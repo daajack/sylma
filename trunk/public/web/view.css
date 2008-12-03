@@ -1,0 +1,17 @@
+
+dd, dt {
+  float: left;
+  margin: 5px 0 5px 0;
+}
+
+dt {
+  width: 35%;
+  font-weight: bold;
+}
+
+dd {
+  width: 60%;
+  background: url(/web/img/arrow.gif) no-repeat 0 0.5em;
+  padding-left: 1.5em;
+  min-height: 2em;
+}

@@ -1,0 +1,32 @@
+/ :
+  display : Accueil
+  rights  : #
+
+.utilisateur
+  
+  /utilisateur/list :
+    display : Utilisateurs
+    rights  : #
+  
+  /utilisateur/add :
+    display : Ajouter un utilisateur
+  
+  /utilisateur/edit :
+    rights  : #
+  
+  /utilisateur/edit_do :
+    rights  : #
+  
+  /utilisateur/delete :
+  
+  /utilisateur/delete_do :
+  
+  /utilisateur/table :
+  
+  /utilisateur/login :
+    display : Connexion
+    rights  : *
+  
+  /utilisateur/logout :
+    display : Déconnexion
+    rights  : *

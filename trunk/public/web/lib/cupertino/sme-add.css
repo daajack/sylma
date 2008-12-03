@@ -1,0 +1,12 @@
+#ui-datepicker-div {
+  border: 1px solid #eff !important;
+  border-bottom-color: #ccc !important;
+  border-right-color: #ccc !important;
+}
+
+.ui-datepicker-today a {
+  background: #E0E0E0 url(gray_today.png) repeat-x scroll 0 50% !important;
+}
+.ui-datepicker-current-day a {
+  background: #E0E0E0 url(blue_current.png) repeat-x scroll 0 50% !important;
+}

@@ -1,6 +1,6 @@
 <?php
 
-class XML {
+class XML_Tag extends DOMElement {
   
   
 }

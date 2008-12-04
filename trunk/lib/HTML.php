@@ -7,7 +7,7 @@
 /**
  * Tag
  */
-class HTML_Tag {
+class HTML_Tag { //  extends XML_Tag
   
   protected $sName;
   protected $bForceClosure = false;

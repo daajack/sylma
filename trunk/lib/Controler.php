@@ -107,8 +107,8 @@ class Controler {
       
       // Redirection
       
-      if (self::isWindowType('form')) self::doAJAXRedirect($oResult);
-      else self::doHTTPRedirect($oResult);
+      if (self::isWindowType('window')) self::doHTTPRedirect($oResult);
+      else self::doAJAXRedirect($oResult);
       
     } else {
       

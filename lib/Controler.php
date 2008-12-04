@@ -209,7 +209,7 @@ class Controler {
     
     $sPath = "action/$sClassName.php";
     
-    if (file_exists('../'.$sPath)) include_once($sPath);
+    if (file_exists(self::getDirectory().$sPath)) include_once($sPath);
     else if (self::isAdmin()) self::addMessage(sprintf(t('Fichier "%s" introuvable !'), $sPath));
     
     // Contrôle de l'existence de la classe et de l'opération
@@ -446,7 +446,7 @@ class Controler {
   
   public static function getDirectory() {
     
-    return '../';
+    return PATH_PHP.'/';
   }
   
   public static function isAdmin() {

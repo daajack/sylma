@@ -38,7 +38,8 @@ class Window extends HTML implements Main {
     
     // Titre & menu
     
-    $this->setBloc('title', Controler::getArgument('title'));
+    $this->setBloc('title', SITE_TITLE);
+    
     $this->addBlocChild('header', new HTML_Tag('link', '', array('rel' => 'icon', 'href' => '/web/img/icone.png', 'type' => 'image/x-icon')));
     $this->setBloc('menu-primary', new AccessMenu('menu-primary', $aMenuPrimary));
     

@@ -118,7 +118,7 @@ class HTML_Form extends HTML_Tag {
     $oAction = new HTML_Input($sType);
     $oAction->setValue($sValue);
     
-    $oAction->setAttributes($aAttributes);
+    $oAction->addAttributes($aAttributes);
     
     $this->getBloc('action')->addChild($oAction);
   }
@@ -160,7 +160,7 @@ class HTML_JSRedirect extends HTML_Form {
     
     Controler::getWindow()->addBlocChild('content-title', t('Redirection en cours...'));
     Controler::getWindow()->addCSS('/web/form.css');
-    Controler::getWindow()->setBloc('body_attributes', new HTML_Attribute('onload', $sJs));
+    Controler::getWindow()->setBloc('body_attributes', new XML_Attribute('onload', $sJs));
     
     parent::__construct();
     $this->displayMark(false);
@@ -193,8 +193,7 @@ interface HTML_FormElement {
 }
 
 class HTML_Input extends HTML_Tag implements HTML_FormElement {
-
-
+  
   public function __construct($sType = 'text', $oValue = '', $aAttributes = array()) {
     
     $this->addAttribute('type', $sType);
@@ -202,7 +201,7 @@ class HTML_Input extends HTML_Tag implements HTML_FormElement {
     
     parent::__construct('input', '', $aAttributes);
   }
-
+  
   public function setValue($sValue) {
     
     $this->addAttribute('value', $sValue);

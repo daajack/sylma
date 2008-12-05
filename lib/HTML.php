@@ -24,7 +24,7 @@ class HTML__Style extends HTML_Tag {
     $this->name = $sName;
     $this->content = $content;
   }
-
+  
   public function __toString() {
     
     return $this->name.' : '.$this->content.';';

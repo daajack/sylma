@@ -29,7 +29,7 @@ class XML_Tag {
     if (is_array($mChildren)) $this->setChildren($mChildren); 
     else $this->addChild($mChildren);
     
-    $this->setAttributes($aAttributes);
+    $this->addAttributes($aAttributes);
     $this->forceClosure($bForceClosure);
   }
   
@@ -45,6 +45,11 @@ class XML_Tag {
     $this->setAttribute($sKey, $sValue);
   }
   
+  public function addAttributes($aAttributes) {
+    
+    if ($aAttributes) $this->setAttributes($aAttributes);
+  }
+  
   public function setAttribute($sKey, $sValue = '') {
     
     $this->aAttributes[$sKey] = new XML_Attribute($sKey, $sValue);
@@ -54,7 +59,7 @@ class XML_Tag {
   
   public function setAttributes($aAttributes = array()) {
     
-    $this->aAttributes = array();
+    if (!$aAttributes) $this->aAttributes = array();
     foreach ($aAttributes  as $sKey => $sValue) $this->setAttribute($sKey, $sValue);
   }
   
@@ -224,6 +229,7 @@ class XML_Tag {
   public function loadXMLFile($sPath) {
     
     $oDocument = new DOMDocument();
+    $oDocument->preserveWhiteSpace = false;
     $oDocument->load(Controler::getDirectory().$sPath);
     
     $this->loadDocument($oDocument);
@@ -232,6 +238,7 @@ class XML_Tag {
   public function loadXML($sContent) {
     
     $oDocument = new DOMDocument();
+    $oDocument->preserveWhiteSpace = false;
     $oDocument->loadXML($sContent);
     
     $this->loadDocument($oDocument);
@@ -239,7 +246,7 @@ class XML_Tag {
   
   public function loadDocument($oDocument) {
     
-    $this->loadNode($oDocument->firstChild);
+    foreach ($oDocument->childNodes as $oChild) $this->loadNode($oChild);
   }
   
   public function loadNode($oElement) {
@@ -261,7 +268,7 @@ class XML_Tag {
         
         case 1 : // Node
           
-          $oTag = new HTML_Tag();
+          $oTag = new XML_Tag;
           $oTag->loadNode($oChild);
           $this->addChild($oTag);
           
@@ -291,7 +298,6 @@ class XML_Tag {
     // Transformation et affichage du résultat
     
     $oResult = $oXslt->transformToDoc($oXml);
-    
     $this->loadDocument($oResult);
     
     return $this;

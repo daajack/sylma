@@ -1,6 +1,11 @@
 <?php
 
-class Action extends HTML_Tag {
+class XML_Action extends Action {
+  
+  
+}
+
+class Action extends XML_Tag {
   
   private $aSchemas = array();
   private $sMode = 'normal';

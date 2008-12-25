@@ -66,6 +66,14 @@ function fusion($sSep, $aArray) {
 }
 
 /*
+ * Implosion = fusion + implode
+ **/
+function implosion($sSepFusion, $sepImplode, $aArray) {
+  
+  return implode($sepImplode, fusion($sSepFusion, $aArray));
+}
+
+/*
  * Pour le débuggage, affiche une variable dans un tag <pre> qui affiche les retours à la ligne
  **/
 function dsp($mVar) {

@@ -3,7 +3,7 @@
  * Classe de template de page
  */
 
-class AccessMenu extends HTML_List {
+class AccessMenu extends HTML_Ul {
   
   public function __construct($sName = 'defaut', $aItems = Array()) {
     
@@ -28,7 +28,7 @@ class AccessMenu extends HTML_List {
   }
 }
 
-class Menu extends HTML_List {
+class Menu extends HTML_Ul {
 
   public function __construct($sName = 'defaut', $aItems = Array()) {
     

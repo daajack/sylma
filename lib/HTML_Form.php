@@ -265,9 +265,9 @@ class HTML_Select extends HTML_Tag implements HTML_FormElement {
 class HTML_Textarea extends HTML_Tag implements HTML_FormElement {
 
 
-  public function __construct() {
+  public function __construct($sContent = '', $aAttributes = array()) {
     
-    parent::__construct('textarea');
+    parent::__construct('textarea', $sContent, $aAttributes);
     $this->forceClosure();
   }
 

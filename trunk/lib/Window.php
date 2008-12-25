@@ -8,7 +8,7 @@ interface Main {
   public function setContent($mValue = '');
 }
 
-class Window extends HTML implements Main {
+class Html extends HTML_Document implements Main {
   
   public function __construct() {
     
@@ -85,7 +85,7 @@ class Window extends HTML implements Main {
   }
 }
 
-class Popup extends HTML implements Main {
+class Popup extends HTML_Document implements Main {
   
   public function __construct() {
     
@@ -198,10 +198,19 @@ class Form extends HTML_Tag implements Main {
   }
 }
 
-class Simple extends HTML_Tag implements Main {
+class Simple extends XML_Tag implements Main {
   
   public function setContent($mValue = '') {
     
+    $this->addChild($mValue);
+  }
+}
+
+class Xml extends XML_Tag implements Main {
+  
+  public function setContent($mValue = '') {
+    
+    header('Content-type: text/xml');
     $this->addChild($mValue);
   }
 }

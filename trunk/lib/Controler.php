@@ -19,8 +19,8 @@ class Controler {
   private static $aRights = array();
   
   private static $aAllowedMessages = array('notice', 'warning', 'success', 'error', '_report', 'query-new', 'query-old', '_system');
-  private static $aAllowedWindowType = array('popup', 'window', 'form', 'simple');
-  private static $sWindowType = 'window';
+  private static $aAllowedWindowType = array('popup', 'html', 'form', 'simple', 'xml');
+  private static $sWindowType = 'html';
   
   private static $oWindow;
   
@@ -107,7 +107,7 @@ class Controler {
       
       // Redirection
       
-      if (self::isWindowType('window')) self::doHTTPRedirect($oResult);
+      if (self::isWindowType('html')) self::doHTTPRedirect($oResult);
       else self::doAJAXRedirect($oResult);
       
     } else {
@@ -670,19 +670,19 @@ class Messages extends HTML_Tag {
   public function addMessage($oMessage) {
     
     // TODO: foreach ($oMessage->aArguments as $oArgument) $this->setArgument('fields'][ += $oMessage[]
-    
     $this->aMessages[$oMessage->getStatut()][] = $oMessage;
   }
   
   /*
    * Ajoute un message dans la pile
    * 
-   * @param $aMessages
+   * @param $sMessage
    *   Message au format String
    **/
   public function addStringMessage($sMessage, $sStatut = 'notice', $aArguments = array()) {
     
     $this->addMessage(new Message($sMessage, $sStatut, $aArguments));
+    if (is_array($aArguments) && isset($aArguments['show_array'])) $this->addStringMessage(implosion(' => ', '<br />', $aArguments['show_array']), $sStatut);
   }
   
   /*

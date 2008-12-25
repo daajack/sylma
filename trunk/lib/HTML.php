@@ -105,7 +105,7 @@ class HTML_Template extends HTML_Tag {
   }
 }
 
-class HTML extends HTML_Template {
+class HTML_Document extends HTML_Template {
   
   public function __construct($sTemplatePath) {
     
@@ -289,11 +289,13 @@ class HTML_TableRow extends HTML_Tag {
   }
 }
 
+/* TODO : Sera supprimer dans le prochain commit (si j'y pense) */
+
 class HTML_List extends HTML_Tag {
   
-  function __construct($oContent = '', $aArguments = array()) {
+  function __construct($oContent = '', $aAttributes = array()) {
     
-    parent::__construct('ul', $oContent, $aArguments);
+    parent::__construct('ul', $oContent, $aAttributes);
   }
   
   function addItem($sContent, $aAttributes = array()) {
@@ -305,3 +307,66 @@ class HTML_List extends HTML_Tag {
     return $oItem;
   }
 }
+
+class HTML_Ul extends HTML_Tag {
+  
+  function __construct($mChildren = '', $aAttributes = array(), $aChildAttributes = array()) {
+    
+    parent::__construct('ul', $aAttributes);
+    
+    if (is_array($mChildren)) foreach ($mChildren as $oChild) $this->addItem($oChild, $aChildAttributes);
+    else $this->addItem($mChildren, $aChildAttributes);
+  }
+  
+  function addItem($sContent, $aAttributes = array()) {
+    
+    $oItem = new HTML_Tag('li', $sContent, $aAttributes);
+    
+    $this->addChild($oItem);
+    
+    return $oItem;
+  }
+}
+
+class HTML_Dl extends HTML_Tag {
+  
+  function __construct($mChildren = '', $aAttributes = array(), $aChildKeyAttributes = array(), $aChildValueAttributes = array()) {
+    
+    parent::__construct('dl', $aAttributes);
+    
+    if (is_array($mChildren)) foreach ($mChildren as $sKey => $sValue) $this->addItem($sKey, $sValue, $aChildKeyAttributes, $aChildValueAttributes);
+    else $this->addItem($mChildren, '', $aChildKeyAttributes);
+  }
+  
+  function addItem($sKey, $sValue, $aKeyAttributes = array(), $aValueAttributes = array()) {
+    
+    $oKey = new HTML_Tag('dt', $sKey, $aKeyAttributes);
+    $oValue = new HTML_Tag('dd', $sValue, $aValueAttributes);
+    
+    $this->addChild($oKey);
+    $this->addChild($oValue);
+    
+    return array($oKey, $oValue);
+  }
+}
+
+
+class HTML_Embed extends HTML_Tag {
+  
+  function __construct($sUrl = '', $iWidth = 0, $iHeight = 0, $sBgColor = '#ffffff', $aAttributes = array()) {
+    
+    parent::__construct('embed', $aAttributes);
+    
+    $this->setAttributes(array(
+      
+      'src'         => $sUrl,
+      'quality'     => 'high',
+      'bgcolor'     => $sBgColor,
+      'width'       => $iWidth,
+      'height'      => $iHeight,
+      'type'        => 'application/x-shockwave-flash',
+      'pluginspage' => 'http://www.macromedia.com/go/getflashplayer',
+    ));
+  }
+}
+

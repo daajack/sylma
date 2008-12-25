@@ -1,29 +1,34 @@
 <?php
 
-class XML extends XML_Tag {
+class XML_Document extends XML_Tag {
   
-  public function __construct($sContent) {
+  public function __toString() {
     
-    // Chargement du fichier XML
+    // $oDocument = new DOMDocument;
+    // $this->loadDocument($oDocument->loadXML($sContent));
+    // if ($this->isIndented()) $sSeparator = "\n";
+    // else $sSeparator = '';
+    $sSeparator = "\n";
+    $sPrefix = '<?xml version="1.0" encoding="utf-8"?>'.$sSeparator;
     
-    $oDocument = new DOMDocument;
-    $this->loadDocument($oDocument->loadXML($sContent));
-    
-    // parent::__construct('1.0', 'utf-8'); // iso-8859-1
+    return $sPrefix.parent::__toString();
   }
 }
 
 class XML_Tag {
   
-  protected $sName;
+  protected $sName = '';
+  protected $sNamespace = '';
   protected $bForceClosure = false;
+  protected $bIndented = false;
   
   protected $aAttributes = array();
   protected $aChildren = array();
   protected $aBlocs = array();
   
-  public function __construct($sName = '', $mChildren = '', $aAttributes = array(), $bForceClosure = false) {
+  public function __construct($sName = '', $mChildren = '', $aAttributes = array(), $bForceClosure = false, $sNamespace = '') {
     
+    $this->setNamespace($sNamespace);
     $this->setName($sName);
     
     if (is_array($mChildren)) $this->setChildren($mChildren); 
@@ -31,6 +36,16 @@ class XML_Tag {
     
     $this->addAttributes($aAttributes);
     $this->forceClosure($bForceClosure);
+  }
+  
+  public function setNamespace($sValue = '') {
+    
+    $this->sNamespace = $sValue;
+  }
+  
+  public function getNamespace() {
+    
+    return $this->sNamespace;
   }
   
   public function getAttribute($sKey) {
@@ -55,12 +70,19 @@ class XML_Tag {
     $this->aAttributes[$sKey] = new XML_Attribute($sKey, $sValue);
   }
   
-  // Compense la class XML_Attribute en permettant de récupérer un tableau de type (sKey => sContent)
+  // Compense la class XML_Attribute en permettant de rÃ©cupÃ©rer un tableau de type (sKey => sContent)
   
   public function setAttributes($aAttributes = array()) {
     
-    if (!$aAttributes) $this->aAttributes = array();
-    foreach ($aAttributes  as $sKey => $sValue) $this->setAttribute($sKey, $sValue);
+    if (is_array($aAttributes)) {
+      
+      if (!$aAttributes) $this->aAttributes = array();
+      else foreach ($aAttributes  as $sKey => $sValue) $this->setAttribute($sKey, $sValue);
+      
+    } else if (Controler::isAdmin()) {
+      
+      Controler::addMessage(t('Liste d\'attributs invalide'), 'error', array('show_array' => $aAttributes));
+    }
   }
   
   public function getAttributes() {
@@ -114,7 +136,7 @@ class XML_Tag {
   
   public function setBloc($sKey = '', $oValue = '') {
     
-    if (!is_string($sKey)) Controler::addMessage(t('Clé de bloc invalide !'));
+    if (!is_string($sKey)) Controler::addMessage(t('ClÃ© de bloc invalide !'));
     
     if ($this->isBloc($sKey)) $this->getBloc($sKey)->addChild($oValue);
     else $this->aBlocs[$sKey] = $oValue;
@@ -228,7 +250,7 @@ class XML_Tag {
   
   public function loadXMLFile($sPath) {
     
-    $oDocument = new DOMDocument();
+    $oDocument = new DOMDocument('1.0', 'utf-8');
     $oDocument->preserveWhiteSpace = false;
     $oDocument->load(Controler::getDirectory().$sPath);
     
@@ -237,7 +259,7 @@ class XML_Tag {
   
   public function loadXML($sContent) {
     
-    $oDocument = new DOMDocument();
+    $oDocument = new DOMDocument('1.0', 'utf-8');
     $oDocument->preserveWhiteSpace = false;
     $oDocument->loadXML($sContent);
     
@@ -250,9 +272,6 @@ class XML_Tag {
   }
   
   public function loadNode($oElement) {
-    
-    $this->setChildren();
-    $this->setAttributes();
     
     $this->setName($oElement->nodeName);
     
@@ -284,23 +303,40 @@ class XML_Tag {
   
   public function parse($sPath = '') {
     
-    $oXml = new DOMDocument();
-    $oXml->loadXML($this->__toString());
+    $oXml = new DOMDocument('1.0', 'utf-8');
+    $sContent = $this->__toString();
     
-    // Chargement du fichier XSL
-    $oXsl = new DOMDocument();
-    $oXsl->load(Controler::getDirectory().$sPath);
+    $this->setChildren();
+    $this->setAttributes();
     
-    // Nouvelle instance & import de la feuille XSL
-    $oXslt = new XSLTProcessor();
-    $oXslt->importStylesheet($oXsl);
-    
-    // Transformation et affichage du résultat
-    
-    $oResult = $oXslt->transformToDoc($oXml);
-    $this->loadDocument($oResult);
-    
+    if ($oXml->loadXML($sContent)) {
+      
+      // Chargement du fichier XSL
+      $oXsl = new DOMDocument();
+      
+      if ($oXsl->load(Controler::getDirectory().$sPath)) {
+        
+        // Nouvelle instance & import de la feuille XSL
+        $oXslt = new XSLTProcessor();
+        $oXslt->importStylesheet($oXsl);
+        
+        // Transformation et affichage du rÃ©sultat
+        
+        $oResult = $oXslt->transformToDoc($oXml);
+        // dsp(htmlentities($oResult->saveXML()));
+        $this->loadDocument($oResult);
+        
+      } else Controler::addMessage(t('Impossible de charger le fichier template !'), 'error');
+      
+    } else Controler::addMessage(t('Impossible de charger le fichier source !'), 'error');
+    // dsp($oResult); exit;
     return $this;
+  }
+  
+  public function isIndented($bIs = null) {
+    
+    if ($bIs !== null) $this->bIndented = $bIs;
+    return $this->bIndented;
   }
   
   public function __toString() {
@@ -318,10 +354,13 @@ class XML_Tag {
     if ($this->isBloc('_class')) $this->setAttribute('class', $this->getBloc('_class')->implodeChildren(' '));
     if ($this->isBloc('_style')) $this->setAttribute('style', $this->getBloc('_style')->implodeChildren(' '));
     
+    if ($this->isIndented()) $sSeparator = "\n";
+    else $sSeparator = '';
+    
     if ($this->hasChildren()) {
       
-      if (count($this->getChildren()) > 1) $sContent = "\n";
-      $sContent = implode("\n", $this->getChildren());
+      if (count($this->getChildren()) > 1) $sContent = $sSeparator;
+      $sContent = implode($sSeparator, $this->getChildren());
       
     } else $sContent = '';
     
@@ -330,7 +369,10 @@ class XML_Tag {
       if (count($this->aAttributes)) $sAttributes = ' '.implode(' ', $this->aAttributes);
       else $sAttributes = '';
       
-      $sResult = '<'.$this->getName().$sAttributes;
+      if ($this->getNamespace()) $sNamespace = $this->getNamespace().':';
+      else $sNamespace = '';
+      
+      $sResult = '<'.$sNamespace.$this->getName().$sAttributes;
       
       // Content
       
@@ -348,16 +390,28 @@ class XML_Tag {
  */
 class XML_Attribute {
   
-  var $sName;
-  var $oValue;
+  var $sNamespace = '';
+  var $sName = '';
+  var $oValue = '';
   
-  public function __construct($sName, $oValue = '') {
+  public function __construct($sName = '', $oValue = '', $sNamespace = '') {
     
     $this->sName = (string) $sName;
     $this->oValue = $oValue;
+    $this->setNamespace($sNamespace);
   }
   
-  public function setValue($sValue) {
+  public function setNamespace($sValue = '') {
+    
+    $this->sNamespace = $sValue;
+  }
+  
+  public function getNamespace() {
+    
+    return $this->sNamespace;
+  }
+  
+  public function setValue($sValue = '') {
     
     $this->oValue = $sValue;
   }
@@ -371,14 +425,30 @@ class XML_Attribute {
     
     if ($this->sName) {
       
-      $sValue = htmlentities((string) $this->oValue, ENT_COMPAT, 'UTF-8');
-      return $this->sName.'="'.$sValue.'"';
+      $sValue = $this->oValue; // htmlentities((string) $this->oValue, ENT_COMPAT, 'UTF-8')
+      
+      if ($this->getNamespace()) $sName = $this->getNamespace().':'.$this->sName;
+      else $sName = $this->sName;
+      
+      return $sName.'="'.$sValue.'"';
     }
   }
 }
 
-
-class XSLT extends XML_Tag {
+class XSL_Document extends XML_Tag {
   
-  
+  public function __construct() {
+    
+    $this->addChild(new XML_Tag('output', array('method' => 'xml', 'encoding' => 'utf-8'), true, 'xsl'));
+    $this->setNamespace('xsl');
+    
+    $aAttributes = array(
+      'version'     => '1.0',
+      'xmlns:xsl'   => 'http://www.w3.org/1999/XSL/Transform',
+      'xmlns:fo'    => 'http://www.w3.org/1999/XSL/Format',
+      'xmlns:axsl'  => 'http://www.w3.org/1999/XSL/TransformAlias',
+    );
+    
+    parent::__construct('stylesheet', '', $aAttributes);
+  }
 }

@@ -44,7 +44,7 @@ class db {
   public static function connect() {
     
     self::$rDb = mysql_connect(self::getArgument('host'), self::getArgument('user'), self::getArgument('password'));
-    mysql_select_db('lemon-web');
+    mysql_select_db(self::getArgument('database'));
     
     mysql_query('SET CHARACTER SET utf8');
   }

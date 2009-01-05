@@ -344,7 +344,7 @@ class XML_Tag {
     // Attributs
     
     // Si le tag est vide ne retourne rien
-    if ($this->isEmpty()) return '';
+    if ($this->isEmpty() && get_class($this) == 'HTML_Tag') return '';
     
     // Classes et styles
     

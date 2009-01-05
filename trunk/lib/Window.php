@@ -47,7 +47,10 @@ class Html extends HTML_Document implements Main {
     
     $oContent = new HTML_Tag('div', '', array('id' => 'content'));
     $oContent->setBloc('content-title', new HTML_Tag('h2'));
-    $oContent->setBloc('message', Controler::getMessages()); // pointeur
+    
+    $oMessages = Controler::getMessages();
+    $oMessages->setAllowedMessages(array('notice', 'warning', 'success', 'error', '_report', 'query-new', 'query-old', '_system'));
+    $oContent->setBloc('message', $oMessages); // pointeur
     
     $this->setBloc('content-title', $oContent->getBloc('content-title'));
     $this->setBloc('content', $oContent);
@@ -71,7 +74,7 @@ class Html extends HTML_Document implements Main {
     $oMessages = new Messages(Controler::getMessages()->getMessages('system'));
     $oMessages->addStyle('margin-top', '5px');
     
-    if (Controler::isAdmin() && $oMessages->hasMessages() && in_array('system', Controler::getAllowedMessages())) {
+    if (Controler::isAdmin() && $oMessages->hasMessages() && in_array('system', Controler::getMessages()->getAllowedMessages())) {
       
       $this->getBloc('system')->addChild(new HTML_Strong(t('Infos système')));
       $this->getBloc('system')->addChild($oMessages);

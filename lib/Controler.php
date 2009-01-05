@@ -1,12 +1,5 @@
 <?php
 
-define('PATH_LOGIN',    '/utilisateur/login');
-define('PATH_LOGIN_DO', '/utilisateur/login_do');
-define('PATH_LOGOUT',   '/utilisateur/logout');
-define('PATH_ERROR',    '/error/view');
-define('PATH_ACCESS',   '/error/access');
-define('DEBUG', false); // A mettre pour le débuggage, renvoie Controler::isAdmin() à true et enlève le cache des templates
-
 /**
  * Contrôleur général du framwork
  */
@@ -18,7 +11,6 @@ class Controler {
   private static $aArguments = array();
   private static $aRights = array();
   
-  private static $aAllowedMessages = array('notice', 'warning', 'success', 'error', '_report', 'query-new', 'query-old', '_system');
   private static $aAllowedWindowType = array('popup', 'html', 'form', 'simple', 'xml');
   private static $sWindowType = 'html';
   
@@ -99,7 +91,7 @@ class Controler {
     
     self::addMessage(new HTML_Strong(t('Date & heure').' : ').date('j M Y').' - '.date('H:i'), 'system');
     
-    self::addMessage(new HTML_Strong(t('Messages').' : ').implode(', ', self::getAllowedMessages()), 'system');
+    self::addMessage(new HTML_Strong(t('Messages').' : ').implode(', ', self::getMessages()->getAllowedMessages()), 'system');
     
     // Redirection ou ajout du contenu
     
@@ -171,8 +163,11 @@ class Controler {
   public static function getBacktrace($sStatut = 'system') {
     
     $aBacktrace = array();
+    
     foreach (debug_backtrace() as $aTrace) $aBacktrace[] = "{$aTrace['class']}::{$aTrace['function']}() [{$aTrace['line']}]";
     self::addMessage(new HTML_Strong(t('Backtrace').' : ').implode('<br/>', $aBacktrace), $sStatut);
+    
+    return implode('<br/>', $aBacktrace);
   }
   
   public static function loadRedirect() {
@@ -471,11 +466,6 @@ class Controler {
     return self::$sOperationName;
   }
   
-  public static function getAllowedMessages() {
-    
-    return self::$aAllowedMessages;
-  }
-  
   public static function setReady($bValue = true) {
     
     self::$bReady = $bValue;
@@ -764,13 +754,23 @@ class Messages extends HTML_Tag {
     
   }
   
+  public function getAllowedMessages() {
+    
+    return $this->aAllowedMessages;
+  }
+  
+  public function setAllowedMessages($aStatuts = array()) {
+    
+    $this->aAllowedMessages = $aStatuts;
+  }
+  
   public function __toString() {
     
     $aStatuts = array();
     
     foreach ($this->aMessages as $sStatut => $aMessages) {
       
-      if (in_array($sStatut, Controler::getAllowedMessages()) && $aMessages) {
+      if (in_array($sStatut, $this->getAllowedMessages()) && $aMessages) {
         
         if (!isset($aStatuts[$sStatut])) {
           

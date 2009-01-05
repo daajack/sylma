@@ -7,11 +7,9 @@ require('XML.php');
 require('HTML.php');
 require('HTML_Form.php');
 require('Field.php');
-require('Divers.php');
 require('Controler.php');
 require('Action.php');
 require('User.php');
 require('Database.php');
 require('spyc/spyc.php');
 
-require('Window.php');

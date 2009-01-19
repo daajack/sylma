@@ -1,8 +1,136 @@
 <?php
 
-class XML_Action extends Action {
+class XML_Action extends XML_Document {
   
+  private $sPath = '';
+  private $oRedirect = null;
   
+  /*
+   * A charger : Settings, XML, XSD, XSL
+   **/
+  
+  public function __construct($sPath = '', $oRedirect = null, $sSource = '') {
+    
+    parent::__construct($sPath, $oRedirect, $sSource );
+    
+    $this->setRedirect($oRedirect);
+    $this->setPath($sPath);
+    $this->setSource($sSource);
+  }
+  
+  public function addAction($sPath, $oRedirect = null, $sSource = '') {
+    
+    $this->getRoot()->addChild($this->loadAction($sPath, $oRedirect = null, $sSource = ''));
+  }
+  
+  public function loadAction($sPath, $oRedirect = null, $sSource = '') {
+    
+    $oDocument = new XML_Document($sPath, $sSource);
+    
+    if ($oDocument) return $this->loadActionSettings($oDocument->getRoot(), $oRedirect);
+    else return null;
+  }
+  
+  public function loadActionSettings($oElement, $oRedirect = null) {
+    
+    $sClass = $oElement->read('class');
+    $sFile = $oElement->read('class/@file');
+    $sMethod = $oElement->read('method');
+    $bRedirect = $oElement->read('redirect');
+    
+    if ($bRedirect !== null && $bRedirect) $oRedirect = null;
+    
+    return $this->runAction($sClass, $sMethod, $sFile, $oRedirect);
+  }
+  
+  public function runAction($sClassName, $sMethodName, $sFile = '', $oRedirect = null) {
+    
+    if ($sFile) {
+      
+      // Include du fichier
+      $sFile = Controler::getDirectory().$sFile;
+      
+      if (file_exists($sFile)) require_once($sFile);
+      else if (Controler::isAdmin()) Controler::addMessage(sprintf(t('Fichier "%s" introuvable !'), $sFile));
+    }
+    
+    // Contrôle de l'existence de la classe et de l'opération
+    
+    if (Controler::isAdmin()) $sClassError = sprintf(t('Action impossible (la classe "%s" n\'existe pas) !'), new HTML_Strong($sClassName));
+    else $sClassError = t('Page introuvable, veuillez corriger l\'adresse !');
+    
+    if (!class_exists($sClassName)) Controler::errorRedirect($sClassError);
+    
+    // Création de la classe
+    
+    $oAction = new $sClassName($oRedirect);
+    
+    if ($sMethodName) {
+      
+      // Création de la méthode
+      
+      if (Controler::isAdmin()) $sOperationError = sprintf(t('Action impossible (la méthode "%s" n\'existe pas) !'), new HTML_Strong(Controler::getClassName().'::'.$sMethodName.'()'));
+      else $sOperationError = t('Page introuvable, veuillez corriger l\'adresse !');
+      
+      if (!method_exists($oAction, $sMethodName)) Controler::errorRedirect($sOperationError);
+      else $oResult = $oAction->$sMethodName($oRedirect);
+      
+      return $oResult;
+      
+    } else return $oAction;
+  }
+  
+  public function setRedirect($oRedirect = null) {
+    
+    $this->oRedirect = $oRedirect;
+  }
+  
+  public function getRedirect() {
+    
+    return $this->oRedirect;
+  }
+  
+  public function getPath() {
+    
+    return $this->sPath;
+  }
+  
+  public function setPath($sPath = '') {
+    
+    $this->sPath = $sPath;
+  }
+  
+  public function getSource() {
+    
+    return $this->sSource;
+  }
+  
+  public function setSource($sSource = '') {
+    
+    $this->sSource = $sSource;
+  }
+  
+  public function parse() {
+    
+    $oDocument = new XML_Document($this->get('document/*'));
+    $oTemplate = new XML_Document($this->get('template/*'));
+    
+    if (!$oDocument->isEmpty()) {
+      
+      if (!$oTemplate->isEmpty()) $oResult = $oDocument->parse($oTemplate);
+      else $oResult = $oDocument;
+      
+    } else $oResult = new XML_Document;
+    
+    return $oResult;
+  }
+  
+  public function __toString() {
+    
+    $oResult = $this->parse();
+    
+    return $oResult->__toString();
+  }
 }
 
 class Action extends XML_Tag {

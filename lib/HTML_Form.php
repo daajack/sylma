@@ -160,7 +160,7 @@ class HTML_JSRedirect extends HTML_Form {
     
     Controler::getWindow()->addBlocChild('content-title', t('Redirection en cours...'));
     Controler::getWindow()->addCSS('/web/form.css');
-    Controler::getWindow()->setBloc('body_attributes', new XML_Attribute('onload', $sJs));
+    Controler::getWindow()->setBloc('body_attributes', new HTML_Attribute('onload', $sJs));
     
     parent::__construct();
     $this->displayMark(false);

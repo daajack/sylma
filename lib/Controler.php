@@ -27,6 +27,7 @@ class Controler {
     
     // Formatage de l'adresse
     
+    self::loadSettings();
     self::loadContext($sDefaultModule, $sDefaultAction);
     
     // Chargement des droits
@@ -113,6 +114,12 @@ class Controler {
     return self::getWindow();
   }
   
+  public static function loadSettings() {
+    
+    // $oSettings = new XML_Action('/');
+    
+    
+  }
   public static function loadContext($sDefaultModule, $sDefaultAction) {
     
     self::$oMessages = new Messages();

@@ -209,12 +209,14 @@ class Simple extends XML_Tag implements Main {
   }
 }
 
-class Xml extends XML_Tag implements Main {
+class Xml extends XML_Document implements Main {
   
   public function setContent($mValue = '') {
     
     header('Content-type: text/xml');
-    $this->addChild($mValue);
+    $this->loadText($mValue);
+    
+    if (!$this->documentElement) $this->appendChild(new XML_Element('message', $mValue));
   }
 }
 

@@ -1,6 +1,6 @@
 <?php
 
-/**
+/*
  * Classe des gestion de la DB
  **/
 class db {

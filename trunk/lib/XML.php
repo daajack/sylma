@@ -1,14 +1,333 @@
 <?php
 
-class XML_Document extends XML_Tag {
+class XML_Document extends DOMDocument {
+  
+  public function __construct($mChildren = '', $sSource = '') {
+    
+    parent::__construct();
+    
+    $this->preserveWhiteSpace = false;
+    
+    $this->registerNodeClass('DOMElement', 'XML_Element');
+    $this->registerNodeClass('DOMText', 'XML_Text');
+    $this->registerNodeClass('DOMAttr', 'XML_Attribute');
+    $this->registerNodeClass('DOMCharacterData', 'XML_CData');
+    
+    // Chargement du document si path envoyé
+    if ($mChildren) {
+      
+      if (is_object($mChildren)) $this->set($mChildren);
+      else if (is_string($mChildren)) $this->loadDocument($mChildren, $sSource);
+    }
+  }
+  
+  public function loadDocument($sPath = '', $sSource = '') {
+    
+    $sContent = '';
+    
+    switch ($sSource) {
+      
+      case 'file' : 
+        
+        $this->loadFile($this->getPath());
+        
+      break;
+      
+      case 'db' : 
+      default :
+        
+        $this->loadDatabase($sPath);
+        
+      break;
+    }
+    
+    return $sContent;
+  }
+  
+  public function isEmpty() {
+  
+    return !($this->getRoot());
+  }
+  
+  public function loadDatabase($sPath = '') {
+    
+    $rContent = db::query("SELECT s_content FROM xml WHERE v_path = '$sPath'");
+    
+    if (mysql_num_rows($rContent)) list($sContent) = mysql_fetch_row($rContent);
+    else $sContent = '';
+    
+    $this->loadText($sContent);
+  }
+  
+  public function loadFile($sPath) {
+    
+    $this->load(Controler::getDirectory().$sPath);
+  }
+  
+  public function loadText($sContent) {
+    
+    $this->loadXML($sContent);
+  }
+  
+  public function getRoot() {
+    
+    return $this->documentElement;
+  }
+  
+  /*
+   * Return a String from the result of the sQuery
+   **/
+  
+  public function read($sQuery) {
+    
+    $xPath = new DOMXPath($this);
+    return $this->queryString($xPath->evaluate($sQuery));
+  }
+  
+  /*
+   * Return an XML_Element from the result of the sQuery
+   **/
+  
+  public function get($sQuery) {
+    
+    return $this->queryOne($this->query($sQuery));
+  }
+  
+  /*
+   * Return a DOMNodeList from the result of the sQuery
+   **/
+   
+  public function query($sQuery) {
+    
+    $xPath = new DOMXPath($this);
+    return $xPath->query($sQuery);
+  }
+  
+  /*
+   * Extract the first result of a DOMNodeList if possible
+   **/
+  
+  public function queryOne($oCollection) {
+    
+    if ($oCollection->length) return $oCollection->item(0);
+    else return null;
+  }
+  
+  /*
+   * Extract a string value from a mixed variable
+   **/
+  
+  public function queryString($mValue) {
+    
+    if (is_object($mValue)) {
+      
+      if (get_class($mValue) == 'DOMNodeList') $mValue = $mValue->item(0);
+      if (get_class($mValue) == 'XML_Element' || get_class($mValue) == 'XML_Attribute') $mValue = $mValue->nodeValue;
+    }
+    
+    return (string) $mValue;
+  }
+  
+  public function set($mValue) {
+    
+    if (is_object($mValue)) {
+      
+      if ($mValue instanceof XML_Document) {
+        
+        if ($this->getRoot()) $this->removeChild($this->getRoot());
+        
+        $oRoot = $this->importNode($mValue->getRoot(), true);
+        $this->appendChild($oRoot);
+        
+      } else if ($mValue instanceof XML_Element) {
+        
+        if ($this->getRoot()) $this->removeChild($this->getRoot());
+        
+        $oRoot = $this->importNode($mValue, true);
+        $this->appendChild($oRoot);
+        
+      } else if ($mValue instanceof XML_Attribute) {
+        
+        // $this->getRoot()->setAttribute($mValue->name, $mValue->value);
+      }
+      
+    } else if (is_string($mValue)) $this->loadText($mValue);
+  }
+  
+  public function parse($oTemplate) {
+    
+    $oStyleSheet = new XSLTProcessor();
+    $oStyleSheet->importStylesheet($oTemplate);
+    
+    // Transformation et affichage du résultat
+    
+    $oResult = new XML_Document();
+    $oResult->loadText($oStyleSheet->transformToXML($this));
+    
+    return $oResult;
+  }
   
   public function __toString() {
     
-    // $oDocument = new DOMDocument;
-    // $this->loadDocument($oDocument->loadXML($sContent));
-    // if ($this->isIndented()) $sSeparator = "\n";
-    // else $sSeparator = '';
-    $sSeparator = "\n";
+    if (!$this->isEmpty()) return $this->saveXML();
+    else return '';
+  }
+}
+
+class XML_Attribute extends DOMAttr {
+  
+  public function __construct($sName, $sValue) {
+    
+    parent::__construct($sName, $sValue);
+  }
+  
+  public function set($sValue) {
+    
+    $this->value = (string) $sValue;
+  }
+  
+  public function __toString() {
+    
+    return $this->name.'="'.$this->value.'"';
+  }
+}
+
+class XML_CData extends DOMCharacterData {
+  
+  
+}
+
+class XML_Text extends DOMText {
+  
+  public function __construct($sContent) {
+    
+    parent::__construct((string) $sContent);
+  }
+  
+  public function __toString() {
+    
+    return $this->nodeValue;
+  }
+}
+
+class XML_Element extends DOMElement {
+  
+  private $aChildren = array();
+  
+  public function __construct($oName = 'default', $oContent = '') {
+    
+    parent::__construct($oName, $oContent); //$oNode->nodeValue
+  }
+  
+  public function getDocument() {
+    
+    return $this->ownerDocument;
+  }
+  
+  public function read($sQuery) {
+    
+    $xPath = new DOMXPath($this->getDocument());
+    return $this->getDocument()->queryString($xPath->evaluate($sQuery, $this));
+  }
+  
+  public function set($mValue) {
+    
+    if (is_object($mValue)) {
+      
+      switch (get_class($mValue)) {
+        
+        case 'XML_Element' :
+          foreach ($this->childNodes as $oChild) $this->removeChild($oChild);
+          $this->addChild($mValue);
+        break;
+        
+        case 'XML_Attribute' :
+          // $this->setAttribute($mValue->name, $mValue->value);
+        break;
+        
+        case 'DOMNodeList' :
+          // foreach ($this->children as $oChild) $this->removeChild($oChild);
+          // foreach ($mValue as $oChild) $this->set($oChild);
+        break;
+      }
+      
+    } else {
+      
+      foreach ($this->childNodes as $oChild) $this->removeChild($oChild);
+      $this->addChild($mValue);
+    }
+  }
+  
+  public function get($sQuery) {
+    
+    return $this->getDocument()->queryOne($this->query($sQuery));
+  }
+  
+  public function query($sQuery) {
+    
+    $xPath = new DOMXPath($this->getDocument());
+    return $xPath->query($sQuery, $this);
+  }
+  
+  public function addChild($mChild) {
+    
+    if (is_object($mChild)) {
+      
+      if (is_subclass_of($mChild, 'XML_Element') || is_subclass_of($mChild, 'XML_Text')) {
+        
+        if ($mChild->getDocument() != $this->getDocument()) $mChild = $this->getDocument()->importNode($mChild, true);
+        $this->appendChild($mChild);
+        
+      } else if (is_subclass_of($mChild, 'XML_Document')) {
+        
+        // TODO : Ajout des XMLNS
+        
+        $mChild = $this->getDocument()->importNode($mChild->getRoot(), true);
+        $this->appendChild($mChild);
+        
+      } else $this->appendChild(new XML_Text($mChild));
+      
+    } else $this->appendChild(new XML_Text($mChild));
+  }
+  
+  public function implode($sSep, $cChildren) {
+    
+    $sContent = '';
+    
+    foreach ($cChildren as $iIndex => $oChild) {
+      
+      $sContent .= (string) $oChild;
+      if ($iIndex != $cChildren->length - 1) $sContent .= $sSep;
+    }
+    
+    return $sContent;
+  }
+  
+  public function __toString() {
+    
+    if ($this->childNodes->length) $sChildren = $this->implode('', $this->childNodes);
+    else $sChildren = '';
+    
+    if ($this->attributes->length) $sAttributes = ' '.$this->implode(' ', $this->attributes);
+    else $sAttributes = '';
+    
+    $sResult = '<'.$this->nodeName.$sAttributes;
+    
+    if ($sChildren) $sResult .= '>'.$sChildren.'</'.$this->nodeName.'>';
+    else $sResult .= ' />';
+    
+    return $sResult;
+  }
+}
+
+/*
+ * /// Old classes. To Kill ///
+ **/
+
+class XML_Tagument extends XML_Tag {
+  
+  public function __toString() {
+    
     $sPrefix = '<?xml version="1.0" encoding="utf-8"?>'.$sSeparator;
     
     return $sPrefix.parent::__toString();
@@ -67,7 +386,7 @@ class XML_Tag {
   
   public function setAttribute($sKey, $sValue = '') {
     
-    $this->aAttributes[$sKey] = new XML_Attribute($sKey, $sValue);
+    $this->aAttributes[$sKey] = new HTML_Attribute($sKey, $sValue);
   }
   
   // Compense la class XML_Attribute en permettant de récupérer un tableau de type (sKey => sContent)
@@ -106,6 +425,8 @@ class XML_Tag {
     if ($this->isUsable($oValue)) {
       
       $this->aChildren[] = $oValue;
+      // if (is_object($oValue) && is_subclass_of($oValue, 'DOMNode')) $this->;
+      // $this->getXml()->appendChild($oValue)
       
     } else if (Controler::isAdmin()) {
       
@@ -388,7 +709,7 @@ class XML_Tag {
 /**
  * Attribut
  */
-class XML_Attribute {
+class HTML_Attribute extends DOMAttr {
   
   var $sNamespace = '';
   var $sName = '';

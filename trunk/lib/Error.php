@@ -10,8 +10,9 @@ function userErrorHandler($errno, $errstr, $errfile, $errline) {
   
   if (Controler::isAdmin()) {
     
-    if (Controler::isReady()) Controler::addMessage($sMsg, 'error');
-    else echo $sMsg;
+    // if (Controler::isReady()) Controler::addMessage($sMsg, 'error');
+    echo $sMsg;
+    // else echo $sMsg;
   }
   
   return true;

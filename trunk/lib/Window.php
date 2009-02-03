@@ -8,15 +8,18 @@ interface Main {
   public function setContent($mValue = '');
 }
 
-class Html extends HTML_Document implements Main {
+class Html extends XML_Action {
   
   public function __construct() {
     
-    parent::__construct('template/main');
+    // $oTemplate = ;
+    // $oTemplate->set($this->get('//html'));
     
-    $this->addJS('/web/global.js');
-    $this->addCSS('/web/global.css');
-    $this->addCSS('/web/main.css');
+    $oTemplate = $this->setBloc('template', new HTML_Document('/html'));
+    
+    $oTemplate->addJS('/web/global.js');
+    $oTemplate->addCSS('/web/global.css');
+    $oTemplate->addCSS('/web/main.css');
     
     // Préparation / insertion des blocs
     
@@ -31,60 +34,58 @@ class Html extends HTML_Document implements Main {
     
     if (Controler::getUser()->isReal()) {
       
-      $oUserInfo = new HTML_Tag('div', '', array('id' => 'user-info'));
-      $oUserInfo->addChild(new HTML_A('/utilisateur/edit/'.Controler::getUser()->getArgument('id'), Controler::getUser()->getBloc('full_name')).' ('.implode(', ', Controler::getUser()->getRoles()).')');
-      $this->setBloc('user-info', $oUserInfo);
+      $oUserInfo = $oTemplate->setBloc('user-info', new XML_Tag('div', '', array('id' => 'user-info')));
+      $oUserInfo->add(new XML_Tag('a', '/utilisateur/edit/'.Controler::getUser()->getArgument('id'), Controler::getUser()->getBloc('full_name')).' ('.implode(', ', Controler::getUser()->getRoles()).')');
     }
     
     // Titre & menu
     
-    $this->setBloc('title', SITE_TITLE);
-    
-    $this->addBlocChild('header', new HTML_Tag('link', '', array('rel' => 'icon', 'href' => '/web/img/icone.png', 'type' => 'image/x-icon')));
-    $this->setBloc('menu-primary', new AccessMenu('menu-primary', $aMenuPrimary));
+    $oTemplate->get('//title')->set(SITE_TITLE);
+    $oTemplate->get("//div[@id='sidebar']")->add(new AccessMenu('menu-primary', $aMenuPrimary));
     
     // Messages & contenu
     
-    $oContent = new HTML_Tag('div', '', array('id' => 'content'));
-    $oContent->setBloc('content-title', new HTML_Tag('h2'));
+    $oContent = $this->setBloc('content', new HTML_Tag('div', '', array('id' => 'content')));
+    $this->setBloc('content-title', new XML_Tag('h2'));
     
     $oMessages = Controler::getMessages();
     $oMessages->setAllowedMessages(array('notice', 'warning', 'success', 'error', '_report', 'query-new', 'query-old', '_system'));
-    $oContent->setBloc('message', $oMessages); // pointeur
-    
-    $this->setBloc('content-title', $oContent->getBloc('content-title'));
-    $this->setBloc('content', $oContent);
+    $this->setBloc('message', $oMessages); // pointeur
+    // echo get_class($oContent);
+    // $oTemplate->get("//div[@id='center']")->add($oContent);
   }
   
   public function setContent($mValue = '') {
     
-    $this->getBloc('content')->setBloc('action', $mValue);
+    // $this->getBloc('template')->get("//div[@id='center']")->setBloc('action', $mValue);
+    $this->setBloc('action', $mValue);
   }
   
   public function __toString() {
     
     // Contenu
     
-    $this->getBloc('content')->addBloc('content-title');
-    $this->getBloc('content')->addBloc('message');
-    $this->getBloc('content')->addBloc('action');
-    
+    $this->getBloc('template')->get("//div[@id='center']")->add(
+      $this->getBloc('content-title'),
+      $this->getBloc('message'),
+      $this->getBloc('action'));
+    // echo htmlentities($this->getBloc('action'));
     // Infos système
     
-    $oMessages = new Messages(Controler::getMessages()->getMessages('system'));
-    $oMessages->addStyle('margin-top', '5px');
+    // $oMessages = new Messages(Controler::getMessages()->getMessages('system'));
+    // $oMessages->addStyle('margin-top', '5px');
     
-    if (Controler::isAdmin() && $oMessages->hasMessages() && in_array('system', Controler::getMessages()->getAllowedMessages())) {
+    // if (Controler::isAdmin() && $oMessages->hasMessages() && in_array('system', Controler::getMessages()->getAllowedMessages())) {
       
-      $this->getBloc('system')->addChild(new HTML_Strong(t('Infos système')));
-      $this->getBloc('system')->addChild($oMessages);
-    }
+      // $this->getBloc('system')->addChild(new HTML_Strong(t('Infos système')));
+      // $this->getBloc('system')->addChild($oMessages);
+    // }
     
     // Supression des messages système dans le panneau de messages principal
     
-    Controler::getMessages()->setMessages('system');
-    
-    return parent::__toString();
+    // Controler::getMessages()->setMessages('system');
+    $this->getBloc('template')->getRoot()->setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+    return $this->getBloc('template')->__toString();
   }
 }
 

@@ -4,6 +4,7 @@ class XML_Action extends XML_Document {
   
   private $sPath = '';
   private $oRedirect = null;
+  private $aBlocs = array();
   
   /*
    * A charger : Settings, XML, XSD, XSL
@@ -110,6 +111,24 @@ class XML_Action extends XML_Document {
     $this->sSource = $sSource;
   }
   
+  public function setBloc($sKey, $mValue) {
+    
+    if ($sKey) $this->aBlocs[$sKey] = $mValue;
+    return $mValue;
+  }
+  
+  public function addBloc($sKey, $oTarget = null) {
+    
+    if ($oTarget && $oTarget instanceof XML_Element) return $oTarget->add($this->getBloc($sKey));
+    else return $this->add($this->getBloc($sKey));
+  }
+  
+  public function getBloc($sKey) {
+    
+    if (array_key_exists($sKey, $this->aBlocs)) return $this->aBlocs[$sKey];
+    else return null;
+  }
+  
   public function parse() {
     
     $oDocument = new XML_Document($this->get('document/*'));
@@ -120,16 +139,9 @@ class XML_Action extends XML_Document {
       if (!$oTemplate->isEmpty()) $oResult = $oDocument->parse($oTemplate);
       else $oResult = $oDocument;
       
-    } else $oResult = new XML_Document;
-    
-    return $oResult;
-  }
-  
-  public function __toString() {
-    
-    $oResult = $this->parse();
-    
-    return $oResult->__toString();
+      return $oResult;
+      
+    } else return $this; //$oResult = new XML_Document;
   }
 }
 

@@ -169,9 +169,15 @@ class Controler {
   
   public static function getBacktrace($sStatut = 'system') {
     
-    $aBacktrace = array();
+    $aBacktrace = array(); $aLines = array(); $i = 0;
     
-    foreach (debug_backtrace() as $aTrace) $aBacktrace[] = "{$aTrace['class']}::{$aTrace['function']}() [{$aTrace['line']}]";
+    foreach (debug_backtrace() as $aLine) $aLines[] = $aLine['line'];
+    $aLines[] = 'x';
+    
+    foreach (debug_backtrace() as $aTrace) {
+      $aBacktrace[] = strrchr($aTrace['file'], DIRECTORY_SEPARATOR)."::{$aTrace['class']}::{$aTrace['function']}() [{$aLines[$i]}]";
+      $i++;
+    }
     self::addMessage(new HTML_Strong(t('Backtrace').' : ').implode('<br/>', $aBacktrace), $sStatut);
     
     return implode('<br/>', $aBacktrace);
@@ -782,17 +788,17 @@ class Messages extends HTML_Tag {
         if (!isset($aStatuts[$sStatut])) {
           
           $aStatuts[$sStatut] = new HTML_Tag('ul');
-          $aStatuts[$sStatut]->addAttribute('id', 'messages');
+          $aStatuts[$sStatut]->setAttribute('id', 'messages');
           $aStatuts[$sStatut]->addClass('message-'.$sStatut);
         }
         
-        foreach ($aMessages as $oMessage) $aStatuts[$sStatut]->addChild($oMessage);
+        foreach ($aMessages as $oMessage) $aStatuts[$sStatut]->add($oMessage);
       }
     }
     
     if ($aStatuts) {
       
-      $this->addChildren($aStatuts);
+      $this->add($aStatuts);
       return parent::__toString();
       
     } else return '';

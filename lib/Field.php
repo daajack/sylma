@@ -16,11 +16,13 @@
  * 'class' et 'style' doivent être des tableaux qui rempliront les attributs correspondants
  * 'display' fixera le comportement du conteneur (float, inline ou default)
  */
-class HTML_Field extends HTML_Tag {
+class HTML_Field extends XML_Action {
   
   private $aArguments = array();
   
   public function __construct($aNode = array(), $bMark = false) {
+    
+    parent::__construct();
     
     if (array_val('disable', $aNode) && $aNode['disable']) return ''; // Pas de rendu
     
@@ -87,7 +89,7 @@ class HTML_Field extends HTML_Tag {
     if (array_key_exists('arguments', $aNode))
       foreach($aNode['arguments'] as $sKey => $sVal) $oInput->addAttribute($sKey, $sVal);
     
-    if ($sInput == 'hidden') $this->addChild($oInput); // Pas de label pour les hidden
+    if ($sInput == 'hidden') $this->add($oInput); // Pas de label pour les hidden
     else {
       
       // Label
@@ -101,7 +103,7 @@ class HTML_Field extends HTML_Tag {
       if ($bRequired) {
         
         $mTitle = new HTML_Tag('strong');
-        $mTitle->addChild($sTitle);
+        $mTitle->add($sTitle);
         
       } else $mTitle = $sTitle;
       
@@ -135,8 +137,8 @@ class HTML_Field extends HTML_Tag {
         else $sOptions = '';
         
         $oScript = new HTML_Script();
-        $oScript->addChild("$(document).ready(function(){ $('#$sId').datepicker($sOptions);});");
-        $oContainer->addChild($oScript);
+        $oScript->add("$(document).ready(function(){ $('#$sId').datepicker($sOptions);});");
+        $oContainer->add($oScript);
       }
       
       // Marquage
@@ -153,13 +155,13 @@ class HTML_Field extends HTML_Tag {
         
       if (in_array($sInput, array('checkbox', 'radio'))) {
         
-        $oContainer->addChild($oInput);
-        $oContainer->addChild($oLabel);
+        $oContainer->add($oInput);
+        $oContainer->add($oLabel);
         
       } else {
         
-        $oContainer->addChild($oLabel);
-        $oContainer->addChild($oInput);
+        $oContainer->add($oLabel);
+        $oContainer->add($oInput);
       }
       
       // Ajout d'un suffixe
@@ -167,13 +169,13 @@ class HTML_Field extends HTML_Tag {
       if (array_key_exists('suffixe', $aNode)) {
         
         $oSpan = new HTML_Tag('span');
-        $oSpan->addChild($aNode['suffixe']);
-        $oSpan->addAttribute('class', 'field-suffixe');
+        $oSpan->add($aNode['suffixe']);
+        $oSpan->addClass('field-suffixe');
         
-        $oContainer->addChild($oSpan);
+        $oContainer->add($oSpan);
       }
       
-      $this->addChild($oContainer);
+      $this->add($oContainer);
     }
   }
   

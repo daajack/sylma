@@ -8,7 +8,8 @@ class AccessMenu extends HTML_Ul {
   public function __construct($sName = 'defaut', $aItems = Array()) {
     
     parent::__construct();
-    $this->addAttribute('id', $sName);
+    
+    $this->setAttribute('id', $sName);
     
     foreach ($aItems as $sItem => $aItem) {
       
@@ -16,8 +17,8 @@ class AccessMenu extends HTML_Ul {
         
         $oLink = new HTML_Tag('a');
         
-        $oLink->addChild(t($aItem['display']));
-        $oLink->addAttribute('href', $sItem);
+        $oLink->add(t($aItem['display']));
+        $oLink->setAttribute('href', $sItem);
         
         if (Controler::getAction() == $sItem) $aAttributes['class'] = 'item-current';
         else $aAttributes = array();

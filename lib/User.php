@@ -1,6 +1,6 @@
 <?php
 
-class User extends HTML_Tag {
+class User extends XML_Action {
   
   private $sUser = '';
   private $aRoles = array();

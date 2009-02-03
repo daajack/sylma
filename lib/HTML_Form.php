@@ -3,31 +3,34 @@
  * Fichier des classes Field...
  **/
 
-class HTML_Form extends HTML_Tag {
+class HTML_Form extends XML_Action {
   
   private $bDisplayTop = false;
   private $bDisplayMark = true;
   
   public function __construct($sAction = '', $oValue = '', $aAttributes = array()) {
     
-    parent::__construct('form', $oValue, $aAttributes);
+    parent::__construct();
+    
+    $oForm = new HTML_Tag('form', $oValue, $aAttributes, $this);
+    $this->setBloc('form', $oForm);
     
     $this->setBloc('form-content', new HTML_Div());
     
-    $this->addAttribute('action', $sAction);
-    $this->addAttribute('method', 'post');
+    $oForm->setAttribute('action', $sAction);
+    $oForm->setAttribute('method', 'post');
     
     // Notice concernant les champs obligatoires
     
     $oMark = new HTML_Div(t('Les champs marqués en gras sont obligatoires.'));
-    $oMark->addClasses(array('clear-block', 'form-required'));
+    $oMark->addClasses('clear-block', 'form-required');
     
     $this->setBloc('mark', $oMark);
     
     // Boutons d'action
     
     $oAction = new HTML_Div();
-    $oAction->addClasses(array('form-action', 'clear-block'));
+    $oAction->addClasses('form-action', 'clear-block');
     
     $this->setBloc('action', $oAction);
   }
@@ -106,7 +109,7 @@ class HTML_Form extends HTML_Tag {
         $oField = $aField['content'];
       }
       
-      if ($bAutoAdd) $this->addChild($oField);
+      if ($bAutoAdd) $this->getBloc('form')->add($oField);
       $aForm[$sField] = $oField;
     }
     
@@ -118,9 +121,9 @@ class HTML_Form extends HTML_Tag {
     $oAction = new HTML_Input($sType);
     $oAction->setValue($sValue);
     
-    $oAction->addAttributes($aAttributes);
+    $oAction->setAttributes($aAttributes);
     
-    $this->getBloc('action')->addChild($oAction);
+    $this->getBloc('action')->add($oAction);
   }
   
   public function displayTop($bValue = true) {
@@ -133,14 +136,13 @@ class HTML_Form extends HTML_Tag {
     $this->bDisplayMark = $bValue;
   }
   
-  public function __toString() {
+  public function parse() {
     
-    $oForm = clone $this;
+    $oRoot = new HTML_Tag('div');
+    $oRoot->addClass('form-content clear-block');
+    $this->set($oRoot);
     
-    $this->getBloc('form-content')->addChildren($oForm->getChildren());
-    $this->getBloc('form-content')->addClass('form-content clear-block');
-    $this->clearChildren();
-    
+    $this->addBloc('form');
     if ($this->bDisplayTop) $this->addBloc('action');
     
     $this->addBloc('form-content');
@@ -148,7 +150,7 @@ class HTML_Form extends HTML_Tag {
     $this->getBloc('action')->addClass('form-action-bottom');
     $this->addBloc('action');
     
-    return parent::__toString();
+    return parent::parse();
   }
 }
 
@@ -196,10 +198,10 @@ class HTML_Input extends HTML_Tag implements HTML_FormElement {
   
   public function __construct($sType = 'text', $oValue = '', $aAttributes = array()) {
     
+    parent::__construct('input', '', $aAttributes);
+    
     $this->addAttribute('type', $sType);
     $this->addAttribute('value', $oValue);
-    
-    parent::__construct('input', '', $aAttributes);
   }
   
   public function setValue($sValue) {

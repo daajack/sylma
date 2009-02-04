@@ -15,7 +15,7 @@ class HTML_Form extends XML_Action {
     $oForm = new HTML_Tag('form', $oValue, $aAttributes, $this);
     $this->setBloc('form', $oForm);
     
-    $this->setBloc('form-content', new HTML_Div());
+    $this->setBloc('form-content', new HTML_Div('', array('class' => 'form-content clear-block')));
     
     $oForm->setAttribute('action', $sAction);
     $oForm->setAttribute('method', 'post');
@@ -109,7 +109,7 @@ class HTML_Form extends XML_Action {
         $oField = $aField['content'];
       }
       
-      if ($bAutoAdd) $this->getBloc('form')->add($oField);
+      if ($bAutoAdd) $this->getBloc('fields')->add($oField);
       $aForm[$sField] = $oField;
     }
     
@@ -138,14 +138,13 @@ class HTML_Form extends XML_Action {
   
   public function parse() {
     
-    $oRoot = new HTML_Tag('div');
-    $oRoot->addClass('form-content clear-block');
-    $this->set($oRoot);
-    
+    $this->set();
     $this->addBloc('form');
-    if ($this->bDisplayTop) $this->addBloc('action');
     
+    if ($this->bDisplayTop) $this->addBloc('action');
+    $this->getBloc('form-content')->add($this->getBloc('fields')->query('*'));
     $this->addBloc('form-content');
+    
     if ($this->bDisplayMark) $this->addBloc('mark');
     $this->getBloc('action')->addClass('form-action-bottom');
     $this->addBloc('action');

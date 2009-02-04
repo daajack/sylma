@@ -56,10 +56,7 @@ class HTML_Tag extends XML_Element {
       if (!$aAttributes) $this->aAttributes = array();
       else foreach ($aAttributes  as $sKey => $sValue) $this->setAttribute($sKey, $sValue);
       
-    } else if (Controler::isAdmin()) {
-      
-      Controler::addMessage(t('Liste d\'attributs invalide'), 'error', array('show_array' => $aAttributes));
-    }
+    } // else ERROR Liste invalide
   }
   
   public function parse() {
@@ -85,378 +82,6 @@ class HTML_Tag extends XML_Element {
     
     $this->parse();
     return parent::__toString();
-  }
-}
-
-class Old_HTML_Tag {
-  
-  protected $sName = '';
-  protected $sNamespace = '';
-  protected $bForceClosure = false;
-  protected $bIndented = false;
-  
-  protected $aAttributes = array();
-  protected $aChildren = array();
-  protected $aBlocs = array();
-  
-  public function __construct($sName = '', $mChildren = '', $aAttributes = array(), $bForceClosure = false, $sNamespace = '') {
-    
-    $this->setNamespace($sNamespace);
-    $this->setName($sName);
-    
-    if (is_array($mChildren)) $this->setChildren($mChildren); 
-    else $this->addChild($mChildren);
-    
-    $this->addAttributes($aAttributes);
-    $this->forceClosure($bForceClosure);
-  }
-  
-  public function setNamespace($sValue = '') {
-    
-    $this->sNamespace = $sValue;
-  }
-  
-  public function getNamespace() {
-    
-    return $this->sNamespace;
-  }
-  
-  public function getAttribute($sKey) {
-    
-    return (isset($this->aAttributes[$sKey])) ? $this->aAttributes[$sKey] : null;
-  }
-  
-  // TODO: alias de setAttribute()
-  
-  public function addAttribute($sKey, $sValue) {
-    
-    $this->setAttribute($sKey, $sValue);
-  }
-  
-  public function addAttributes($aAttributes) {
-    
-    if ($aAttributes) $this->setAttributes($aAttributes);
-  }
-  
-  public function setAttribute($sKey, $sValue = '') {
-    
-    $this->aAttributes[$sKey] = new HTML_Attribute($sKey, $sValue);
-  }
-  
-  // Compense la class XML_Attribute en permettant de récupérer un tableau de type (sKey => sContent)
-  
-  public function setAttributes($aAttributes = array()) {
-    
-    if (is_array($aAttributes)) {
-      
-      if (!$aAttributes) $this->aAttributes = array();
-      else foreach ($aAttributes  as $sKey => $sValue) $this->setAttribute($sKey, $sValue);
-      
-    } else if (Controler::isAdmin()) {
-      
-      Controler::addMessage(t('Liste d\'attributs invalide'), 'error', array('show_array' => $aAttributes));
-    }
-  }
-  
-  public function getAttributes() {
-    
-    return $this->aAttributes;
-  }
-  
-  public function hasAttribute($sKey) {
-    
-    return isset($this->aAttribute[$sKey]);
-  }
-  
-  public function hasAttributes() {
-    
-    return count($this->getAttributes());
-  }
-  
-  public function addChild($oValue) {
-    
-    // TODO : 
-    if ($this->isUsable($oValue)) {
-      
-      $this->aChildren[] = $oValue;
-      // if (is_object($oValue) && is_subclass_of($oValue, 'DOMNode')) $this->;
-      // $this->getXml()->appendChild($oValue)
-      
-    } else if (Controler::isAdmin()) {
-      
-      // if (!is_string($sKey)) Controler::addMessage(t('Valeur de Tag non valide ! : '.gettype($oValue)));
-      // if (!is_null(Controler::getMessages())) Controler::addMessage($sMessage);
-    }
-  }
-  
-  public function addChildren($aChildren = array()) {
-    
-    if (is_array($aChildren)) foreach ($aChildren as $oChild) $this->addChild($oChild);
-  }
-
-  public function addBloc($sKey = '') {
-    
-    if ($this->isBloc($sKey)) $this->addChild($this->getBloc($sKey));
-  }
-  
-  public function addBlocs() {
-    
-    foreach ($this->getBlocs() as $sBloc => $oBloc) $this->addBloc($sBloc);
-  }
-  
-  public function addBlocChild($sKey = '', $oValue = '') {
-    
-    $this->getBloc($sKey)->addChild($oValue);
-  }
-  
-  public function setBloc($sKey = '', $oValue = '') {
-    
-    if (!is_string($sKey)) Controler::addMessage(t('Clé de bloc invalide !'));
-    
-    if ($this->isBloc($sKey)) $this->getBloc($sKey)->addChild($oValue);
-    else $this->aBlocs[$sKey] = $oValue;
-    
-    return $this->getBloc($sKey);
-  }
-  
-  public function getBloc($sKey = '') {
-    
-    if (!$this->isBloc($sKey)) $this->aBlocs[$sKey] = new HTML_Tag();
-    
-    return $this->aBlocs[$sKey];
-  }
-  
-  public function getBlocs() {
-    
-    return $this->aBlocs;
-  }
-  
-  public function isBloc($sKey = '') {
-    
-    return isset($this->aBlocs[$sKey]);
-  }
-  //xString
-  public function hasBlocs() {
-    
-    return count($this->getBlocs());
-  }
-  
-  public function setChildren($aChildren = array()) {
-    
-    if (is_array($aChildren)) $this->aChildren = $aChildren;
-  }
-  
-  public function getChildren() {
-    
-    return $this->aChildren;
-  }
-  
-  public function clearChildren($oChildren = '') {
-    
-    if ($oChildren) $this->aChildren = array($oChildren);
-    else $this->aChildren = array();
-  }
-  
-  public function hasChildren() {
-    
-    return count($this->getChildren());
-  }
-  
-  public function forceClosure($bValue = true) {
-    
-    $this->bForceClosure = $bValue;
-  }
-  
-  public function isReal() {
-    
-    return $this->getName();
-  }
-  
-  public function getName() {
-    
-    return $this->sName;
-  }
-  
-  public function setName($sName = '') {
-    
-    $this->sName = (string) $sName;
-  }
-  
-  public function isUsable($mValue) {
-    
-    if (
-         (is_string($mValue) && $mValue)
-      || is_numeric($mValue)
-      || (is_object($mValue) && method_exists($mValue, '__toString'))) return true;//&& !is_boolean($oValeur)
-    else return false;
-  }
-  
-  public function isEmpty() {
-    
-    return (!$this->hasAttributes() && !$this->hasChildren() && !$this->hasBlocs());
-  }
-  
-  public function addClass($sValue) {
-    
-    $this->getBloc('_class')->addChild($sValue);
-  }
-  
-  public function addClasses($aClasses) {
-    
-    if (is_array($aClasses)) foreach ($aClasses as $sClass) $this->addClass($sClass);
-    else $this->addClass($aClasses);
-  }
-
-  public function addStyle($sKey = '', $sValue = '') {
-    
-    $this->getBloc('_style')->addChild(new HTML__Style($sKey, $sValue));
-  }
-
-  public function addStyles($aStyles = array()) {
-    
-    if (is_array($aStyles)) foreach ($aStyles as $sKey => $sValue) $this->addStyle($sKey, $sValue);
-    else return false;
-  }
-  
-  public function implodeChildren($sSep = "\n") {
-    
-    return implode($sSep, $this->getChildren());
-  }
-  
-  public function loadXMLFile($sPath) {
-    
-    $oDocument = new DOMDocument('1.0', 'utf-8');
-    $oDocument->preserveWhiteSpace = false;
-    $oDocument->load(Controler::getDirectory().$sPath);
-    
-    $this->loadDocument($oDocument);
-  }
-  
-  public function loadXML($sContent) {
-    
-    $oDocument = new DOMDocument('1.0', 'utf-8');
-    $oDocument->preserveWhiteSpace = false;
-    $oDocument->loadXML($sContent);
-    
-    $this->loadDocument($oDocument);
-  }
-  
-  public function loadDocument($oDocument) {
-    
-    foreach ($oDocument->childNodes as $oChild) $this->loadNode($oChild);
-  }
-  
-  public function loadNode($oElement) {
-    
-    $this->setName($oElement->nodeName);
-    
-    // Attributes
-    
-    foreach($oElement->attributes as $oAttribute) $this->setAttribute($oAttribute->name, $oAttribute->value);
-    
-    // Children
-    
-    foreach($oElement->childNodes as $oChild) {
-      
-      switch ($oChild->nodeType) {
-        
-        case 1 : // Node
-          
-          $oTag = new XML_Tag;
-          $oTag->loadNode($oChild);
-          $this->addChild($oTag);
-          
-        break;
-        case 3 : // Text
-          
-          $this->addChild($oChild->nodeValue);
-          
-        break;
-      }
-    }
-  }
-  
-  public function parse($sPath = '') {
-    
-    $oXml = new DOMDocument('1.0', 'utf-8');
-    $sContent = $this->__toString();
-    
-    $this->setChildren();
-    $this->setAttributes();
-    
-    if ($oXml->loadXML($sContent)) {
-      
-      // Chargement du fichier XSL
-      $oXsl = new DOMDocument();
-      
-      if ($oXsl->load(Controler::getDirectory().$sPath)) {
-        
-        // Nouvelle instance & import de la feuille XSL
-        $oXslt = new XSLTProcessor();
-        $oXslt->importStylesheet($oXsl);
-        
-        // Transformation et affichage du résultat
-        
-        $oResult = $oXslt->transformToDoc($oXml);
-        // dsp(htmlentities($oResult->saveXML()));
-        $this->loadDocument($oResult);
-        
-      } else Controler::addMessage(t('Impossible de charger le fichier template !'), 'error');
-      
-    } else Controler::addMessage(t('Impossible de charger le fichier source !'), 'error');
-    // dsp($oResult); exit;
-    return $this;
-  }
-  
-  public function isIndented($bIs = null) {
-    
-    if ($bIs !== null) $this->bIndented = $bIs;
-    return $this->bIndented;
-  }
-  
-  public function __toString() {
-    
-    // Attributs
-    
-    // Si le tag est vide ne retourne rien
-    if ($this->isEmpty() && get_class($this) == 'HTML_Tag') return '';
-    
-    // Classes et styles
-    
-    if ($sClass = $this->getAttribute('class')) $this->addBlocChild('_class', $sClass->getValue());
-    if ($sStyle = $this->getAttribute('style')) $this->addBlocChild('_style', $sStyle->getValue());
-    
-    if ($this->isBloc('_class')) $this->setAttribute('class', $this->getBloc('_class')->implodeChildren(' '));
-    if ($this->isBloc('_style')) $this->setAttribute('style', $this->getBloc('_style')->implodeChildren(' '));
-    
-    if ($this->isIndented()) $sSeparator = "\n";
-    else $sSeparator = '';
-    
-    if ($this->hasChildren()) {
-      
-      if (count($this->getChildren()) > 1) $sContent = $sSeparator;
-      $sContent = implode($sSeparator, $this->getChildren());
-      
-    } else $sContent = '';
-    
-    if ($this->isReal()) {
-      
-      if (count($this->aAttributes)) $sAttributes = ' '.implode(' ', $this->aAttributes);
-      else $sAttributes = '';
-      
-      if ($this->getNamespace()) $sNamespace = $this->getNamespace().':';
-      else $sNamespace = '';
-      
-      $sResult = '<'.$sNamespace.$this->getName().$sAttributes;
-      
-      // Content
-      
-      if ($this->isUsable($sContent) || $this->bForceClosure) $sResult .= '>'.$sContent.'</'.$this->getName().'>';
-      else $sResult .= ' />';
-      
-    } else $sResult = $sContent;
-    
-    return $sResult;
   }
 }
 
@@ -583,8 +208,8 @@ class HTML_Template extends HTML_Tag {
     
     $sPath .= '.tpl.php';
     
-    if (file_exists(Controler::getDirectory().$sPath)) $this->sPath = $sPath;
-    else if (Controler::isAdmin()) Controler::addMessage(sprintf(t('Le template "%s" semble ne pas exister !'), new HTML_Strong($sPath)), 'error');
+    if (file_exists(MAIN_DIRECTORY.$sPath)) $this->sPath = $sPath;
+    // ERROR else if (Controler::isAdmin()) Controler::addMessage(sprintf(t('Le template "%s" semble ne pas exister !'), new HTML_Strong($sPath)), 'error');
   }
   
   public function __toString() {
@@ -608,10 +233,11 @@ class HTML_Document extends XML_Action {
   
   public function __construct($sPath = '', $oRedirect = null, $sSource = '') {
     
-    parent::__construct($sPath, $oRedirect, $sSource);
+    $imp = new DomImplementation;
+    $dtd = $imp->createDocumentType('html', '-//W3C//DTD XHTML 1.0 Transitional//EN', 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd');
     
-    // $this->addChild('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">');
-    // $this->setBloc('header', new HTML_Tag());
+    parent::__construct($sPath, $oRedirect, $sSource);
+    '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
   }
   
   public function addJS($sHref) {
@@ -627,6 +253,24 @@ class HTML_Document extends XML_Action {
   public function addIECSS($sHref = '', $sVersion = '') {
     
     // $this->getBloc('header')->addChild(new HTML_IEComment(new HTML_Style($sHref), $sVersion));
+  }
+  
+  public function __toString() {
+    
+    // $imp = new DomImplementation;
+    // $dtd = $imp->createDocumentType('html', '-//W3C//DTD XHTML 1.0 Transitional//EN', 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd');
+    // $doc = $imp->createDocument('', '', $dtd);
+    // $doc->loadXML(parent::__toString());
+    
+    // return $doc->saveHTML();
+    // $oRoot = $doc->importNode($this->getRoot(), true);
+    // $this->appendChild($oRoot);
+    // echo $oRoot;
+    // return $doc->saveXML();
+    
+    $sDocType = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
+    $this->formatOutput = true;
+    return $sDocType."\n".parent::__toString();
   }
 }
 
@@ -691,6 +335,14 @@ class HTML_IEComment extends HTML_Comment {
   }
 }
 
+class HTML_Br extends HTML_Tag {
+  
+  public function __construct() {
+    
+    parent::__construct('br');
+  }
+}
+
 class HTML_A extends HTML_Tag {
   
   public function __construct($sHref = '', $oChild = '', $aAttributes = array()) {
@@ -709,6 +361,14 @@ class HTML_Icone extends HTML_A {
     
     parent::__construct($sHref, '', $aAttributes);
     $this->addChild(new HTML_Img($sSrc, $sTitle, array('title' => $sTitle)));
+  }
+}
+
+class HTML_Span extends HTML_Tag {
+  
+  public function __construct($oChild = '', $aAttributes = array()) {
+    
+    parent::__construct('span', $oChild, $aAttributes);
   }
 }
 
@@ -817,9 +477,9 @@ class HTML_Ul extends HTML_Tag {
   function __construct($mChildren = '', $aAttributes = array(), $aChildAttributes = array()) {
     
     parent::__construct('ul', $aAttributes);
-    
+    $this->forceClosure();
     if (is_array($mChildren)) foreach ($mChildren as $oChild) $this->addItem($oChild, $aChildAttributes);
-    else $this->addItem($mChildren, $aChildAttributes);
+    else if ($mChildren) $this->addItem($mChildren, $aChildAttributes);
   }
   
   function addItem($sContent, $aAttributes = array()) {

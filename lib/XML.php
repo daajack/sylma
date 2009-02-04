@@ -2,27 +2,85 @@
 
 class XML_Fragment extends DOMDocumentFragment { }
 
+class XML_NodeList implements Iterator {
+  
+  private $aNodes = array();
+  public $length;
+  protected $iIndex = 0;
+  
+  public function __construct($oNodeList) {
+    
+    foreach ($oNodeList as $oNode) $this->aNodes[] = $oNode;
+    $this->length = $oNodeList->length;
+  }
+  
+  public function item($iKey) {
+    
+    if (array_key_exists($iKey, $this->aNodes)) return $this->aNodes[$iKey];
+    else return null;
+  }
+  
+  public function __call($sMethod, $aArguments) {
+    
+    foreach ($this->aNodes as $oNode) {
+      
+      if (method_exists($oNode, $sMethod)) $oNode->$sMethod($aArguments);
+    }
+  }
+  
+  public function rewind() {
+    
+    $this->iIndex = 0;
+  }
+  
+  public function next() {
+    
+    $this->iIndex++;
+  }
+  
+  public function key() {
+    
+    return $this->iIndex;
+  }
+  
+  public function current() {
+    
+    return $this->aNodes[$this->iIndex];
+  }
+  
+  public function valid() {
+    
+    return ($this->iIndex < count($this->aNodes));
+  }
+}
+
 class XML_Document extends DOMDocument {
   
   public $isDocument = true;
   
-  public function __construct($mChildren = '', $sSource = '') {
+  public function __construct($mChildren = 'div', $sSource = '') {
     
-    parent::__construct();
+    parent::__construct('1.0');
     
     $this->preserveWhiteSpace = false;
     
+    $this->registerNodeClass('DOMDocument', 'XML_Document');
     $this->registerNodeClass('DOMElement', 'XML_Element');
     $this->registerNodeClass('DOMText', 'XML_Text');
     $this->registerNodeClass('DOMAttr', 'XML_Attribute');
     $this->registerNodeClass('DOMCharacterData', 'XML_CData');
     $this->registerNodeClass('DOMDocumentFragment', 'XML_Fragment');
     
-    // Chargement du document si path envoyé
     if ($mChildren) {
       
+      // if Object else String
       if (is_object($mChildren)) $this->set($mChildren);
-      else if (is_string($mChildren)) $this->loadDocument($mChildren, $sSource);
+      else if (is_string($mChildren)) {
+        
+        // if Path else Name
+        if ($mChildren[0] == '/') $this->loadDocument($mChildren, $sSource);
+        else $this->set(new XML_Element($mChildren, '', null, $this));
+      }
     }
   }
   
@@ -66,7 +124,7 @@ class XML_Document extends DOMDocument {
   
   public function loadFile($sPath) {
     
-    $this->load(Controler::getDirectory().$sPath);
+    $this->load(MAIN_DIRECTORY.$sPath);
   }
   
   public function loadText($sContent) {
@@ -105,7 +163,8 @@ class XML_Document extends DOMDocument {
     
     if (func_num_args() > 1) {
       
-      foreach (func_get_args() as $mValue) $this->set($mValue);
+      $this->set(func_get_arg(0));
+      for ($i = 1; $i < func_num_args(); $i++) $this->add(func_get_arg($i));
       
     } else if (func_num_args() == 1) {
       
@@ -115,9 +174,9 @@ class XML_Document extends DOMDocument {
         
         if ($mValue instanceof XML_Document) {
           
-          if ($mValue instanceof XML_Action) $mValue = $mValue->parse();
+          // XML_Document, XML_Action
           
-          // XML_Document
+          if ($mValue instanceof XML_Action) $mValue = $mValue->parse();
           
           if ($this->getRoot()) $this->removeChild($this->getRoot());
           
@@ -129,16 +188,16 @@ class XML_Document extends DOMDocument {
           // XML_Element
           
           if ($this->getRoot()) $this->removeChildNode($this->getRoot());
-          // echo '<br/>+'.get_class($mValue).'+<br/>';
           
           if ($mValue->getDocument() && $mValue->getDocument() !== $this) {
+            
             $mValue = $this->importNode($mValue, true);
-            //dsp(Controler::getBacktrace());
           }
-          // echo '<br/>-'.get_class($mValue).'-<br/>';
+          
           $this->appendChild($mValue);
           
           // Else passed to Root
+          
         } else if ($this->getRoot()) $this->getRoot()->set($mValue);
         
         // If String load as XML String
@@ -146,7 +205,8 @@ class XML_Document extends DOMDocument {
       } else if (is_string($mValue)) $this->loadText($mValue);
       
       return $mValue;
-    }
+      
+    } else $this->removeChild($this->getRoot());
     
     return null;
   }
@@ -168,9 +228,23 @@ class XML_Document extends DOMDocument {
     return null;
   }
   
+  public function addArray($aChildren) {
+    
+    foreach ($aChildren as $sKey => $sValue) {
+      
+      if (!is_numeric($sKey)) $this->add(new XML_Element($sKey, $sValue));
+      else $this->add(new XML_Element($sValue));
+    }
+  }
+  
   public function importNode($oChild, $bDepth) {
     
-    if ($oChild instanceof HTML_Tag) $oChild->parse();
+    if ($oChild instanceof HTML_Tag) {
+      
+      $oChild = clone $oChild;
+      $oChild->parse();
+    }
+    
     return parent::importNode($oChild, $bDepth);
   }
   
@@ -188,8 +262,9 @@ class XML_Document extends DOMDocument {
     }
     
     $mResult = $xPath->query($sQuery);
-    if (!$mResult && Controler::isAdmin()) Controler::addMessage("XPath [$sQuery] : Aucun résultat.", 'warning');
-    return $mResult;
+    // ERROR : if (!$mResult) Pas de résultat dans la requête
+    //&& Controler::isAdmin()) Controler::addMessage("XPath [$sQuery] : Aucun résultat.", 'warning');
+    return new XML_NodeList($mResult);
   }
   
   /*
@@ -232,7 +307,6 @@ class XML_Document extends DOMDocument {
   
   public function __toString() {
     
-    $this->formatOutput = true;
     if (!$this->isEmpty()) return $this->saveXML();
     else return '';
   }
@@ -297,10 +371,10 @@ class XML_Element extends DOMElement {
   public function __construct($sName = 'default', $oContent = '', $aAttributes = array(), $oDocument = null) {
     
     parent::__construct($sName);
-    // dsp(Controler::getBacktrace());
-    //if (!$oDocument) 
-    $oDocument = new XML_Document();
+    if (!$oDocument) $oDocument = new XML_Document();
+    
     $oDocument->appendChild($this);
+    $oDocument->removeChild($this);
     
     $this->set($oContent);
     if ($aAttributes) $this->addAttributes($aAttributes);
@@ -326,7 +400,8 @@ class XML_Element extends DOMElement {
     
     if (func_num_args() > 1) {
       
-      foreach (func_get_args() as $mValue) $this->set($mValue);
+      $this->set(func_get_arg(0));
+      for ($i = 1; $i < func_num_args(); $i++) $this->add(func_get_arg($i));
       
     } else if (func_num_args() == 1) {
       
@@ -351,7 +426,7 @@ class XML_Element extends DOMElement {
           $this->setAttribute($mValue->name, $mValue->value);
           $mValue = $this->getAttribute($mValue->name);
           
-        } else if ($mValue instanceof DOMNodeList) {
+        } else if ($mValue instanceof XML_NodeList) {
           
           $this->cleanChildren();
           foreach ($mValue as $oChild) $this->add($oChild);
@@ -416,11 +491,14 @@ class XML_Element extends DOMElement {
           /* XML_Document */
           
           // TODO : Ajout des XMLNS
-          // dsp(Controler::getBacktrace());
           if ($mValue->getRoot()) $mValue = $this->addChild($mValue->getRoot());
           else $mValue = null;
           
           /* Undefined object (Forced String) */
+          
+        } else if ($mValue instanceof XML_NodeList) {
+          
+          foreach ($mValue as $oChild) $this->add($oChild);
           
         } else $mValue = $this->addText($mValue);
         
@@ -458,7 +536,7 @@ class XML_Element extends DOMElement {
   
   public function addAttributes($aAttributes) {
     
-    foreach ($aAttributes as $sKey => $sValue) $this->addAttribute($sKey, $sValue);
+    foreach ($aAttributes as $sKey => $sValue) $this->setAttribute($sKey, $sValue);
   }
   
   public function addChild($oChild) {
@@ -488,14 +566,19 @@ class XML_Element extends DOMElement {
     } else return $sValue;
   }
   
+  public function getValue() {
+    
+    return $this->textContent;
+  }
+  
   public function query($sQuery) {
     
     $xPath = new DOMXPath($this->getDocument());
     
     $mResult = $xPath->query($sQuery, $this);
     
-    if (!$mResult && Controler::isAdmin()) Controler::addMessage("XPath [$sQuery] : Aucun résultat.", 'warning');
-    return $mResult;
+    // ERROR : if (!$mResult) Pas de résultat dans la requête
+    return new XML_NodeList($mResult);
   }
   
   public function implode($sSep, $cChildren) {

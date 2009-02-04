@@ -72,7 +72,17 @@ class db {
         '<span class="query-keyword-2">\1</span>',
     );
     
-    return preg_replace(array_keys($aRemplacements), $aRemplacements, $aQueries);
+    $aResults = preg_replace(array_keys($aRemplacements), $aRemplacements, $aQueries);
+    // echo htmlentities($aResults[0]);
+    
+    foreach ($aResults as &$sResult) {
+      
+      $oDocument = new XML_Document;
+      $oDocument->loadText('<li>'.$sResult.'</li>');
+      $sResult = $oDocument->getRoot();
+    }
+    
+    return $aResults;
   }
   
   public static function getQueries() {

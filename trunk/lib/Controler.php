@@ -110,7 +110,7 @@ class Controler {
       self::getWindow()->setContent($oResult);
     }
     
-    if (self::isAdmin()) self::getMessages()->addStringMessages(db::getQueries(), 'query-new');
+    if (self::isAdmin()) self::getMessages()->addObjectMessages(db::getQueries(), 'query-new');
     return self::getWindow();
   }
   
@@ -120,6 +120,7 @@ class Controler {
     
     
   }
+  
   public static function loadContext($sDefaultModule, $sDefaultAction) {
     
     self::$oMessages = new Messages();
@@ -197,7 +198,7 @@ class Controler {
       // Récupération des messages du Redirect et suppression
       
       if (get_class($oRedirect) == 'Redirect') {
-        
+        // dsp($oRedirect->getMessages()->getMessages());
         $oRedirect->setReal();
         self::getMessages()->addMessages($oRedirect->getMessages()->getMessages());
         
@@ -314,7 +315,7 @@ class Controler {
     
     // Ajout des messages requêtes si admin
     
-    if (self::isAdmin()) $oRedirect->getMessages()->addStringMessages(db::getQueries(), 'query-old');
+    if (self::isAdmin()) $oRedirect->getMessages()->addObjectMessages(db::getQueries(), 'query-old');
     
     // $oRedirect->setSource(Controler::getPath());
     
@@ -652,15 +653,13 @@ class URL {
   }
 }
 
-class Messages extends HTML_Tag {
+class Messages extends XML_Action {
   
   private $aMessages = array(); // de type 'mode' => array() mode = notice, warning, error, ...
-  private $sSource;
   
   public function __construct($aMessages = array()) {
     
-    parent::__construct('div');
-    $this->addClass('messages');
+    parent::__construct();
     $this->addMessages($aMessages);
   }
   
@@ -670,10 +669,18 @@ class Messages extends HTML_Tag {
    * @param $oMessage
    *   Message au format Message
    **/
+  public function addObjectMessages($oMessages, $sStatut = 'notice') {
+    
+    foreach ($oMessages as $oMessage) $this->addMessage(new Message($oMessage, $sStatut));
+  }
+  
   public function addMessage($oMessage) {
     
+    // dsp(Controler::getBacktrace());
+    // echo "'";
     // TODO: foreach ($oMessage->aArguments as $oArgument) $this->setArgument('fields'][ += $oMessage[]
-    $this->aMessages[$oMessage->getStatut()][] = $oMessage;
+    // $this->aMessages[$oMessage->getStatut()][] = $oMessage;
+    if ($oStatut = $this->get("//{$oMessage->getStatut()}")) $oStatut->add($oMessage);
   }
   
   /*
@@ -775,9 +782,15 @@ class Messages extends HTML_Tag {
   public function setAllowedMessages($aStatuts = array()) {
     
     $this->aAllowedMessages = $aStatuts;
+    $this->addArray($aStatuts);
   }
   
-  public function __toString() {
+  public function parse() {
+    
+    $oMessages = new HTML_Ul();
+    $oMessages->addClass('messages');
+    
+    //$oMessages->add(
     
     $aStatuts = array();
     
@@ -787,7 +800,7 @@ class Messages extends HTML_Tag {
         
         if (!isset($aStatuts[$sStatut])) {
           
-          $aStatuts[$sStatut] = new HTML_Tag('ul');
+          $aStatuts[$sStatut] = new HTML_Ul();
           $aStatuts[$sStatut]->setAttribute('id', 'messages');
           $aStatuts[$sStatut]->addClass('message-'.$sStatut);
         }
@@ -798,24 +811,25 @@ class Messages extends HTML_Tag {
     
     if ($aStatuts) {
       
-      $this->add($aStatuts);
-      return parent::__toString();
+      // $this->add($aStatuts);
+      return $this;
+      //return parent::parse();
       
-    } else return '';
+    } else return null;
   }
 }
 
 class Message extends HTML_Tag {
   
-  private $sMessage;
+  private $mMessage;
   private $sStatut;
   private $aArgs;
   
-  public function __construct($sMessage, $sStatut = 'notice', $aArgs = array()) {
+  public function __construct($mMessage, $sStatut = 'notice', $aArgs = array()) {
     
     parent::__construct('li');
     
-    $this->sMessage = $sMessage;
+    $this->mMessage = $mMessage;
     $this->sStatut = $sStatut;
     $this->aArgs = $aArgs;
   }
@@ -835,12 +849,12 @@ class Message extends HTML_Tag {
     return $this->aArgs;
   }
   
-  public function __toString() {
+  public function parse() {
     
-    $this->addChild($this->sMessage);
+    $this->add($this->mMessage);
     $this->addClass('message-'.$this->sStatut);
-    
-    return parent::__toString();
+    // echo $this->mMessage.'<br/>';
+    return parent::parse();
   }
 }
 

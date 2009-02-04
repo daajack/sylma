@@ -77,8 +77,8 @@ class HTML_Field extends XML_Action {
     if (array_key_exists('options', $aNode)) $oInput->setOptions($aNode['options'], $sValue);
     else $oInput->setValue($sValue);
     
-    if ($sId) $oInput->addAttribute('id', $sId);
-    if ($sName) $oInput->addAttribute('name', $sName);
+    if ($sId) $oInput->setAttribute('id', $sId);
+    if ($sName) $oInput->setAttribute('name', $sName);
     
     // Attribut Class
     
@@ -87,7 +87,7 @@ class HTML_Field extends XML_Action {
     // Tous les autres attributs
     
     if (array_key_exists('arguments', $aNode))
-      foreach($aNode['arguments'] as $sKey => $sVal) $oInput->addAttribute($sKey, $sVal);
+      foreach($aNode['arguments'] as $sKey => $sVal) $oInput->setAttribute($sKey, $sVal);
     
     if ($sInput == 'hidden') $this->add($oInput); // Pas de label pour les hidden
     else {
@@ -95,8 +95,8 @@ class HTML_Field extends XML_Action {
       // Label
       
       $oLabel = new HTML_Tag('label');
-      $oLabel->addAttribute('for', $sId);
-      if ($bMark) $oInput->addAttribute('onfocus', "this.style.color = 'black'");
+      $oLabel->setAttribute('for', $sId);
+      if ($bMark) $oInput->setAttribute('onfocus', "this.style.color = 'black'");
       
       foreach ($aClasses as $sClass) $oLabel->addClass($sClass);
       
@@ -214,8 +214,8 @@ class HTML_Field extends XML_Action {
     
     $this->setValue($sValue);
     
-    if ($sId = $this->getArgument('id')) $this->addAttribute('id', $sId);
-    if ($sName = $this->getArgument('name')) $this->addAttribute('name', $sName);
+    if ($sId = $this->getArgument('id')) $this->setAttribute('id', $sId);
+    if ($sName = $this->getArgument('name')) $this->setAttribute('name', $sName);
     
     // Titre du label
     
@@ -228,7 +228,7 @@ class HTML_Field extends XML_Action {
     
     // Tous les autres attributs
     
-    foreach($this->getArgument('arguments') as $sKey => $sVal) $oInput->addAttribute($sKey, $sVal);
+    foreach($this->getArgument('arguments') as $sKey => $sVal) $oInput->setAttribute($sKey, $sVal);
   }
   
   public function setArgument($sKey, $sValue) {
@@ -256,8 +256,8 @@ class HTML_Field extends XML_Action {
     // Label
     
     $oLabel = new HTML_Tag('label');
-    $oLabel->addAttribute('for', $sId);
-    if ($bMark) $oInput->addAttribute('onfocus', "this.style.color = 'black'");
+    $oLabel->setAttribute('for', $sId);
+    if ($bMark) $oInput->setAttribute('onfocus', "this.style.color = 'black'");
     
     foreach ($aClasses as $sClass) $oLabel->addClass($sClass);
     

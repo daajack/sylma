@@ -8,18 +8,17 @@ interface Main {
   public function setContent($mValue = '');
 }
 
-class Html extends XML_Action {
+class Html extends HTML_Document {
   
   public function __construct() {
     
     // $oTemplate = ;
     // $oTemplate->set($this->get('//html'));
+    parent::__construct('/html');
     
-    $oTemplate = $this->setBloc('template', new HTML_Document('/html'));
-    
-    $oTemplate->addJS('/web/global.js');
-    $oTemplate->addCSS('/web/global.css');
-    $oTemplate->addCSS('/web/main.css');
+    $this->addJS('/web/global.js');
+    $this->addCSS('/web/global.css');
+    $this->addCSS('/web/main.css');
     
     // Préparation / insertion des blocs
     
@@ -34,30 +33,30 @@ class Html extends XML_Action {
     
     if (Controler::getUser()->isReal()) {
       
-      $oUserInfo = $oTemplate->setBloc('user-info', new XML_Tag('div', '', array('id' => 'user-info')));
-      $oUserInfo->add(new XML_Tag('a', '/utilisateur/edit/'.Controler::getUser()->getArgument('id'), Controler::getUser()->getBloc('full_name')).' ('.implode(', ', Controler::getUser()->getRoles()).')');
+      $oUserInfo = new XML_Tag('div', '', array('id' => 'user-info'));
+      $oUserInfo->add(
+        new HTML_A('/utilisateur/edit/'.Controler::getUser()->getArgument('id'), Controler::getUser()->getBloc('full_name')),
+        ' ('.implode(', ', Controler::getUser()->getRoles()).')');
+      
+      $this->get("//div[@id='header']")->add($oUserInfo);
     }
     
     // Titre & menu
     
-    $oTemplate->get('//title')->set(SITE_TITLE);
-    $oTemplate->get("//div[@id='sidebar']")->add(new AccessMenu('menu-primary', $aMenuPrimary));
+    $this->get('//h1//span')->set(SITE_TITLE);
+    $this->get("//div[@id='sidebar']")->add(new AccessMenu('menu-primary', $aMenuPrimary));
     
     // Messages & contenu
     
-    $oContent = $this->setBloc('content', new HTML_Tag('div', '', array('id' => 'content')));
     $this->setBloc('content-title', new XML_Tag('h2'));
+    $this->setBloc('content', new HTML_Tag('div', '', array('id' => 'content')));
     
     $oMessages = Controler::getMessages();
     $oMessages->setAllowedMessages(array('notice', 'warning', 'success', 'error', '_report', 'query-new', 'query-old', '_system'));
-    $this->setBloc('message', $oMessages); // pointeur
-    // echo get_class($oContent);
-    // $oTemplate->get("//div[@id='center']")->add($oContent);
   }
   
   public function setContent($mValue = '') {
     
-    // $this->getBloc('template')->get("//div[@id='center']")->setBloc('action', $mValue);
     $this->setBloc('action', $mValue);
   }
   
@@ -65,11 +64,17 @@ class Html extends XML_Action {
     
     // Contenu
     
-    $this->getBloc('template')->get("//div[@id='center']")->add(
-      $this->getBloc('content-title'),
-      $this->getBloc('message'),
-      $this->getBloc('action'));
-    // echo htmlentities($this->getBloc('action'));
+    $this->get('//title')->add(SITE_TITLE, ' - ', $this->getBloc('content-title')->getValue());
+    
+    $oContent = $this->getBloc('content');
+    
+    if (Controler::getMessages()->getMessages()) $oContent->add(Controler::getMessages());
+    $oContent->add($this->getBloc('content-title'), $this->getBloc('action'));
+    
+    $this->get("//div[@id='center']")->add($oContent);
+    
+    // echo htmlentities($this->getBloc('message'));
+    
     // Infos système
     
     // $oMessages = new Messages(Controler::getMessages()->getMessages('system'));
@@ -84,8 +89,8 @@ class Html extends XML_Action {
     // Supression des messages système dans le panneau de messages principal
     
     // Controler::getMessages()->setMessages('system');
-    $this->getBloc('template')->getRoot()->setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-    return $this->getBloc('template')->__toString();
+    $this->getRoot()->setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+    return parent::__toString();
   }
 }
 
@@ -215,9 +220,10 @@ class Xml extends XML_Document implements Main {
   public function setContent($mValue = '') {
     
     header('Content-type: text/xml');
-    $this->loadText($mValue);
+    if (is_string($mValue)) $this->add($mValue);
+    else $this->set($mValue);
     
-    if (!$this->documentElement) $this->appendChild(new XML_Element('message', $mValue));
+    if (!$this->getRoot()) $this->appendChild(new XML_Element('message', $mValue));
   }
 }
 

@@ -10,7 +10,6 @@ class AccessMenu extends HTML_Ul {
     parent::__construct();
     
     $this->setAttribute('id', $sName);
-    
     foreach ($aItems as $sItem => $aItem) {
       
       if (is_array($aItem) && array_key_exists('display', $aItem) && Controler::checkAuthentication($sItem)) {
@@ -34,7 +33,7 @@ class Menu extends HTML_Ul {
   public function __construct($sName = 'defaut', $aItems = Array()) {
     
     parent::__construct();
-    $this->addAttribute('id', $sName);
+    $this->setAttribute('id', $sName);
     
     foreach ($aItems as $aItem) {
       
@@ -43,7 +42,7 @@ class Menu extends HTML_Ul {
         $oLink = new HTML_Tag('a');
         
         $oLink->addChild(t($aItem['display']));
-        $oLink->addAttribute('href', $aItem['href']);
+        $oLink->setAttribute('href', $aItem['href']);
         
         $this->addItem($oLink);
       }

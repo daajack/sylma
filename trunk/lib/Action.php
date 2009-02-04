@@ -125,8 +125,13 @@ class XML_Action extends XML_Document {
   
   public function getBloc($sKey) {
     
-    if (array_key_exists($sKey, $this->aBlocs)) return $this->aBlocs[$sKey];
-    else return null;
+    if (!array_key_exists($sKey, $this->aBlocs)) {
+      
+      $oBloc = new XML_Element;
+      $this->aBlocs[$sKey] = $oBloc;
+    }
+    
+    return $this->aBlocs[$sKey];
   }
   
   public function parse() {
@@ -153,7 +158,7 @@ class Action extends XML_Tag {
   public function __construct() {
     
     parent::__construct('div');
-    $this->addAttribute('id', 'action');
+    $this->setAttribute('id', 'action');
   }
   
   protected function setMode($sMode = '') {

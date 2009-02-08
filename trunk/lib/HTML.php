@@ -164,8 +164,8 @@ class HTML_Template extends HTML_Tag {
   private $sPath = '';
   private $aArguments = array();
   
-  public function __construct($sPath, $aArguments = array(), $sName = '') {
-    
+  public function __construct($sPath, $aArguments = array(), $sName = null) {
+    // echo $sName;
     parent::__construct($sName);
     
     $this->setTemplate($sPath);
@@ -218,7 +218,11 @@ class HTML_Template extends HTML_Tag {
       
       ob_start();
       include($this->getTemplate());
-      $this->addChild(ob_get_clean());
+      $oDocument = new XML_Document();
+      $text = ob_get_clean();
+      
+      $oDocument->loadText($text);
+      $this->add($oDocument);
       
     } else {
       

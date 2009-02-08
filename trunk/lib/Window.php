@@ -64,7 +64,7 @@ class Html extends HTML_Document {
     
     // Contenu
     
-    $this->get('//title')->add(SITE_TITLE, ' - ', $this->getBloc('content-title')->getValue());
+    $this->get('//title')->add(SITE_TITLE, ' - ', $this->getBloc('content-title')->read());
     
     $oContent = $this->getBloc('content');
     
@@ -73,8 +73,6 @@ class Html extends HTML_Document {
     
     $this->get("//div[@id='center']")->add($oContent);
     
-    // echo htmlentities($this->getBloc('message'));
-    
     // Infos système
     
     // $oMessages = new Messages(Controler::getMessages()->getMessages('system'));
@@ -82,8 +80,7 @@ class Html extends HTML_Document {
     
     // if (Controler::isAdmin() && $oMessages->hasMessages() && in_array('system', Controler::getMessages()->getAllowedMessages())) {
       
-      // $this->getBloc('system')->addChild(new HTML_Strong(t('Infos système')));
-      // $this->getBloc('system')->addChild($oMessages);
+      // $this->getBloc('system')->add(new HTML_Strong(t('Infos système')), $oMessages);
     // }
     
     // Supression des messages système dans le panneau de messages principal

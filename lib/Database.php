@@ -75,19 +75,21 @@ class db {
     $aResults = preg_replace(array_keys($aRemplacements), $aRemplacements, $aQueries);
     // echo htmlentities($aResults[0]);
     
-    foreach ($aResults as &$sResult) {
-      
-      $oDocument = new XML_Document;
-      $oDocument->loadText('<li>'.$sResult.'</li>');
-      $sResult = $oDocument->getRoot();
-    }
-    
     return $aResults;
   }
   
   public static function getQueries() {
     
-    return self::queryColorize(self::$aQueries);
+    $aResults = self::queryColorize(self::$aQueries);
+    
+    foreach ($aResults as &$oResult) {
+      
+      $oDocument = new XML_Document;
+      $oDocument->loadText('<div>'.$oResult.'</div>');
+      $oResult = new Message($oDocument->getRoot(), 'query-new');
+    }
+    
+    return $aResults;
   }
   
   public static function buildUpdate($aFields) {

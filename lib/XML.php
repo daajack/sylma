@@ -75,13 +75,24 @@ class XML_Document extends DOMDocument {
       
       // if Object else String
       if (is_object($mChildren)) $this->set($mChildren);
-      else if (is_string($mChildren)) {
-        
-        // if Path else Name
-        if ($mChildren[0] == '/') $this->loadDocument($mChildren, $sSource);
-        else $this->set(new XML_Element($mChildren, '', null, $this));
-      }
+      else if (is_string($mChildren)) $this->startString($mChildren, $sSource);
     }
+  }
+  public function dsp() {
+    
+    echo htmlentities($this);
+  }
+  public function startString($sString, $sSource = '') {
+    
+    // if Path else LoadText else Root
+    if ($sString{0} == '/') $this->loadDocument($sString, $sSource);
+    else if ($sString{0} == '<') $this->loadText($sString);
+    else $this->set(new XML_Element($sString, '', null, $this));
+  }
+  
+  public function createNode($sName, $oContent = '', $aAttributes = null) {
+    
+    return new XML_Element($sName, $oContent, $aAttributes, $this);
   }
   
   public function loadDocument($sPath = '', $sSource = '') {
@@ -127,6 +138,12 @@ class XML_Document extends DOMDocument {
     $this->load(MAIN_DIRECTORY.$sPath);
   }
   
+  public function getChildren() {
+    
+    if ($this->getRoot()) return $this->getRoot()->getChildren();
+    else return null;
+  }
+  
   public function loadText($sContent) {
     
     $this->loadXML($sContent);
@@ -144,10 +161,17 @@ class XML_Document extends DOMDocument {
    * Return a String from the result of the sQuery
    **/
   
-  public function read($sQuery, $sNamespace = '') {
+  public function read($sQuery = '', $sNamespace = '') {
     
-    $xPath = new DOMXPath($this);
-    return $this->queryString($xPath->evaluate($sQuery));
+    if ($this->getRoot()) {
+      if ($sQuery) {
+        
+        if ($this->getRoot()) return $this->getRoot()->read($sQuery, $sNamespace);
+        else return null;
+        
+      } else return $this->getRoot()->getValue();
+      
+    } else return null;
   }
   
   /*
@@ -156,7 +180,8 @@ class XML_Document extends DOMDocument {
   
   public function get($sQuery, $sNamespace = '') {
     
-    return $this->queryOne($this->query($sQuery));
+    if ($this->getRoot()) return $this->getRoot()->get($sQuery, $sNamespace);
+    else return null;
   }
   
   public function set() {
@@ -187,7 +212,7 @@ class XML_Document extends DOMDocument {
           
           // XML_Element
           
-          if ($this->getRoot()) $this->removeChildNode($this->getRoot());
+          if ($this->getRoot()) $this->removeChild($this->getRoot());
           
           if ($mValue->getDocument() && $mValue->getDocument() !== $this) {
             
@@ -202,13 +227,19 @@ class XML_Document extends DOMDocument {
         
         // If String load as XML String
         
-      } else if (is_string($mValue)) $this->loadText($mValue);
+      } else if (is_string($mValue)) $this->startString($mValue);
       
       return $mValue;
       
-    } else $this->removeChild($this->getRoot());
+    } else if ($this->getRoot()) $this->removeChild($this->getRoot());
     
     return null;
+  }
+  
+  public function addNode($sName, $oContent = '', $aAttributes = null) {
+    
+    if ($this->getRoot()) return $this->getRoot()->addNode($sName, $oContent, $aAttributes);
+    else return $this->appendChild($this->createNode($sName, $oContent, $aAttributes));
   }
   
   public function add() {
@@ -230,11 +261,8 @@ class XML_Document extends DOMDocument {
   
   public function addArray($aChildren) {
     
-    foreach ($aChildren as $sKey => $sValue) {
-      
-      if (!is_numeric($sKey)) $this->add(new XML_Element($sKey, $sValue));
-      else $this->add(new XML_Element($sValue));
-    }
+    if ($this->getRoot()) return $this->getRoot()->addArray($aChildren);
+    else return null;
   }
   
   public function importNode($oChild, $bDepth) {
@@ -251,25 +279,25 @@ class XML_Document extends DOMDocument {
   /*
    * Return a DOMNodeList from the result of the sQuery
    **/
-   
+  
   public function query($sQuery, $sNamespace = '') {
     
-    $xPath = new DOMXPath($this);
-    
-    if ($sNamespace) {
-      
-      $xPath->registerNamespace('m', 'http://www.w3.org/1999/xhtml');
-    }
-    
-    $mResult = $xPath->query($sQuery);
-    // ERROR : if (!$mResult) Pas de résultat dans la requête
-    //&& Controler::isAdmin()) Controler::addMessage("XPath [$sQuery] : Aucun résultat.", 'warning');
-    return new XML_NodeList($mResult);
+    if ($this->getRoot()) return $this->getRoot()->query($sQuery, $sNamespace);
+    else return null;
   }
   
   /*
    * Extract the first result of a DOMNodeList if possible
    **/
+   
+  public function queryArray($sQuery, $sNamespace = '') {
+    
+    $aResult = array();
+    $oResult = $this->query($sQuery);
+    foreach ($oResult as $oStatut) $aResult[] = $oStatut->read();
+    
+    return $aResult;
+  }
   
   public function queryOne($oCollection) {
     
@@ -292,11 +320,10 @@ class XML_Document extends DOMDocument {
     return (string) $mValue;
   }
   
-  public function parse($oTemplate) {
+  public function parseXSL($oTemplate) {
     
     $oStyleSheet = new XSLTProcessor();
-    $oStyleSheet->importStylesheet($oTemplate);
-    
+    $oStyleSheet->importStylesheet((object) $oTemplate);
     // Transformation et affichage du résultat
     
     $oResult = new XML_Document();
@@ -359,7 +386,7 @@ class XML_Text extends DOMText {
 }
 
 /*
- * Alias de XML_Element
+ * Alias of XML_Element
  **/
 
 class XML_Tag extends XML_Element { }
@@ -368,9 +395,12 @@ class XML_Element extends DOMElement {
   
   private $aChildren = array();
   
-  public function __construct($sName = 'default', $oContent = '', $aAttributes = array(), $oDocument = null) {
+  public function __construct($sName = '', $oContent = '', $aAttributes = array(), $oDocument = null) {
     
+    $sName = (string) $sName;
+    if (!$sName) $sName = 'default';
     parent::__construct($sName);
+    
     if (!$oDocument) $oDocument = new XML_Document();
     
     $oDocument->appendChild($this);
@@ -385,10 +415,33 @@ class XML_Element extends DOMElement {
     return $this->ownerDocument;
   }
   
-  public function read($sQuery) {
+  public function read($sQuery = '') {
     
-    $xPath = new DOMXPath($this->getDocument());
-    return $this->getDocument()->queryString($xPath->evaluate($sQuery, $this));
+    if ($sQuery) {
+      
+      $xPath = new DOMXPath($this->getDocument());
+      return $this->getDocument()->queryString($xPath->evaluate($sQuery, $this));
+      
+    } else if ($this->getValue()) return $this->getValue();
+    else return $this->getName();
+  }
+  
+  public function query($sQuery, $sNamespace = '') {
+    
+    if (is_string($sQuery) && $sQuery) {
+      
+      $xPath = new DOMXPath($this->getDocument());
+      $mResult = $xPath->query($sQuery, $this);
+      
+      return new XML_NodeList($mResult);
+      
+    } else {
+      echo 'Erreur de requête !';
+      echo new HTML_Div(Controler::getBacktrace());
+      exit;
+      return null;
+    // ERROR : if (!$mResult) Pas de résultat dans la requête
+    }
   }
   
   public function get($sQuery) {
@@ -476,29 +529,46 @@ class XML_Element extends DOMElement {
       if (is_object($mValue)) {
         
         /* XML_Element or XML_Text */
+        
         if ($mValue instanceof XML_Element || $mValue instanceof XML_Text) {
+          
+          /* XML_Element or XML_Text */
           
           $mValue = $this->addChild($mValue);
           
         } else if ($mValue instanceof XML_Attribute) {
           
+          /* XML_Attribute */
+          
           $mValue = $this->addAttribute($mValue);
           
         } else if ($mValue instanceof XML_Document) {
           
-          if ($mValue instanceof XML_Action) $mValue = $mValue->parse();
+          if ($mValue instanceof XML_Action) {
+            
+            /* XML_Action */
+            
+            $mValue = $mValue->parse();
+            
+            // If result is not a doc
+            if (!($mValue instanceof XML_Document)) return $this->add($mValue);
+          }
           
           /* XML_Document */
           
-          // TODO : Ajout des XMLNS
+          // TODO : add XMLNS
+          
           if ($mValue->getRoot()) $mValue = $this->addChild($mValue->getRoot());
           else $mValue = null;
           
-          /* Undefined object (Forced String) */
           
         } else if ($mValue instanceof XML_NodeList) {
           
+          /* XML_NodeList */
+          
           foreach ($mValue as $oChild) $this->add($oChild);
+          
+          /* Undefined object (Forced String) */
           
         } else $mValue = $this->addText($mValue);
         
@@ -555,6 +625,24 @@ class XML_Element extends DOMElement {
     return $oChild;
   }
   
+  public function addNode($sName, $oContent = '', $aAttributes = null) {
+    
+    return $this->appendChild($this->getDocument()->createNode($sName, $oContent, $aAttributes));
+  }
+  
+  public function addArray($aChildren) {
+    
+    $aResult = array();
+    
+    foreach ($aChildren as $sKey => $sValue) {
+      
+      if (!is_numeric($sKey)) $aResult[] = $this->addNode($sKey, $sValue);
+      else $aResult[] = $this->addNode($sValue);
+    }
+    
+    return $aResult;
+  }
+  
   public function addText($sValue) {
     
     if ($sValue) {
@@ -566,19 +654,29 @@ class XML_Element extends DOMElement {
     } else return $sValue;
   }
   
+  public function getChildren() {
+    
+    return new XML_NodeList($this->childNodes);
+  }
+  
+  public function isEmpty() {
+    
+    return !$this->hasChildNodes();
+  }
+  
+  public function getName() {
+    
+    return $this->nodeName;
+  }
+  
   public function getValue() {
     
     return $this->textContent;
   }
   
-  public function query($sQuery) {
+  public function remove() {
     
-    $xPath = new DOMXPath($this->getDocument());
-    
-    $mResult = $xPath->query($sQuery, $this);
-    
-    // ERROR : if (!$mResult) Pas de résultat dans la requête
-    return new XML_NodeList($mResult);
+    return $this->getDocument()->removeChild($this);
   }
   
   public function implode($sSep, $cChildren) {

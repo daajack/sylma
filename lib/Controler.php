@@ -91,7 +91,6 @@ class Controler {
     self::addMessage(new HTML_Strong(t('Action').' : ').self::getClassName().'::'.self::getOperationName().'()', 'system');
     
     self::addMessage(new HTML_Strong(t('Date & heure').' : ').date('j M Y').' - '.date('H:i'), 'system');
-    
     self::addMessage(new HTML_Strong(t('Messages').' : ').implode(', ', self::getMessages()->getAllowedMessages()), 'system');
     
     // Redirection ou ajout du contenu
@@ -110,7 +109,7 @@ class Controler {
       self::getWindow()->setContent($oResult);
     }
     
-    if (self::isAdmin()) self::getMessages()->addObjectMessages(db::getQueries(), 'query-new');
+    if (self::isAdmin()) self::getMessages()->addMessages(db::getQueries());
     return self::getWindow();
   }
   
@@ -172,16 +171,27 @@ class Controler {
     
     $aBacktrace = array(); $aLines = array(); $i = 0;
     
-    foreach (debug_backtrace() as $aLine) $aLines[] = $aLine['line'];
+    foreach (debug_backtrace() as $aLine) {
+      
+      if (isset($aLine['line'])) $aLines[] = $aLine['line'];
+      else $aLines[] = 'k';
+    }
+    
     $aLines[] = 'x';
     
     foreach (debug_backtrace() as $aTrace) {
-      $aBacktrace[] = strrchr($aTrace['file'], DIRECTORY_SEPARATOR)."::{$aTrace['class']}::{$aTrace['function']}() [{$aLines[$i]}]";
+      
+      if (isset($aTrace['file'])) $sFile = strrchr($aTrace['file'], DIRECTORY_SEPARATOR);
+      else $sFile = 'xxx';
+      
+      if (isset($aTrace['class'])) $sClass = "::{$aTrace['class']}";
+      else $sClass = '';
+      
+      $aBacktrace[] = new HTML_Div($sFile.$sClass."::{$aTrace['function']}() [{$aLines[$i]}]");
       $i++;
     }
-    self::addMessage(new HTML_Strong(t('Backtrace').' : ').implode('<br/>', $aBacktrace), $sStatut);
-    
-    return implode('<br/>', $aBacktrace);
+    // self::addMessage(new HTML_Strong(t('Backtrace').' : ').implode('<br/>', $aBacktrace), $sStatut);
+    return $aBacktrace;
   }
   
   public static function loadRedirect() {
@@ -200,7 +210,13 @@ class Controler {
       if (get_class($oRedirect) == 'Redirect') {
         // dsp($oRedirect->getMessages()->getMessages());
         $oRedirect->setReal();
-        self::getMessages()->addMessages($oRedirect->getMessages()->getMessages());
+        
+        $oMessages = new XML_Document;
+        $oMessages->loadText($oRedirect->getArgument('messages'));
+        $aMessages = $oMessages->query('message');
+        $oRedirect->resetMessages($aMessages);
+        
+        if ($aMessages->length) self::getMessages()->addMessages($aMessages);
         
       } else {
         
@@ -311,11 +327,12 @@ class Controler {
     
     // Suppression des infos système
     
-    $oRedirect->getMessages()->setMessages('system');
+    if ($oSystem = $oRedirect->getMessages()->get('system')) $oSystem->remove();
     
     // Ajout des messages requêtes si admin
     
-    if (self::isAdmin()) $oRedirect->getMessages()->addObjectMessages(db::getQueries(), 'query-old');
+    if (self::isAdmin()) $oRedirect->getMessages()->addMessages(db::getQueries());
+    $oRedirect->setArgument('messages', $oRedirect->getMessages()->saveXML());
     
     // $oRedirect->setSource(Controler::getPath());
     
@@ -518,7 +535,7 @@ class Redirect {
   
   public function __construct($sPath = '/', $mMessage = array(), $aArguments = array()) {
     
-    $this->oMessages = new Messages();
+    $this->resetMessages();
     
     if ($mMessage) {
       
@@ -547,6 +564,11 @@ class Redirect {
   public function getArguments() {
     
     return $this->aArguments;
+  }
+  
+  public function resetMessages($aMessages = array()) {
+    
+    $this->oMessages = new Messages($aMessages);
   }
   
   public function getMessages($sStatut = null) {
@@ -656,31 +678,33 @@ class URL {
 class Messages extends XML_Action {
   
   private $aMessages = array(); // de type 'mode' => array() mode = notice, warning, error, ...
+  private $aAllowedMessages = array();
   
   public function __construct($aMessages = array()) {
     
-    parent::__construct();
-    $this->addMessages($aMessages);
-  }
-  
-  /*
-   * Ajoute un message dans la pile
-   * 
-   * @param $oMessage
-   *   Message au format Message
-   **/
-  public function addObjectMessages($oMessages, $sStatut = 'notice') {
+    parent::__construct('messages');
+    $this->setBloc('messages-all', new XML_Document('messages'));
     
-    foreach ($oMessages as $oMessage) $this->addMessage(new Message($oMessage, $sStatut));
+    $this->addMessages($aMessages);
   }
   
   public function addMessage($oMessage) {
     
-    // dsp(Controler::getBacktrace());
-    // echo "'";
     // TODO: foreach ($oMessage->aArguments as $oArgument) $this->setArgument('fields'][ += $oMessage[]
     // $this->aMessages[$oMessage->getStatut()][] = $oMessage;
-    if ($oStatut = $this->get("//{$oMessage->getStatut()}")) $oStatut->add($oMessage);
+    if ($oMessage) {
+      
+      $sStatut = $oMessage->read('statut');
+      
+      // Add the stat if not exists
+      
+      if (!$oAllStatut = $this->getBloc('messages-all')->get($sStatut)) $oAllStatut = $this->getBloc('messages-all')->addNode($sStatut);
+      $oAllStatut->add($oMessage);
+      
+      // Add in ze main doc
+      // echo $this;
+      if (in_array($sStatut, $this->getAllowedMessages())) $this->get($sStatut)->add($oMessage);
+    }
   }
   
   /*
@@ -708,18 +732,6 @@ class Messages extends XML_Action {
   }
   
   /*
-   * Ajoute une liste de messages dans la pile
-   * 
-   * @param $aMessages
-   *   Un tableau contenant les messages à ajouter au format String
-   **/
-  public function addStringMessages($aMessages, $sStatut = 'notice', $aArgs = array()) {
-    
-    foreach ($aMessages as $sMessage) $this->addMessage(new Message($sMessage, $sStatut, $aArgs));
-    return $aMessages;
-  }
-  
-  /*
    * Récupère les messages sous forme de liste
    * 
    * @param $sStatut
@@ -727,51 +739,23 @@ class Messages extends XML_Action {
    **/
   public function getMessages($sStatut = null) {
     
-    $aResult = array();
-    
     if ($sStatut) {
       
-      if (isset($this->aMessages[$sStatut]))
-        foreach ($this->aMessages[$sStatut] as $oMessage) $aResult[] = clone $oMessage;
+      $aResult = $this->query("$sStatut/*");
       
     } else {
       
-      foreach ($this->aMessages as $sStatut => $aMessages)
-        foreach ($aMessages as $oMessage) $aResult[] = clone $oMessage;
+      $aResult = $this->query("//message");
     }
+    
+    if (!$aResult->length) $aResult = array();
     
     return $aResult;
   }
   
   public function hasMessages($sStatut = null) {
     
-    $iCount = 0;
-    
-    if ($sStatut) {
-      
-      if (isset($this->aMessages[$sStatut])) $iCount = count($this->aMessages[$sStatut]);
-      else $iCount = null;
-      
-    } else foreach ($this->aMessages as $aStatut) $iCount += count($aStatut);
-    
-    return $iCount;
-  }
-  
-  public function setMessages($sStatut = '', $mMessages = array()) {
-      
-      $aMessages = array();
-      
-      // Transformation de la valeur en tableau
-      if (is_array($mMessages)) $aMessages = $mMessages;
-      else if ($mMessages) $aMessages = array($mMessages);
-      
-      if (is_string($sStatut) && $sStatut) $this->aMessages[$sStatut] = $aMessages;
-      else $this->aMessages = $aMessages;
-  }
-  
-  public function getArguments($sKey) {
-    
-    
+    return $this->getMessages($sStatut);
   }
   
   public function getAllowedMessages() {
@@ -782,79 +766,53 @@ class Messages extends XML_Action {
   public function setAllowedMessages($aStatuts = array()) {
     
     $this->aAllowedMessages = $aStatuts;
+    
+    // Add allowed statuts in docs
     $this->addArray($aStatuts);
+    $this->getBloc('messages-all')->add($this->getChildren());
   }
   
   public function parse() {
+    $res = $this->parseXSL(new XML_Document('/messages.xsl'));
+    // echo $this;
+    // echo '<br/>-----<br/>';
+    // echo $res;
+    return $res;
     
-    $oMessages = new HTML_Ul();
-    $oMessages->addClass('messages');
+    $oResult = new HTML_Div;
+    $oResult->addClass('messages');
     
-    //$oMessages->add(
-    
-    $aStatuts = array();
-    
-    foreach ($this->aMessages as $sStatut => $aMessages) {
+    foreach ($this->query('*') as $oStatut) {
       
-      if (in_array($sStatut, $this->getAllowedMessages()) && $aMessages) {
+      if (!$oStatut->isEmpty()) {
         
-        if (!isset($aStatuts[$sStatut])) {
+        $oContainer = new HTML_Ul();
+        // $oStatut->setAttribute('id', 'messages');
+        $oContainer->addClass('message-'.$oStatut->getName());
+        
+        foreach ($oStatut->query('*') as $oMessage) {
           
-          $aStatuts[$sStatut] = new HTML_Ul();
-          $aStatuts[$sStatut]->setAttribute('id', 'messages');
-          $aStatuts[$sStatut]->addClass('message-'.$sStatut);
+          $oItem = new HTML_Tag('li', $oMessage->get('content/*'));
+          $oContainer->add($oItem);
         }
         
-        foreach ($aMessages as $oMessage) $aStatuts[$sStatut]->add($oMessage);
+        $oResult->add($oContainer);
       }
     }
     
-    if ($aStatuts) {
-      
-      // $this->add($aStatuts);
-      return $this;
-      //return parent::parse();
-      
-    } else return null;
+    return $oResult;
   }
 }
 
 class Message extends HTML_Tag {
   
-  private $mMessage;
-  private $sStatut;
-  private $aArgs;
-  
   public function __construct($mMessage, $sStatut = 'notice', $aArgs = array()) {
     
-    parent::__construct('li');
+    parent::__construct('message');
     
-    $this->mMessage = $mMessage;
-    $this->sStatut = $sStatut;
-    $this->aArgs = $aArgs;
-  }
-  
-  public function getStatut() {
-    
-    return $this->sStatut;
-  }
-  
-  public function getArgument($sKey) {
-    
-    return (isset($this->aArgs[$sKey])) ? $this->aArgs[$sKey] : false;
-  }
-  
-  public function getArguments() {
-    
-    return $this->aArgs;
-  }
-  
-  public function parse() {
-    
-    $this->add($this->mMessage);
-    $this->addClass('message-'.$this->sStatut);
-    // echo $this->mMessage.'<br/>';
-    return parent::parse();
+    $this->addNode('content', $mMessage);
+    $this->addNode('statut', $sStatut);
+    $this->addNode('arguments')->addArray($aArgs);
   }
 }
 

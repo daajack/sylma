@@ -49,8 +49,8 @@ class HTML_Form extends XML_Action {
     if ($oMessages) {
       
       foreach ($oMessages->getMessages() as $oMessage) {
-        
-        if ($aFields = $oMessage->getArgument('field')) {
+        dsp($oMessages->getMessages());
+        if ($aFields = $oMessage->get('arguments/field')) {
           
           if (!is_array($aFields)) $aFields = array($aFields);
           foreach ($aFields as $sField) $aMessages[$sField] = $oMessage;
@@ -177,12 +177,14 @@ class HTML_AJAX_Form extends HTML_Form {
     
     parent::__construct('', $oChild, $aAttributes);
     
-    $this->addStyle('display', 'none');
-    $this->addClass('ajax-container');
-    $this->setAttribute('id' , $sId.'-container');
-    $this->setAttribute('name' , $sId.'-container');
-    $this->setAttribute('style');
-    $this->setAttribute('onsubmit', "return window.getAJAX('$sId').submit();");
+    $oForm = $this->getBloc('form');
+    
+    $oForm->addStyle('display', 'none');
+    $oForm->addClass('ajax-container');
+    $oForm->setAttribute('id' , $sId.'-container');
+    $oForm->setAttribute('name' , $sId.'-container');
+    $oForm->setAttribute('style', '');
+    $oForm->setAttribute('onsubmit', "return window.getAJAX('$sId').submit();");
   }
 }
 

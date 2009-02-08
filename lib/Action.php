@@ -12,7 +12,7 @@ class XML_Action extends XML_Document {
   
   public function __construct($sPath = '', $oRedirect = null, $sSource = '') {
     
-    parent::__construct($sPath, $oRedirect, $sSource );
+    parent::__construct($sPath, '', $sSource);
     
     $this->setRedirect($oRedirect);
     $this->setPath($sPath);
@@ -141,7 +141,7 @@ class XML_Action extends XML_Document {
     
     if (!$oDocument->isEmpty()) {
       
-      if (!$oTemplate->isEmpty()) $oResult = $oDocument->parse($oTemplate);
+      if (!$oTemplate->isEmpty()) $oResult = $oDocument->parseXSL($oTemplate);
       else $oResult = $oDocument;
       
       return $oResult;

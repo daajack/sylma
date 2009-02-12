@@ -44,12 +44,11 @@ class HTML_Form extends XML_Action {
     $aMessages = array();
     
     // Récupération des références dans les messages
-    // dsp($aValues);
     
     if ($oMessages) {
       
       foreach ($oMessages->getMessages() as $oMessage) {
-        dsp($oMessages->getMessages());
+        
         if ($aFields = $oMessage->get('arguments/field')) {
           
           if (!is_array($aFields)) $aFields = array($aFields);

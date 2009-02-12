@@ -204,7 +204,7 @@ class HTML_Template extends HTML_Tag {
   public function setTemplate($sPath = '') {
     
     if (!$sPath) return false;
-    else if ($sPath[0] == '/') $sPath = substr($sPath, 1);
+    else if ($sPath[0] != '/') $sPath = '/'.$sPath;
     
     $sPath .= '.tpl.php';
     
@@ -272,9 +272,15 @@ class HTML_Document extends XML_Action {
     // echo $oRoot;
     // return $doc->saveXML();
     
-    $sDocType = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
-    $this->formatOutput = true;
-    return $sDocType."\n".parent::__toString();
+    if ($this->getRoot()) {
+      
+      $this->getRoot()->setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+      
+      $sDocType = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
+      $this->formatOutput = true;
+      return $sDocType."\n".parent::__toString();
+      
+    } else return parent::__toString();
   }
 }
 

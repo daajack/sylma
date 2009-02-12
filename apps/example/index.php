@@ -40,6 +40,5 @@ db::connect();
 
 $sError = set_error_handler("userErrorHandler");
 
-if (DEBUG) echo Controler::getMessages();
+// if (DEBUG) echo Controler::getMessages();
 echo Controler::trickMe('intervention', 'home');
-

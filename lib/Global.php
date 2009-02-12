@@ -53,6 +53,13 @@ function formatPrice($fNumber) {
   else return '';
 }
 
+function stringResume($sValue, $iLength = 50) {
+  
+  $sValue = (string) $sValue;
+  if (strlen($sValue) > $iLength) return substr($sValue, 0, $iLength).'...';
+  else return $sValue;
+}
+
 /*
  * Fusionne les clés et les valeurs en insérant une chaîne de séparation
  **/

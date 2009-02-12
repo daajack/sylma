@@ -11,9 +11,9 @@
       self::$oMessages = new Messages(array('error', 'warning'));
     }
     
-    public static function addMessage($mValue, $sStatut) {
+    public static function addMessage($mValue, $sStatut = 'notice', $aArguments = array()) {
       
-      Controler::addMessage($mValue, $sStatut);
+      if (Controler::isReady() && Controler::isAdmin()) Controler::addMessage(array('XML : ', $mValue, Controler::getBacktrace()), $sStatut, $aArguments);
     }
   }
   

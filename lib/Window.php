@@ -35,7 +35,8 @@ class Html extends HTML_Document {
       
       $oUserInfo = new XML_Tag('div', '', array('id' => 'user-info'));
       $oUserInfo->add(
-        new HTML_A('/utilisateur/edit/'.Controler::getUser()->getArgument('id'), Controler::getUser()->getBloc('full_name')),
+        new HTML_A('/utilisateur/edit/'.Controler::getUser()->getArgument('id'),
+          Controler::getUser()->getBloc('full_name')),
         ' ('.implode(', ', Controler::getUser()->getRoles()).')');
       
       $this->get("//div[@id='header']")->add($oUserInfo);
@@ -61,10 +62,9 @@ class Html extends HTML_Document {
     
     // Infos système
     
-    $oMessages = new Messages(array('system'));
-    $oMessages->addMessages(Controler::getMessages()->getMessages('system'));
-    
-    if (Controler::isAdmin() && $oMessages->hasMessages('system') && in_array('system', Controler::getMessages()->getAllowedMessages())) {
+    if (Controler::isAdmin() && $oXMessages = Controler::getMessages()->getBloc('allowed')->get('//system/*')) {
+      
+      $oMessages = new Messages(array('system'), Controler::getMessages()->getMessages('system'));
       
       $oSystem = new HTML_Div(new HTML_Strong(t('Infos système')));
       $oSystem->addStyle('margin', '5px');
@@ -77,8 +77,7 @@ class Html extends HTML_Document {
     
     // Supression des messages système dans le panneau de messages principal
     
-    if (in_array('system', Controler::getMessages()->getAllowedMessages()))
-      Controler::getMessages()->getBloc('allowed')->get('//system')->remove();
+    Controler::getMessages()->getBloc('allowed')->get('//system')->remove();
     
     // Contenu
     
@@ -86,7 +85,7 @@ class Html extends HTML_Document {
     
     $oContent = $this->getBloc('content');
     
-    if (Controler::getMessages()->getMessages()) $oContent->add(Controler::getMessages());
+    $oContent->add(Controler::getMessages());
     $oContent->add($this->getBloc('content-title'), $this->getBloc('action'));
     
     $this->get("//div[@id='center']")->add($oContent);
@@ -230,7 +229,7 @@ class Xml extends XML_Document implements Main {
   public function setContent($mValue = '') {
     
     header('Content-type: text/xml');
-    if (is_string($mValue)) $this->add($mValue);
+    if (is_string($mValue)) $this->addNode('root', $mValue);
     else $this->set($mValue);
     
     if (!$this->getRoot()) $this->appendChild(new XML_Element('message', $mValue));

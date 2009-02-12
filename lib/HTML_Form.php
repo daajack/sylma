@@ -49,10 +49,8 @@ class HTML_Form extends XML_Action {
       
       foreach ($oMessages->getMessages() as $oMessage) {
         
-        if ($aFields = $oMessage->get('arguments/field')) {
-          
-          if (!is_array($aFields)) $aFields = array($aFields);
-          foreach ($aFields as $sField) $aMessages[$sField] = $oMessage;
+        if ($aFields = $oMessage->query('arguments/field')) {
+          foreach ($aFields as $oField) $aMessages[$oField->read()] = $oMessage;
         }
       }
     }

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<controler xmlns:li="http://www.lemon.ch/sylma/include" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <debug>true</debug>
+  <window content-type="text/html" name="window">
+    <html>
+      <template>
+        <xi:include href="html.xml"/>
+      </template>
+    </html>
+    <redirection/>
+    <form/>
+    <popup/>
+    <xml content-type="text/xml"/>
+    <simple/>
+  </window>
+  <directory>
+    <protected/>
+    <web/>
+    <temp/>
+  </directory>
+  <messages>
+    <allowed>success,error,warning,notice,_report,query-old,query-new,system</allowed>
+    <class>
+      <name>Messages</name>
+      <method>
+        <name>setAllowedMessages</name>
+        <arguments/>
+      </method>
+    </class>
+  </messages>
+  <actions window="html" direct-call="true">
+    <action>
+      <path>menus</path>
+      <class>
+        <file>Divers.php</file>
+        <name>accessMenu</name>
+        <arguments>
+          <id>menu-primary</id>
+        </arguments>
+      </class>
+    </action>
+    <test action="html">
+      <class>
+        <file>action/Test.php</file>
+        <name>Test</name>
+      </class>
+      <method>actionEditeur</method>
+      <query id="test"/>
+      <actions window="xml">
+        <jquery_load/>
+        <jquery_save/>
+        <jquery_backup/>
+      </actions>
+    </test>
+    <test_xml/>
+    <utilisateur>
+      <infos direct-call="false"/>
+    </utilisateur>
+    <client>
+      <class file="">Test_xml</class>
+      <schema/>
+      <template/>
+    </client>
+    <projet li:source="db">[auto]</projet>
+  </actions>
+</controler>

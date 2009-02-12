@@ -11,7 +11,7 @@ class Controler {
   private static $aArguments = array();
   private static $aRights = array();
   
-  private static $aAllowedWindowType = array('popup', 'html', 'form', 'simple', 'xml');
+  private static $aAllowedWindowType = array();
   private static $sWindowType = 'html';
   
   private static $oWindow;
@@ -69,29 +69,73 @@ class Controler {
     
     $oMessage = new HTML_Strong(t('Authentification').' : ');
     
-    if (self::getUser()->isReal()) self::addMessage($oMessage.self::getUser()->getBloc('full_name'), 'system');
-    else self::addMessage($oMessage.''.new HTML_Tag('em', t('- aucun -')), 'system');
+    if (self::getUser()->isReal()) {
+      
+      self::addMessage(array(
+        $oMessage,
+        self::getUser()->getBloc('full_name')), 'system');
+      
+    } else {
+      
+      self::addMessage(array(
+        $oMessage, 
+        new HTML_Tag('em', t('- aucun -'))), 'system');
+    }
     
     if (self::getUser()->isReal()) {
       
       $oMessage = new HTML_Strong(t('Rôle(s)').' : ');
       
-      if (self::getUser()->getRoles()) self::addMessage($oMessage.implode(', ', self::getUser()->getRoles()), 'system');
-      else self::addMessage($oMessage.new HTML_Tag('em', t('- aucun -')), 'system');
+      if (self::getUser()->getRoles()) {
+        
+        self::addMessage(array(
+          $oMessage,
+          implode(', ', self::getUser()->getRoles())), 'system');
+          
+      } else {
+        
+        self::addMessage(array(
+          $oMessage,
+          new HTML_Tag('em', t('- aucun -'))), 'system');
+      }
     }
     
-    self::addMessage(new HTML_Strong(t('Adresse').' : ').self::getAction(), 'system');
+    self::addMessage(array(
+      new HTML_Strong(t('Adresse').' : '),
+      self::getAction()), 'system');
     
     $oMessage = new HTML_Strong(t('Redirection').' : ');
     
-    if ($oRedirect->isReal()) self::addMessage($oMessage.$oRedirect->getSource(), 'system');
-    else self::addMessage($oMessage.new HTML_Tag('em', t('- aucun -')), 'system');
+    if ($oRedirect->isReal()) {
+      
+      self::addMessage(array(
+        $oMessage, 
+        $oRedirect->getSource()), 'system');
+      
+    } else {
+      
+      self::addMessage(array(
+        $oMessage,
+        new HTML_Tag('em', t('- aucun -'))), 'system');
+    }
     
-    self::addMessage(new HTML_Strong(t('Fenêtre').' : ').self::getWindowType(), 'system');
-    self::addMessage(new HTML_Strong(t('Action').' : ').self::getClassName().'::'.self::getOperationName().'()', 'system');
+    self::addMessage(array(
+      new HTML_Strong(t('Fenêtre').' : '), 
+      self::getWindowType()), 'system');
     
-    self::addMessage(new HTML_Strong(t('Date & heure').' : ').date('j M Y').' - '.date('H:i'), 'system');
-    self::addMessage(new HTML_Strong(t('Messages').' : ').implode(', ', self::getMessages()->getAllowedMessages()), 'system');
+    self::addMessage(array(
+      new HTML_Strong(t('Action').' : '),
+      self::getClassName(),
+      '::',
+      self::getOperationName().'()'), 'system');
+    
+    self::addMessage(array(
+      new HTML_Strong(t('Date & heure').' : '),
+      date('j M Y').' - '.date('H:i')), 'system');
+    
+    self::addMessage(array(
+      new HTML_Strong(t('Messages').' : '),
+      implode(', ', self::getMessages()->getAllowedMessages())), 'system');
     
     // Redirection ou ajout du contenu
     
@@ -99,14 +143,14 @@ class Controler {
       
       // Redirection
       
-      if (self::isWindowType('html')) self::doHTTPRedirect($oResult);
+      if (self::isWindowType('html') || self::isWindowType('redirection')) self::doHTTPRedirect($oResult);
       else self::doAJAXRedirect($oResult);
       
     } else {
       
       // Affichage
       
-      self::getWindow()->setContent($oResult);
+      $oContent = self::getWindow()->setContent($oResult);
     }
     
     if (self::isAdmin()) self::getMessages()->addMessages(db::getQueries());
@@ -115,15 +159,15 @@ class Controler {
   
   public static function loadSettings() {
     
-    // $oSettings = new XML_Action('/');
+    $oSettings = new XML_Document('/xml/root.xml', 'file');
     
+    self::$oMessages = new Messages(explode(',', $oSettings->read('//messages/allowed')));
+    self::setReady();
     
+    self::$aAllowedWindowType = $oSettings->query('//window/*')->toArray('name');
   }
   
   public static function loadContext($sDefaultModule, $sDefaultAction) {
-    
-    self::$oMessages = new Messages();
-    self::setReady();
     
     $aArguments = array();
     
@@ -169,9 +213,11 @@ class Controler {
   
   public static function getBacktrace($sStatut = 'system') {
     
-    $aBacktrace = array(); $aLines = array(); $i = 0;
+    $aResult = array(); $aLines = array(); $i = 0;
+    $aBackTrace = debug_backtrace();
+    array_shift($aBackTrace);
     
-    foreach (debug_backtrace() as $aLine) {
+    foreach ($aBackTrace as $aLine) {
       
       if (isset($aLine['line'])) $aLines[] = $aLine['line'];
       else $aLines[] = 'k';
@@ -179,19 +225,19 @@ class Controler {
     
     $aLines[] = 'x';
     
-    foreach (debug_backtrace() as $aTrace) {
+    foreach ($aBackTrace as $aTrace) {
       
-      if (isset($aTrace['file'])) $sFile = strrchr($aTrace['file'], DIRECTORY_SEPARATOR);
+      if (isset($aTrace['file'])) $sFile = new HTML_Tag('u', strrchr($aTrace['file'], DIRECTORY_SEPARATOR));
       else $sFile = 'xxx';
       
       if (isset($aTrace['class'])) $sClass = "::{$aTrace['class']}";
       else $sClass = '';
       
-      $aBacktrace[] = new HTML_Div($sFile.$sClass."::{$aTrace['function']}() [{$aLines[$i]}]");
+      $aResult[] = new HTML_Div(array("[{$aLines[$i]}] ", $sFile, $sClass, "::{$aTrace['function']}()"));
       $i++;
     }
-    // self::addMessage(new HTML_Strong(t('Backtrace').' : ').implode('<br/>', $aBacktrace), $sStatut);
-    return $aBacktrace;
+    // self::addMessage(new HTML_Strong(t('Backtrace').' : ').implode('<br/>', $aResult), $sStatut);
+    return new XML_NodeList($aResult);
   }
   
   public static function loadRedirect() {
@@ -208,12 +254,13 @@ class Controler {
       // Récupération des messages du Redirect et suppression
       
       if (get_class($oRedirect) == 'Redirect') {
-        // dsp($oRedirect->getMessages()->getMessages());
+        
         $oRedirect->setReal();
         
         $oMessages = new XML_Document;
         $oMessages->loadText($oRedirect->getArgument('messages'));
-        $aMessages = $oMessages->query('message');
+        $aMessages = $oMessages->query('//message');
+        
         $oRedirect->resetMessages($aMessages);
         
         if ($aMessages->length) self::getMessages()->addMessages($aMessages);
@@ -235,7 +282,7 @@ class Controler {
     $sPath = "action/$sClassName.php";
     
     if (file_exists(self::getDirectory().$sPath)) include_once($sPath);
-    else if (self::isAdmin()) self::addMessage(sprintf(t('Fichier "%s" introuvable !'), $sPath));
+    else if (self::isAdmin()) self::addMessage(sprintf(t('Fichier "%s" introuvable !'), $sPath), 'warning');
     
     // Contrôle de l'existence de la classe et de l'opération
     
@@ -323,7 +370,7 @@ class Controler {
     
     // Récupération et ajout dans le Redirect des messages en attente
     
-    $oRedirect->getMessages()->addMessages(self::getMessages()->getMessages());
+    $oRedirect->getMessages()->addMessages(self::getMessages()->query('//message'));
     
     // Suppression des infos système
     
@@ -331,7 +378,8 @@ class Controler {
     
     // Ajout des messages requêtes si admin
     
-    if (self::isAdmin()) $oRedirect->getMessages()->addMessages(db::getQueries());
+    if (self::isAdmin()) $oRedirect->getMessages()->addMessages(db::getQueries('old'));
+    
     $oRedirect->setArgument('messages', $oRedirect->getMessages()->saveXML());
     
     // $oRedirect->setSource(Controler::getPath());
@@ -373,6 +421,7 @@ class Controler {
     if (array_key_exists('user', $_SESSION)) {
       
       self::addMessage(t('Session existante'), 'report');
+      
       $oUser = unserialize($_SESSION['user']);
       
       // Récupération des messages du Redirect et suppression
@@ -535,14 +584,7 @@ class Redirect {
   
   public function __construct($sPath = '/', $mMessage = array(), $aArguments = array()) {
     
-    $this->resetMessages();
-    
-    if ($mMessage) {
-      
-      if (is_array($mMessage)) $this->addMessages($mMessage);
-      else if (is_string($mMessage)) $this->addMessage($mMessage);
-      else $this->getMessages()->addMessage($mMessage);
-    }
+    $this->resetMessages($mMessage);
     
     $this->setPath($sPath);
     $this->aArguments = $aArguments;
@@ -568,19 +610,14 @@ class Redirect {
   
   public function resetMessages($aMessages = array()) {
     
-    $this->oMessages = new Messages($aMessages);
+    $this->oMessages = new Messages(Controler::getMessages()->getAllowedMessages());
+    $this->getMessages()->addMessage($aMessages);
   }
   
   public function getMessages($sStatut = null) {
     
     if ($sStatut) return $this->oMessages->getMessages($sStatut);
     else return $this->oMessages;
-  }
-  
-  public function addMessages($aMessages) {
-    
-    $this->oMessages->addMessages($aMessages);
-    return $aMessages;
   }
   
   public function addMessage($sMessage = '- message vide -', $sStatut = 'notice', $aArguments = array()) {
@@ -677,45 +714,70 @@ class URL {
 
 class Messages extends XML_Action {
   
-  private $aMessages = array(); // de type 'mode' => array() mode = notice, warning, error, ...
   private $aAllowedMessages = array();
   
-  public function __construct($aMessages = array()) {
+  public function __construct($aAllowedMessages = array()) {
     
     parent::__construct('messages');
-    $this->setBloc('messages-all', new XML_Document('messages'));
+    $this->setBloc('allowed', new XML_Document('messages'));
     
-    $this->addMessages($aMessages);
+    $this->setAllowedMessages($aAllowedMessages);
   }
   
-  public function addMessage($oMessage) {
+  public function addMessage() {
     
-    // TODO: foreach ($oMessage->aArguments as $oArgument) $this->setArgument('fields'][ += $oMessage[]
-    // $this->aMessages[$oMessage->getStatut()][] = $oMessage;
-    if ($oMessage) {
+    $aArguments = func_get_args();
+    
+    if (!$aArguments) return null;
+    
+    if (count($aArguments) > 1) return $this->addMessages($aArguments);
+    else $mMessage = $aArguments[0];
+    
+    if (is_array($mMessage) || ($mMessage instanceof XML_NodeList)) return $this->addMessages($mMessage);
+    else if (is_string($mMessage)) return $this->addStringMessage($mMessage);
+    else if ($mMessage instanceof XML_Element) {
+      
+      $oMessage = $mMessage;
+      
+      // TODO: foreach ($oMessage->aArguments as $oArgument) $this->setArgument('fields'][ += $oMessage[]
+      // $this->aMessages[$oMessage->getStatut()][] = $oMessage;
       
       $sStatut = $oMessage->read('statut');
       
       // Add the stat if not exists
       
-      if (!$oAllStatut = $this->getBloc('messages-all')->get($sStatut)) $oAllStatut = $this->getBloc('messages-all')->addNode($sStatut);
+      if (!$oAllStatut = $this->get($sStatut))
+        $oAllStatut = $this->addNode($sStatut);
+      
+      // Add in the main doc
+      
       $oAllStatut->add($oMessage);
       
-      // Add in ze main doc
-      // echo $this;
-      if (in_array($sStatut, $this->getAllowedMessages())) $this->get($sStatut)->add($oMessage);
-    }
+      // Add in the allowed doc
+      
+      if (in_array($sStatut, $this->getAllowedMessages()))
+        $oMessage = $this->getBloc('allowed')->get($sStatut)->add($oMessage);
+      
+      return $oMessage;
+      
+    } else return null;
   }
   
   /*
-   * Ajoute un message dans la pile
+   * Add a message from a String
    * 
    * @param $sMessage
-   *   Message au format String
+   *   The message format String
+   * @param $sStatut
+   *   The stat of the message format String
+   * @param $aArguments
+   *   The arguments of the message format Array
+   * @return
+   *   A pointer to the node added
    **/
   public function addStringMessage($sMessage, $sStatut = 'notice', $aArguments = array()) {
     
-    $this->addMessage(new Message($sMessage, $sStatut, $aArguments));
+    return $this->addMessage(new Message($sMessage, $sStatut, $aArguments));
     if (is_array($aArguments) && isset($aArguments['show_array'])) $this->addStringMessage(implosion(' => ', '<br />', $aArguments['show_array']), $sStatut);
   }
   
@@ -723,12 +785,14 @@ class Messages extends XML_Action {
    * Ajoute une liste de messages dans la pile
    * 
    * @param $aMessages
-   *   Un tableau contenant les messages à ajouter au format Message
+   *   Un tableau contenant les messages à ajouter
    **/
   public function addMessages($aMessages) {
     
-    foreach ($aMessages as $oMessage) $this->addMessage($oMessage);
-    return $aMessages;
+    $aResult = array();
+    foreach ($aMessages as $oMessage) $aResult[] = $this->addMessage($oMessage);
+    
+    return $aResult;
   }
   
   /*
@@ -741,16 +805,16 @@ class Messages extends XML_Action {
     
     if ($sStatut) {
       
-      $aResult = $this->query("$sStatut/*");
+      $oResult = $this->query("$sStatut/*");
       
     } else {
       
-      $aResult = $this->query("//message");
+      $oResult = $this->query("//message");
     }
     
-    if (!$aResult->length) $aResult = array();
+    if (!$oResult->length) $oResult = array();
     
-    return $aResult;
+    return $oResult;
   }
   
   public function hasMessages($sStatut = null) {
@@ -769,38 +833,13 @@ class Messages extends XML_Action {
     
     // Add allowed statuts in docs
     $this->addArray($aStatuts);
-    $this->getBloc('messages-all')->add($this->getChildren());
+    $this->getBloc('allowed')->add($this->getChildren());
   }
   
   public function parse() {
-    $res = $this->parseXSL(new XML_Document('/messages.xsl'));
-    // echo $this;
-    // echo '<br/>-----<br/>';
-    // echo $res;
-    return $res;
     
-    $oResult = new HTML_Div;
-    $oResult->addClass('messages');
-    
-    foreach ($this->query('*') as $oStatut) {
-      
-      if (!$oStatut->isEmpty()) {
-        
-        $oContainer = new HTML_Ul();
-        // $oStatut->setAttribute('id', 'messages');
-        $oContainer->addClass('message-'.$oStatut->getName());
-        
-        foreach ($oStatut->query('*') as $oMessage) {
-          
-          $oItem = new HTML_Tag('li', $oMessage->get('content/*'));
-          $oContainer->add($oItem);
-        }
-        
-        $oResult->add($oContainer);
-      }
-    }
-    
-    return $oResult;
+    // return $this->parseXSL(new XML_Document('/messages.xsl'));
+    return $this->getBloc('allowed')->parseXSL(new XML_Document('/xml/messages.xsl', 'file'));
   }
 }
 

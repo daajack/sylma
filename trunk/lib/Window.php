@@ -14,7 +14,7 @@ class Html extends HTML_Document {
     
     // $oTemplate = ;
     // $oTemplate->set($this->get('//html'));
-    parent::__construct('/html');
+    parent::__construct('/xml/html.xml', null, 'file');
     
     $this->addJS('/web/global.js');
     $this->addCSS('/web/global.css');
@@ -25,7 +25,7 @@ class Html extends HTML_Document {
     $aMenuPrimary = Controler::getRights();
     
     if (Controler::getUser()->isReal()) unset($aMenuPrimary['/utilisateur/login']);
-    else unset($aMenuPrimary['/utilisateur/logout']);
+    else unset($aMenuPrimary['/redirection/utilisateur/logout']);
     
     // Contenu
     
@@ -50,9 +50,6 @@ class Html extends HTML_Document {
     
     $this->setBloc('content-title', new XML_Tag('h2'));
     $this->setBloc('content', new HTML_Tag('div', '', array('id' => 'content')));
-    
-    $oMessages = Controler::getMessages();
-    $oMessages->setAllowedMessages(array('notice', 'warning', 'success', 'error', '_report', 'query-new', 'query-old', '_system'));
   }
   
   public function setContent($mValue = '') {
@@ -61,6 +58,27 @@ class Html extends HTML_Document {
   }
   
   public function __toString() {
+    
+    // Infos système
+    
+    $oMessages = new Messages(array('system'));
+    $oMessages->addMessages(Controler::getMessages()->getMessages('system'));
+    
+    if (Controler::isAdmin() && $oMessages->hasMessages('system') && in_array('system', Controler::getMessages()->getAllowedMessages())) {
+      
+      $oSystem = new HTML_Div(new HTML_Strong(t('Infos système')));
+      $oSystem->addStyle('margin', '5px');
+      
+      $oMessages = $oSystem->add($oMessages);
+      $oMessages->setAttribute('style', 'margin-top: 5px;');
+      
+      $this->get("//div[@id='sidebar']")->shift($oSystem);
+    }
+    
+    // Supression des messages système dans le panneau de messages principal
+    
+    if (in_array('system', Controler::getMessages()->getAllowedMessages()))
+      Controler::getMessages()->getBloc('allowed')->get('//system')->remove();
     
     // Contenu
     
@@ -73,24 +91,19 @@ class Html extends HTML_Document {
     
     $this->get("//div[@id='center']")->add($oContent);
     
-    // Infos système
-    
-    // $oMessages = new Messages(Controler::getMessages()->getMessages('system'));
-    // $oMessages->addStyle('margin-top', '5px');
-    
-    // if (Controler::isAdmin() && $oMessages->hasMessages() && in_array('system', Controler::getMessages()->getAllowedMessages())) {
-      
-      // $this->getBloc('system')->add(new HTML_Strong(t('Infos système')), $oMessages);
-    // }
-    
-    // Supression des messages système dans le panneau de messages principal
-    
     // Controler::getMessages()->setMessages('system');
-    $this->getRoot()->setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+    
     return parent::__toString();
   }
 }
 
+class Redirection {
+  
+  public function setContent($mValue = '') {
+    
+    return Controler::errorRedirect('Redirection incorrecte !');
+  }
+}
 class Popup extends HTML_Document implements Main {
   
   public function __construct() {

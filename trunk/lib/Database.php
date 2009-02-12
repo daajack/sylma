@@ -78,7 +78,7 @@ class db {
     return $aResults;
   }
   
-  public static function getQueries() {
+  public static function getQueries($sStatut = 'new') {
     
     $aResults = self::queryColorize(self::$aQueries);
     
@@ -86,7 +86,7 @@ class db {
       
       $oDocument = new XML_Document;
       $oDocument->loadText('<div>'.$oResult.'</div>');
-      $oResult = new Message($oDocument->getRoot(), 'query-new');
+      $oResult = new Message($oDocument->getRoot(), 'query-'.$sStatut);
     }
     
     return $aResults;

@@ -11,7 +11,29 @@ class XML_NodeList implements Iterator {
   public function __construct($oNodeList) {
     
     foreach ($oNodeList as $oNode) $this->aNodes[] = $oNode;
-    $this->length = $oNodeList->length;
+    
+    if (is_array($oNodeList)) $this->length = count($oNodeList);
+    else if ($oNodeList instanceof DOMNodeList) $this->length = $oNodeList->length;
+  }
+  
+  public function toArray($sMode = 'default') {
+    
+    $aResults = array();
+    
+    foreach ($this as $oNode) {
+      
+      switch ($sMode) {
+        
+        case 'name' : $aResults[] = $oNode->getName(); break;
+        
+        default :
+          
+          if ($oNode->isEmpty()) $aResults[] = $oNode->getName();
+          else $aResults[$oNode->getName()] = $oNode->getValue();
+      }
+    }
+    
+    return $aResults;
   }
   
   public function item($iKey) {
@@ -78,14 +100,20 @@ class XML_Document extends DOMDocument {
       else if (is_string($mChildren)) $this->startString($mChildren, $sSource);
     }
   }
-  public function dsp() {
+  
+  public function dsp($bHtml = false) {
     
-    echo htmlentities($this);
+    echo '<pre>';
+    $this->formatOutput = true;
+    echo htmlentities($this).'<br/>';
+    $this->formatOutput = false;
+    echo '</pre>';
   }
+  
   public function startString($sString, $sSource = '') {
     
     // if Path else LoadText else Root
-    if ($sString{0} == '/') $this->loadDocument($sString, $sSource);
+    if ($sSource == 'file' || $sString{0} == '/') $this->loadDocument($sString, $sSource);
     else if ($sString{0} == '<') $this->loadText($sString);
     else $this->set(new XML_Element($sString, '', null, $this));
   }
@@ -103,7 +131,7 @@ class XML_Document extends DOMDocument {
       
       case 'file' : 
         
-        $this->loadFile($this->getPath());
+        $this->loadFile($sPath);
         
       break;
       
@@ -146,7 +174,8 @@ class XML_Document extends DOMDocument {
   
   public function loadText($sContent) {
     
-    $this->loadXML($sContent);
+    if ($sContent) $this->loadXML($sContent);
+    else XML_Controler::addMessage('Aucun contenu', 'error');
   }
   
   public function getRoot() {
@@ -323,7 +352,7 @@ class XML_Document extends DOMDocument {
   public function parseXSL($oTemplate) {
     
     $oStyleSheet = new XSLTProcessor();
-    $oStyleSheet->importStylesheet((object) $oTemplate);
+    $oStyleSheet->importStylesheet($oTemplate);
     // Transformation et affichage du résultat
     
     $oResult = new XML_Document();
@@ -397,7 +426,7 @@ class XML_Element extends DOMElement {
   
   public function __construct($sName = '', $oContent = '', $aAttributes = array(), $oDocument = null) {
     
-    $sName = (string) $sName;
+    $sName = trim((string) $sName);
     if (!$sName) $sName = 'default';
     parent::__construct($sName);
     
@@ -518,74 +547,74 @@ class XML_Element extends DOMElement {
   
   public function add() {
     
-    if (func_num_args() > 1) {
+    return $this->insert(func_get_args());
+  }
+  
+  public function shift() {
+    
+    if (!$this->isEmpty()) return $this->insert(func_get_args(), $this->get('*'));
+    else return $this->insert(func_get_args());
+  }
+  
+  public function insert($mValue, $oNext = null) {
+    
+    if (is_object($mValue)) {
       
-      foreach (func_get_args() as $mValue) $this->add($mValue);
+      /* XML_Element or XML_Text */
       
-    } else if (func_num_args() == 1) {
-      
-      $mValue = func_get_arg(0);
-      
-      if (is_object($mValue)) {
+      if ($mValue instanceof XML_Element || $mValue instanceof XML_Text) {
         
         /* XML_Element or XML_Text */
         
-        if ($mValue instanceof XML_Element || $mValue instanceof XML_Text) {
-          
-          /* XML_Element or XML_Text */
-          
-          $mValue = $this->addChild($mValue);
-          
-        } else if ($mValue instanceof XML_Attribute) {
-          
-          /* XML_Attribute */
-          
-          $mValue = $this->addAttribute($mValue);
-          
-        } else if ($mValue instanceof XML_Document) {
-          
-          if ($mValue instanceof XML_Action) {
-            
-            /* XML_Action */
-            
-            $mValue = $mValue->parse();
-            
-            // If result is not a doc
-            if (!($mValue instanceof XML_Document)) return $this->add($mValue);
-          }
-          
-          /* XML_Document */
-          
-          // TODO : add XMLNS
-          
-          if ($mValue->getRoot()) $mValue = $this->addChild($mValue->getRoot());
-          else $mValue = null;
-          
-          
-        } else if ($mValue instanceof XML_NodeList) {
-          
-          /* XML_NodeList */
-          
-          foreach ($mValue as $oChild) $this->add($oChild);
-          
-          /* Undefined object (Forced String) */
-          
-        } else $mValue = $this->addText($mValue);
+        $mValue = $this->addChild($mValue, $oNext);
         
-        /* Array */
+      } else if ($mValue instanceof XML_Attribute) {
         
-      } else if (is_array($mValue) && $mValue) {
+        /* XML_Attribute */
         
-        foreach ($mValue as $mSubValue) $this->add($mSubValue);
+        $mValue = $this->addAttribute($mValue);
         
-        /* String, Integer, Float, Bool, Resource, ... ? */
+      } else if ($mValue instanceof XML_Document) {
+        
+        if ($mValue instanceof XML_Action) {
+          
+          /* XML_Action */
+          
+          $mValue = $mValue->parse();
+          
+          // If result is not a doc
+          if (!($mValue instanceof XML_Document)) return $this->insert($mValue, $oNext);
+        }
+        
+        /* XML_Document */
+        
+        // TODO : add XMLNS
+        
+        if ($mValue->getRoot()) $mValue = $this->addChild($mValue->getRoot(), $oNext);
+        else $mValue = null;
+        
+        
+      } else if ($mValue instanceof XML_NodeList) {
+        
+        /* XML_NodeList */
+        
+        foreach ($mValue as $oChild) $this->insert($oChild, $oNext);
+        
+        /* Undefined object (Forced String) */
         
       } else $mValue = $this->addText($mValue);
       
-      return $mValue;
-    }
+      /* Array */
+      
+    } else if (is_array($mValue) && $mValue) {
+      
+      foreach ($mValue as $mSubValue) $mValue = $this->insert($mSubValue, $oNext);
+      
+      /* String, Integer, Float, Bool, Resource, ... ? */
+      
+    } else $mValue = $this->addText($mValue);
     
-    return null;
+    return $mValue;
   }
   
   public function addAttribute($oAttribute) {
@@ -609,7 +638,7 @@ class XML_Element extends DOMElement {
     foreach ($aAttributes as $sKey => $sValue) $this->setAttribute($sKey, $sValue);
   }
   
-  public function addChild($oChild) {
+  public function addChild($oChild, $oNext = null) {
     
     if (is_object($oChild)) {
       
@@ -618,7 +647,8 @@ class XML_Element extends DOMElement {
         $oChild = $this->getDocument()->importNode($oChild, true);
       }
       
-      $this->appendChild($oChild);
+      if ($oNext) $this->insertBefore($oChild, $oNext);
+      else $this->appendChild($oChild);
       
     } else $this->add($oChild);
     
@@ -628,6 +658,12 @@ class XML_Element extends DOMElement {
   public function addNode($sName, $oContent = '', $aAttributes = null) {
     
     return $this->appendChild($this->getDocument()->createNode($sName, $oContent, $aAttributes));
+  }
+  
+  public function insertNode($sName, $oContent = '', $aAttributes = null, $oNext = null) {
+    
+    if ($oNext) return $this->insertBefore($this->getDocument()->createNode($sName, $oContent, $aAttributes), $oNext);
+    else return $this->addNode($sName, $oContent, $aAttributes);
   }
   
   public function addArray($aChildren) {
@@ -643,12 +679,15 @@ class XML_Element extends DOMElement {
     return $aResult;
   }
   
-  public function addText($sValue) {
+  public function addText($sValue, $oNext = null) {
     
     if ($sValue) {
       
       $oText = new XML_Text($sValue);
-      $this->appendChild($oText);
+      
+      if ($oNext) $this->insertBefore($oText, $oNext);
+      else $this->appendChild($oText);
+      
       return $oText;
       
     } else return $sValue;
@@ -676,7 +715,7 @@ class XML_Element extends DOMElement {
   
   public function remove() {
     
-    return $this->getDocument()->removeChild($this);
+    return $this->parentNode->removeChild($this);
   }
   
   public function implode($sSep, $cChildren) {
@@ -690,6 +729,11 @@ class XML_Element extends DOMElement {
     }
     
     return $sContent;
+  }
+  
+  public function dsp() {
+    
+    echo htmlentities($this).'<br/>';
   }
   
   public function __toString() {

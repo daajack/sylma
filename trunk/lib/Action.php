@@ -12,7 +12,7 @@ class XML_Action extends XML_Document {
   
   public function __construct($sPath = '', $oRedirect = null, $sSource = '') {
     
-    parent::__construct($sPath, '', $sSource);
+    parent::__construct($sPath, $sSource);
     
     $this->setRedirect($oRedirect);
     $this->setPath($sPath);

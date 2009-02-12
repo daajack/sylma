@@ -80,9 +80,9 @@ class XML_Document extends DOMDocument {
   
   public $isDocument = true;
   
-  public function __construct($mChildren = 'div', $sSource = '') {
+  public function __construct($mChildren = '', $sSource = '') {
     
-    parent::__construct('1.0');
+    parent::__construct('1.0', 'utf-8');
     
     $this->preserveWhiteSpace = false;
     
@@ -131,7 +131,9 @@ class XML_Document extends DOMDocument {
       
       case 'file' : 
         
+        XML_Controler::addMessage(array(t('Chargement d\'un fichier : '), new HTML_Strong($sPath)), 'report');
         $this->loadFile($sPath);
+        //XML_Controler::addMessage(array(t('Aucun contenu. Le chargement du fichier \''), new HTML_Strong($sPath), '\' a échoué !'), 'error'); }
         
       break;
       
@@ -175,7 +177,7 @@ class XML_Document extends DOMDocument {
   public function loadText($sContent) {
     
     if ($sContent) $this->loadXML($sContent);
-    else XML_Controler::addMessage('Aucun contenu', 'error');
+    else XML_Controler::addMessage('Aucun contenu. La chaîne est vide !', 'error');
   }
   
   public function getRoot() {
@@ -465,11 +467,8 @@ class XML_Element extends DOMElement {
       return new XML_NodeList($mResult);
       
     } else {
-      echo 'Erreur de requête !';
-      echo new HTML_Div(Controler::getBacktrace());
-      exit;
-      return null;
-    // ERROR : if (!$mResult) Pas de résultat dans la requête
+      
+      XML_Controler::addMessage('Requête vide !', 'warning');
     }
   }
   

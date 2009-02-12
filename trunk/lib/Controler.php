@@ -160,6 +160,7 @@ class Controler {
   public static function loadSettings() {
     
     $oSettings = new XML_Document('/xml/root.xml', 'file');
+    // $oSettings = new XML_Document('/', 'db');
     
     self::$oMessages = new Messages(explode(',', $oSettings->read('//messages/allowed')));
     self::setReady();
@@ -214,6 +215,7 @@ class Controler {
   public static function getBacktrace($sStatut = 'system') {
     
     $aResult = array(); $aLines = array(); $i = 0;
+    
     $aBackTrace = debug_backtrace();
     array_shift($aBackTrace);
     
@@ -233,11 +235,53 @@ class Controler {
       if (isset($aTrace['class'])) $sClass = "::{$aTrace['class']}";
       else $sClass = '';
       
-      $aResult[] = new HTML_Div(array("[{$aLines[$i]}] ", $sFile, $sClass, "::{$aTrace['function']}()"));
+      // Arguments
+      
+      $oArguments = null;
+      
+      if (isset($aTrace['args']) && $aTrace['args']) {
+        
+        $aArguments = array();
+        $iMaxLength = 80 / count($aTrace['args']);
+        
+        foreach ($aTrace['args'] as $mArgument) {
+          
+          if (is_string($mArgument))
+            $aValue = array("'".stringResume($mArgument, $iMaxLength)."'", 'gray');
+          else if (is_array($mArgument))
+            $aValue = array('array('.count($mArgument).')', 'black');
+          else if ($mArgument instanceof XML_Element)
+            $aValue = array("'".stringResume($mArgument, $iMaxLength)."'", 'blue');
+          else if (is_object($mArgument))
+            $aValue = array(get_class($mArgument), 'red');
+          else if ($mArgument === null) $aValue = array('NULL', 'magenta');
+          else $aValue = array('undefined', 'orange');
+          
+          $aArguments[] = new HTML_Span($aValue[0], array('style' => 'color: '.$aValue[1].';'));
+          $aArguments[] = ', ';
+        }
+        
+        if ($aArguments) array_pop($aArguments);
+        
+        $oArguments = new HTML_Span($aArguments);
+      }
+      
+      $aResult[] = new HTML_Div(array(
+        '[',
+        new HTML_Span($aLines[$i], array('style' => 'color: blue; font-weight: bold;')),
+        '] ',
+        $sFile,
+        $sClass,
+        "::",
+        new HTML_Strong($aTrace['function']),
+        '(',  $oArguments, ')'));
+      
       $i++;
     }
+    
+    return new HTML_Div(array_reverse($aResult), array('style' => 'margin: 3px; padding: 3px; border: 1px solid white; border-width: 1px 0 1px 0; font-size: 0.8em'));
     // self::addMessage(new HTML_Strong(t('Backtrace').' : ').implode('<br/>', $aResult), $sStatut);
-    return new XML_NodeList($aResult);
+    // return new XML_NodeList($aResult);
   }
   
   public static function loadRedirect() {
@@ -282,7 +326,7 @@ class Controler {
     $sPath = "action/$sClassName.php";
     
     if (file_exists(self::getDirectory().$sPath)) include_once($sPath);
-    else if (self::isAdmin()) self::addMessage(sprintf(t('Fichier "%s" introuvable !'), $sPath), 'warning');
+    else if (self::isAdmin()) self::addMessage(sprintf(t('Fichier "%s" introuvable !'), $sPath), 'error');
     
     // Contrôle de l'existence de la classe et de l'opération
     
@@ -404,9 +448,10 @@ class Controler {
   
   public static function errorRedirect($mMessages = null, $sStatut = 'error') {
     
-    if (is_string($mMessages)) $mMessages = new Message($mMessages, $sStatut);
+    $aMessages = array($mMessages);
+    if (self::isAdmin()) $aMessages[] = self::getBacktrace();
     
-    self::doHTTPRedirect(new Redirect(PATH_ERROR, $mMessages));
+    self::doHTTPRedirect(new Redirect(PATH_ERROR, new Message($aMessages, $sStatut)));
   }
   
   public static function setUser($oUser = null) {
@@ -449,9 +494,9 @@ class Controler {
     return self::$oMessages;
   }
   
-  public static function addMessage($sMessage = '- message vide -', $sStatut = 'notice', $aArgs = array()) {
+  public static function addMessage($mMessage = '- message vide -', $sStatut = 'notice', $aArgs = array()) {
     
-    self::getMessages()->addStringMessage($sMessage, $sStatut, $aArgs);
+    self::getMessages()->addMessage(new Message($mMessage, $sStatut, $aArgs));
   }
   
   public static function setWindow($oWindow) {
@@ -582,9 +627,9 @@ class Redirect {
   private $aArguments = array();
   private $oMessages;
   
-  public function __construct($sPath = '/', $mMessage = array(), $aArguments = array()) {
+  public function __construct($sPath = '/', $mMessages = array(), $aArguments = array()) {
     
-    $this->resetMessages($mMessage);
+    $this->resetMessages($mMessages);
     
     $this->setPath($sPath);
     $this->aArguments = $aArguments;
@@ -608,10 +653,9 @@ class Redirect {
     return $this->aArguments;
   }
   
-  public function resetMessages($aMessages = array()) {
+  public function resetMessages($mMessages = array()) {
     
-    $this->oMessages = new Messages(Controler::getMessages()->getAllowedMessages());
-    $this->getMessages()->addMessage($aMessages);
+    $this->oMessages = new Messages(Controler::getMessages()->getAllowedMessages(), $mMessages);
   }
   
   public function getMessages($sStatut = null) {
@@ -716,12 +760,13 @@ class Messages extends XML_Action {
   
   private $aAllowedMessages = array();
   
-  public function __construct($aAllowedMessages = array()) {
+  public function __construct($aAllowedMessages, $mMessages = array()) {
     
     parent::__construct('messages');
     $this->setBloc('allowed', new XML_Document('messages'));
     
     $this->setAllowedMessages($aAllowedMessages);
+    $this->addMessage($mMessages);
   }
   
   public function addMessage() {
@@ -735,7 +780,7 @@ class Messages extends XML_Action {
     
     if (is_array($mMessage) || ($mMessage instanceof XML_NodeList)) return $this->addMessages($mMessage);
     else if (is_string($mMessage)) return $this->addStringMessage($mMessage);
-    else if ($mMessage instanceof XML_Element) {
+    else if ($mMessage instanceof XML_Element && $mMessage->getName() == 'message') {
       
       $oMessage = $mMessage;
       
@@ -760,13 +805,13 @@ class Messages extends XML_Action {
       
       return $oMessage;
       
-    } else return null;
+    } else return $this->addStringMessage($mMessage);
   }
   
   /*
    * Add a message from a String
    * 
-   * @param $sMessage
+   * @param $mMessage
    *   The message format String
    * @param $sStatut
    *   The stat of the message format String
@@ -775,9 +820,9 @@ class Messages extends XML_Action {
    * @return
    *   A pointer to the node added
    **/
-  public function addStringMessage($sMessage, $sStatut = 'notice', $aArguments = array()) {
+  public function addStringMessage($mMessage, $sStatut = 'notice', $aArguments = array()) {
     
-    return $this->addMessage(new Message($sMessage, $sStatut, $aArguments));
+    return $this->addMessage(new Message($mMessage, $sStatut, $aArguments));
     if (is_array($aArguments) && isset($aArguments['show_array'])) $this->addStringMessage(implosion(' => ', '<br />', $aArguments['show_array']), $sStatut);
   }
   
@@ -838,8 +883,10 @@ class Messages extends XML_Action {
   
   public function parse() {
     
-    // return $this->parseXSL(new XML_Document('/messages.xsl'));
-    return $this->getBloc('allowed')->parseXSL(new XML_Document('/xml/messages.xsl', 'file'));
+    if ($this->getBloc('allowed')->get('//message'))
+      return $this->getBloc('allowed')->parseXSL(new XML_Document('/xml/messages.xsl', 'file'));
+      // return $this->getBloc('allowed')->parseXSL(new XML_Document('/messages.xsl', 'db'));
+    else return null;
   }
 }
 

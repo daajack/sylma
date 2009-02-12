@@ -208,19 +208,19 @@ class HTML_Template extends HTML_Tag {
     
     $sPath .= '.tpl.php';
     
-    if (file_exists(MAIN_DIRECTORY.$sPath)) $this->sPath = $sPath;
+    if (file_exists(MAIN_DIRECTORY.$sPath)) $this->sPath = MAIN_DIRECTORY.$sPath;
     // ERROR else if (Controler::isAdmin()) Controler::addMessage(sprintf(t('Le template "%s" semble ne pas exister !'), new HTML_Strong($sPath)), 'error');
   }
   
-  public function __toString() {
+  public function parse() {
     
     if (!DEBUG) {
       
       ob_start();
       include($this->getTemplate());
-      $oDocument = new XML_Document();
       $text = ob_get_clean();
       
+      $oDocument = new XML_Document();
       $oDocument->loadText($text);
       $this->add($oDocument);
       
@@ -229,7 +229,7 @@ class HTML_Template extends HTML_Tag {
       require($this->getTemplate());
     }
     
-    return parent::__toString();
+    return parent::parse();
   }
 }
 

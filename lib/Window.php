@@ -66,8 +66,8 @@ class Html extends HTML_Document {
       
       $oMessages = new Messages(array('system'), Controler::getMessages()->getMessages('system'));
       
-      $oSystem = new HTML_Div(new HTML_Strong(t('Infos système')));
-      $oSystem->addStyle('margin', '5px');
+      $oSystem = new HTML_Div();
+      $oSystem->addStyle('margin', '10px 5px');
       
       $oMessages = $oSystem->add($oMessages);
       $oMessages->setAttribute('style', 'margin-top: 5px;');
@@ -86,7 +86,8 @@ class Html extends HTML_Document {
     $oContent = $this->getBloc('content');
     
     $oContent->add(Controler::getMessages());
-    $oContent->add($this->getBloc('content-title'), $this->getBloc('action'));
+    if (!$this->getBloc('content-title')->isEmpty()) $oContent->add($this->getBloc('content-title'));
+    $oContent->add($this->getBloc('action'));
     
     $this->get("//div[@id='center']")->add($oContent);
     
@@ -143,12 +144,13 @@ class Popup extends HTML_Document implements Main {
   }
 }
 
-class Form extends HTML_Tag implements Main {
+class Form extends XML_Action implements Main {
   
   private $oRedirect = null;
   
   public function __construct() {
     
+    parent::__construct();
     $this->setBloc('content-title', new HTML_Tag('h4', '', array('class' => 'ajax-title'), true));
   }
   

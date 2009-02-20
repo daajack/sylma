@@ -160,7 +160,7 @@ class Controler {
   public static function loadSettings() {
     
     $oSettings = new XML_Document('/xml/root.xml', 'file');
-    // $oSettings = new XML_Document('/', 'db');
+    $oSettings->add(new XML_Document('/xml/actions.xml', 'file'));
     
     self::$oMessages = new Messages(explode(',', $oSettings->read('//messages/allowed')));
     self::setReady();
@@ -326,7 +326,7 @@ class Controler {
     $sPath = "action/$sClassName.php";
     
     if (file_exists(self::getDirectory().$sPath)) include_once($sPath);
-    else if (self::isAdmin()) self::addMessage(sprintf(t('Fichier "%s" introuvable !'), $sPath), 'error');
+    else if (self::isAdmin()) self::addMessage(sprintf(t('Fichier "%s" introuvable !'), $sPath), 'warning');
     
     // Contrôle de l'existence de la classe et de l'opération
     
@@ -885,7 +885,6 @@ class Messages extends XML_Action {
     
     if ($this->getBloc('allowed')->get('//message'))
       return $this->getBloc('allowed')->parseXSL(new XML_Document('/xml/messages.xsl', 'file'));
-      // return $this->getBloc('allowed')->parseXSL(new XML_Document('/messages.xsl', 'db'));
     else return null;
   }
 }

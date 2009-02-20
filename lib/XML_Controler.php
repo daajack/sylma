@@ -13,7 +13,7 @@
     
     public static function addMessage($mValue, $sStatut = 'notice', $aArguments = array()) {
       
-      if (Controler::isReady() && Controler::isAdmin()) Controler::addMessage(array('XML : ', $mValue, Controler::getBacktrace()), $sStatut, $aArguments);
+      if (Controler::isReady() && Controler::isAdmin()) Controler::addMessage(array('XML : ', $mValue), $sStatut, $aArguments);
     }
   }
   

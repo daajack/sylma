@@ -101,13 +101,19 @@ class XML_Document extends DOMDocument {
     }
   }
   
+  public function view($bHtml = false) {
+    
+    $this->formatOutput = true;
+    $oView = new XML_Element('pre');
+    $oView->addText($this);
+    $this->formatOutput = false;
+    
+    return $oView;
+  }
+  
   public function dsp($bHtml = false) {
     
-    echo '<pre>';
-    $this->formatOutput = true;
-    echo htmlentities($this).'<br/>';
-    $this->formatOutput = false;
-    echo '</pre>';
+    echo $this->view();
   }
   
   public function startString($sString, $sSource = '') {
@@ -186,6 +192,11 @@ class XML_Document extends DOMDocument {
     catch (Exception $e) { $oRoot = null; }
     
     return $oRoot;
+  }
+  
+  public function test($sPath) {
+    
+    return (bool) $this->get($sPath);
   }
   
   /*
@@ -470,6 +481,11 @@ class XML_Element extends DOMElement {
       
       XML_Controler::addMessage('Requête vide !', 'warning');
     }
+  }
+  
+  public function test($sPath) {
+    
+    return (bool) $this->get($sPath);
   }
   
   public function get($sQuery) {

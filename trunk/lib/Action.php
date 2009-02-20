@@ -21,25 +21,24 @@ class XML_Action extends XML_Document {
   
   public function addAction($sPath, $oRedirect = null, $sSource = '') {
     
-    $this->getRoot()->addChild($this->loadAction($sPath, $oRedirect = null, $sSource = ''));
+    $this->getBloc('actions')->add($this->loadAction($sPath, $oRedirect = null, $sSource = ''));
   }
   
   public function loadAction($sPath, $oRedirect = null, $sSource = '') {
     
     $oDocument = new XML_Document($sPath, $sSource);
     
-    if ($oDocument) return $this->loadActionSettings($oDocument->getRoot(), $oRedirect);
-    else return null;
+    if (!$oDocument->isEmpty()) return $this->loadActionSettings($oDocument, $oRedirect);
   }
   
   public function loadActionSettings($oElement, $oRedirect = null) {
     
-    $sClass = $oElement->read('class');
-    $sFile = $oElement->read('class/@file');
+    $sClass = $oElement->read('class/name');
+    $sFile = $oElement->read('class/file');
     $sMethod = $oElement->read('method');
-    $bRedirect = $oElement->read('redirect');
+    $bRedirect = $oElement->test("@redirect='true'");
     
-    if ($bRedirect !== null && $bRedirect) $oRedirect = null;
+    if ($bRedirect) $oRedirect = null;
     
     return $this->runAction($sClass, $sMethod, $sFile, $oRedirect);
   }
@@ -101,6 +100,11 @@ class XML_Action extends XML_Document {
     $this->sPath = $sPath;
   }
   
+  public function reload() {
+    
+    if ($this->getPath()) $this->loadDocument($this->getPath(), $this->getSource());
+  }
+  
   public function getSource() {
     
     return $this->sSource;
@@ -127,7 +131,7 @@ class XML_Action extends XML_Document {
     
     if (!array_key_exists($sKey, $this->aBlocs)) {
       
-      $oBloc = new XML_Element;
+      $oBloc = new XML_Element($sKey);
       $this->aBlocs[$sKey] = $oBloc;
     }
     

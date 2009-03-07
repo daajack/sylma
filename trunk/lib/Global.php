@@ -56,6 +56,7 @@ function formatPrice($fNumber) {
 function stringResume($sValue, $iLength = 50) {
   
   $sValue = (string) $sValue;
+  
   if (strlen($sValue) > $iLength) return substr($sValue, 0, $iLength).'...';
   else return $sValue;
 }

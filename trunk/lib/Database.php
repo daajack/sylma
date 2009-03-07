@@ -29,7 +29,7 @@ class db {
   
   public static function getError($sQuery) {
     
-    $oMessages = new Messages;
+    $oMessages = new Messages(array('error'));
     
     if (Controler::isAdmin()) {
       

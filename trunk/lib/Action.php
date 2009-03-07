@@ -33,8 +33,8 @@ class XML_Action extends XML_Document {
   
   public function loadActionSettings($oElement, $oRedirect = null) {
     
-    $sClass = $oElement->read('class/name');
     $sFile = $oElement->read('class/file');
+    $sClass = $oElement->read('class/name');
     $sMethod = $oElement->read('method');
     $bRedirect = $oElement->test("@redirect='true'");
     
@@ -152,34 +152,7 @@ class XML_Action extends XML_Document {
       
     } else return $this; //$oResult = new XML_Document;
   }
-}
 
-class Action extends XML_Tag {
-  
-  private $aSchemas = array();
-  private $sMode = 'normal';
-  
-  public function __construct() {
-    
-    parent::__construct('div');
-    $this->setAttribute('id', 'action');
-  }
-  
-  protected function setMode($sMode = '') {
-    
-    if ($sMode) $this->sMode = $sMode;
-  }
-  
-  protected function getMode() {
-    
-    return $this->sMode;
-  }
-  
-  protected function isMode($sMode) {
-    
-    return ($this->getMode() == $sMode);
-  }
-  
   protected function checkRequest($aSchema = array()) {
     
     $aMsg = array();
@@ -193,7 +166,7 @@ class Action extends XML_Tag {
       if (isset($aField['deco']) && $aField['deco']) continue;
       
       $oTitle = new HTML_Tag('strong');
-      $oTitle->addChild($aField['title']);
+      $oTitle->add($aField['title']);
       
       if (!array_key_exists($sKey, $_POST) || !$_POST[$sKey]) {
         
@@ -279,48 +252,6 @@ class Action extends XML_Tag {
     return $aMsg;
   }
   
-  protected function getArgument($iKey = 0) {
-    
-    return Controler::getArgument($iKey);
-  }
-  
-  protected function getId($iKey = 0) {
-    
-    $iId = $this->getArgument($iKey);
-    
-    if ($iId && is_numeric($iId)) return $iId;
-    else return false;
-  }
-  
-  protected function errorRedirect($sMessage = '', $sRedirect = '/error/view') {
-    
-    return new Redirect($sRedirect, new Message($sMessage, 'error'));
-  }
-  
-  public function getSchema($sSchema = '') {
-    
-    if (array_key_exists($sSchema, $this->aSchemas)) return $this->aSchemas[$sSchema];
-    else return array();
-  }
-  
-  public function getSchemas() {
-    
-    $aSchemas = array();
-    foreach (func_get_args() as $sArg) $aSchemas += $this->getSchema($sArg);
-    
-    return $aSchemas;
-  }
-  
-  public function setSchemas($aSchemas) {
-    
-    $this->aSchemas = $aSchemas;
-  }
-  
-  public function addSchemas($aSchemas) {
-    
-    $this->aSchemas += $aSchemas;
-  }
-  
   public function importPost($aSchema) {
     
     $aFields = array();
@@ -365,6 +296,75 @@ class Action extends XML_Tag {
     }
     
     return $aFields;
+  }
+}
+
+class Action extends XML_Tag {
+  
+  private $aSchemas = array();
+  private $sMode = 'normal';
+  
+  public function __construct() {
+    
+    parent::__construct('div');
+    $this->setAttribute('id', 'action');
+  }
+  
+  protected function setMode($sMode = '') {
+    
+    if ($sMode) $this->sMode = $sMode;
+  }
+  
+  protected function getMode() {
+    
+    return $this->sMode;
+  }
+  
+  protected function isMode($sMode) {
+    
+    return ($this->getMode() == $sMode);
+  }
+  
+  protected function getArgument($iKey = 0) {
+    
+    return Controler::getArgument($iKey);
+  }
+  
+  protected function getId($iKey = 0) {
+    
+    $iId = $this->getArgument($iKey);
+    
+    if ($iId && is_numeric($iId)) return $iId;
+    else return false;
+  }
+  
+  protected function errorRedirect($sMessage = '', $sRedirect = '/error/view') {
+    
+    return new Redirect($sRedirect, new Message($sMessage, 'error'));
+  }
+  
+  public function getSchema($sSchema = '') {
+    
+    if (array_key_exists($sSchema, $this->aSchemas)) return $this->aSchemas[$sSchema];
+    else return array();
+  }
+  
+  public function getSchemas() {
+    
+    $aSchemas = array();
+    foreach (func_get_args() as $sArg) $aSchemas += $this->getSchema($sArg);
+    
+    return $aSchemas;
+  }
+  
+  public function setSchemas($aSchemas) {
+    
+    $this->aSchemas = $aSchemas;
+  }
+  
+  public function addSchemas($aSchemas) {
+    
+    $this->aSchemas += $aSchemas;
   }
 }
 

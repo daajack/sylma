@@ -41,7 +41,7 @@ class Menu extends HTML_Ul {
         
         $oLink = new HTML_Tag('a');
         
-        $oLink->addChild(t($aItem['display']));
+        $oLink->add(t($aItem['display']));
         $oLink->setAttribute('href', $aItem['href']);
         
         $this->addItem($oLink);

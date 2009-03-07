@@ -14,6 +14,7 @@
     public static function addMessage($mValue, $sStatut = 'notice', $aArguments = array()) {
       
       if (Controler::isReady() && Controler::isAdmin()) Controler::addMessage(array('XML : ', $mValue), $sStatut, $aArguments);
+      else if (DEBUG) print_r($mValue);
     }
   }
   

@@ -67,7 +67,7 @@ class HTML_Field extends XML_Action {
     if ($iMinSize && !isset($aNode['suffixe'])) {
       
       $oSuffixe = new HTML_Tag('em');
-      $oSuffixe->addChild(sprintf(t('min. %s caractères'), $iMinSize));
+      $oSuffixe->add(sprintf(t('min. %s caractères'), $iMinSize));
       
       $aNode['suffixe'] = $oSuffixe;
     }
@@ -107,7 +107,7 @@ class HTML_Field extends XML_Action {
         
       } else $mTitle = $sTitle;
       
-      $oLabel->addChild($mTitle);
+      $oLabel->add($mTitle);
       
       // Container
       
@@ -264,11 +264,11 @@ class HTML_Field extends XML_Action {
     if ($this->getArgument('required')) {
       
       $mTitle = new HTML_Tag('strong');
-      $mTitle->addChild($sTitle);
+      $mTitle->add($sTitle);
       
     } else $mTitle = $sTitle;
     
-    $oLabel->addChild($mTitle);
+    $oLabel->add($mTitle);
     
     // Container
     
@@ -285,13 +285,13 @@ class HTML_Field extends XML_Action {
     
     if (in_array($sInput, array('checkbox', 'radio'))) {
       
-      $oContainer->addChild($oInput);
-      $oContainer->addChild($oLabel);
+      $oContainer->add($oInput);
+      $oContainer->add($oLabel);
       
     } else {
       
-      $oContainer->addChild($oLabel);
-      $oContainer->addChild($oInput);
+      $oContainer->add($oLabel);
+      $oContainer->add($oInput);
     }
     
     // Ajout d'un suffixe

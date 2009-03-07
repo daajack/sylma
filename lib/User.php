@@ -3,21 +3,21 @@
 class User extends XML_Action {
   
   private $sUser = '';
-  private $aRoles = array();
+  private $aGroups = array();
   private $bIsReal = false;
   private $aArguments = array();
   
-  public function __construct($sUser = null, $aRoles = array(), $aArguments = array()) {
+  public function __construct($sUser = null, $aGroups = array(), $aArguments = array()) {
     
     if ($sUser) $this->setReal();
     else $this->setReal(false);
     
     $this->setBloc('user', $sUser);
     
-    if (isset($aArguments['prenom']) && isset($aArguments['nom']))
-      $this->setBloc('full_name', $aArguments['prenom'].' '.$aArguments['nom']);
+    if (isset($aArguments['full_name']))
+      $this->setBloc('full_name', $aArguments['full_name']);
     
-    $this->setRoles($aRoles);
+    $this->setRoles($aGroups);
     $this->setArguments($aArguments);
   }
   
@@ -46,17 +46,17 @@ class User extends XML_Action {
   
   public function getRoles() {
     
-    return $this->aRoles;
+    return $this->aGroups;
   }
   
-  public function setRoles($aRoles) {
+  public function setRoles($aGroups) {
     
-    $this->aRoles = $aRoles;
+    $this->aGroups = $aGroups;
   }
   
-  public function isRole($sRole) {
+  public function isMember($sGroup) {
     
-    return in_array($sRole, $this->aRoles);
+    return in_array($sGroup, $this->aGroups);
   }
   
   public function setArgument($sKey, $sValue) {

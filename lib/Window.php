@@ -8,9 +8,39 @@ interface Main {
   public function setContent($mValue = '');
 }
 
-class Html extends HTML_Document {
+class Img {
   
-  public function __construct() {
+  public function __toString() {
+    
+    $sFilePath = MAIN_DIRECTORY.Controler::getAction();
+    $aAllowedExtensions = array('jpg', 'png', 'gif');
+    
+    if (file_exists($sFilePath)) {
+      
+      $iExtensionPosition = strrpos($sFilePath, '.');
+      $sExtension = $iExtensionPosition ? substr($sFilePath, $iExtensionPosition + 1) : '';
+      if ($sExtension == 'jpg') $sExtension = 'jpeg';
+      
+      header("Content-type: image/".$sExtension);
+      
+      $sFunction = 'imagecreatefrom'.strtolower($sExtension);
+      
+      $im = @$sFunction($sFilePath)
+      or die("Cannot Initialize new GD image stream");
+      
+      // imagefilter($im, IMG_FILTER_GRAYSCALE);
+      
+      $sFunction = 'image'.$sExtension;
+      
+      $sFunction($im);
+      imagedestroy($im);
+    }
+  }
+}
+
+class Html extends HTML_Document implements Main {
+  
+  public function configure() {
     
     // $oTemplate = ;
     // $oTemplate->set($this->get('//html'));
@@ -97,7 +127,7 @@ class Html extends HTML_Document {
   }
 }
 
-class Redirection {
+class Redirection implements Main {
   
   public function setContent($mValue = '') {
     
@@ -161,12 +191,12 @@ class Form extends XML_Action implements Main {
   
   public function addJS($sHref) {
     
-    $this->getBloc('header')->addChild(new HTML_Script($sHref));
+    $this->getBloc('header')->add(new HTML_Script($sHref));
   }
   
   public function addCSS($sHref) {
     
-    $this->getBloc('header')->addChild(new HTML_Style($sHref));
+    $this->getBloc('header')->add(new HTML_Style($sHref));
   }
   
   public function isRedirect() {
@@ -190,26 +220,26 @@ class Form extends XML_Action implements Main {
       
       $sAction = $this->getRedirect()->getArgument('action');
       
-      $this->addChild($sAction.'<>');
-      if ($sAction == 'script') $this->addChild($this->getRedirect()->getArgument('script'));
-      else if ($sAction == 'redirect') $this->addChild($this->getRedirect());
+      $this->add($sAction.'<>');
+      if ($sAction == 'script') $this->add($this->getRedirect()->getArgument('script'));
+      else if ($sAction == 'redirect') $this->add($this->getRedirect());
       
     } else {
       
       Controler::getMessages()->setMessages('system');
       
-      $this->addChild('display<>');
-      $this->addChild($this->getBloc('content')->getAttribute('action')->getValue().'<>');
+      $this->add('display<>');
+      $this->add($this->getBloc('content')->getAttribute('action')->getValue().'<>');
       
       // Suppression du nom du form pour empêcher l'affichage
       $this->getBloc('content')->setName();
       
       $this->addBloc('header');
       $this->addBloc('content-title');
-      $this->addChild(new HTML_Div($this->getBloc('content'), array('class' => 'ajax-content')));
-      $this->addChild(new HTML_Div('', array('class' => 'ajax-shadow')));
-      $this->addChild(new HTML_Div('', array('class' => 'ajax-bulle')));
-      $this->addChild(Controler::getMessages());
+      $this->add(new HTML_Div($this->getBloc('content'), array('class' => 'ajax-content')));
+      $this->add(new HTML_Div('', array('class' => 'ajax-shadow')));
+      $this->add(new HTML_Div('', array('class' => 'ajax-bulle')));
+      $this->add(Controler::getMessages());
       
       // $this->addBloc('content');
     }
@@ -222,7 +252,7 @@ class Simple extends XML_Tag implements Main {
   
   public function setContent($mValue = '') {
     
-    $this->addChild($mValue);
+    $this->add($mValue);
   }
 }
 

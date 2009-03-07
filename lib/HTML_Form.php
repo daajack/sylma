@@ -163,7 +163,7 @@ class HTML_JSRedirect extends HTML_Form {
     parent::__construct();
     $this->displayMark(false);
     
-    $this->addChild(new HTML_Tag('p', t('Si cette fenêtre ne se ferme pas, cliquez sur le bouton.')));
+    $this->add(new HTML_Tag('p', t('Si cette fenêtre ne se ferme pas, cliquez sur le bouton.')));
     $this->addBlocChild('action', new HTML_Button('Fermer', 'window.close();'));
   }
 }
@@ -254,11 +254,11 @@ class HTML_Select extends HTML_Tag implements HTML_FormElement {
     
     $oOption = new HTML_Tag('option');
     $oOption->addAttribute('value', $sKey);
-    $oOption->addChild($sValue);
+    $oOption->add($sValue);
     
     if ($bSelected) $oOption->addAttribute('selected', 'selected');
     
-    $this->addChild($oOption);
+    $this->add($oOption);
   }
 }
 
@@ -273,7 +273,7 @@ class HTML_Textarea extends HTML_Tag implements HTML_FormElement {
 
   public function setValue($sValue) {
     
-    $this->addChild($sValue);
+    $this->add($sValue);
   }
 }
 

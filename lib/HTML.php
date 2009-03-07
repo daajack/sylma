@@ -241,7 +241,7 @@ class HTML_Document extends XML_Action {
     $dtd = $imp->createDocumentType('html', '-//W3C//DTD XHTML 1.0 Transitional//EN', 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd');
     
     parent::__construct($sPath, $oRedirect, $sSource);
-    '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
+    //'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
   }
   
   public function addJS($sHref) {
@@ -256,7 +256,7 @@ class HTML_Document extends XML_Action {
   
   public function addIECSS($sHref = '', $sVersion = '') {
     
-    // $this->getBloc('header')->addChild(new HTML_IEComment(new HTML_Style($sHref), $sVersion));
+    // $this->getBloc('header')->add(new HTML_IEComment(new HTML_Style($sHref), $sVersion));
   }
   
   public function __toString() {
@@ -370,7 +370,7 @@ class HTML_Icone extends HTML_A {
   public function __construct($sHref = '', $sSrc = '', $sTitle = '', $aAttributes = array()) {
     
     parent::__construct($sHref, '', $aAttributes);
-    $this->addChild(new HTML_Img($sSrc, $sTitle, array('title' => $sTitle)));
+    $this->add(new HTML_Img($sSrc, $sTitle, array('title' => $sTitle)));
   }
 }
 
@@ -424,7 +424,7 @@ class HTML_Table extends HTML_Tag {
   function addRow() {
     
     $row = new HTML_TableRow();
-    $this->addChild($row); 
+    $this->add($row); 
     
     return $row;
   }
@@ -441,9 +441,9 @@ class HTML_TableRow extends HTML_Tag {
   function addCell($content, $attributes = NULL) {
     
     $cell = new HTML_Tag('td');
-    $this->addChild($cell);
+    $this->add($cell);
     
-    $cell->addChild($content);
+    $cell->add($content);
     
     if (is_array($attributes)) foreach ($attributes as $key => $val) $cell->setAttribute($key, $val);
     
@@ -476,7 +476,7 @@ class HTML_List extends HTML_Tag {
     
     $oItem = new HTML_Tag('li', $sContent, $aAttributes);
     
-    $this->addChild($oItem);
+    $this->add($oItem);
     
     return $oItem;
   }
@@ -514,8 +514,8 @@ class HTML_Dl extends HTML_Tag {
     $oKey = new HTML_Tag('dt', $sKey, $aKeyAttributes);
     $oValue = new HTML_Tag('dd', $sValue, $aValueAttributes);
     
-    $this->addChild($oKey);
-    $this->addChild($oValue);
+    $this->add($oKey);
+    $this->add($oValue);
     
     return array($oKey, $oValue);
   }

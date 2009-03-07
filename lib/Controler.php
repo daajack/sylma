@@ -15,6 +15,7 @@ class Controler {
   private static $sWindowType = 'html';
   
   private static $oWindow;
+  private static $oSettings = null;
   
   private static $sClassName = '';
   private static $sOperationName = '';
@@ -30,142 +31,91 @@ class Controler {
     self::loadSettings();
     self::loadContext($sDefaultModule, $sDefaultAction);
     
-    // Chargement des droits
-    
-    self::loadRights();
-    
-    // Récupération du cookie Redirect qui indique qu'une redirection a été effectuée
-    
-    $oRedirect = self::loadRedirect();
-    
-    // Récupération du cookie User
-    
-    self::setUser(self::loadUser());
-    
     // Création du type de fenêtre
     
     // $sWindow = ucfirst($oRedirect->getWindowType());
     $sWindow = ucfirst(self::getWindowType());
     self::setWindow(new $sWindow);
     
-    // Include de la classe d'action
-    
-    $oAction = self::includeClass();
-    
-    // Authentification
-    
-    if (!self::checkAuthentication()) self::accessRedirect();
-    
-    // DEBUG
-    
-    if (self::isAdmin()) error_reporting(E_ALL);
-    else error_reporting(0);
-    
-    /*** Lancement de l'action, récupuration du contenu / redirect ***/
-    
-    $oResult = self::getContent($oAction, $oRedirect);
-    
-    // Ajout des infos système
-    
-    $oMessage = new HTML_Strong(t('Authentification').' : ');
-    
-    if (self::getUser()->isReal()) {
+    if (!self::isWindowType('img')) {
       
-      self::addMessage(array(
-        $oMessage,
-        self::getUser()->getBloc('full_name')), 'system');
+      // Chargement des droits
       
-    } else {
+      self::loadRights();
       
-      self::addMessage(array(
-        $oMessage, 
-        new HTML_Tag('em', t('- aucun -'))), 'system');
-    }
-    
-    if (self::getUser()->isReal()) {
+      // Récupération du cookie Redirect qui indique qu'une redirection a été effectuée
       
-      $oMessage = new HTML_Strong(t('Rôle(s)').' : ');
+      $oRedirect = self::loadRedirect();
       
-      if (self::getUser()->getRoles()) {
+      // Récupération du cookie User
+      
+      self::setUser(self::loadUser());
+      
+      // Configuration de la fenêtre
+      
+      if (self::isWindowType('html')) self::getWindow()->configure();
+      
+      // Include de la classe d'action
+      
+      $oAction = self::includeClass();
+      
+      // Authentification
+      
+      if (!self::checkAuthentication()) self::accessRedirect();
+      
+      // DEBUG
+      
+      if (self::isAdmin()) error_reporting(E_ALL);
+      else error_reporting(0);
+      
+      /*** Lancement de l'action, récupuration du contenu / redirect ***/
+      
+      $oResult = self::getContent($oAction, $oRedirect);
+      
+      self::addSystemInfos($oRedirect);
+      
+      // Redirection ou ajout du contenu
+      
+      if (is_object($oResult) && get_class($oResult) == 'Redirect') {
         
-        self::addMessage(array(
-          $oMessage,
-          implode(', ', self::getUser()->getRoles())), 'system');
-          
+        // Redirection
+        
+        if (self::isWindowType('html') || self::isWindowType('redirection')) self::doHTTPRedirect($oResult);
+        else self::doAJAXRedirect($oResult);
+        
       } else {
         
-        self::addMessage(array(
-          $oMessage,
-          new HTML_Tag('em', t('- aucun -'))), 'system');
+        // Affichage
+        
+        $oContent = self::getWindow()->setContent($oResult);
       }
+      
+      if (self::isAdmin()) self::getMessages()->addMessages(db::getQueries());
     }
     
-    self::addMessage(array(
-      new HTML_Strong(t('Adresse').' : '),
-      self::getAction()), 'system');
-    
-    $oMessage = new HTML_Strong(t('Redirection').' : ');
-    
-    if ($oRedirect->isReal()) {
-      
-      self::addMessage(array(
-        $oMessage, 
-        $oRedirect->getSource()), 'system');
-      
-    } else {
-      
-      self::addMessage(array(
-        $oMessage,
-        new HTML_Tag('em', t('- aucun -'))), 'system');
-    }
-    
-    self::addMessage(array(
-      new HTML_Strong(t('Fenêtre').' : '), 
-      self::getWindowType()), 'system');
-    
-    self::addMessage(array(
-      new HTML_Strong(t('Action').' : '),
-      self::getClassName(),
-      '::',
-      self::getOperationName().'()'), 'system');
-    
-    self::addMessage(array(
-      new HTML_Strong(t('Date & heure').' : '),
-      date('j M Y').' - '.date('H:i')), 'system');
-    
-    self::addMessage(array(
-      new HTML_Strong(t('Messages').' : '),
-      implode(', ', self::getMessages()->getAllowedMessages())), 'system');
-    
-    // Redirection ou ajout du contenu
-    
-    if (is_object($oResult) && get_class($oResult) == 'Redirect') {
-      
-      // Redirection
-      
-      if (self::isWindowType('html') || self::isWindowType('redirection')) self::doHTTPRedirect($oResult);
-      else self::doAJAXRedirect($oResult);
-      
-    } else {
-      
-      // Affichage
-      
-      $oContent = self::getWindow()->setContent($oResult);
-    }
-    
-    if (self::isAdmin()) self::getMessages()->addMessages(db::getQueries());
     return self::getWindow();
+  }
+  
+  // Ajout des infos système
+  
+  public static function getSettings() {
+    
+    return self::$oSettings;
   }
   
   public static function loadSettings() {
     
     $oSettings = new XML_Document('/xml/root.xml', 'file');
+    
     $oSettings->add(new XML_Document('/xml/actions.xml', 'file'));
+    // $oSettings->addNode('users', implode(',', array('root', 'john', 'serge', 'daajack')));
+    // $oSettings->addNode('groups', implode(',', array('0', 'lemon', 'team', 'dev')));
     
     self::$oMessages = new Messages(explode(',', $oSettings->read('//messages/allowed')));
-    self::setReady();
-    
     self::$aAllowedWindowType = $oSettings->query('//window/*')->toArray('name');
+    
+    self::$oSettings = $oSettings;
+    self::setReady();
   }
   
   public static function loadContext($sDefaultModule, $sDefaultAction) {
@@ -210,78 +160,6 @@ class Controler {
   public static function loadRights() {
     
     self::$aRights = self::getYAML('rights.yml');
-  }
-  
-  public static function getBacktrace($sStatut = 'system') {
-    
-    $aResult = array(); $aLines = array(); $i = 0;
-    
-    $aBackTrace = debug_backtrace();
-    array_shift($aBackTrace);
-    
-    foreach ($aBackTrace as $aLine) {
-      
-      if (isset($aLine['line'])) $aLines[] = $aLine['line'];
-      else $aLines[] = 'k';
-    }
-    
-    $aLines[] = 'x';
-    
-    foreach ($aBackTrace as $aTrace) {
-      
-      if (isset($aTrace['file'])) $sFile = new HTML_Tag('u', strrchr($aTrace['file'], DIRECTORY_SEPARATOR));
-      else $sFile = 'xxx';
-      
-      if (isset($aTrace['class'])) $sClass = "::{$aTrace['class']}";
-      else $sClass = '';
-      
-      // Arguments
-      
-      $oArguments = null;
-      
-      if (isset($aTrace['args']) && $aTrace['args']) {
-        
-        $aArguments = array();
-        $iMaxLength = 80 / count($aTrace['args']);
-        
-        foreach ($aTrace['args'] as $mArgument) {
-          
-          if (is_string($mArgument))
-            $aValue = array("'".stringResume($mArgument, $iMaxLength)."'", 'gray');
-          else if (is_array($mArgument))
-            $aValue = array('array('.count($mArgument).')', 'black');
-          else if ($mArgument instanceof XML_Element)
-            $aValue = array("'".stringResume($mArgument, $iMaxLength)."'", 'blue');
-          else if (is_object($mArgument))
-            $aValue = array(get_class($mArgument), 'red');
-          else if ($mArgument === null) $aValue = array('NULL', 'magenta');
-          else $aValue = array('undefined', 'orange');
-          
-          $aArguments[] = new HTML_Span($aValue[0], array('style' => 'color: '.$aValue[1].';'));
-          $aArguments[] = ', ';
-        }
-        
-        if ($aArguments) array_pop($aArguments);
-        
-        $oArguments = new HTML_Span($aArguments);
-      }
-      
-      $aResult[] = new HTML_Div(array(
-        '[',
-        new HTML_Span($aLines[$i], array('style' => 'color: blue; font-weight: bold;')),
-        '] ',
-        $sFile,
-        $sClass,
-        "::",
-        new HTML_Strong($aTrace['function']),
-        '(',  $oArguments, ')'));
-      
-      $i++;
-    }
-    
-    return new HTML_Div(array_reverse($aResult), array('style' => 'margin: 3px; padding: 3px; border: 1px solid white; border-width: 1px 0 1px 0; font-size: 0.8em'));
-    // self::addMessage(new HTML_Strong(t('Backtrace').' : ').implode('<br/>', $aResult), $sStatut);
-    // return new XML_NodeList($aResult);
   }
   
   public static function loadRedirect() {
@@ -352,13 +230,12 @@ class Controler {
     
     if (in_array($sPath, $aExceptions)) return true;
     
-    if (self::getUser()->isRole('administrateur')) return true;
-    if (self::getUser()->isRole('developpeur')) return true;
+    if (self::getUser()->isMember('0')) return true;
     
     if (in_array('*', $aAskRights)) return true;
     if (self::getUser()->isReal() && in_array('#', $aAskRights)) return true;
     
-    foreach ($aAskRights as $sRight) if (self::getUser()->isRole($sRight)) return true;
+    foreach ($aAskRights as $sRight) if (self::getUser()->isMember($sRight)) return true;
     
     return false;
   }
@@ -392,6 +269,79 @@ class Controler {
     else $oResult = $oAction->$sOperationName($oRedirect);
     
     return $oResult;
+  }
+  
+  public static function addSystemInfos($oRedirect) {
+    
+    $oMessage = new HTML_Strong(t('Authentification').' : ');
+    
+    if (self::getUser()->isReal()) {
+      
+      self::addMessage(array(
+        $oMessage,
+        self::getUser()->getBloc('full_name')), 'system');
+      
+    } else {
+      
+      self::addMessage(array(
+        $oMessage, 
+        new HTML_Tag('em', t('- aucun -'))), 'system');
+    }
+    
+    if (self::getUser()->isReal()) {
+      
+      $oMessage = new HTML_Strong(t('Rôle(s)').' : ');
+      
+      if (self::getUser()->getRoles()) {
+        
+        self::addMessage(array(
+          $oMessage,
+          implode(', ', self::getUser()->getRoles())), 'system');
+          
+      } else {
+        
+        self::addMessage(array(
+          $oMessage,
+          new HTML_Tag('em', t('- aucun -'))), 'system');
+      }
+    }
+    
+    self::addMessage(array(
+      new HTML_Strong(t('Adresse').' : '),
+      self::getAction()), 'system');
+    
+    $oMessage = new HTML_Strong(t('Redirection').' : ');
+    
+    if ($oRedirect->isReal()) {
+      
+      self::addMessage(array(
+        $oMessage, 
+        $oRedirect->getSource()), 'system');
+      
+    } else {
+      
+      self::addMessage(array(
+        $oMessage,
+        new HTML_Tag('em', t('- aucun -'))), 'system');
+    }
+    
+    self::addMessage(array(
+      new HTML_Strong(t('Fenêtre').' : '), 
+      self::getWindowType()), 'system');
+    
+    self::addMessage(array(
+      new HTML_Strong(t('Action').' : '),
+      self::getClassName(),
+      '::',
+      self::getOperationName().'()'), 'system');
+    
+    self::addMessage(array(
+      new HTML_Strong(t('Date & heure').' : '),
+      date('j M Y').' - '.date('H:i')), 'system');
+    
+    self::addMessage(array(
+      new HTML_Strong(t('Messages').' : '),
+      implode(', ', self::getMessages()->getAllowedMessages())), 'system');
   }
   
   public static function doAJAXRedirect($oRedirect) {
@@ -431,6 +381,81 @@ class Controler {
     // Redirection
     
     $_SESSION['redirect'] = serialize($oRedirect);
+  }
+  
+  public static function getBacktrace($sStatut = 'system') {
+    
+    $aResult = array(); $aLines = array(); $i = 0;
+    
+    $aBackTrace = debug_backtrace();
+    array_shift($aBackTrace);
+    
+    // if (DEBUG) dsp($aBackTrace);
+    // return null;
+    
+    foreach ($aBackTrace as $aLine) {
+      
+      if (isset($aLine['line'])) $aLines[] = $aLine['line'];
+      else $aLines[] = 'k';
+    }
+    
+    $aLines[] = 'x';
+    
+    foreach ($aBackTrace as $aTrace) {
+      
+      if (isset($aTrace['file'])) $sFile = new HTML_Tag('u', strrchr($aTrace['file'], DIRECTORY_SEPARATOR));
+      else $sFile = 'xxx';
+      
+      if (isset($aTrace['class'])) $sClass = "::{$aTrace['class']}";
+      else $sClass = '';
+      
+      // Arguments
+      
+      $oArguments = null;
+      
+      if (isset($aTrace['args']) && $aTrace['args']) {
+        
+        $aArguments = array();
+        $iMaxLength = 80 / count($aTrace['args']);
+        
+        foreach ($aTrace['args'] as $mArgument) {
+          
+          if (is_string($mArgument))
+            $aValue = array("'".stringResume($mArgument, $iMaxLength)."'", 'gray');
+          else if (is_array($mArgument))
+            $aValue = array('array('.count($mArgument).')', 'black');
+          else if ($mArgument instanceof XML_Element)
+            $aValue = array("'".stringResume($mArgument, $iMaxLength)."'", 'blue');
+          else if (is_object($mArgument))
+            $aValue = array(get_class($mArgument), 'red');
+          else if ($mArgument === null) $aValue = array('NULL', 'magenta');
+          else $aValue = array('undefined', 'orange');
+          
+          $aArguments[] = new HTML_Span($aValue[0], array('style' => 'color: '.$aValue[1].';'));
+          $aArguments[] = ', ';
+        }
+        
+        if ($aArguments) array_pop($aArguments);
+        
+        $oArguments = new HTML_Span($aArguments);
+      }
+      
+      $aResult[] = new HTML_Div(array(
+        '[',
+        new HTML_Span($aLines[$i], array('style' => 'color: blue; font-weight: bold;')),
+        '] ',
+        $sFile,
+        $sClass,
+        "::",
+        new HTML_Strong($aTrace['function']),
+        '(',  $oArguments, ')'));
+      
+      $i++;
+    }
+    
+    return new HTML_Div(array_reverse($aResult), array('style' => 'margin: 3px; padding: 3px; border: 1px solid white; border-width: 1px 0 1px 0; font-size: 0.8em'));
+    // self::addMessage(new HTML_Strong(t('Backtrace').' : ').implode('<br/>', $aResult), $sStatut);
+    // return new XML_NodeList($aResult);
   }
   
   /* *** */
@@ -564,6 +589,32 @@ class Controler {
     self::$sPath = '/'.$sPath;
   }
   
+  public static function listDirectory($sPath, $aExtensions) {
+    
+    $sPath = self::getDirectory().$sPath;
+    
+    if (substr($sPath, -1) != '/') $sPath .= '/';
+    
+    $aValidFiles = array();
+    
+    if (file_exists($sPath)) {
+      
+      $aFiles = scandir($sPath);
+      
+      foreach ($aFiles as $sFile) {
+        
+        $iExtensionPosition = strrpos($sFile, '.');
+        $sExtension = $iExtensionPosition ? substr($sFile, $iExtensionPosition + 1) : '';
+        $sPathFile = $sPath.$sFile;
+        
+        if ($sExtension && in_array(strtolower($sExtension), $aExtensions) && is_file($sPathFile)) $aValidFiles[] = $sFile;
+      }
+      
+    }
+    
+    return $aValidFiles;
+  }
+  
   public static function getDirectory() {
     
     return PATH_PHP.'/';
@@ -572,7 +623,7 @@ class Controler {
   public static function isAdmin() {
     
     if (DEBUG) return true;
-    else if (self::getUser()) return self::getUser()->isRole('developpeur');
+    else if (self::getUser()) return self::getUser()->isMember('0');
     else return false;
   }
   
@@ -878,6 +929,7 @@ class Messages extends XML_Action {
     
     // Add allowed statuts in docs
     $this->addArray($aStatuts);
+    
     $this->getBloc('allowed')->add($this->getChildren());
   }
   

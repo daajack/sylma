@@ -140,6 +140,19 @@ class XML_Action extends XML_Document {
   
   public function parse() {
     
+    if ($oWindow = $this->get('window')) {
+      
+      foreach ($oWindow->getChildren() as $oChild) {
+        
+        switch ($oChild->getName()) {
+          
+          case 'add-js' : Controler::getWindow()->addJS($oChild->getValue()); break;
+          case 'add-css' : Controler::getWindow()->addJS($oChild->getValue()); break;
+          case 'content-title' : Controler::getWindow()->getBloc('content-title')->add(t($oChild->getValue())); break;
+        }
+      }
+    }
+    
     $oDocument = new XML_Document($this->get('document/*'));
     $oTemplate = new XML_Document($this->get('template/*'));
     

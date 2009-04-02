@@ -6,7 +6,7 @@
 
 function userErrorHandler($errno, $errstr, $errfile, $errline) {
   
-  if (DEBUG || Controler::isAdmin()) {
+  if (Controler::isAdmin()) {
     
     $oMessage = new HTML_Div;
     $oMessage->add(
@@ -18,6 +18,9 @@ function userErrorHandler($errno, $errstr, $errfile, $errline) {
       
     if (Controler::isReady()) Controler::getMessages()->addMessage(new Message($oMessage, 'error'));
     else echo $oMessage;
+    
+    return false;
+    
   }
   
   return true;

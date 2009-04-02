@@ -12,8 +12,17 @@ function t($s) {
  **/
 function array_val($sKey, $aArray, $sDefault = '') {
   
-  if (is_array($aArray) && is_string($sKey) && array_key_exists($sKey, $aArray)) return $aArray[$sKey];
+  if (is_array($aArray) && (is_string($sKey) || is_numeric($sKey)) && array_key_exists($sKey, $aArray)) return $aArray[$sKey];
   else return $sDefault;
+}
+
+function array_clear($aArray, $sDefault = '') {
+  
+  $aCopyArray = $aArray;
+  
+  foreach ($aArray as $sKey => $sValue)if (!$sValue) unset($aCopyArray[$sKey]);
+  
+  return $aCopyArray;
 }
 
 /*

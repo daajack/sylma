@@ -290,7 +290,7 @@ class Controler {
     
     if (self::getUser()->isReal()) {
       
-      $oMessage = new HTML_Strong(t('Rôle(s)').' : ');
+      $oMessage = new HTML_Strong(t('Groupe(s)').' : ');
       
       if (self::getUser()->getRoles()) {
         
@@ -589,6 +589,110 @@ class Controler {
     self::$sPath = '/'.$sPath;
   }
   
+  public static function browseDirectory($sPath, $aAllowedExt = array(), $aExcludedExt = array(), $aAllowedPath = array(), $aExcludedPath = array(), $iMaxLevel = 0) {
+    
+    $oDocument = new XML_Document();
+    
+    if ($sPath && $sPath != '/') {
+      
+      if ($sPath{0} != '/') $sPath = '/'.$sPath;
+      
+      $iLastPosition = strrpos($sPath, '/');
+      $sName = substr($sPath, $iLastPosition + 1);
+      
+    } else { $sName = '/'; $sPath = ''; }
+    
+    $aPath = array(
+      MAIN_DIRECTORY, // Base dir - file
+      $sPath, // Origin dir - http
+      '', // Relative dir - origin relative
+      '');// Name
+    
+    $oDocument->set(self::buildFile($aPath, $aAllowedExt, $aExcludedExt, $aAllowedPath, $aExcludedPath, 0, $iMaxLevel));
+    
+    if ($oDocument->getRoot()) $oDocument->getRoot()->setAttributes(array(
+      'full-path' => '/'.$sPath,
+      'name' => $sName));
+    
+    return $oDocument;
+  }
+  
+  public static function buildFile($aPath, $aAllowedExt = array(), $aExcludedExt = array(), $aAllowedPath = array(), $aExcludedPath = array(), $iLevel = 0, $iMaxLevel = 0) {
+    
+    $sRelativePath = array_val(2, $aPath, '');
+    $sName = array_val(3, $aPath, '');
+    
+    $sRelativeName = implode('/', array_clear(array_slice($aPath, 2))); // origin relative
+    $sFullName = implode('/', array_clear(array_slice($aPath, 1))); // http
+    $sRealName = implode('/', array_clear($aPath)); // file
+    
+    if ($sRelativeName) $aPath[2] = $sRelativeName;
+    
+    if (file_exists($sRealName) && (!$iMaxLevel || ($iMaxLevel > $iLevel))) {
+      
+      if (strpbrk($sName, '.')) $sExtension = substr($sName, strrpos($sName, '.') + 1);
+      else $sExtension = '';
+      
+      if (
+        (!$aAllowedExt || !$sExtension || in_array(strtolower($sExtension), $aAllowedExt)) &&
+        (!$aExcludedExt || !$sExtension || !in_array(strtolower($sExtension), $aExcludedExt))) {
+        
+        if (is_dir($sRealName)) {
+          
+          if (
+          (!$aAllowedPath || !$sRelativeName || in_array($sRelativeName, $aAllowedPath)) &&
+          (!$aExcludedPath || !$sRelativeName || !in_array($sRelativeName, $aExcludedPath))) {
+            
+            // directory
+            
+            $oDirectory = new XML_Tag('directory', null, array(
+              'full-path' => $sFullName,
+              'name' => $sName));
+            
+            if ($sRelativePath) $oDirectory->setAttribute('path', $sRelativePath.'/');
+            
+            $aFiles = scandir($sRealName);
+            asort($aFiles);
+            
+            foreach ($aFiles as $sFile) {
+              
+              if ($sFile != '.' && $sFile != '..') {
+                
+                $aPath[3] = $sFile;
+                
+                $oDirectory->add(self::buildFile(
+                  $aPath,
+                  $aAllowedExt,
+                  $aExcludedExt,
+                  $aAllowedPath,
+                  $aExcludedPath,
+                  $iLevel + 1,
+                  $iMaxLevel));
+              }
+            }
+            
+            return $oDirectory;
+          }
+          
+        } else {
+          
+          // file
+          
+          $oFile = new XML_Tag('file', null, array(
+            'full-path' => $sFullName,
+            'name' => $sName,
+            'extension' => $sExtension));
+          
+          if ($sRelativePath) $oFile->setAttribute('path', $sRelativePath.'/');
+          
+          return $oFile;
+        }
+      }
+    }
+    
+    return null;
+  }
+  
   public static function listDirectory($sPath, $aExtensions) {
     
     $sPath = self::getDirectory().$sPath;
@@ -607,11 +711,19 @@ class Controler {
         $sExtension = $iExtensionPosition ? substr($sFile, $iExtensionPosition + 1) : '';
         $sPathFile = $sPath.$sFile;
         
-        if ($sExtension && in_array(strtolower($sExtension), $aExtensions) && is_file($sPathFile)) $aValidFiles[] = $sFile;
+        if ($aExtensions) {
+          
+          // If extensions given get only there
+          
+          if ($sExtension && in_array(strtolower($sExtension), $aExtensions) && is_file($sPathFile))
+            $aValidFiles[] = $sFile;
+          
+          // Else, get all
+          
+        } else $aValidFiles[] = $sFile;
       }
-      
     }
-    
+        
     return $aValidFiles;
   }
   

@@ -65,7 +65,7 @@ class XML_Document extends DOMDocument {
   
   private function buildRights() {
     
-    if (Controler::getUser() && $this->getRoot() && $this->lookupNamespaceURI('ls')) {
+    if (Controler::getUser() && $this->getRoot() && $this->hasNamespace(NS_SECURITY)) {
       
       $oNodes = $this->query('//*[@ls:owner|@ls:mode|@ls:group]');
       
@@ -108,7 +108,13 @@ class XML_Document extends DOMDocument {
   
   public function dsp($bHtml = false) {
     
-    echo $this->view();
+    $oView = new XML_Document($this);
+    $oView->formatOutput();
+    
+    $oPre = new XML_Tag('pre');
+    $oPre->addText(htmlentities($oView));
+    
+    echo $oPre;
   }
   
   public function startString($sString, $sSource = '') {
@@ -152,7 +158,7 @@ class XML_Document extends DOMDocument {
   }
   
   public function isEmpty() {
-  
+    
     return !($this->getRoot());
   }
   
@@ -174,6 +180,8 @@ class XML_Document extends DOMDocument {
   public function load($sPath) {
     
     parent::load($sPath);
+    XML_Controler::addStat('load');
+    
     $this->appendRights();
   }
   
@@ -181,14 +189,8 @@ class XML_Document extends DOMDocument {
     
     if ($sContent) {
       
-      try {
-        
-        parent::loadXML($sContent);
-        
-      } catch (Exception $e) {
-        
-        XML_Controler::addMessage(array('Résultat de la transformation incorrect', new HTML_Hr, $sContent), 'error');
-      }
+      parent::loadXML($sContent);
+      if ($this->isEmpty()) XML_Controler::addMessage(array('Document : contenu invalide', new HTML_Br, $sContent), 'error');
       
     } else XML_Controler::addMessage('Document : Aucun contenu. La chaîne est vide !', 'error');
     
@@ -372,9 +374,9 @@ class XML_Document extends DOMDocument {
     return null;
   }
   
-  public function addArray($aChildren) {
+  public function addArray($aChildren, $sName = '') {
     
-    if ($this->getRoot()) return $this->getRoot()->addArray($aChildren);
+    if ($this->getRoot()) return $this->getRoot()->addArray($aChildren, $sName);
     else return null;
   }
   
@@ -445,6 +447,7 @@ class XML_Document extends DOMDocument {
     
     $oResult = new XML_Document();
     $oResult->loadText($oStyleSheet->transformToXML($this));
+    XML_Controler::addStat('parse');
     
     return $oResult;
   }
@@ -482,7 +485,7 @@ class XML_Element extends DOMElement {
     
     if (!$oDocument) $oDocument = new XML_Document();
     $oDocument->add($this);
-    $this->remove();
+    // $this->remove();
     $this->set($oContent);
     if ($aAttributes) $this->addAttributes($aAttributes);
   }
@@ -571,6 +574,7 @@ class XML_Element extends DOMElement {
       if ($sNamespace) $xPath->registerNamespace($sNamespace, $this->lookupNamespaceURI($sNamespace));
       
       $mResult = $this->getDocument()->queryString($xPath->evaluate($sQuery, $this));
+      XML_Controler::addStat('query');
       
       if ($mResult === null) {
         
@@ -599,13 +603,25 @@ class XML_Element extends DOMElement {
       $xPath = new DOMXPath($this->getDocument());
       $mResult = null;
       
+      if ($sUrl = $this->getDocument()->getRoot()->getAttribute('xmlns')) {
+        
+        if ($sNamespace != '-') $sNamespace = 'ns';
+        else $sNamespace = '';
+      }
+      
       if ($sNamespace) {
         
         // Use Namespace
         
-        if ($sUrl = $this->lookupNamespaceURI($sNamespace)) {
+        if ($sNamespace != 'ns') $sUrl = $this->lookupNamespaceURI($sNamespace);
+        
+        if ($sUrl) {
           
-          XML_Controler::addMessage(xt("Element : Ajout de l'espace de nom : '%s'", new HTML_Strong($sNamespace)), 'report');
+          XML_Controler::addMessage(xt(
+            "Element : Ajout de l'espace de nom : '%s' => '%s'",
+            new HTML_Strong($sNamespace),
+            new HTML_Strong($sUrl)), 'report');
+          
           $xPath->registerNamespace($sNamespace, $sUrl);
           
           $mResult = $xPath->query($sQuery, $this);
@@ -622,9 +638,11 @@ class XML_Element extends DOMElement {
         $mResult = $xPath->query($sQuery, $this);
       }
       
+      XML_Controler::addStat('query');
+      
       if (!$mResult || !$mResult->length)
         XML_Controler::addMessage(xt("Element->query(%s) : Aucun résultat", new HTML_Strong($sQuery)), 'warning');
-      
+      // ////// report type will crash system in DEBUG mode, maybe something TODO /////// //
       return new XML_NodeList($mResult);
       
     } else {
@@ -658,10 +676,11 @@ class XML_Element extends DOMElement {
   /*
    * setAttribute() Security override
    **/
-  public function setAttribute($sName, $sValue) {
+  public function setAttribute($sName, $sValue = '') {
     
     // TODO : RIGHTS
-    parent::setAttribute($sName, $sValue);
+    if ($sValue) parent::setAttribute($sName, $sValue);
+    else $this->removeAttribute($sName);
   }
   
   public function addAttribute($oAttribute) {
@@ -918,13 +937,14 @@ class XML_Element extends DOMElement {
   
   /*** Array ***/
   
-  public function addArray($aChildren) {
+  public function addArray($aChildren, $sName = '') {
     
     $aResult = array();
     
     foreach ($aChildren as $sKey => $sValue) {
       
-      if (!is_numeric($sKey)) $aResult[] = $this->addNode($sKey, $sValue);
+      if ($sName) $aResult[] = $this->addNode($sName, $sValue, array('name' => $sKey));
+      else if (!is_numeric($sKey)) $aResult[] = $this->addNode($sKey, $sValue);
       else $aResult[] = $this->addNode($sValue);
     }
     
@@ -943,9 +963,26 @@ class XML_Element extends DOMElement {
     return $this->insertText($sValue);
   }
   
-  public function getName() {
+  public function hasNamespace($sNamespace = '') {
     
-    return $this->nodeName;
+    if ($sNamespace) return ($this->getNamespace() == $sNamespace);
+    else return ($this->getNamespace());
+  }
+  
+  public function getNamespace() {
+    
+    return $this->namespaceURI;
+  }
+  
+  public function getPrefix() {
+    
+    return $this->prefix;
+  }
+  
+  public function getName($bLocal = false) {
+    
+    if ($bLocal) return $this->localName;
+    else return $this->nodeName;
   }
   
   public function implode($sSep, $cChildren) {
@@ -1120,7 +1157,13 @@ class XML_NodeList implements Iterator {
     
     foreach ($this->aNodes as $oNode) {
       
-      if (method_exists($oNode, $sMethod)) $oNode->$sMethod($aArguments);
+      if (method_exists($oNode, $sMethod)) {
+        
+        $aEvalArguments = array();
+        for ($i = 0; $i < count($aArguments); $i++) $aEvalArguments[] = "\$aArguments[$i]";
+        
+        eval('$oResult = $oNode->$sMethod('.implode(', ', $aEvalArguments).');');
+      }
       else XML_Controler::addMessage(xt('NodeList : Méthode %s introuvable', new HTML_Strong($sMethod)), 'error');
     }
   }

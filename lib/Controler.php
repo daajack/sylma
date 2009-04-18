@@ -15,7 +15,6 @@ class Controler {
   private static $sWindowType = 'html';
   
   private static $oWindow;
-  private static $oSettings = null;
   
   private static $sClassName = '';
   private static $sOperationName = '';
@@ -98,23 +97,18 @@ class Controler {
   
   // Ajout des infos système
   
-  public static function getSettings() {
-    
-    return self::$oSettings;
-  }
-  
   public static function loadSettings() {
     
     $oSettings = new XML_Document('/xml/root.xml', 'file');
     
-    $oSettings->add(new XML_Document('/xml/actions.xml', 'file'));
+    // $oSettings->add(new XML_Document('/xml/actions.xml', 'file'));
     // $oSettings->addNode('users', implode(',', array('root', 'john', 'serge', 'daajack')));
     // $oSettings->addNode('groups', implode(',', array('0', 'lemon', 'team', 'dev')));
     
     self::$oMessages = new Messages(explode(',', $oSettings->read('//messages/allowed')));
     self::$aAllowedWindowType = $oSettings->query('//window/*')->toArray('name');
     
-    self::$oSettings = $oSettings;
+    // self::setArgument('settings', $oSettings);
     self::setReady();
   }
   
@@ -342,6 +336,10 @@ class Controler {
     self::addMessage(array(
       new HTML_Strong(t('Messages').' : '),
       implode(', ', self::getMessages()->getAllowedMessages())), 'system');
+    
+    self::addMessage(array(
+      new HTML_Strong(t('Statistiques XML').' : '),
+      XML_Controler::viewStats()), 'system');
   }
   
   public static function doAJAXRedirect($oRedirect) {

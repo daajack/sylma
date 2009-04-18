@@ -28,56 +28,201 @@ class XML_Action extends XML_Document {
     
     $oDocument = new XML_Document($sPath, $sSource);
     
-    if (!$oDocument->isEmpty()) return $this->loadActionSettings($oDocument, $oRedirect);
+    if (!$oDocument->isEmpty()) {
+      
+      //if ($oDocument->getRoot()->getNamespace() == '')
+      switch ($oDocument->getRoot()->getNamespace()) {
+        
+        case NS_EXECUTION : $oAction = $this->_loadExecutable($oDocument->getRoot(), $oRedirect); break;
+        case NS_INTERFACE : $oAction = $this->_loadInterface($oDocument); break;
+      }
+      
+    } else $oAction = null;
+    
+    return $oAction;
   }
   
-  public function loadActionSettings($oElement, $oRedirect = null) {
+  private function _parseArguments($oChildren) {
     
-    $sFile = $oElement->read('class/file');
-    $sClass = $oElement->read('class/name');
-    $sMethod = $oElement->read('method');
-    $bRedirect = $oElement->test("@redirect='true'");
+    // Load IML
     
-    if ($bRedirect) $oRedirect = null;
+    foreach ($oChildren as $oChild) {
+      
+      // if 
+    }
     
-    return $this->runAction($sClass, $sMethod, $sFile, $oRedirect);
+    $sFile = $oSettings->read('class/file');
+    $sClass = $oSettings->read('class/name');
+    $sMethod = $oSettings->read('method');
+    $bRedirect = $oSettings->test("@redirect='true'");
   }
   
-  public function runAction($sClassName, $sMethodName, $sFile = '', $oRedirect = null) {
+  private function _loadInterface($oObject, $oElement, $oRedirect = null) {
+    
+    
+  }
+  
+  private function _loadExecutable($oElement, $oRedirect = null) {
+    
+    $oResult = new XML_Document;
+    
+    foreach ($oElement->getChildren() as $oChild) {
+      
+      switch ($oChild->getNamespace()) {
+        
+        case NS_EXECUTION :
+          
+          switch ($oChild->getName(true)) {
+            
+            case 'settings' :
+              
+              // ?
+              
+            break;
+            
+            default :
+              
+              $oResult->add($this->_loadSubExecutable($oChild, $oRedirect));
+              
+            break;
+          }
+          
+        break;
+        
+        case NS_INTERFACE :
+        
+        break;
+        
+        default:
+          
+          $oResult->add($oElement);
+          
+        break;
+      }
+    }
+    
+    return $oResult;
+  }
+  
+  private function _loadSubExecutable($oElement, $oRedirect = null) {
+    
+    switch ($oElement->getName(true)) {
+      
+      case 'action' :
+        
+        if ($sPath = $oElement->read('@path')) {
+          
+          // @path
+          
+          $oResult = $this->loadAction($sPath);
+          
+        } else if ($sCall = $oElement->read('@call')) {
+          
+          // @call
+          
+          $oObjectElement = $oStatics->get("//*[@name='$sCall']");
+          
+          try { eval('$oObject = '.$oObjectElement->read("call").';'); }
+          catch (Exception $e) { Controler::errorRedirect(xt('L\'objet "%s" n\'existe pas !', $oObjectElement->read('call'))); }
+          
+          $sInterface = $oStatics->read("interface");
+          
+          // $oResult = $this->load
+        }
+        
+        // $oAction = $this->_buildAction($sClass, $sFile, $aArguments, $sArguments);
+        // $oResult = $this->_loadBloc($oAction, $oElement, $oRedirect);
+        
+      break;
+      
+      case 'file' :
+      
+      break;
+    }
+    
+    // if ($oObject instanceof XML_Document) $sIml = '/users/web/xml_document.iml';
+    // else if ($oObject instanceof XML_Element) $sIml = '/users/web/xml_element.iml';
+    
+    $oStatics = new XML_Document('/users/web/statics.cml');
+    
+    $sPrefix = $oElement->getPrefix();
+    
+    foreach ($oElement->getChildren() as $oChild) {
+      
+      switch ($oChild->getNamespace()) {
+        
+        case NS_EXECUTION :
+          
+          
+        break;
+        
+        case NS_INTERFACE :
+        
+        break;
+        
+        default:
+        
+        break;
+      }
+    }
+    
+    // CALL argument
+    
+    $aEvalArguments = array();
+    
+    for ($i = 0; $i < count($aArguments); $i++) $aEvalArguments[] = "\$aArguments[$i]";
+    $sArguments = implode(', ', $aEvalArguments);
+    
+    // CALL actions
+    
+    if ($sMethod) {
+      
+      $oResult = $this->_runAction($oAction, $sMethod, $aArguments, $sArguments);
+      return $oResult;
+      
+    } else return $oAction;
+  }
+  
+  private function _buildAction($sClassName, $sFile = '', $aArguments = null, $sArguments = '') {
     
     if ($sFile) {
       
       // Include du fichier
+      
       $sFile = Controler::getDirectory().$sFile;
       
       if (file_exists($sFile)) require_once($sFile);
       else if (Controler::isAdmin()) Controler::addMessage(sprintf(t('Fichier "%s" introuvable !'), $sFile));
     }
     
-    // Contrôle de l'existence de la classe et de l'opération
+    // Contrôle de l'existence de la classe
     
-    if (Controler::isAdmin()) $sClassError = sprintf(t('Action impossible (la classe "%s" n\'existe pas) !'), new HTML_Strong($sClassName));
-    else $sClassError = t('Page introuvable, veuillez corriger l\'adresse !');
+    if (Controler::isAdmin()) $sError = sprintf(t('Action impossible (la classe "%s" n\'existe pas) !'), new HTML_Strong($sClassName));
+    else $sError = t('Page introuvable, veuillez corriger l\'adresse !');
     
-    if (!class_exists($sClassName)) Controler::errorRedirect($sClassError);
+    if (!class_exists($sClassName)) Controler::errorRedirect($sError);
     
     // Création de la classe
     
-    $oAction = new $sClassName($oRedirect);
+    eval("\$oAction = new \$sClassName($sArguments)");
     
-    if ($sMethodName) {
-      
-      // Création de la méthode
-      
-      if (Controler::isAdmin()) $sOperationError = sprintf(t('Action impossible (la méthode "%s" n\'existe pas) !'), new HTML_Strong(Controler::getClassName().'::'.$sMethodName.'()'));
-      else $sOperationError = t('Page introuvable, veuillez corriger l\'adresse !');
-      
-      if (!method_exists($oAction, $sMethodName)) Controler::errorRedirect($sOperationError);
-      else $oResult = $oAction->$sMethodName($oRedirect);
-      
-      return $oResult;
-      
-    } else return $oAction;
+    return $oAction;
+  }
+  
+  private function _runAction($oAction, $sMethodName, $oRedirect = null, $sArguments = '') {
+    
+    // Contrôle de l'existence de la méthode
+    
+    if (Controler::isAdmin()) $sError = sprintf(t('Action impossible (la méthode "%s" n\'existe pas) !'), new HTML_Strong(Controler::getClassName().'::'.$sMethodName.'()'));
+    else $sError = t('Page introuvable, veuillez corriger l\'adresse !');
+    
+    if (!method_exists($oAction, $sMethodName)) Controler::errorRedirect($sError);
+    
+    // Lancement de l'action
+    
+    eval("\$oResult = \$oAction->\$sMethodName($sArguments);");
+    
+    return $oResult;
   }
   
   public function setRedirect($oRedirect = null) {

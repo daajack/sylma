@@ -148,7 +148,7 @@ class XML_Document extends DOMDocument {
         XML_Controler::addMessage(xt('Document : Chargement d\'un fichier - %s', new HTML_Strong($sPath)), 'report');
         $this->loadFile($sPath);
         
-        if (!$this->getRoot())
+        if ($this->isEmpty())
           XML_Controler::addMessage(xt('Document : Aucun contenu dans %s', new HTML_Strong($sPath)), 'warning');
         
       break;
@@ -554,7 +554,7 @@ class XML_Element extends DOMElement {
   
   public function view($bHtml = false) {
     
-    $oView = clone $this;
+    $oView = $this;
     $oView->formatOutput();
     
     return new XML_Element('pre', htmlentities($oView));
@@ -565,15 +565,51 @@ class XML_Element extends DOMElement {
     echo $this->view();
   }
   
-  public function read($sQuery = '', $sNamespace = '') {
+  protected function _buildXPath($sQuery = '', $sPrefix = '') {
+    
+    $oXPath = new DOMXPath($this->getDocument());
+    
+    if ($sUrl = $this->getDocument()->getRoot()->getAttribute('xmlns')) {
+      
+      if ($sPrefix != '-') $sPrefix = 'ns';
+      else $sPrefix = '';
+    }
+    
+    if ($sPrefix) {
+      
+      // Use Namespace
+      
+      if ($sPrefix != 'ns') $sUrl = $this->lookupNamespaceURI($sPrefix);
+      
+      if ($sUrl) {
+        
+        XML_Controler::addMessage(xt(
+          "Element : Ajout de l'espace de nom : '%s' => '%s'",
+          new HTML_Strong($sPrefix),
+          new HTML_Strong($sUrl)), 'report');
+        
+        $oXPath->registerNamespace($sPrefix, $sUrl);
+        
+      } else {
+        
+        XML_Controler::addMessage(xt("Element : Espace de nom '%s' inconnu !", new HTML_Strong($sPrefix)), 'warning');
+      }
+    }
+    
+    return $oXPath;
+  }
+  
+  public function read($sQuery = '', $sPrefix = '') {
     
     if ($sQuery) {
       
       $xPath = new DOMXPath($this->getDocument());
       
-      if ($sNamespace) $xPath->registerNamespace($sNamespace, $this->lookupNamespaceURI($sNamespace));
+      if ($sPrefix) $xPath->registerNamespace($sPrefix, $this->lookupNamespaceURI($sPrefix));
       
-      $mResult = $this->getDocument()->queryString($xPath->evaluate($sQuery, $this));
+      $mResult = $this->_buildXPath($sQuery, $sPrefix)->evaluate($sQuery, $this);
+      $mResult = $this->getDocument()->queryString($mResult);
+      
       XML_Controler::addStat('query');
       
       if ($mResult === null) {
@@ -592,51 +628,15 @@ class XML_Element extends DOMElement {
    * XPath Query
    * @param $sQuery
    *   Query to execute
-   * @param $sNamespace
-   *   Namespace where to lookup the result
+   * @param $sPrefix
+   *   Prefix of the namespace where to lookup the result
    **/
   
-  public function query($sQuery, $sNamespace = '') {
+  public function query($sQuery, $sPrefix = '') {
     
     if (!$this->isEmpty() && is_string($sQuery) && $sQuery) {
       
-      $xPath = new DOMXPath($this->getDocument());
-      $mResult = null;
-      
-      if ($sUrl = $this->getDocument()->getRoot()->getAttribute('xmlns')) {
-        
-        if ($sNamespace != '-') $sNamespace = 'ns';
-        else $sNamespace = '';
-      }
-      
-      if ($sNamespace) {
-        
-        // Use Namespace
-        
-        if ($sNamespace != 'ns') $sUrl = $this->lookupNamespaceURI($sNamespace);
-        
-        if ($sUrl) {
-          
-          XML_Controler::addMessage(xt(
-            "Element : Ajout de l'espace de nom : '%s' => '%s'",
-            new HTML_Strong($sNamespace),
-            new HTML_Strong($sUrl)), 'report');
-          
-          $xPath->registerNamespace($sNamespace, $sUrl);
-          
-          $mResult = $xPath->query($sQuery, $this);
-          
-        } else {
-          
-          XML_Controler::addMessage(xt("Element : Espace de nom '%s' inconnu !", new HTML_Strong($sNamespace)), 'warning');
-        }
-        
-      } else {
-        
-        // No Namespace
-        
-        $mResult = $xPath->query($sQuery, $this);
-      }
+      $mResult = $this->_buildXPath($sQuery, $sPrefix)->query($sQuery, $this);
       
       XML_Controler::addStat('query');
       
@@ -652,14 +652,9 @@ class XML_Element extends DOMElement {
     }
   }
   
-  public function test($sPath, $sNamespace = '') {
+  public function get($sQuery, $sPrefix = '') {
     
-    return (bool) $this->get($sPath, $sNamespace);
-  }
-  
-  public function get($sQuery, $sNamespace = '') {
-    
-    return $this->getDocument()->queryOne($this->query($sQuery, $sNamespace));
+    return $this->getDocument()->queryOne($this->query($sQuery, $sPrefix));
   }
   
   /*** Attributes ***/

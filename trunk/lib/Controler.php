@@ -64,8 +64,12 @@ class Controler {
       
       // DEBUG
       
-      if (self::isAdmin()) error_reporting(E_ALL);
-      else error_reporting(0);
+      if (self::isAdmin()) {
+        
+        if (DEBUG) error_reporting(E_ALL);
+        else error_reporting(ERROR_LEVEL);
+        
+      } else error_reporting(0);
       
       /*** Lancement de l'action, récupuration du contenu / redirect ***/
       

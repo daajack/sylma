@@ -24,42 +24,174 @@ class XML_Action extends XML_Document {
     $this->getBloc('actions')->add($this->loadAction($sPath, $oRedirect = null, $sSource = ''));
   }
   
-  public function loadAction($sPath, $oRedirect = null, $sSource = '') {
+  private function _parsePath($sPath) {
     
-    $oDocument = new XML_Document($sPath, $sSource);
+    $bValidPath = false;
     
-    if (!$oDocument->isEmpty()) {
+    $sBasePath = MAIN_DIRECTORY.'/';
+    $sResultPath = '';
+    $bError = false;
+    
+    $sArguments = '';
+    
+    // Find file
+    
+    if ($sPath{0} == '/') {
       
-      //if ($oDocument->getRoot()->getNamespace() == '')
-      switch ($oDocument->getRoot()->getNamespace()) {
+      // absolute path
+      
+      $bAbsolute = true;
+      $sPath = substr($sPath, 1);
+      
+    } else $bAbsolute = false; // relative path
+    
+    $sPreviousPath = '';
+    $sNextPath = $sPath;
+    
+    // Remove arguments following '?'
+    
+    if ($iNextQuestion = strpos($sPath, '?')) {
+      
+      $sArguments = substr($sNextPath, $iNextQuestion);
+      $sNextPath = substr($sNextPath, 0, $iNextQuestion);
+    }
+    
+    do {
+      
+      // only val/val?val not val?val/val
+      if ($iNextSlash = strpos($sNextPath, '/')) {
         
-        case NS_EXECUTION : $oAction = $this->_loadExecutable($oDocument->getRoot(), $oRedirect); break;
-        case NS_INTERFACE : $oAction = $this->_loadInterface($oDocument); break;
+        $sSubPath = substr($sNextPath, 0, $iNextSlash);
+        $sNextPath = substr($sNextPath, $iNextSlash + 1);
+        
+      } else $sSubPath = $sNextPath;
+      
+      $sActualPath = $sPreviousPath.$sSubPath;
+      
+      if (is_file($sBasePath.$sActualPath)) $sResultPath = $sActualPath;
+      else if (is_file($sBasePath.$sActualPath.'.iml')) $sResultPath = $sActualPath.'.iml';
+      else if (is_file($sBasePath.$sActualPath.'.eml')) $sResultPath = $sActualPath.'.eml';
+      else if (is_file($sBasePath.$sActualPath.'.dml')) $sResultPath = $sActualPath.'.dml';
+      else if (is_dir($sBasePath.$sActualPath)) {
+        
+        // directory
+        
+        if ($sNextPath) $sPreviousPath .= $sSubPath.'/';
+        else {
+          
+          if (file_exists($sBasePath.$sActualPath.'/index.eml')) $sResultPath = $sPath.'/index.eml';
+          else {
+            
+            $bError = true;
+            Controler::addMessage(t('Action : Le listing de répertoire n\'est point encore possible :|'), 'warning');
+            break;
+          }
+        }
+        
+      } else {
+        
+        $bError = true;
+        Controler::addMessage(xt('Action : Action "%s" introuvable !', new HTML_Strong($sActualPath)), 'warning');
+        break;
       }
       
-    } else $oAction = null;
+    } while (!$sResultPath && !$bError);
+    
+    // Get arguments of type ..?arg1=val&arg2=val..
+    
+    if (!$bError) {
+      
+      $aArguments = array();
+      
+      if ($sArguments) {
+        
+        $aStringArguments = explode('&', substr($sArguments, 1));
+        
+        foreach ($aStringArguments as $sArgument) {
+          
+          $aArgument = explode('=', $sArgument);
+          
+          if (count($aArgument) == 1) $aArguments[$aArgument[0]] = true; // only name
+          else $aArguments[$aArgument[0]] = $aArgument[1]; // name and value
+        }
+      }
+      
+      return array('path' => '/'.$sResultPath, 'arguments' => $aArguments);
+      
+    } else return array();
+  }
+  
+  public function loadAction($sPath, $oRedirect = null, $sSource = '') {
+    
+    $oAction = new XML_Document;
+    $aPath = $this->_parsePath($sPath);
+    // dsp($aPath);
+    if ($aPath) {
+      
+      $oDocument = new XML_Document($aPath['path'], $sSource);
+      
+      if (!$oDocument->isEmpty()) {
+        
+        //if ($oDocument->getRoot()->getNamespace() == '')
+        switch ($oDocument->getRoot()->getNamespace()) {
+          
+          case NS_EXECUTION : $oAction = $this->_loadExecutable($oDocument->getRoot(), $oRedirect); break;
+          case NS_INTERFACE : $oAction = $this->_loadInterface($oDocument->getRoot(), $aPath['arguments']); break;
+        }
+      }
+    }
     
     return $oAction;
   }
   
-  private function _parseArguments($oChildren) {
+  private function _loadInterface($oElement, $aArguments = array()) {
     
-    // Load IML
+    $oResult = null;
+    $bError = false;
     
-    foreach ($oChildren as $oChild) {
+    if ($oConstruct = $oElement->get('ns:method-construct')) {
       
-      // if 
+      $oArguments = $oConstruct->query('ns:argument');
+      
+      if ($oArguments->length) {
+        
+        $aArguments = $this->_parseArguments($oArguments, $aArguments);
+        if (!$aArguments) {
+          
+          Controler::addMessage('Action : Erreur dans les arguments, impossible de construire l\'objet', 'warning');
+          $bError = true;
+        }
+      }
     }
     
-    $sFile = $oSettings->read('class/file');
-    $sClass = $oSettings->read('class/name');
-    $sMethod = $oSettings->read('method');
-    $bRedirect = $oSettings->test("@redirect='true'");
+    if (!$bError) {
+      
+      $oResult = $this->_buildClass($oElement->read('ns:name'), $oElement->read('ns:file'), $aArguments);
+      
+      // foreach ($oElement->query('ns:method') as $oChild) {
+        
+        // switch ($oChild->getNamespace()) {
+          
+          // case NS_INTERFACE :
+            
+            // ?
+            
+          // break;
+          
+          // default:
+            
+            // $oResult->add($oElement);
+            
+          // break;
+        // }
+      // }
+    }
+    
+    return $oResult;
   }
   
-  private function _loadInterface($oObject, $oElement, $oRedirect = null) {
-    
-    
+  private function _useInterface($oElement, $aArguments = array()) {
+  
   }
   
   private function _loadExecutable($oElement, $oRedirect = null) {
@@ -90,7 +222,9 @@ class XML_Action extends XML_Document {
         break;
         
         case NS_INTERFACE :
-        
+          
+          // ?
+          
         break;
         
         default:
@@ -106,32 +240,34 @@ class XML_Action extends XML_Document {
   
   private function _loadSubExecutable($oElement, $oRedirect = null) {
     
+    $oStatics = new XML_Document('/users/web/statics.cml');
+    
     switch ($oElement->getName(true)) {
       
       case 'action' :
         
-        if ($sPath = $oElement->read('@path')) {
-          
-          // @path
-          
-          $oResult = $this->loadAction($sPath);
-          
-        } else if ($sCall = $oElement->read('@call')) {
-          
-          // @call
-          
-          $oObjectElement = $oStatics->get("//*[@name='$sCall']");
-          
-          try { eval('$oObject = '.$oObjectElement->read("call").';'); }
-          catch (Exception $e) { Controler::errorRedirect(xt('L\'objet "%s" n\'existe pas !', $oObjectElement->read('call'))); }
-          
-          $sInterface = $oStatics->read("interface");
-          
-          // $oResult = $this->load
-        }
+        // @path
         
-        // $oAction = $this->_buildAction($sClass, $sFile, $aArguments, $sArguments);
+        $sPath = $oElement->read('@path');
+        $oResult = $this->loadAction($sPath);
+        
+        // $oAction = $this->_buildClass($sClass, $sFile, $aArguments, $sArguments);
         // $oResult = $this->_loadBloc($oAction, $oElement, $oRedirect);
+        
+      break;
+      
+      case 'static' :
+        
+        // @call
+        
+        $sCall = $oElement->read('@call');
+        $oObjectElement = $oStatics->get("//*[@name='$sCall']");
+        
+        try { eval('$oObject = '.$oObjectElement->read("call").';'); }
+        catch (Exception $e) { Controler::errorRedirect(xt('L\'objet "%s" n\'existe pas !', $oObjectElement->read('call'))); }
+        
+        $oInterface = new XML_Document($oStatics->read("interface"));
+        $oResult = $this->_loadInterface($oInterface);
         
       break;
       
@@ -142,8 +278,6 @@ class XML_Action extends XML_Document {
     
     // if ($oObject instanceof XML_Document) $sIml = '/users/web/xml_document.iml';
     // else if ($oObject instanceof XML_Element) $sIml = '/users/web/xml_element.iml';
-    
-    $oStatics = new XML_Document('/users/web/statics.cml');
     
     $sPrefix = $oElement->getPrefix();
     
@@ -177,13 +311,103 @@ class XML_Action extends XML_Document {
     
     if ($sMethod) {
       
-      $oResult = $this->_runAction($oAction, $sMethod, $aArguments, $sArguments);
+      $oResult = $this->_runMethod($oAction, $sMethod, $aArguments, $sArguments);
       return $oResult;
       
     } else return $oAction;
   }
   
-  private function _buildAction($sClassName, $sFile = '', $aArguments = null, $sArguments = '') {
+  private function _validArgumentType($mArgument, $aFormats = array()) {
+    
+    if (is_object($mArgument)) {
+      
+      foreach ($aFormats as $sFormat) if ($mArgument instanceof $sFormat) return true;
+      
+    } else {
+      
+      $sFormat = 'php-'.gettype($mArgument);
+      if (in_array($sFormat, $aFormats)) return true;
+    }
+    
+    Controler::addMessage(xt('Action : L\'argument %s n\'est pas au format "%s"',
+      new HTML_Strong($oChild->read('@name')),
+      new HTML_Strong($sFormat)), 'warning');
+    
+    return false;
+  }
+  
+  private function _parseArguments($oChildren, $aArguments) {
+    
+    // CALL argument
+    
+    $bAssoc = true;
+    $bError = false;
+    
+    if (!$bAssoc) $aArguments = array_values($aArguments);
+    
+    if ($oChildren->length == 1 && $oChildren->item(0)->getName() == 'multiple-arguments') {
+      
+      $oArguments = $oChildren->item(0);
+      
+      // Multiple arguments (undefined number)
+      
+      $iRequired = intval($oArguments->read('@required-count'));
+      
+      if (count($aArguments) >= $iRequired) {
+        
+        $aFormats = array();
+        foreach($oArguments->getChildren() as $oFormat) $aFormats[] = $oFormat->read();
+        
+        $bError = !$this->_validArgumentType($mArgument, $aFormats);
+        
+      } else {
+        
+        Controler::addMessage(t('Action : Pas assez d\'arguments !', 'warning'));
+        $bError = true;
+      }
+      
+    } else {
+      
+      // Normal arguments (defined number)
+      
+      foreach($oChildren as $mIndex => $oChild) {
+        
+        $sName = $oChild->read('@name');
+        
+        if (($bAssoc && array_key_exists($sName, $aArguments)) || (!$bAssoc && array_key_exists($mIndex, $aArguments))) {
+          
+          if ($bAssoc) $mArgument = $aArguments[$sName];
+          else $mArgument = $aArguments[$mIndex];
+          
+          $bError = !$this->_validArgumentType($mArgument, array($oChild->read('@format')));
+          
+        } else if (!$oChild->read("self[@required='false']")) {
+          
+          Controler::addMessage(xt('Action : L\'argument requis %s est absent',
+            new HTML_Strong($oChild->read('@name'))), 'warning');
+          
+          $bError = true;
+        }
+      }
+    }
+    
+    if (!$bError) {
+      
+      $aEvalArguments = array();
+      
+      foreach ($aArguments as $mIndex => $mArgument) $aEvalArguments[] = "\$aArguments['arguments']['$mIndex']";
+      $sArguments = implode(', ', $aEvalArguments);
+      
+      return array(
+        'result' => true,
+        'string' => $sArguments,
+        'arguments' => $aArguments,
+      );
+      
+    } else return false;
+  }
+  
+  private function _buildClass($sClassName, $sFile = '', $aArguments = array()) {
     
     if ($sFile) {
       
@@ -204,12 +428,12 @@ class XML_Action extends XML_Document {
     
     // Création de la classe
     
-    eval("\$oAction = new \$sClassName($sArguments)");
+    eval("\$oAction = new \$sClassName({$aArguments['string']});");
     
     return $oAction;
   }
   
-  private function _runAction($oAction, $sMethodName, $oRedirect = null, $sArguments = '') {
+  private function _runMethod($oAction, $sMethodName, $oRedirect = null, $sArguments = '') {
     
     // Contrôle de l'existence de la méthode
     

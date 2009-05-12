@@ -16,7 +16,7 @@
  * 'class' et 'style' doivent être des tableaux qui rempliront les attributs correspondants
  * 'display' fixera le comportement du conteneur (float, inline ou default)
  */
-class HTML_Field extends XML_Action {
+class HTML_Field extends Temp_Action {
   
   private $aArguments = array();
   

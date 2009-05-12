@@ -1,6 +1,6 @@
 <?php
 
-class User extends XML_Action {
+class User extends Temp_Action {
   
   private $sUser = '';
   private $aGroups = array();

@@ -25,6 +25,9 @@ class Controler {
   
   public static function trickMe($sDefaultModule, $sDefaultAction) {
     
+    XML_Controler::init();
+    Action_Controler::init();
+    
     // Formatage de l'adresse
     
     self::loadSettings();
@@ -93,7 +96,12 @@ class Controler {
         $oContent = self::getWindow()->setContent($oResult);
       }
       
-      if (self::isAdmin()) self::getMessages()->addMessages(db::getQueries());
+      if (self::isAdmin()) {
+        
+        self::getMessages()->addMessages(XML_Controler::getMessages()->getMessages());
+        self::getMessages()->addMessages(Action_Controler::getMessages()->getMessages());
+        self::getMessages()->addMessages(db::getQueries());
+      }
     }
     
     return self::getWindow();
@@ -418,7 +426,7 @@ class Controler {
       if (isset($aTrace['args']) && $aTrace['args']) {
         
         $aArguments = array();
-        $iMaxLength = 80 / count($aTrace['args']);
+        $iMaxLength = 120 / count($aTrace['args']);
         
         foreach ($aTrace['args'] as $mArgument) {
           
@@ -428,6 +436,8 @@ class Controler {
             $aValue = array('array('.count($mArgument).')', 'black');
           else if ($mArgument instanceof XML_Element)
             $aValue = array("'".stringResume($mArgument, $iMaxLength)."'", 'blue');
+          else if ($mArgument instanceof XML_NodeList)
+            $aValue = array(xt('XML_NodeList(%s)', new HTML_Strong($mArgument->length)), 'green');
           else if (is_object($mArgument))
             $aValue = array(get_class($mArgument), 'red');
           else if ($mArgument === null) $aValue = array('NULL', 'magenta');
@@ -921,7 +931,7 @@ class URL {
   }
 }
 
-class Messages extends XML_Action {
+class Messages extends Temp_Action {
   
   private $aAllowedMessages = array();
   

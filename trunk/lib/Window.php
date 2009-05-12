@@ -174,7 +174,7 @@ class Popup extends HTML_Document implements Main {
   }
 }
 
-class Form extends XML_Action implements Main {
+class Form extends Temp_Action implements Main {
   
   private $oRedirect = null;
   

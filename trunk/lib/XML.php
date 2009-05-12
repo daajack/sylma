@@ -90,7 +90,7 @@ class XML_Document extends DOMDocument {
     }
   }
   
-  public function view($bHtml = false) {
+  public function view($bInline = false) {
     
     $oView = new XML_Document($this);
     $oView->formatOutput();
@@ -145,11 +145,11 @@ class XML_Document extends DOMDocument {
       case 'file' : 
       default :
         
-        XML_Controler::addMessage(xt('Document : Chargement d\'un fichier - %s', new HTML_Strong($sPath)), 'report');
+        XML_Controler::addMessage(xt('Document : Chargement d\'un fichier : %s', new HTML_Strong($sPath)), 'report');
         $this->loadFile($sPath);
         
         if ($this->isEmpty())
-          XML_Controler::addMessage(xt('Document : Aucun contenu dans %s', new HTML_Strong($sPath)), 'warning');
+          XML_Controler::addMessage(xt('Document : Aucun contenu dans "%s"', new HTML_Strong($sPath)), 'warning');
         
       break;
     }
@@ -191,6 +191,7 @@ class XML_Document extends DOMDocument {
       
       parent::loadXML($sContent);
       if ($this->isEmpty()) XML_Controler::addMessage(array('Document : contenu invalide', new HTML_Br, $sContent), 'error');
+      XML_Controler::addStat('read');
       
     } else XML_Controler::addMessage('Document : Aucun contenu. La chaîne est vide !', 'error');
     
@@ -268,7 +269,7 @@ class XML_Document extends DOMDocument {
           
           // XML_Document, XML_Action
           
-          if ($mValue instanceof XML_Action) $mValue = $mValue->parse();
+          if ($mValue instanceof Temp_Action) $mValue = $mValue->parse();
           
           if ($this->getRoot()) $this->removeChild($this->getRoot());
           
@@ -306,7 +307,7 @@ class XML_Document extends DOMDocument {
           
           $aChildren = array();
           
-          $this->set($this->array_shift($mValue));
+          $this->set(array_shift($mValue));
           foreach ($mValue as $oChild) $aChildren = $this->add($oChild);
           
           $mValue = $aChildren;
@@ -475,13 +476,11 @@ class XML_Tag extends XML_Element { }
 
 class XML_Element extends DOMElement {
   
-  private $aRights = array();
-  
-  public function __construct($sName = '', $oContent = '', $aAttributes = array(), $oDocument = null) {
+  public function __construct($sName = '', $oContent = '', $aAttributes = array(), $oDocument = null, $sNamespace = null) {
     
     $sName = trim((string) $sName);
     if (!$sName) $sName = 'default';
-    parent::__construct($sName);
+    parent::__construct($sName, null, $sNamespace);
     
     if (!$oDocument) $oDocument = new XML_Document();
     $oDocument->add($this);
@@ -552,12 +551,22 @@ class XML_Element extends DOMElement {
     // XML_Controler::addMessage('+'.$bUpdate.' - '.implosion(':', ' | ', $this->getRights()));
   }
   
-  public function view($bHtml = false) {
+  public function viewResume($iLimit = 100) {
+    
+    $sView = stringResume($this->view(), $iLimit);
+    $iLastSQuote = strrpos($sView, '&');
+    $iLastEQuote = strrpos($sView, ';');
+    
+    if ($iLastSQuote && $iLastEQuote < $iLastSQuote) $sView = substr($sView, 0, $iLastSQuote).'...';
+    return $sView;
+  }
+  
+  public function view($bIndent = false) {
     
     $oView = $this;
-    $oView->formatOutput();
+    if ($bIndent) $oView->formatOutput();
     
-    return new XML_Element('pre', htmlentities($oView));
+    return htmlentities($oView);
   }
   
   public function dsp($bHtml = false) {
@@ -583,10 +592,7 @@ class XML_Element extends DOMElement {
       
       if ($sUrl) {
         
-        XML_Controler::addMessage(xt(
-          "Element : Ajout de l'espace de nom : '%s' => '%s'",
-          new HTML_Strong($sPrefix),
-          new HTML_Strong($sUrl)), 'report');
+        //XML_Controler::addMessage(xt("Element : Ajout de l'espace de nom : '%s' => '%s'", new HTML_Strong($sPrefix), new HTML_Strong($sUrl)), 'report');
         
         $oXPath->registerNamespace($sPrefix, $sUrl);
         
@@ -621,7 +627,8 @@ class XML_Element extends DOMElement {
       return $mResult;
       
     } else if ($this->getValue()) return $this->getValue();
-    else return $this->getName();
+    else return '';
+    // else return $this->getName();
   }
   
   /*
@@ -640,9 +647,8 @@ class XML_Element extends DOMElement {
       
       XML_Controler::addStat('query');
       
-      if (!$mResult || !$mResult->length)
-        XML_Controler::addMessage(xt("Element->query(%s) : Aucun résultat", new HTML_Strong($sQuery)), 'warning');
-      // ////// report type will crash system in DEBUG mode, maybe something TODO /////// //
+      // if (!$mResult || !$mResult->length) XML_Controler::addMessage(xt("Element->query(%s) : Aucun résultat", new HTML_Strong($sQuery)), 'report');
+      // ////// report & notice type will crash system, maybe something TODO /////// //
       return new XML_NodeList($mResult);
       
     } else {
@@ -820,7 +826,7 @@ class XML_Element extends DOMElement {
         
       } else if ($mValue instanceof XML_Document) {
         
-        if ($mValue instanceof XML_Action) {
+        if ($mValue instanceof Temp_Action) {
           
           /* XML_Action */
           
@@ -883,10 +889,27 @@ class XML_Element extends DOMElement {
     } return null;
   }
   
+  public function replace($oChild) {
+    
+    $this->insertBefore($oChild);
+    $this->remove();
+    return $oChild;
+  }
+  
   public function remove() {
     
     if ($this->parentNode) return $this->parentNode->removeChild($this);
-    else if ($this->getDocument()->getRoot() == $this) $this->getDocument()->removeChild($this);
+    else if ($this->getDocument()->getRoot() == $this) return $this->getDocument()->removeChild($this);
+  }
+  
+  public function getFirst() {
+    
+    return $this->firstChild;
+  }
+  
+  public function getCount() {
+    
+    return new XML_NodeList($this->childNodes);
   }
   
   public function getChildren() {
@@ -1006,7 +1029,7 @@ class XML_Element extends DOMElement {
   
   public function __toString() {
     
-    try {
+    // try {
       
       // if (!$this->isReady()) return '';
       
@@ -1023,10 +1046,10 @@ class XML_Element extends DOMElement {
       
       return $sResult;
       
-		} catch ( Exception $e ) {
+		// } catch ( Exception $e ) {
       
-			XML_Controler::addMessage('Element : '.$e->getMessage(), 'error');
-		}
+			// XML_Controler::addMessage('Element : '.$e->getMessage(), 'error');
+		// }
   }
 }
 
@@ -1079,9 +1102,18 @@ class XML_Text extends DOMText {
     return $this->ownerDocument;
   }
   
-  // public function setRights($aRights) {
+  public function replace($oChild) {
     
-  // }
+    $this->insertBefore($oChild);
+    $this->remove();
+    return $oChild;
+  }
+  
+  public function remove() {
+    
+    return $this->parentNode->removeChild($this);
+  }
+  
   public function formatOutput($iLevel = 0) {
     
     return null;

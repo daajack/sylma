@@ -75,7 +75,9 @@ class HTML_Tag extends XML_Element {
       $this->setAttribute('style', $sStyles);
     }
     
-    if ($this->bForceClosure && !$this->childNodes->length) $this->appendChild(new DOMText(' '));
+    // if ($this->bForceClosure && !$this->hasChildren()) $this->add(' ');
+    if ($this->bForceClosure && !$this->read()) $this->add(' ');
+    //echo 'hello : '.$this->getName().' / ';
   }
   
   public function __toString() {
@@ -233,7 +235,7 @@ class HTML_Template extends HTML_Tag {
   }
 }
 
-class HTML_Document extends XML_Action {
+class HTML_Document extends Temp_Action {
   
   public function __construct($sPath = '', $oRedirect = null, $sSource = '') {
     
@@ -288,6 +290,7 @@ class HTML_Script extends HTML_Tag {
   
   public function __construct($sSrc = '', $oChild = null) {
     
+    $this->forceClosure();
     parent::__construct('script');
     
     $this->setAttribute('type', 'text/javascript');
@@ -304,6 +307,8 @@ class HTML_Script extends HTML_Tag {
 class HTML_Style extends HTML_Tag {
   
   public function __construct($sHref = '', $oChild = null) {
+    
+    $this->forceClosure();
     
     if ($sHref) {
       
@@ -386,6 +391,7 @@ class HTML_Strong extends HTML_Tag {
   
   public function __construct($oChild = '', $aAttributes = array()) {
     
+    $this->forceClosure();
     parent::__construct('strong', $oChild, $aAttributes);
   }
 }

@@ -80,7 +80,7 @@ class XML_Document extends DOMDocument {
         
         if (Controler::isAdmin()) {
           
-          XML_Controler::addMessage(array(
+          if (XML_Controler::useStatut('notice')) XML_Controler::addMessage(array(
             'Element sécurisé : ',
             new HTML_Strong($oNode->getName()),
             ' - ',
@@ -145,11 +145,11 @@ class XML_Document extends DOMDocument {
       case 'file' : 
       default :
         
-        XML_Controler::addMessage(xt('Document : Chargement d\'un fichier : %s', new HTML_Strong($sPath)), 'report');
+        if (XML_Controler::useStatut('report')) XML_Controler::addMessage(xt('Document : Chargement d\'un fichier : %s', new HTML_Strong($sPath)), 'report');
         $this->loadFile($sPath);
         
         if ($this->isEmpty())
-          XML_Controler::addMessage(xt('Document : Aucun contenu dans "%s"', new HTML_Strong($sPath)), 'warning');
+          if (XML_Controler::useStatut('warning')) XML_Controler::addMessage(xt('Document : Aucun contenu dans "%s"', new HTML_Strong($sPath)), 'warning');
         
       break;
     }
@@ -489,11 +489,6 @@ class XML_Element extends DOMElement {
     if ($aAttributes) $this->addAttributes($aAttributes);
   }
   
-  public function isReady() {
-    
-    return $this->bReady;
-  }
-  
   public function getDocument() {
     
     return $this->ownerDocument;
@@ -590,16 +585,8 @@ class XML_Element extends DOMElement {
       
       if ($sPrefix != 'ns') $sUrl = $this->lookupNamespaceURI($sPrefix);
       
-      if ($sUrl) {
-        
-        //XML_Controler::addMessage(xt("Element : Ajout de l'espace de nom : '%s' => '%s'", new HTML_Strong($sPrefix), new HTML_Strong($sUrl)), 'report');
-        
-        $oXPath->registerNamespace($sPrefix, $sUrl);
-        
-      } else {
-        
-        XML_Controler::addMessage(xt("Element : Espace de nom '%s' inconnu !", new HTML_Strong($sPrefix)), 'warning');
-      }
+      if ($sUrl) $oXPath->registerNamespace($sPrefix, $sUrl);
+      else if (XML_Controler::useStatut('warning')) XML_Controler::addMessage(xt('Element : Aucun URI pour le préfix "%s" !', new HTML_Strong($sPrefix)), 'warning');
     }
     
     return $oXPath;
@@ -621,7 +608,7 @@ class XML_Element extends DOMElement {
       if ($mResult === null) {
         
         $mResult = '';
-        XML_Controler::addMessage(xt("Element->read(%s) : Aucun résultat", $sQuery), 'warning');
+        if (XML_Controler::useStatut('warning')) XML_Controler::addMessage(xt("Element->read(%s) : Aucun résultat", $sQuery), 'warning');
       }
       
       return $mResult;
@@ -641,7 +628,7 @@ class XML_Element extends DOMElement {
   
   public function query($sQuery, $sPrefix = '') {
     
-    if (!$this->isEmpty() && is_string($sQuery) && $sQuery) {
+    if (is_string($sQuery) && $sQuery) {
       
       $mResult = $this->_buildXPath($sQuery, $sPrefix)->query($sQuery, $this);
       
@@ -653,14 +640,19 @@ class XML_Element extends DOMElement {
       
     } else {
       
-      if ($this->isEmpty()) XML_Controler::addMessage('Element : Requête impossible, élément vide !', 'warning');
-      else XML_Controler::addMessage('Element : Requête vide !', 'warning');
+      // if ($this->isEmpty()) XML_Controler::addMessage(xt('Element->query(%s) : Requête impossible, élément vide !', new HTML_Strong($sQuery)), 'warning');
+      if (XML_Controler::useStatut('warning')) XML_Controler::addMessage('Element : Requête vide !', 'warning');
     }
   }
   
   public function get($sQuery, $sPrefix = '') {
     
     return $this->getDocument()->queryOne($this->query($sQuery, $sPrefix));
+  }
+  
+  public function test($sPath, $sPrefix = '') {
+    
+    return (bool) $this->get($sPath, $sPrefix);
   }
   
   /*** Attributes ***/
@@ -672,6 +664,15 @@ class XML_Element extends DOMElement {
     
     // TODO : RIGHTS
     parent::setAttributeNode($oAttribute);
+  }
+  
+  public function testAttribute($sAttribute) {
+    
+    $sValue = strtolower($this->getAttribute($sAttribute));
+    
+    if ($sValue == 'true') return true;
+    else if ($sValue == 'false') return false;
+    else return null;
   }
   
   /*
@@ -797,7 +798,7 @@ class XML_Element extends DOMElement {
   public function insertBefore() {
     
     if (!$this->isParent()) $this->parentNode->insert(func_get_args(), $this);
-    else XML_Controler::addMessage('Element : Impossible d\'insérer un noeud ici (root)', 'error');
+    else if (XML_Controler::useStatut('error')) XML_Controler::addMessage(t('Element : Impossible d\'insérer un noeud ici (root)'), 'error');
   }
   
   public function insertAfter() {
@@ -891,15 +892,20 @@ class XML_Element extends DOMElement {
   
   public function replace($oChild) {
     
-    $this->insertBefore($oChild);
-    $this->remove();
+    if ($oChild != $this) {
+      
+      $this->insertBefore($oChild);
+      $this->remove();
+      
+    } else if (XML_Controler::useStatut('notice')) XML_Controler::addMessage(xt('replace() : Impossible de remplacer un élément par lui-même : %s', $this->viewResume()), 'notice');
+    
     return $oChild;
   }
   
   public function remove() {
     
     if ($this->parentNode) return $this->parentNode->removeChild($this);
-    else if ($this->getDocument()->getRoot() == $this) return $this->getDocument()->removeChild($this);
+    // else if ($this->getDocument()->getRoot() == $this) return $this->getDocument()->removeChild($this);
   }
   
   public function getFirst() {
@@ -970,6 +976,16 @@ class XML_Element extends DOMElement {
   }
   
   /*** Text ***/
+  
+  public function isText() {
+    
+    return false;
+  }
+  
+  public function isElement() {
+    
+    return true;
+  }
   
   public function getValue() {
     
@@ -1090,7 +1106,11 @@ class XML_Text extends DOMText {
     if (is_object($mContent)) {
       
       if (method_exists($mContent, '__toString')) $mContent = (string) $mContent;
-      else XML_Controler::addMessage('Text : Objet not allowed', 'error');
+      else {
+        
+        $mContent = '';
+        XML_Controler::addMessage('Text : Object not allowed', 'error');
+      }
     }
     
     // if (!(is_string($mContent) || is_numeric($mContent))) $mContent = '';
@@ -1117,6 +1137,16 @@ class XML_Text extends DOMText {
   public function formatOutput($iLevel = 0) {
     
     return null;
+  }
+  
+  public function isText() {
+    
+    return true;
+  }
+  
+  public function isElement() {
+    
+    return false;
   }
   
   public function __toString() {

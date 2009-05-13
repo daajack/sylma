@@ -433,9 +433,9 @@ class Controler {
           if (is_string($mArgument))
             $aValue = array("'".stringResume($mArgument, $iMaxLength)."'", 'gray');
           else if (is_array($mArgument))
-            $aValue = array('array('.count($mArgument).')', 'black');
+            $aValue = array(xt('array(%s)', new HTML_Strong(count($mArgument))), 'black');
           else if ($mArgument instanceof XML_Element)
-            $aValue = array("'".stringResume($mArgument, $iMaxLength)."'", 'blue');
+            $aValue = array(stringResume($mArgument, $iMaxLength), 'blue');
           else if ($mArgument instanceof XML_NodeList)
             $aValue = array(xt('XML_NodeList(%s)', new HTML_Strong($mArgument->length)), 'green');
           else if (is_object($mArgument))
@@ -1035,6 +1035,11 @@ class Messages extends Temp_Action {
     if (!$oResult->length) $oResult = array();
     
     return $oResult;
+  }
+  
+  public function useStatut($sStatut) {
+    
+    return (in_array($sStatut, $this->getAllowedMessages()));
   }
   
   public function hasMessages($sStatut = null) {

@@ -931,7 +931,7 @@ class URL {
   }
 }
 
-class Messages extends Temp_Action {
+class Messages extends Action {
   
   private $aAllowedMessages = array();
   
@@ -1064,13 +1064,15 @@ class Messages extends Temp_Action {
   
   public function parse() {
     
-    if ($this->getBloc('allowed')->get('//message'))
-      return $this->getBloc('allowed')->parseXSL(new XML_Document('/xml/messages.xsl', 'file'));
-    else return null;
+    if ($this->getBloc('allowed')->get('//message')) {
+      
+      return $this->getBloc('allowed')->parseXSL(new XML_Document('/xml/messages.xsl'));
+      
+    } else return null;
   }
 }
 
-class Message extends HTML_Tag {
+class Message extends XML_Element {
   
   public function __construct($mMessage, $sStatut = 'notice', $aArgs = array()) {
     

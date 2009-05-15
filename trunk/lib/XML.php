@@ -8,8 +8,11 @@ function xt () {
     $aArguments = func_get_args();
     $sValue = array_shift($aArguments);
     
-    return strtoxml(t(vsprintf($sValue, $aArguments)));
+    if (FORMAT_MESSAGES) return strtoxml(t(vsprintf($sValue, $aArguments)));
+    else return $sValue;
   }
+  
+  return '';
 }
 
 function strtoxml ($sValue) {
@@ -50,13 +53,13 @@ class XML_Document extends DOMDocument {
       
       // if Object else String
       if (is_object($mChildren)) $this->set($mChildren);
-      else if (is_string($mChildren)) $this->startString($mChildren, $sSource);
+      else if (is_string($mChildren)) $this->startString($mChildren);
     }
   }
   
   private function appendRights() {
     
-    // $this->buildRights();
+    $this->buildRights();
     
     // if (Controler::getUser()) {
       // (Controler::isUser($sOwner) && Controler::isGroup($sGroup) && $sMode) {
@@ -65,18 +68,18 @@ class XML_Document extends DOMDocument {
   
   private function buildRights() {
     
-    if (Controler::getUser() && $this->getRoot() && $this->hasNamespace(NS_SECURITY)) {
-      
-      $oNodes = $this->query('//*[@ls:owner|@ls:mode|@ls:group]');
-      
+    if (Controler::getUser() && $this->getRoot()) {
+      // echo 'hello';
+      $oNodes = $this->query('//*[@ls:owner|@ls:mode|@ls:group]', 'ls', NS_SECURITY);
+      /*
       for ($i = $oNodes->length - 1; $i >= 0; $i--) {
         
         $oNode = $oNodes->item($i);
         
-        $oNode->setRights(array(
-          'owner' => $oNode->getAttribute('ls:owner'),
-          'group' => $oNode->getAttribute('ls:group'),
-          'mode' => $oNode->getAttribute('ls:mode')));
+        // $oNode->setRights(array(
+          // 'owner' => $oNode->getAttribute('ls:owner'),
+          // 'group' => $oNode->getAttribute('ls:group'),
+          // 'mode' => $oNode->getAttribute('ls:mode')));
         
         if (Controler::isAdmin()) {
           
@@ -86,7 +89,7 @@ class XML_Document extends DOMDocument {
             ' - ',
             implosion(':', ' | ', $oNode->getRights())), 'notice');
         }
-      }
+      }*/
     }
   }
   
@@ -117,17 +120,17 @@ class XML_Document extends DOMDocument {
     echo $oPre;
   }
   
-  public function startString($sString, $sSource = '') {
+  public function startString($sString) {
     
     // if Path else XML String else new XML_Element
-    if ($sSource == 'file' || $sString{0} == '/') $this->loadDocument($sString, $sSource);
+    if ($sString{0} == '/') $this->loadDocument($sString);
     else if ($sString{0} == '<') $this->loadText($sString);
-    else $this->set(new XML_Element($sString, '', null, $this));
+    else $this->set(new XML_Element($sString, '', null, '', $this));
   }
   
   public function createNode($sName, $oContent = '', $aAttributes = null) {
     
-    return new XML_Element($sName, $oContent, $aAttributes, $this);
+    return new XML_Element($sName, $oContent, $aAttributes, '', $this);
   }
   
   public function loadDocument($sPath = '', $sSource = '') {
@@ -230,12 +233,12 @@ class XML_Document extends DOMDocument {
    * Return a String from the result of the sQuery
    **/
   
-  public function read($sQuery = '', $sNamespace = '') {
+  public function read($sQuery = '', $sPrefix = '', $sUri = '') {
     
     if ($this->getRoot()) {
       if ($sQuery) {
         
-        if ($this->getRoot()) return $this->getRoot()->read($sQuery, $sNamespace);
+        if ($this->getRoot()) return $this->getRoot()->read($sQuery, $sPrefix, $sUri);
         else return null;
         
       } else return $this->getRoot()->getValue();
@@ -247,9 +250,9 @@ class XML_Document extends DOMDocument {
    * Return an XML_Element from the result of the sQuery
    **/
   
-  public function get($sQuery, $sNamespace = '') {
+  public function get($sQuery, $sPrefix = '', $sUri = '') {
     
-    if ($this->getRoot()) return $this->getRoot()->get($sQuery, $sNamespace);
+    if ($this->getRoot()) return $this->getRoot()->get($sQuery, $sPrefix, $sUri);
     else return null;
   }
   
@@ -269,9 +272,13 @@ class XML_Document extends DOMDocument {
           
           // XML_Document, XML_Action
           
-          if ($mValue instanceof Temp_Action) $mValue = $mValue->parse();
+          if ($this->getRoot()) $this->getRoot()->remove();
           
-          if ($this->getRoot()) $this->removeChild($this->getRoot());
+          if ($mValue instanceof XML_Action || $mValue instanceof Action) {
+            
+            $mResult = $mValue->parse();
+            if ($mResult instanceof XML_Action || $mResult instanceof Action) return $this->set($mResult);
+          }
           
           if ($mValue->getRoot()) {
             
@@ -400,9 +407,9 @@ class XML_Document extends DOMDocument {
    * Return a DOMNodeList from the result of the sQuery
    **/
   
-  public function query($sQuery, $sNamespace = '') {
+  public function query($sQuery, $sPrefix = '', $sUri = '') {
     
-    if ($this->getRoot()) return $this->getRoot()->query($sQuery, $sNamespace);
+    if ($this->getRoot()) return $this->getRoot()->query($sQuery, $sPrefix, $sUri);
     else return null;
   }
   
@@ -410,10 +417,10 @@ class XML_Document extends DOMDocument {
    * Extract the first result of a DOMNodeList if possible
    **/
    
-  public function queryArray($sQuery, $sNamespace = '') {
+  public function queryArray($sQuery, $sPrefix = '', $sUri = '') {
     
     $aResult = array();
-    $oResult = $this->query($sQuery);
+    $oResult = $this->query($sQuery, $sPrefix, $sUri);
     foreach ($oResult as $oStatut) $aResult[] = $oStatut->read();
     
     return $aResult;
@@ -476,11 +483,11 @@ class XML_Tag extends XML_Element { }
 
 class XML_Element extends DOMElement {
   
-  public function __construct($sName = '', $oContent = '', $aAttributes = array(), $oDocument = null, $sNamespace = null) {
+  public function __construct($sName = '', $oContent = '', $aAttributes = array(), $sUri = null, $oDocument = null) {
     
     $sName = trim((string) $sName);
     if (!$sName) $sName = 'default';
-    parent::__construct($sName, null, $sNamespace);
+    parent::__construct($sName, null, $sUri);
     
     if (!$oDocument) $oDocument = new XML_Document();
     $oDocument->add($this);
@@ -569,30 +576,42 @@ class XML_Element extends DOMElement {
     echo $this->view();
   }
   
-  protected function _buildXPath($sQuery = '', $sPrefix = '') {
+  private function buildXPath($sPrefix, $sUri) {
     
     $oXPath = new DOMXPath($this->getDocument());
     
-    if ($sUrl = $this->getDocument()->getRoot()->getAttribute('xmlns')) {
+    if ($sUri) $sResultUri = $sUri;
+    else {
       
-      if ($sPrefix != '-') $sPrefix = 'ns';
-      else $sPrefix = '';
+      //if ($sResultUri = $this->getDocument()->getRoot()->getAttribute('xmlns')) {
+      if ($this->isDefaultNamespace($this->getNamespace())) {
+        
+        $sResultUri = $this->getNamespace();
+        
+        if ($sPrefix != '-') $sPrefix = 'ns';
+        else $sPrefix = '';
+      }
     }
     
     if ($sPrefix) {
       
       // Use Namespace
       
-      if ($sPrefix != 'ns') $sUrl = $this->lookupNamespaceURI($sPrefix);
+      if ($sPrefix != 'ns') $sResultUri = $this->lookupNamespaceURI($sPrefix);
       
-      if ($sUrl) $oXPath->registerNamespace($sPrefix, $sUrl);
-      else if (XML_Controler::useStatut('warning')) XML_Controler::addMessage(xt('Element : Aucun URI pour le préfix "%s" !', new HTML_Strong($sPrefix)), 'warning');
+      if ($sResultUri) $oXPath->registerNamespace($sPrefix, $sResultUri);
+      else {
+        
+        // if (XML_Controler::useStatut('warning')) XML_Controler::addMessage(xt('Element : Aucun URI pour le préfix "%s" !', new HTML_Strong($sPrefix)), 'warning');
+        // ////// LOOP CRASH TODO /////// //
+        return false;
+      }
     }
     
     return $oXPath;
   }
   
-  public function read($sQuery = '', $sPrefix = '') {
+  public function read($sQuery = '', $sPrefix = '', $sUri = '') {
     
     if ($sQuery) {
       
@@ -600,7 +619,7 @@ class XML_Element extends DOMElement {
       
       if ($sPrefix) $xPath->registerNamespace($sPrefix, $this->lookupNamespaceURI($sPrefix));
       
-      $mResult = $this->_buildXPath($sQuery, $sPrefix)->evaluate($sQuery, $this);
+      $mResult = $this->buildXPath($sPrefix, $sUri)->evaluate($sQuery, $this);
       $mResult = $this->getDocument()->queryString($mResult);
       
       XML_Controler::addStat('query');
@@ -626,33 +645,41 @@ class XML_Element extends DOMElement {
    *   Prefix of the namespace where to lookup the result
    **/
   
-  public function query($sQuery, $sPrefix = '') {
+  public function query($sQuery, $sPrefix = '', $sUri = '') {
     
     if (is_string($sQuery) && $sQuery) {
       
-      $mResult = $this->_buildXPath($sQuery, $sPrefix)->query($sQuery, $this);
+      $oPath = $this->buildXPath($sPrefix, $sUri);
       
-      XML_Controler::addStat('query');
-      
-      // if (!$mResult || !$mResult->length) XML_Controler::addMessage(xt("Element->query(%s) : Aucun résultat", new HTML_Strong($sQuery)), 'report');
-      // ////// report & notice type will crash system, maybe something TODO /////// //
-      return new XML_NodeList($mResult);
+      if ($oPath) {
+        
+        $mResult = $oPath->query($sQuery, $this);
+        
+        XML_Controler::addStat('query');
+        
+        // if (!$mResult || !$mResult->length) XML_Controler::addMessage(xt("Element->query(%s) : Aucun résultat", new HTML_Strong($sQuery)), 'report');
+        // ////// report & notice type will crash system, maybe something TODO /////// //
+        return new XML_NodeList($mResult);
+        
+      }
       
     } else {
       
       // if ($this->isEmpty()) XML_Controler::addMessage(xt('Element->query(%s) : Requête impossible, élément vide !', new HTML_Strong($sQuery)), 'warning');
       if (XML_Controler::useStatut('warning')) XML_Controler::addMessage('Element : Requête vide !', 'warning');
     }
+    
+    return null;
   }
   
-  public function get($sQuery, $sPrefix = '') {
+  public function get($sQuery, $sPrefix = '', $sUri = '') {
     
-    return $this->getDocument()->queryOne($this->query($sQuery, $sPrefix));
+    return $this->getDocument()->queryOne($this->query($sQuery, $sPrefix, $sUri));
   }
   
-  public function test($sPath, $sPrefix = '') {
+  public function test($sPath, $sPrefix = '', $sUri = '') {
     
-    return (bool) $this->get($sPath, $sPrefix);
+    return (bool) $this->get($sPath, $sPrefix, $sUri);
   }
   
   /*** Attributes ***/
@@ -827,14 +854,15 @@ class XML_Element extends DOMElement {
         
       } else if ($mValue instanceof XML_Document) {
         
-        if ($mValue instanceof Temp_Action) {
+        /* XML_Document */
+        
+        if ($mValue instanceof XML_Action || $mValue instanceof Action) {
           
           /* XML_Action */
           
-          $mValue = $mValue->parse();
+          $mResult = $mValue->parse();
           
-          // If result is not a doc
-          if (!($mValue instanceof XML_Document)) return $this->insert($mValue, $oNext);
+          if (!($mResult instanceof XML_Action || $mResult instanceof Action)) return $this->insert($mResult, $oNext);
         }
         
         /* XML_Document */

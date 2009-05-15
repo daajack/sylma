@@ -103,55 +103,40 @@ class Action_Controler {
   
   public static function addMessage($mValue, $sStatut = 'notice', $aArguments = array()) {
     
-    // if (Controler::isAdmin()) {
+    if (FORMAT_MESSAGES) {
       
-      $aMessage = array(
+      $mMessage = array(
         new HTML_Strong('Action', array('style' => 'text-decoration: underline;')),
         ' : ',
         $mValue);
       
-      if ($sStatut == 'error') $aMessage = array_merge($aMessage, array(new HTML_Br, Controler::getBacktrace()));
+      if ($sStatut == 'error') $mMessage = array_merge($mMessage, array(new HTML_Br, Controler::getBacktrace()));
       
-      self::getMessages()->addMessage(new Message($aMessage, $sStatut, $aArguments));
-      // if (Controler::isReady()) Controler::addMessage($aMessage, $sStatut, $aArguments);
-      // else self::getMessage()->addMessage($aMessage, $sStatut, $aArguments);
-      // echo new HTML_Tag('pre', $aMessage, array('class' => 'message-'.$sStatut));
-    // }
+    } else $mMessage = $mValue;
+    
+    self::getMessages()->addMessage(new Message($mMessage, $sStatut, $aArguments));
+    // if (Controler::isReady()) Controler::addMessage($mMessage, $sStatut, $aArguments);
+    // else self::getMessage()->addMessage($mMessage, $sStatut, $aArguments);
+    // echo new HTML_Tag('pre', $mMessage, array('class' => 'message-'.$sStatut));
   }
 }
 
 class XML_Action extends XML_Document {
   
   private $sPath = '';
+  private $oRedirect = null;
   
-  protected function loadAction($sPath, $oRedirect = null) {
+  public function __construct($sPath, $oRedirect = null) {
     
     if (!$oRedirect) $oRedirect = new Redirect;
-    $this->parsePath($sPath, $oRedirect);
     
-    if ($this->getPath()) {
-      
-      $oDocument = new XML_Document($this->getPath());
-      
-      if (!$oDocument->isEmpty()) {
-        
-        switch ($oDocument->getRoot()->getNamespace()) {
-          
-          case NS_EXECUTION : 
-            
-            $oSettings = $oDocument->get('//le:settings')->remove();
-            $oMethod = new XML_Element('li:add', $oDocument->getRoot()->getChildren(), null, null, NS_INTERFACE);
-            
-            list($oResult, $bReturn) = $this->runInterfaceMethod($this, $oMethod, Action_Controler::getInterface($this), $oRedirect);
-            
-          break;
-          case NS_INTERFACE : $oAction = $this->loadInterface($oElement, $oRedirect); break;
-        }
-      }
-    }
+    $this->setRedirect($oRedirect);
+    $this->parsePath($sPath);
+    
+    if ($this->getPath()) parent::__construct($this->getPath());
   }
   
-  private function parsePath($sPath, $oRedirect) {
+  private function parsePath($sPath) {
     
     $bValidPath = false;
     
@@ -255,9 +240,9 @@ class XML_Action extends XML_Document {
       }
       
       $this->setPath('/'.$sResultPath);
-      $oRedirect->setArgument('get_assoc', $aArgumentsAssoc);
-      $oRedirect->setArgument('get_index', $aArgumentsIndex);
-      $oRedirect->setArgument('get_all', array_merge($aArgumentsIndex, array_values($aArgumentsAssoc)));
+      $this->getRedirect()->setArgument('get_assoc', $aArgumentsAssoc);
+      $this->getRedirect()->setArgument('get_index', $aArgumentsIndex);
+      $this->getRedirect()->setArgument('get_all', array_merge($aArgumentsIndex, array_values($aArgumentsAssoc)));
       
       return true;
     }
@@ -297,8 +282,7 @@ class XML_Action extends XML_Document {
         break;
         case 'le:action' :
           
-          $mResult = new XML_Action();
-          $mResult->loadAction($oElement->getAttribute('path'), $oRedirect);
+          $mResult = new XML_Action($oElement->getAttribute('path'), $oRedirect);
           
         break;
         case 'le:php' : 
@@ -420,9 +404,11 @@ class XML_Action extends XML_Document {
       
       foreach ($oElement->getChildren() as $oChild) {
         
+        // !li || li:argument
+        
         if ($oChild->isElement()) {
           
-          if ($oChild->getNamespace() != NS_INTERFACE || ($oChild->getNamespace() == NS_INTERFACE && $oChild->getName(true) == 'argument')) {
+          if (!$oChild->hasNamespace(NS_INTERFACE) || $oChild->getName(true) == 'argument') {
             
             $mResult = $this->buildArgument($oChild, $oRedirect);
             
@@ -640,14 +626,85 @@ class XML_Action extends XML_Document {
     
     return $oAction;
   }
+  
+  public function setRedirect($oRedirect) {
+    
+    $this->oRedirect = $oRedirect;
+  }
+  
+  public function getRedirect() {
+    
+    return $this->oRedirect;
+  }
+  
+  public function parse() {
+    
+    if (!$this->isEmpty()) {
+      
+      $oResult = new XML_Document(new HTML_Div(null, array('class' => 'action')));
+      $oDocument = new XML_Document($this->getRoot());
+      
+      switch ($oDocument->getRoot()->getNamespace()) {
+        
+        case NS_EXECUTION : 
+          
+          $oSettings = $oDocument->get('le:settings')->remove();
+          $oMethod = new XML_Element('li:add', $oDocument->getRoot()->getChildren(), null, NS_INTERFACE);
+          
+          list(, $bReturn) = $this->runInterfaceMethod($oResult, $oMethod, Action_Controler::getInterface($oResult), $this->getRedirect());
+          
+        break;
+        case NS_INTERFACE : $oAction = $this->loadInterface($oElement, $this->getRedirect()); break;
+      }
+      
+      return $oResult;
+    }
+    
+    return null;
+  }
 }
 
-class Action extends XML_Action {
+class Action extends XML_Document {
   
-  public function __construct($sPath, $oRedirect = null) {
+  private $aBlocs = array();
+  
+  public function loadAction($sPath, $oRedirect = null) {
     
-    parent::__construct(new HTML_Div('', array('class' => 'action')));
-    $this->loadAction($sPath, $oRedirect);
+    return new XML_Action($sPath, $oRedirect);
+  }
+  
+  public function addAction($sPath, $oRedirect = null) {
+    
+    $this->add($this->loadAction($sPath, $oRedirect));
+  }
+  
+  public function setBloc($sKey, $mValue) {
+    
+    if ($sKey) $this->aBlocs[$sKey] = $mValue;
+    return $mValue;
+  }
+  
+  public function addBloc($sKey, $oTarget = null) {
+    
+    if ($oTarget && $oTarget instanceof XML_Element) return $oTarget->add($this->getBloc($sKey));
+    else return $this->add($this->getBloc($sKey));
+  }
+  
+  public function getBloc($sKey) {
+    
+    if (!array_key_exists($sKey, $this->aBlocs)) {
+      
+      $oBloc = new XML_Element($sKey);
+      $this->aBlocs[$sKey] = $oBloc;
+    }
+    
+    return $this->aBlocs[$sKey];
+  }
+  
+  public function parse() {
+    
+    if (!$this->isEmpty()) return $this->getRoot();
+    else return null;
   }
 }
 
@@ -707,7 +764,7 @@ class Temp_Action extends XML_Document {
   
   public function __construct($sPath = '', $oRedirect = null, $sSource = '') {
     
-    parent::__construct($sPath, $sSource);
+    parent::__construct($sPath);
     
     $this->setRedirect($oRedirect);
     $this->setPath($sPath);

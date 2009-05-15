@@ -13,6 +13,11 @@ class HTML_Tag extends XML_Element {
   private $aClasses = array();
   private $bForceClosure = false;
   
+  public function __construct($sName = '', $oContent = '', $aAttributes = array()) {
+    
+    parent::__construct($sName, $oContent, $aAttributes, NS_XHTML);
+  }
+  
   public function addClass($sValue) {
     
     if ($sValue) $this->aClasses[$sValue] = true;
@@ -235,25 +240,25 @@ class HTML_Template extends HTML_Tag {
   }
 }
 
-class HTML_Document extends Temp_Action {
+class HTML_Document extends Action {
   
-  public function __construct($sPath = '', $oRedirect = null, $sSource = '') {
+  public function __construct($sPath = '') {
     
-    $imp = new DomImplementation;
-    $dtd = $imp->createDocumentType('html', '-//W3C//DTD XHTML 1.0 Transitional//EN', 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd');
+    // $imp = new DomImplementation;
+    // $dtd = $imp->createDocumentType('html', '-//W3C//DTD XHTML 1.0 Transitional//EN', 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd');
     
-    parent::__construct($sPath, $oRedirect, $sSource);
+    parent::__construct($sPath);
     //'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
   }
   
   public function addJS($sHref) {
     
-    $this->get('/html/head')->add(new HTML_Script($sHref));
+    $this->get('/ns:html/ns:head')->add(new HTML_Script($sHref));
   }
   
   public function addCSS($sHref = '') {
     
-    $this->get('/html/head')->add(new HTML_Style($sHref));
+    $this->get('/ns:html/ns:head')->add(new HTML_Style($sHref));
   }
   
   public function addIECSS($sHref = '', $sVersion = '') {
@@ -269,20 +274,17 @@ class HTML_Document extends Temp_Action {
     // $doc->loadXML(parent::__toString());
     
     // return $doc->saveHTML();
+    
     // $oRoot = $doc->importNode($this->getRoot(), true);
     // $this->appendChild($oRoot);
     // echo $oRoot;
     // return $doc->saveXML();
     
-    if ($this->getRoot()) {
-      
-      $this->getRoot()->setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-      
-      $sDocType = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
-      $this->formatOutput = true;
-      return $sDocType."\n".parent::__toString();
-      
-    } else return parent::__toString();
+    $sDocType = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
+    $this->formatOutput = true;
+    // return $this->saveHTML();
+
+    return $sDocType."\n".parent::__toString();
   }
 }
 

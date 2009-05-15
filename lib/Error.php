@@ -8,19 +8,22 @@ function userErrorHandler($errno, $errstr, $errfile, $errline) {
   
   if (Controler::isAdmin()) {
     
-    $oMessage = new HTML_Div;
-    $oMessage->add(
-      new HTML_Strong("ERREUR [$errno] "),
-      $errstr,
-      new HTML_Tag('i', " - [$errline] - $errfile"),
-      new HTML_Br,
-      Controler::getBacktrace());
+    if (FORMAT_MESSAGES) {
       
+      $oMessage = new HTML_Div;
+      $oMessage->add(
+        new HTML_Strong("ERREUR [$errno] "),
+        xt($errstr),
+        new HTML_Tag('i', " - [$errline] - $errfile"),
+        new HTML_Br,
+        Controler::getBacktrace());
+        
+    } else $oMessage = "ERREUR [$errno] $errstr - [$errline] - $errfile : ".Controler::getBacktrace();
+    
     if (Controler::isReady()) Controler::getMessages()->addMessage(new Message($oMessage, 'error'));
-    else echo $oMessage;
+    else if (DEBUG) echo $oMessage;
     
-    return false;
-    
+    return true;
   }
   
   return true;

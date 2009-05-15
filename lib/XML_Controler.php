@@ -38,19 +38,19 @@ class XML_Controler {
   
   public static function addMessage($mValue, $sStatut = 'notice', $aArguments = array()) {
     
-    // if (Controler::isAdmin()) {
+    if (FORMAT_MESSAGES) {
       
-      $aMessage = array(
-        new HTML_Strong('XML', array('style' => 'text-decoration: underline;')),
+      $mMessage = array(
+        new HTML_Strong('Action', array('style' => 'text-decoration: underline;')),
         ' : ',
         $mValue);
       
-      // $aMessage = array_merge($aMessage, array(new HTML_Br, Controler::getBacktrace()));
-      if ($sStatut == 'error') $aMessage = array_merge($aMessage, array(new HTML_Br, Controler::getBacktrace()));
+      if ($sStatut == 'error') $mMessage = array_merge($mMessage, array(new HTML_Br, Controler::getBacktrace()));
       
-      // if (Controler::isReady()) Controler::addMessage($aMessage, $sStatut, $aArguments);
-      self::getMessages()->addMessage(new Message($aMessage, $sStatut, $aArguments));
-      // echo new HTML_Tag('pre', $aMessage, array('class' => 'message-'.$sStatut));
-    // }
+    } else $mMessage = $mValue;
+    
+    // if (Controler::isReady()) Controler::addMessage($aMessage, $sStatut, $aArguments);
+    self::getMessages()->addMessage(new Message($mMessage, $sStatut, $aArguments));
+    // echo new HTML_Tag('pre', $aMessage, array('class' => 'message-'.$sStatut));
   }
 }

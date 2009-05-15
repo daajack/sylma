@@ -44,7 +44,7 @@ class Html extends HTML_Document implements Main {
     
     // $oTemplate = ;
     // $oTemplate->set($this->get('//html'));
-    parent::__construct('/xml/html.xml', null, 'file');
+    parent::__construct('/xml/html.xml');
     
     $this->addJS('/web/global.js');
     $this->addCSS('/web/global.css');
@@ -69,13 +69,13 @@ class Html extends HTML_Document implements Main {
           Controler::getUser()->getBloc('full_name')),
         ' ('.implode(', ', Controler::getUser()->getRoles()).')');
       
-      $this->get("//div[@id='header']")->add($oUserInfo);
+      $this->get("//ns:div[@id='header']")->add($oUserInfo);
     }
     
     // Titre & menu
     
-    $this->get('//h1//span')->set(SITE_TITLE);
-    $this->get("//div[@id='sidebar']")->add(new AccessMenu('menu-primary', $aMenuPrimary));
+    $this->get('//ns:h1//ns:span')->set(SITE_TITLE);
+    $this->get("//ns:div[@id='sidebar']")->add(new AccessMenu('menu-primary', $aMenuPrimary));
     
     // Messages & contenu
     
@@ -102,7 +102,7 @@ class Html extends HTML_Document implements Main {
       $oMessages = $oSystem->add($oMessages);
       $oMessages->setAttribute('style', 'margin-top: 5px;');
       
-      $this->get("//div[@id='sidebar']")->shift($oSystem);
+      $this->get("//ns:div[@id='sidebar']")->shift($oSystem);
     }
     
     // Supression des messages système dans le panneau de messages principal
@@ -111,15 +111,15 @@ class Html extends HTML_Document implements Main {
     
     // Contenu
     
-    $this->get('//title')->add(SITE_TITLE, ' - ', $this->getBloc('content-title')->read());
+    $this->get('//ns:title')->add(SITE_TITLE, ' - ', $this->getBloc('content-title')->read());
     
     $oContent = $this->getBloc('content');
     
-    $oContent->add(Controler::getMessages());
     if (!$this->getBloc('content-title')->isEmpty()) $oContent->add($this->getBloc('content-title'));
     $oContent->add($this->getBloc('action'));
+    $oContent->shift(Controler::getMessages());
     
-    $this->get("//div[@id='center']")->add($oContent);
+    $this->get("//ns:div[@id='center']")->add($oContent);
     
     // Controler::getMessages()->setMessages('system');
     

@@ -3,7 +3,7 @@
  * Fichier des classes Field...
  **/
 
-class HTML_Form extends Temp_Action {
+class HTML_Form extends Action {
   
   private $bDisplayTop = false;
   private $bDisplayMark = true;

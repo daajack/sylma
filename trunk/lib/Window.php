@@ -61,16 +61,7 @@ class Html extends HTML_Document implements Main {
     
     // Info utilisateur
     
-    if (Controler::getUser()->isReal()) {
-      
-      $oUserInfo = new XML_Tag('div', '', array('id' => 'user-info'));
-      $oUserInfo->add(
-        new HTML_A('/utilisateur/edit/'.Controler::getUser()->getArgument('id'),
-          Controler::getUser()->getBloc('full_name')),
-        ' ('.implode(', ', Controler::getUser()->getRoles()).')');
-      
-      $this->get("//ns:div[@id='header']")->add($oUserInfo);
-    }
+    if (Controler::getUser()->isReal()) $this->get("//ns:div[@id='header']")->add(Controler::getUser());
     
     // Titre & menu
     
@@ -92,7 +83,7 @@ class Html extends HTML_Document implements Main {
     
     // Infos système
     
-    if (Controler::isAdmin() && $oXMessages = Controler::getMessages()->getBloc('allowed')->get('//system/*')) {
+    if (Controler::isAdmin() && Controler::getMessages()->getBloc('allowed')->get('//system/*')) {
       
       $oMessages = new Messages(array('system'), Controler::getMessages()->getMessages('system'));
       
@@ -117,7 +108,7 @@ class Html extends HTML_Document implements Main {
     
     if (!$this->getBloc('content-title')->isEmpty()) $oContent->add($this->getBloc('content-title'));
     $oContent->add($this->getBloc('action'));
-    $oContent->shift(Controler::getMessages());
+    $oContent->shift(XML_Controler::getMessages(), Action_Controler::getMessages(), Controler::getMessages());
     
     $this->get("//ns:div[@id='center']")->add($oContent);
     
@@ -174,7 +165,7 @@ class Popup extends HTML_Document implements Main {
   }
 }
 
-class Form extends Temp_Action implements Main {
+class Form extends XML_Helper implements Main {
   
   private $oRedirect = null;
   
@@ -244,7 +235,7 @@ class Form extends Temp_Action implements Main {
       // $this->addBloc('content');
     }
     
-    return parent::__toString();
+    return parent::__toString;
   }
 }
 

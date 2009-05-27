@@ -81,14 +81,14 @@ class HTML_Tag extends XML_Element {
     }
     
     // if ($this->bForceClosure && !$this->hasChildren()) $this->add(' ');
-    if ($this->bForceClosure && !$this->read()) $this->add(' ');
+    // if ($this->bForceClosure && !$this->read()) $this->add(' ');
     //echo 'hello : '.$this->getName().' / ';
   }
   
   public function __toString() {
     
     $this->parse();
-    return parent::__toString();
+    return parent::__toString(true);
   }
 }
 
@@ -240,7 +240,7 @@ class HTML_Template extends HTML_Tag {
   }
 }
 
-class HTML_Document extends Action {
+class HTML_Document extends XML_Helper {
   
   public function __construct($sPath = '') {
     
@@ -283,8 +283,8 @@ class HTML_Document extends Action {
     $sDocType = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
     $this->formatOutput = true;
     // return $this->saveHTML();
-
-    return $sDocType."\n".parent::__toString();
+    
+    return $sDocType."\n".parent::__toString(true);
   }
 }
 

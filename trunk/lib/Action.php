@@ -1,129 +1,10 @@
 <?php
 
-class Action_Controler {
-  
-  private static $aInterfaces = array();
-  private static $oMessages = null;
-  private static $aStats = array();
-  
-  public static function init() {
-    
-    self::$oMessages = new Messages(array('error', 'warning', '_report', 'notice'));
-    
-    if ($oInterfaces = new XML_Document(PATH_INTERFACES)) {
-      
-      if ($oClasses = $oInterfaces->query('class')) {
-        
-        foreach ($oInterfaces->query('class') as $oClass) {
-          
-          $sName = $oClass->getAttribute('name');
-          $sPath = $oClass->getAttribute('path');
-          $oInterface = new XML_Document($sPath);
-          
-          if (!$oInterface->isEmpty()) self::$aInterfaces[$sName] = $oInterface;
-          else self::addMessage(xt('Fichier d\'interface "%s" vide ou introuvable', new HTML_Strong($sPath)), 'error');
-        }
-        
-      } else self::addMessage(xt('Fichier des interfaces "%s" invalide, aucune classe trouvée !', new HTML_Strong(PATH_INTERFACES)), 'error');
-    } else self::addMessage(xt('Impossible de charger le fichier des interfaces à l\'adresse "%s"', new HTML_Strong(PATH_INTERFACES)), 'error');
-  }
-  
-  public static function getInterface($oObject) {
-    
-    if (is_object($oObject)) $sClass = get_class($oObject);
-    else $sClass = $oObject;
-    
-    if (array_key_exists($sClass, self::$aInterfaces)) return self::$aInterfaces[$sClass];
-    else {
-      
-      $sPrevClass = $sClass;
-      
-      do {
-        
-        $sTempClass = $sPrevClass;
-        $sPrevClass = get_parent_class($sPrevClass);
-        
-      } while ($sPrevClass && !array_key_exists($sPrevClass, self::$aInterfaces));
-      
-      if ($sPrevClass && array_key_exists($sPrevClass, self::$aInterfaces)) return self::$aInterfaces[$sPrevClass];
-      else self::addMessage(xt('Interface de classe "%s" introuvable !', new HTML_Strong($sClass)), 'error');
-    }
-    
-    return false;
-  }
-  
-  public static function getSpecial($sName, $oRedirect) {
-    
-    $oSpecials = new XML_Document(PATH_SPECIALS);
-    
-    if ($oSpecial = $oSpecials->get("object[@name='$sName']")) {
-      if ($sCall = $oSpecial->getAttribute('call')) {
-        
-        if ($oSpecial->getAttribute('static') == 'true') return $sCall;
-        else {
-          
-          eval('$oObject = '.$sCall.';');
-          
-          if (isset($oObject)) return $oObject;
-          else self::addMessage(xt('L\'objet "%s" est nul !', new HTML_Strong($sCall)), 'error');
-        }
-        
-      } else self::addMessage(xt('Pas de référence dans le fichier "%s",  !', new HTML_Strong(PATH_SPECIALS)), 'error');
-      
-    } else self::addMessage(xt('La variable spéciale "%s" n\'existe pas !', new HTML_Strong($sName)), 'error');
-    
-    return false;
-  }
-  
-  public static function getMessages() {
-    
-    return self::$oMessages;
-  }
-  
-  public static function viewStats() {
-    
-    // self::addStat('load', 1); // precog ;)
-    
-    $oResult = new XML_Document('statistics');
-    
-    $oResult->addArray(self::$aStats, 'category');
-    return $oResult->parseXSL(new XML_Document('/users/controler/stats.xsl'));
-  }
-  
-  public static function addStat($sKey, $iWeight = 1) {
-    
-    if (!array_key_exists($sKey, self::$aStats)) self::$aStats[$sKey] = $iWeight;
-    else self::$aStats[$sKey] += $iWeight;
-  }
-  
-  public static function useStatut($sStatut) {
-    
-    return self::getMessages()->useStatut($sStatut);
-  }
-  
-  public static function addMessage($mValue, $sStatut = 'notice', $aArguments = array()) {
-    
-    if (FORMAT_MESSAGES) {
-      
-      $mMessage = array(
-        new HTML_Strong('Action', array('style' => 'text-decoration: underline;')),
-        ' : ',
-        $mValue);
-      
-      if ($sStatut == 'error') $mMessage = array_merge($mMessage, array(new HTML_Br, Controler::getBacktrace()));
-      
-    } else $mMessage = $mValue;
-    
-    self::getMessages()->addMessage(new Message($mMessage, $sStatut, $aArguments));
-    // if (Controler::isReady()) Controler::addMessage($mMessage, $sStatut, $aArguments);
-    // else self::getMessage()->addMessage($mMessage, $sStatut, $aArguments);
-    // echo new HTML_Tag('pre', $mMessage, array('class' => 'message-'.$sStatut));
-  }
-}
-
 class XML_Action extends XML_Document {
   
   private $sPath = '';
+  private $sName = '';
+  private $sFullPath = '';
   private $oRedirect = null;
   
   public function __construct($sPath, $oRedirect = null) {
@@ -131,133 +12,11 @@ class XML_Action extends XML_Document {
     if (!$oRedirect) $oRedirect = new Redirect;
     
     $this->setRedirect($oRedirect);
-    $this->parsePath($sPath);
     
-    if ($this->getPath()) parent::__construct($this->getPath());
-  }
-  
-  private function parsePath($sPath) {
+    $this->sFullPath = $sPath;
+    //$this->sPath = $sPath;
     
-    $bValidPath = false;
-    
-    $sBasePath = MAIN_DIRECTORY.'/';
-    $sResultPath = '';
-    $bError = false;
-    
-    $sArguments = '';
-    
-    // Find file
-    
-    if ($sPath{0} == '/') {
-      
-      // absolute path
-      
-      $bAbsolute = true;
-      $sPath = substr($sPath, 1);
-      
-    } else $bAbsolute = false; // relative path
-    
-    $sPreviousPath = '';
-    $sNextPath = $sPath;
-    
-    // Remove arguments following '?'
-    
-    if ($iNextQuestion = strpos($sPath, '?')) {
-      
-      $sArgumentsAssoc = substr($sNextPath, $iNextQuestion);
-      $sNextPath = substr($sNextPath, 0, $iNextQuestion);
-      
-    } else $sArgumentsAssoc = '';
-    
-    do {
-      
-      // only val/val?val not val?val/val
-      if ($iNextSlash = strpos($sNextPath, '/')) {
-        
-        $sSubPath = substr($sNextPath, 0, $iNextSlash);
-        $sNextPath = substr($sNextPath, $iNextSlash + 1);
-        
-      } else {
-        
-        $sSubPath = $sNextPath;
-        $sNextPath = '';
-      }
-      
-      $sActualPath = $sPreviousPath.$sSubPath;
-      
-      if (is_file($sBasePath.$sActualPath)) $sResultPath = $sActualPath;
-      else if (is_file($sBasePath.$sActualPath.'.iml')) $sResultPath = $sActualPath.'.iml';
-      else if (is_file($sBasePath.$sActualPath.'.eml')) $sResultPath = $sActualPath.'.eml';
-      else if (is_file($sBasePath.$sActualPath.'.dml')) $sResultPath = $sActualPath.'.dml';
-      else if (is_dir($sBasePath.$sActualPath)) {
-        
-        // directory
-        
-        if ($sNextPath) $sPreviousPath .= $sSubPath.'/';
-        else {
-          
-          if (file_exists($sBasePath.$sActualPath.'/index.eml')) $sResultPath = $sPath.'/index.eml';
-          else {
-            
-            $bError = true;
-            Controler::addMessage(t('Action : Le listing de répertoire n\'est point encore possible :|'), 'warning');
-            break;
-          }
-        }
-        
-      } else {
-        
-        $bError = true;
-        Action_Controler::addMessage(xt('Fichier ou répertoire "%s" introuvable dans "%s"!', new HTML_Strong($sActualPath), new HTML_Strong($sPath)), 'error');
-        break;
-      }
-      
-    } while (!$sResultPath && !$bError);
-    
-    // Get arguments of type ..?arg1=val&arg2=val..
-    
-    if (!$bError) {
-      
-      $aArgumentsAssoc = array(); // Associatives arguments exe?var1=val1&var2=val2
-      $aArgumentsIndex = array(); // Indexed arguments exe/val1/val2
-      
-      if ($sNextPath) {
-        
-        $aArgumentsIndex = explode('/', $sNextPath);
-      }
-      
-      if ($sArgumentsAssoc) {
-        
-        $aStringArguments = explode('&', substr($sArgumentsAssoc, 1));
-        
-        foreach ($aStringArguments as $sArgument) {
-          
-          $aArgument = explode('=', $sArgument);
-          
-          if (count($aArgument) == 1) $aArgumentsAssoc[$aArgument[0]] = true; // only name
-          else $aArgumentsAssoc[$aArgument[0]] = $aArgument[1]; // name and value
-        }
-      }
-      
-      $this->setPath('/'.$sResultPath);
-      $this->getRedirect()->setArgument('get_assoc', $aArgumentsAssoc);
-      $this->getRedirect()->setArgument('get_index', $aArgumentsIndex);
-      $this->getRedirect()->setArgument('get_all', array_merge($aArgumentsIndex, array_values($aArgumentsAssoc)));
-      
-      return true;
-    }
-    
-    return false;
-  }
-  
-  public function setPath($sPath) {
-    
-    $this->sPath = $sPath;
-  }
-  
-  public function getPath() {
-    
-    return $this->sPath;
+    parent::__construct($this->sFullPath);
   }
   
   private function buildArgument($oElement, $oRedirect) {
@@ -282,7 +41,7 @@ class XML_Action extends XML_Document {
         break;
         case 'le:action' :
           
-          $mResult = new XML_Action($oElement->getAttribute('path'), $oRedirect);
+          $mResult = new Action($oElement->getAttribute('path'), $oRedirect);
           
         break;
         case 'le:php' : 
@@ -484,7 +243,7 @@ class XML_Action extends XML_Document {
         if ($oRedirect) $aArguments = $this->parseArguments($oArguments, $oRedirect->getArgument('get_assoc'));
         if (!$aArguments) {
           
-          Controler::addMessage('Action : Erreur dans les arguments, impossible de construire l\'objet', 'warning');
+          Action_Controler::addMessage('Erreur dans les arguments, impossible de construire l\'objet', 'warning');
           $bError = true;
         }
       }
@@ -525,7 +284,7 @@ class XML_Action extends XML_Document {
         
       } else {
         
-        Controler::addMessage(t('Action : Pas assez d\'arguments !', 'warning'));
+        Action_Controler::addMessage(xt('Pas assez d\'arguments dans %s!', new HTML_Strong($oArguments->getParent()->getName())), 'warning');
         $bError = true;
       }
       
@@ -552,7 +311,7 @@ class XML_Action extends XML_Document {
           
         } else if (!$oChild->getAttribute('required') =='false') {
           
-          Controler::addMessage(xt('Action : L\'argument requis %s est absent',
+          Action_Controler::addMessage(xt('L\'argument requis %s est absent',
             new HTML_Strong($oChild->getAttribute('name'))), 'warning');
           
           $bError = true;
@@ -607,7 +366,7 @@ class XML_Action extends XML_Document {
       
       // Include du fichier
       
-      $sFile = Controler::getDirectory().$sFile;
+      $sFile = MAIN_DIRECTORY.'/'.$sFile;
       
       if (file_exists($sFile)) require_once($sFile);
       else if (Controler::isAdmin()) Controler::addMessage(sprintf(t('Fichier "%s" introuvable !'), $sFile));
@@ -639,9 +398,9 @@ class XML_Action extends XML_Document {
   
   public function parse() {
     
-    if (!$this->isEmpty()) {
+    if ($this && !$this->isEmpty()) {
       
-      $oResult = new XML_Document(new HTML_Div(null, array('class' => 'action')));
+      $oResult = new XML_Document(new HTML_Div());
       $oDocument = new XML_Document($this->getRoot());
       
       switch ($oDocument->getRoot()->getNamespace()) {
@@ -664,47 +423,145 @@ class XML_Action extends XML_Document {
   }
 }
 
-class Action extends XML_Document {
+class HTML_Action extends HTML_Tag {
   
-  private $aBlocs = array();
-  
-  public function loadAction($sPath, $oRedirect = null) {
+  public function __construct() {
     
-    return new XML_Action($sPath, $oRedirect);
+    parent::__construct('div');
+    $this->addClass('action');
   }
+}
+
+class Action extends HTML_Action {
   
-  public function addAction($sPath, $oRedirect = null) {
+  public function __construct($sPath, $oRedirect = null) {
     
-    $this->add($this->loadAction($sPath, $oRedirect));
-  }
-  
-  public function setBloc($sKey, $mValue) {
+    parent::__construct();
+    if (!$oRedirect) $oRedirect = new Redirect;
     
-    if ($sKey) $this->aBlocs[$sKey] = $mValue;
-    return $mValue;
-  }
-  
-  public function addBloc($sKey, $oTarget = null) {
-    
-    if ($oTarget && $oTarget instanceof XML_Element) return $oTarget->add($this->getBloc($sKey));
-    else return $this->add($this->getBloc($sKey));
-  }
-  
-  public function getBloc($sKey) {
-    
-    if (!array_key_exists($sKey, $this->aBlocs)) {
+    if ($sRealPath = $this->parsePath($sPath, $oRedirect)) {
       
-      $oBloc = new XML_Element($sKey);
-      $this->aBlocs[$sKey] = $oBloc;
+      $oAction = new XML_Action($sRealPath, $oRedirect);
+      $oResult = $oAction->parse();
+      $this->add($oResult->query('content/*'));
+    }
+  }
+  
+  private function parsePath($sPath, $oRedirect) {
+    
+    $bValidPath = false;
+    
+    $sBasePath = MAIN_DIRECTORY.'/';
+    $sResultPath = '';
+    $bError = false;
+    $iMode = 1;
+    
+    $oSubDirectory = Controler::getDirectory();
+    
+    $sArguments = '';
+    
+    // Find file
+    
+    if ($sPath{0} == '/') {
+      
+      // absolute path
+      
+      $bAbsolute = true;
+      $sPath = substr($sPath, 1);
+      
+    } else $bAbsolute = false; // relative path
+    
+    $sPreviousPath = '';
+    $sNextPath = $sPath;
+    
+    // Remove arguments following '?'
+    
+    if ($iNextQuestion = strpos($sPath, '?')) {
+      
+      $sArgumentsAssoc = substr($sNextPath, $iNextQuestion);
+      $sNextPath = substr($sNextPath, 0, $iNextQuestion);
+      
+    } else $sArgumentsAssoc = '';
+    
+    do {
+      
+      if ($iNextSlash = strpos($sNextPath, '/')) {
+        
+        $sSubPath = substr($sNextPath, 0, $iNextSlash);
+        $sNextPath = substr($sNextPath, $iNextSlash + 1);
+        
+      } else {
+        
+        $sSubPath = $sNextPath;
+        $sNextPath = '';
+      }
+      
+      $sActualPath = $sPreviousPath.$sSubPath;
+      
+      if (is_file($sBasePath.$sActualPath)) $sResultPath = $sActualPath;
+      else if (is_file($sBasePath.$sActualPath.'.iml')) $sResultPath = $sActualPath.'.iml';
+      else if (is_file($sBasePath.$sActualPath.'.eml')) $sResultPath = $sActualPath.'.eml';
+      else if (is_file($sBasePath.$sActualPath.'.dml')) $sResultPath = $sActualPath.'.dml';
+      else {
+        
+        $oSubDirectory = $oSubDirectory->getDirectory($sSubPath, $iMode);
+        
+        if ($oSubDirectory && $oSubDirectory->checkRights($iMode)) {
+          
+          if (!$sNextPath) {
+            
+            if (!file_exists($sBasePath.$sActualPath.'/index.eml')) {
+              
+              $bError = true;
+              Action_Controler::addMessage(xt('Le listing de répertoire n\'est pas encore possible :| - "%s"', new HTML_Strong($sActualPath)), 'warning');
+              break;
+              
+            } else $sResultPath = $sPath.'/index.eml';
+            
+          } else $sPreviousPath .= $sSubPath.'/';
+          
+        } else {
+          
+          $bError = true;
+          break;
+        }
+      }
+      
+    } while (!$sResultPath && !$bError);
+    
+    // Get arguments of type ..?arg1=val&arg2=val..
+    
+    if (!$bError) {
+      
+      $aArgumentsAssoc = array(); // Associatives arguments exe?var1=val1&var2=val2
+      $aArgumentsIndex = array(); // Indexed arguments exe/val1/val2
+      
+      if ($sNextPath) {
+        
+        $aArgumentsIndex = explode('/', $sNextPath);
+      }
+      
+      if ($sArgumentsAssoc) {
+        
+        $aStringArguments = explode('&', substr($sArgumentsAssoc, 1));
+        
+        foreach ($aStringArguments as $sArgument) {
+          
+          $aArgument = explode('=', $sArgument);
+          
+          if (count($aArgument) == 1) $aArgumentsAssoc[$aArgument[0]] = true; // only name
+          else $aArgumentsAssoc[$aArgument[0]] = $aArgument[1]; // name and value
+        }
+      }
+      
+      $oRedirect->setArgument('get_assoc', $aArgumentsAssoc);
+      $oRedirect->setArgument('get_index', $aArgumentsIndex);
+      $oRedirect->setArgument('get_all', array_merge($aArgumentsIndex, array_values($aArgumentsAssoc)));
+      
+      return '/'.$sResultPath;
     }
     
-    return $this->aBlocs[$sKey];
-  }
-  
-  public function parse() {
-    
-    if (!$this->isEmpty()) return $this->getRoot();
-    else return null;
+    return '';
   }
 }
 
@@ -750,196 +607,6 @@ class Action_Array {
     
     return ($this->iIndex < count($this->aArray));
   }
-}
-
-class Temp_Action extends XML_Document {
-  
-  private $sPath = '';
-  private $oRedirect = null;
-  private $aBlocs = array();
-  
-  /*
-   * A charger : Settings, XML, XSD, XSL
-   **/
-  
-  public function __construct($sPath = '', $oRedirect = null, $sSource = '') {
-    
-    parent::__construct($sPath);
-    
-    $this->setRedirect($oRedirect);
-    $this->setPath($sPath);
-    $this->setSource($sSource);
-  }
-  
-  public function addAction($sPath, $oRedirect = null, $sSource = '') {
-    
-    $this->getBloc('actions')->add($this->loadAction($sPath, $oRedirect = null, $sSource = ''));
-  }
-  
-  public function loadAction($sPath, $oRedirect = null, $sSource = '') {
-  }
-  
-  public function loadActionBloc($sPath, $oElement, $oRedirect = null) {
-    
-    $oAction = new XML_Document;
-    $aPath = $this->_parsePath($sPath);
-    
-    // dsp($aPath);
-    if ($aPath) {
-      
-      if (!$oDocument->isEmpty()) {
-        
-        //if ($oDocument->getRoot()->getNamespace() == '')
-        switch ($oDocument->getRoot()->getNamespace()) {
-          
-          case NS_EXECUTION : $oAction = $this->_loadExecutable($oElement, $oRedirect); break;
-          case NS_INTERFACE : $oAction = $this->loadInterface($oElement, $aPath['arguments']); break;
-        }
-      }
-    }
-    
-    return $oAction;
-  }
-  
-  private function _loadSubExecutable($oElement, $oArguments, $oRedirect = null) {
-    
-    $oStatics = new XML_Document('/users/web/statics.cml');
-    
-    switch ($oElement->getName(true)) {
-      
-      case 'action' :
-        
-        // @path
-        
-        $sPath = $oElement->getAttribute('path');
-        $oResult = $this->loadAction($sPath);
-        
-        // $oAction = $this->buildClass($sClass, $sFile, $aArguments, $sArguments);
-        // $oResult = $this->_loadBloc($oAction, $oElement, $oRedirect);
-        
-      break;
-      
-      case 'static' :
-        
-        // @call
-        
-      break;
-      
-      case 'file' :
-      
-      break;
-      
-      default:
-        
-        $oResult->add($oElement);
-        
-      break;
-    }
-    
-    // if ($oObject instanceof XML_Document) $sIml = '/users/web/xml_document.iml';
-    // else if ($oObject instanceof XML_Element) $sIml = '/users/web/xml_element.iml';
-    
-    $sPrefix = $oElement->getPrefix();
-    
-    foreach ($oElement->getChildren() as $oChild) {
-      
-      switch ($oChild->getNamespace()) {
-        
-        case NS_EXECUTION :
-          
-          
-        break;
-        
-        case NS_INTERFACE :
-        
-        break;
-        
-        default:
-        
-        break;
-      }
-    }
-    
-    // CALL argument
-    
-    $aEvalArguments = array();
-    
-    for ($i = 0; $i < count($aArguments); $i++) $aEvalArguments[] = "\$aArguments[$i]";
-    $sArguments = implode(', ', $aEvalArguments);
-    
-    // CALL actions
-    
-    if ($sMethod) {
-      
-      $oResult = $this->_runMethod($oAction, $sMethod, $aArguments, $sArguments);
-      return $oResult;
-      
-    } else return $oAction;
-  }
-  
-  public function setRedirect($oRedirect = null) {
-    
-    $this->oRedirect = $oRedirect;
-  }
-  
-  public function getRedirect() {
-    
-    return $this->oRedirect;
-  }
-  
-  public function getPath() {
-    
-    return $this->sPath;
-  }
-  
-  public function setPath($sPath = '') {
-    
-    $this->sPath = $sPath;
-  }
-  
-  public function reload() {
-    
-    if ($this->getPath()) $this->loadDocument($this->getPath(), $this->getSource());
-  }
-  
-  public function getSource() {
-    
-    return $this->sSource;
-  }
-  
-  public function setSource($sSource = '') {
-    
-    $this->sSource = $sSource;
-  }
-  
-  public function setBloc($sKey, $mValue) {
-    
-    if ($sKey) $this->aBlocs[$sKey] = $mValue;
-    return $mValue;
-  }
-  
-  public function addBloc($sKey, $oTarget = null) {
-    
-    if ($oTarget && $oTarget instanceof XML_Element) return $oTarget->add($this->getBloc($sKey));
-    else return $this->add($this->getBloc($sKey));
-  }
-  
-  public function getBloc($sKey) {
-    
-    if (!array_key_exists($sKey, $this->aBlocs)) {
-      
-      $oBloc = new XML_Element($sKey);
-      $this->aBlocs[$sKey] = $oBloc;
-    }
-    
-    return $this->aBlocs[$sKey];
-  }
-  
-  public function parse() {
-    
-    return $this; //$oResult = new XML_Document;
-  }
-
 }
 
 class Old_Action extends XML_Tag {

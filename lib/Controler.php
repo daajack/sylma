@@ -8,6 +8,7 @@ class Controler {
   private static $oMessages = null;
   private static $bReady = false;
   private static $oUser = null;
+  private static $oDirectory = null;
   private static $aArguments = array();
   private static $aRights = array();
   
@@ -27,6 +28,8 @@ class Controler {
     
     XML_Controler::init();
     Action_Controler::init();
+    
+    self::$oDirectory = new XML_Directory('', '');
     
     // Formatage de l'adresse
     
@@ -98,8 +101,8 @@ class Controler {
       
       if (self::isAdmin()) {
         
-        self::getMessages()->addMessages(XML_Controler::getMessages()->getMessages());
-        self::getMessages()->addMessages(Action_Controler::getMessages()->getMessages());
+        // self::getMessages()->addMessages(XML_Controler::getMessages()->getMessages());
+        // self::getMessages()->addMessages(Action_Controler::getMessages()->getMessages());
         self::getMessages()->addMessages(db::getQueries());
       }
     }
@@ -209,7 +212,7 @@ class Controler {
     
     $sPath = "action/$sClassName.php";
     
-    if (file_exists(self::getDirectory().$sPath)) include_once($sPath);
+    if (file_exists(MAIN_DIRECTORY.'/'.$sPath)) include_once($sPath);
     else if (self::isAdmin()) self::addMessage(sprintf(t('Fichier "%s" introuvable !'), $sPath), 'warning');
     
     // Contrôle de l'existence de la classe et de l'opération
@@ -285,7 +288,7 @@ class Controler {
       
       self::addMessage(array(
         $oMessage,
-        self::getUser()->getBloc('full_name')), 'system');
+        self::getUser()->getArgument('full_name')), 'system');
       
     } else {
       
@@ -298,11 +301,11 @@ class Controler {
       
       $oMessage = new HTML_Strong(t('Groupe(s)').' : ');
       
-      if (self::getUser()->getRoles()) {
+      if (self::getUser()->getGroups()) {
         
         self::addMessage(array(
           $oMessage,
-          implode(', ', self::getUser()->getRoles())), 'system');
+          implode(', ', self::getUser()->getGroups())), 'system');
           
       } else {
         
@@ -430,20 +433,45 @@ class Controler {
         
         foreach ($aTrace['args'] as $mArgument) {
           
-          if (is_string($mArgument))
-            $aValue = array("'".stringResume($mArgument, $iMaxLength)."'", 'gray');
-          else if (is_array($mArgument))
-            $aValue = array(xt('array(%s)', new HTML_Strong(count($mArgument))), 'black');
-          else if ($mArgument instanceof XML_Element)
-            $aValue = array(stringResume($mArgument, $iMaxLength), 'blue');
-          else if ($mArgument instanceof XML_NodeList)
-            $aValue = array(xt('XML_NodeList(%s)', new HTML_Strong($mArgument->length)), 'green');
-          else if (is_object($mArgument))
-            $aValue = array(get_class($mArgument), 'red');
-          else if ($mArgument === null) $aValue = array('NULL', 'magenta');
-          else $aValue = array('undefined', 'orange');
+          if (FORMAT_MESSAGES) {
+            
+            if (is_string($mArgument))
+              $aValue = array("'".stringResume($mArgument, $iMaxLength)."'", 'gray');
+            else if (is_array($mArgument))
+              $aValue = array(xt('array(%s)', new HTML_Strong(count($mArgument))), 'black');
+            else if (is_object($mArgument)) {
+              
+              if ($mArgument instanceof XML_Element)
+                $aValue = array($mArgument->viewResume($iMaxLength), 'blue');
+              else if ($mArgument instanceof XML_NodeList)
+                $aValue = array(xt('XML_NodeList(%s)', new HTML_Strong($mArgument->length)), 'green');
+              else 
+                $aValue = array(get_class($mArgument), 'red');
+              
+            } else if ($mArgument === null) $aValue = array('NULL', 'magenta');
+            else $aValue = array('undefined', 'orange');
+            
+            $aArguments[] = new HTML_Span($aValue[0], array('style' => 'color: '.$aValue[1].';'));
+            
+          } else {
+            
+            if (is_string($mArgument))
+              $sValue = "'".stringResume($mArgument, $iMaxLength)."'";
+            else if (is_array($mArgument))
+              $sValue = 'array('.count($mArgument).')';
+            else if (is_object($mArgument)) {
+              
+              if ($mArgument instanceof XML_NodeList)
+                $sValue = 'XML_NodeList('.$mArgument->length.')';
+              else 
+                $sValue = array(get_class($mArgument), 'red');
+              
+            } else if ($mArgument === null) $sValue = 'NULL';
+            else $sValue = 'undefined';
+            
+            $aArguments[] = $sValue;
+          }
           
-          $aArguments[] = new HTML_Span($aValue[0], array('style' => 'color: '.$aValue[1].';'));
           $aArguments[] = ', ';
         }
         
@@ -452,15 +480,22 @@ class Controler {
         $oArguments = new HTML_Span($aArguments);
       }
       
-      $aResult[] = new HTML_Div(array(
-        '[',
-        new HTML_Span($aLines[$i], array('style' => 'color: blue; font-weight: bold;')),
-        '] ',
-        $sFile,
-        $sClass,
-        "::",
-        new HTML_Strong($aTrace['function']),
-        '(',  $oArguments, ')'));
+      if (FORMAT_MESSAGES) {
+        
+        $aResult[] = new HTML_Div(array(
+          '[',
+          new HTML_Span($aLines[$i], array('style' => 'color: blue; font-weight: bold;')),
+          '] ',
+          $sFile,
+          $sClass,
+          '::',
+          new HTML_Strong($aTrace['function']),
+          '(',  $oArguments, ')'));
+          
+      } else {
+        
+        $aResult[] = '['.$aLines[$i].'] '.$sFile.$sClass.'::'.$aTrace['function'].'(no display)';
+      }
       
       $i++;
     }
@@ -502,7 +537,7 @@ class Controler {
     
     if (array_key_exists('user', $_SESSION)) {
       
-      self::addMessage(t('Session existante'), 'report');
+      // self::addMessage(t('Session existante'), 'report');
       
       $oUser = unserialize($_SESSION['user']);
       
@@ -657,14 +692,15 @@ class Controler {
             
             // directory
             
+            $iMode = self::checkDirectoryRights($sRealName);
+            
             $oDirectory = new XML_Tag('directory', null, array(
               'full-path' => $sFullName,
               'name' => $sName));
             
             if ($sRelativePath) $oDirectory->setAttribute('path', $sRelativePath.'/');
             
-            $aFiles = scandir($sRealName);
-            asort($aFiles);
+            $aFiles = scandir($sRealName, 0);
             
             foreach ($aFiles as $sFile) {
               
@@ -705,9 +741,14 @@ class Controler {
     return null;
   }
   
+  public static function checkDirectoryRights($sPath) {
+    
+    //if (file_exists($sPath))
+  }
+  
   public static function listDirectory($sPath, $aExtensions) {
     
-    $sPath = self::getDirectory().$sPath;
+    $sPath = MAIN_DIRECTORY.'/'.$sPath;
     
     if (substr($sPath, -1) != '/') $sPath .= '/';
     
@@ -741,7 +782,8 @@ class Controler {
   
   public static function getDirectory() {
     
-    return PATH_PHP.'/';
+    //return PATH_PHP.'/';
+    return self::$oDirectory;
   }
   
   public static function isAdmin() {
@@ -778,7 +820,7 @@ class Controler {
   
   public static function getYAML($sFilePath) {
     
-    return Spyc::YAMLLoad(self::getDirectory().$sFilePath);
+    return Spyc::YAMLLoad(MAIN_DIRECTORY.'/'.$sFilePath);
   }
   
   // public static function getBloc($sKey) {
@@ -931,7 +973,7 @@ class URL {
   }
 }
 
-class Messages extends Action {
+class Messages extends XML_Helper {
   
   private $aAllowedMessages = array();
   

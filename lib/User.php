@@ -1,23 +1,20 @@
 <?php
 
-class User extends Temp_Action {
+class User {
   
-  private $sUser = '';
-  private $aGroups = array();
+  private $sName = '';
   private $bIsReal = false;
+  private $aGroups = array();
   private $aArguments = array();
   
-  public function __construct($sUser = null, $aGroups = array(), $aArguments = array()) {
+  public function __construct($sName = null, $aGroups = array(), $aArguments = array()) {
     
-    if ($sUser) $this->setReal();
+    if ($sName) $this->setReal();
     else $this->setReal(false);
     
-    $this->setBloc('user', $sUser);
+    $this->setName($sName);
     
-    if (isset($aArguments['full_name']))
-      $this->setBloc('full_name', $aArguments['full_name']);
-    
-    $this->setRoles($aGroups);
+    $this->setGroups($aGroups);
     $this->setArguments($aArguments);
   }
   
@@ -44,14 +41,29 @@ class User extends Temp_Action {
     $this->bIsReal = $bValue;
   }
   
-  public function getRoles() {
+  public function getGroups() {
     
     return $this->aGroups;
   }
   
-  public function setRoles($aGroups) {
+  public function setGroups($aGroups) {
     
     $this->aGroups = $aGroups;
+  }
+  
+  public function getName() {
+    
+    return $this->sName;
+  }
+  
+  private function setName($sName) {
+    
+    $this->sName = $sName;
+  }
+  
+  public function isName($sName) {
+    
+    return ($this->getName() == $sName);
   }
   
   public function isMember($sGroup) {
@@ -79,10 +91,38 @@ class User extends Temp_Action {
     return $this->aArguments;
   }
   
-  function __toString() {
+  public function getMode($sOwner, $sGroup, $sMode, $oNode) {
     
-    $this->addBloc('user');
+    if (!$sOwner) XML_Controler::addMessage(xt('Sécurité : "user" invalide ! - %s', new HTML_Tag('em', $oNode->viewResume())), 'warning');
+    else if (strlen($sMode) < 3 || !is_numeric($sMode)) { echo (!is_numeric($sMode)).' '.$sMode;XML_Controler::addMessage(xt('Sécurité : "mode" invalide ! - %s', new HTML_Tag('em', $oNode->viewResume())), 'warning');}
+    else if (!strlen($sGroup)) XML_Controler::addMessage(xt('Sécurité : "group" invalide ! - %s', new HTML_Tag('em', $oNode->viewResume())), 'warning');
+    else {
+      
+      $iOwner = intval($sMode{0});
+      $iGroup = intval($sMode{1});
+      $iPublic = intval($sMode{2});
+      
+      if ($iOwner > 7 || $iGroup > 7 || $iPublic > 7) XML_Controler::addMessage(xt('Sécurité : Attribut "mode" invalide !', new HTML_Tag('em', $oNode->viewResume())), 'warning');
+      else {
+        
+        $iMode = $iPublic;
+        
+        if ($sOwner == $this->isName($sOwner)) $iMode |= $iOwner;
+        if ($this->isMember($sGroup)) $iMode |= $iGroup;
+        
+        return $iMode;
+      }
+    }
     
-    parent::__toString();
+    return 7;
+  }
+  
+  public function parse() {
+    
+    $oNode = new HTML_Div(array(
+      new HTML_A(PATH_USER_EDIT.$this->getArgument('id'), $this->getArgument('full_name')),
+      ' ('.implode(', ', $this->getGroups()).')'), array('id' => 'user-info'));
+    
+    return $oNode;
   }
 }

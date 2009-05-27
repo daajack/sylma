@@ -3,7 +3,7 @@
  * Fichier des classes Field...
  **/
 
-class HTML_Form extends Action {
+class HTML_Form extends XML_Helper {
   
   private $bDisplayTop = false;
   private $bDisplayMark = true;

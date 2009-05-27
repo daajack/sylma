@@ -7,7 +7,7 @@ class XML_Controler {
   
   public static function init() {
     
-    self::$oMessages = new Messages(array('error', 'warning', '_report', 'notice'));
+    self::$oMessages = new Messages(array('error', 'warning', 'report', 'notice'));
   }
   
   public static function viewStats() {
@@ -41,7 +41,7 @@ class XML_Controler {
     if (FORMAT_MESSAGES) {
       
       $mMessage = array(
-        new HTML_Strong('Action', array('style' => 'text-decoration: underline;')),
+        new HTML_Strong('XML', array('style' => 'text-decoration: underline;')),
         ' : ',
         $mValue);
       
@@ -49,8 +49,8 @@ class XML_Controler {
       
     } else $mMessage = $mValue;
     
-    // if (Controler::isReady()) Controler::addMessage($aMessage, $sStatut, $aArguments);
-    self::getMessages()->addMessage(new Message($mMessage, $sStatut, $aArguments));
+    if (Controler::isReady()) Controler::addMessage($mMessage, $sStatut, $aArguments);
+    else self::getMessages()->addMessage(new Message($mMessage, $sStatut, $aArguments));
     // echo new HTML_Tag('pre', $aMessage, array('class' => 'message-'.$sStatut));
   }
 }

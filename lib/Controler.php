@@ -26,14 +26,17 @@ class Controler {
   
   public static function trickMe($sDefaultModule, $sDefaultAction) {
     
-    XML_Controler::init();
-    Action_Controler::init();
+    $iStartTime = microtime(true);
     
-    self::$oDirectory = new XML_Directory('', '');
+    XML_Controler::init(array('error', 'warning', '_report', 'notice'));
+    Action_Controler::init(array('error', 'warning', 'report', 'notice'));
+    
+    self::$oDirectory = new XML_Directory('', '', array('owner' => 'root', 'group' => '0', 'mode' => '555'));
+    
+    self::loadSettings();
     
     // Formatage de l'adresse
     
-    self::loadSettings();
     self::loadContext($sDefaultModule, $sDefaultAction);
     
     // Création du type de fenêtre
@@ -56,6 +59,10 @@ class Controler {
       
       self::setUser(self::loadUser());
       
+      // Chargement des interfaces
+      
+      Action_Controler::loadInterfaces();
+      
       // Configuration de la fenêtre
       
       if (self::isWindowType('html')) self::getWindow()->configure();
@@ -66,7 +73,7 @@ class Controler {
       
       // Authentification
       
-      if (!self::checkAuthentication()) self::accessRedirect();
+      // if (!self::checkAuthentication()) self::accessRedirect();
       
       // DEBUG
       
@@ -81,11 +88,11 @@ class Controler {
       
       $oResult = self::getContent($oAction, $oRedirect);
       
-      self::addSystemInfos($oRedirect);
+      if (self::getMessages()->useStatut('system')) self::addSystemInfos($oRedirect);
       
       // Redirection ou ajout du contenu
       
-      if (is_object($oResult) && get_class($oResult) == 'Redirect') {
+      if (is_object($oResult) && $oResult instanceof Redirect) {
         
         // Redirection
         
@@ -106,6 +113,10 @@ class Controler {
         self::getMessages()->addMessages(db::getQueries());
       }
     }
+    
+    self::addMessage(array(
+      new HTML_Strong(t('Temps d\'exécution').' : '),
+      number_format(microtime(true) - $iStartTime, 3).' s'), 'system');
     
     return self::getWindow();
   }
@@ -535,6 +546,8 @@ class Controler {
     
     // Une redirection a été effectuée
     
+    $oAnonymous = new User('anonymous', array('web', 'famous'), array('full_name' => 'Anonymous'));
+    
     if (array_key_exists('user', $_SESSION)) {
       
       // self::addMessage(t('Session existante'), 'report');
@@ -543,15 +556,15 @@ class Controler {
       
       // Récupération des messages du Redirect et suppression
       
-      if (get_class($oUser) != 'User') {
+      if (!($oUser instanceof User)) {
         
-        $oUser = new User();
+        $oUser = $oAnonymous;
         
         unset($_SESSION['user']);
         self::addMessage(t('Cookie User perdu !'), 'warning');
       }
       
-    } else $oUser = new User();
+    } else $oUser = $oAnonymous;
     
     return $oUser;
   }
@@ -692,7 +705,7 @@ class Controler {
             
             // directory
             
-            $iMode = self::checkDirectoryRights($sRealName);
+            // $iMode = self::checkDirectoryRights($sRealName);
             
             $oDirectory = new XML_Tag('directory', null, array(
               'full-path' => $sFullName,
@@ -741,11 +754,6 @@ class Controler {
     return null;
   }
   
-  public static function checkDirectoryRights($sPath) {
-    
-    //if (file_exists($sPath))
-  }
-  
   public static function listDirectory($sPath, $aExtensions) {
     
     $sPath = MAIN_DIRECTORY.'/'.$sPath;
@@ -782,8 +790,15 @@ class Controler {
   
   public static function getDirectory() {
     
-    //return PATH_PHP.'/';
     return self::$oDirectory;
+  }
+  
+  public static function getFile($sPath) {
+    
+    $aPath = explode('/', $sPath);
+    array_shift($aPath);
+    
+    return self::getDirectory()->getFile($aPath);
   }
   
   public static function isAdmin() {
@@ -858,6 +873,21 @@ class Redirect {
   public function getArgument($sKey) {
     
     return (array_key_exists($sKey, $this->aArguments)) ? $this->aArguments[$sKey] : false;
+  }
+  
+  public function setArgumentKey($sArgument, $sKey, $mValue = '') {
+    
+    $mArgument = $this->getArgument($sArgument);
+    
+    if (is_array($mArgument)) {
+      
+      if ($mValue) {
+        
+        $mArgument[$sKey] = $mValue;
+        $this->setArgument($sArgument, $mArgument);
+        
+      } else unset($this->aArguments[$sArgument][$sKey]);
+    }
   }
   
   public function setArgument($sKey, $mValue) {

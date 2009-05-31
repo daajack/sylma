@@ -5,9 +5,9 @@ class XML_Controler {
   private static $oMessages = null;
   private static $aStats = array();
   
-  public static function init() {
+  public static function init($aStatuts) {
     
-    self::$oMessages = new Messages(array('error', 'warning', 'report', 'notice'));
+    self::$oMessages = new Messages($aStatuts);
   }
   
   public static function viewStats() {

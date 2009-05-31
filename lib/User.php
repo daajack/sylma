@@ -91,7 +91,9 @@ class User {
     return $this->aArguments;
   }
   
-  public function getMode($sOwner, $sGroup, $sMode, $oNode) {
+  public function getMode($sOwner, $sGroup, $sMode, $oNode = null) {
+    
+    if ($oNode === null) $oNode = new XML_Element('null');
     
     if (!$sOwner) XML_Controler::addMessage(xt('Sécurité : "user" invalide ! - %s', new HTML_Tag('em', $oNode->viewResume())), 'warning');
     else if (strlen($sMode) < 3 || !is_numeric($sMode)) { echo (!is_numeric($sMode)).' '.$sMode;XML_Controler::addMessage(xt('Sécurité : "mode" invalide ! - %s', new HTML_Tag('em', $oNode->viewResume())), 'warning');}
@@ -114,7 +116,7 @@ class User {
       }
     }
     
-    return 7;
+    return null;
   }
   
   public function parse() {

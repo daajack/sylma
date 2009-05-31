@@ -98,7 +98,7 @@ class Html extends HTML_Document implements Main {
     
     // Supression des messages système dans le panneau de messages principal
     
-    Controler::getMessages()->getBloc('allowed')->get('//system')->remove();
+    if ($oSystem = Controler::getMessages()->getBloc('allowed')->get('//system')) $oSystem->remove();
     
     // Contenu
     
@@ -125,6 +125,7 @@ class Redirection implements Main {
     return Controler::errorRedirect('Redirection incorrecte !');
   }
 }
+
 class Popup extends HTML_Document implements Main {
   
   public function __construct() {

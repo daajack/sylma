@@ -108,23 +108,26 @@ class XML_Document extends DOMDocument {
   
   private function getMode($oNode) {
     
+    $iMode = 7;
+    
     if (!($oNode->hasAttributeNS(NS_SECURITY, 'owner') && $oNode->hasAttributeNS(NS_SECURITY, 'mode') && $oNode->hasAttributeNS(NS_SECURITY, 'group'))) {
       
       XML_Controler::addMessage(xt('Sécurité : Élément sécurisé incomplet : %s', new HTML_Tag('em', $oNode->viewResume())), 'warning');
       
     } else {
       
-      $sOwner = $oNode->getAttributeNS(NS_SECURITY, 'owner');
-      $sMode = $oNode->getAttributeNS(NS_SECURITY, 'mode');
-      $sGroup = $oNode->getAttributeNS(NS_SECURITY, 'group');
+      $sOwner = $oNode->getAttribute('owner', NS_SECURITY);
+      $sMode = $oNode->getAttribute('mode', NS_SECURITY);
+      $sGroup = $oNode->getAttribute('group', NS_SECURITY);
       
-      return Controler::getUser()->getMode($sOwner, $sGroup, $sMode, $oNode);
+      $iResult = Controler::getUser()->getMode($sOwner, $sGroup, $sMode, $oNode);
+      if ($iResult !== null) $iMode = $iResult;
     }
     
-    return 7;
+    return $iMode;
   }
   
-  private function appendReadRights() {
+  private function appendLoadRights() {
     
     if (!$this->isEmpty()) {
       
@@ -156,7 +159,7 @@ class XML_Document extends DOMDocument {
     }
   }
   
-  private function appendWriteRights($oTargetDocument) {
+  private function appendSaveRights($oTargetDocument) {
     
   }
   
@@ -190,7 +193,7 @@ class XML_Document extends DOMDocument {
   public function startString($sString) {
     
     // if Path else XML String else new XML_Element
-    if ($sString{0} == '/') $this->loadDocument($sString);
+    if ($sString{0} == '/') $this->loadFile($sString);
     else if ($sString{0} == '<') $this->loadText($sString);
     else $this->set(new XML_Element($sString, '', null, '', $this));
   }
@@ -200,59 +203,49 @@ class XML_Document extends DOMDocument {
     return new XML_Element($sName, $oContent, $aAttributes, '', $this);
   }
   
-  public function loadDocument($sPath = '', $sSource = '') {
-    
-    $sContent = '';
-    
-    switch ($sSource) {
-      
-      case 'db' : 
-        
-        $this->loadDatabase($sPath);
-        
-      break;
-      
-      case 'file' : 
-      default :
-        
-        if (XML_Controler::useStatut('report')) XML_Controler::addMessage(xt('Document : Chargement d\'un fichier : %s', new HTML_Strong($sPath)), 'report');
-        $this->loadFile($sPath);
-        
-        if ($this->isEmpty())
-          if (XML_Controler::useStatut('warning')) XML_Controler::addMessage(xt('Document : Aucun contenu dans "%s"', new HTML_Strong($sPath)), 'warning');
-        
-      break;
-    }
-    
-    return $sContent;
-  }
-  
   public function isEmpty() {
     
-    return !isset($this->documentElement);
-  }
-  
-  public function loadDatabase($sPath = '') {
-    
-    $rContent = db::query("SELECT s_content FROM xml WHERE v_path = '$sPath'");
-    
-    if (mysql_num_rows($rContent)) list($sContent) = mysql_fetch_row($rContent);
-    else $sContent = '';
-    
-    $this->loadText($sContent);
+    return !$this->getRoot();
   }
   
   public function loadFile($sPath) {
     
-    $this->load(MAIN_DIRECTORY.$sPath);
+    if ($oFile = Controler::getFile($sPath)) {
+      
+      if ($oFile->getDocument() === null) {
+        
+        parent::load(MAIN_DIRECTORY.$sPath);
+        
+        if ($this->isEmpty()) {
+          
+          XML_Controler::addMessage(xt('Document : Aucun contenu dans %s', new HTML_Strong($sPath)), 'warning');
+          $oFile->setDocument(new XML_Document);
+          
+        } else {
+          
+          $this->appendLoadRights();
+          
+          if (XML_Controler::useStatut('report')) XML_Controler::addMessage(xt('Document : Chargement du fichier %s', new HTML_Strong($sPath)), 'report');
+          XML_Controler::addStat('load');
+          
+          $oFile->setDocument(new XML_Document($this->getRoot())); // getRoot avoid parsing of specials classes
+        }
+        
+      } else if (!$oFile->getDocument()->isEmpty()) $this->set($oFile->getDocument());
+      
+    } else XML_Controler::addMessage(xt('Document : Fichier inaccessible : %s', new HTML_Strong($sPath)), 'warning');
   }
   
-  public function load($sPath) {
+  public function loadFreeFile($sPath) {
     
-    parent::load($sPath);
-    XML_Controler::addStat('load');
+    parent::load(MAIN_DIRECTORY.$sPath);
     
-    $this->appendReadRights();
+    if ($this->isEmpty()) if (XML_Controler::useStatut('warning')) XML_Controler::addMessage(xt('Document (free) : Aucun contenu dans %s', new HTML_Strong($sPath)), 'warning');
+    else {
+      
+      if (XML_Controler::useStatut('report')) XML_Controler::addMessage(xt('Document (free) : Chargement du fichier %s', new HTML_Strong($sPath)), 'report');
+      XML_Controler::addStat('load');
+    }
   }
   
   public function loadText($sContent) {
@@ -265,12 +258,19 @@ class XML_Document extends DOMDocument {
       
     } else XML_Controler::addMessage('Document : Aucun contenu. La chaîne est vide !', 'error');
     
-    $this->appendReadRights();
+    $this->appendLoadRights();
+  }
+  
+  /*
+   * Method loadFile() alias
+   **/
+  public function load($sPath) {
+    
+    $this->loadFile($sPath);
   }
   
   /*
    * Method loadText() alias
-   * Security override
    **/
   public function loadXML() {
     
@@ -337,23 +337,12 @@ class XML_Document extends DOMDocument {
           
           /* XML_Document */
           
-          if ($mValue->getRoot()) {
-            
-            $mValue = $this->importNode($mValue->getRoot(), true);
-            $this->setChild($mValue);
-            
-          } else XML_Controler::addMessage('Document->set() - Document vide', 'warning');
+          if ($mValue->getRoot()) $this->setChild($mValue->getRoot());
+          else XML_Controler::addMessage('Document->set() - Document vide', 'warning');
           
         } else if ($mValue instanceof XML_Element) {
           
           /* XML_Element */
-          
-          if ($this->getRoot()) $this->removeChild($this->getRoot());
-          
-          if ($mValue->getDocument() && $mValue->getDocument() !== $this) {
-            
-            $mValue = $this->importNode($mValue, true);
-          }
           
           $this->setChild($mValue);
           
@@ -396,7 +385,7 @@ class XML_Document extends DOMDocument {
       
       return $mValue;
       
-    } else if ($this->getRoot()) $this->removeChild($this->getRoot());
+    } else if ($this->getRoot()) $this->getRoot()->remove();
     
     return null;
   }
@@ -408,6 +397,8 @@ class XML_Document extends DOMDocument {
   }
   
   public function setChild($oChild) {
+    
+    if (!$this->isEmpty()) $this->getRoot()->remove();
     
     if ($oChild && is_object($oChild)) {
       
@@ -427,7 +418,6 @@ class XML_Document extends DOMDocument {
   
   /*
    * Method add() alias
-   * Security override
    **/
   public function appendChild() {
     
@@ -531,7 +521,6 @@ class XML_Document extends DOMDocument {
   
   /*
    * Method __toString() alias
-   * Security override
    **/
   public function saveXML() {
     
@@ -575,30 +564,6 @@ class XML_Element extends DOMElement {
   }
   
   /*** Reading ***/
-  
-  public function viewResume($iLimit = 100) {
-    
-    $sView = stringResume($this->view(), $iLimit);
-    $iLastSQuote = strrpos($sView, '&');
-    $iLastEQuote = strrpos($sView, ';');
-    
-    if ($iLastSQuote && $iLastEQuote < $iLastSQuote) $sView = substr($sView, 0, $iLastSQuote).'...';
-    return $sView;
-  }
-  
-  public function view($bIndent = false, $bFormat = false) {
-    
-    $oView = clone $this;
-    if ($bIndent) $oView->formatOutput();
-    
-    // if ($bFormat) return htmlentities($oView);
-    return htmlspecialchars($oView->__toString());
-  }
-  
-  public function dsp($bHtml = false) {
-    
-    echo $this->view();
-  }
   
   private function buildXPath($sPrefix, $sUri) {
     
@@ -755,6 +720,12 @@ class XML_Element extends DOMElement {
   public function addAttributes($aAttributes) {
     
     foreach ($aAttributes as $sKey => $sValue) $this->setAttribute($sKey, $sValue);
+  }
+  
+  public function getAttribute($sName, $sUri = '') {
+    
+    if ($sUri) return parent::getAttributeNS($sUri, $sName);
+    else return parent::getAttribute($sName);
   }
   
   /*** Children ***/
@@ -1093,6 +1064,30 @@ class XML_Element extends DOMElement {
     
     foreach ($this->getChildren() as $oChild) $oChild->formatOutput($iLevel + 1);
     if ($this->hasChildren()) $this->add("\n".str_repeat('  ', $iLevel));
+  }
+  
+  public function viewResume($iLimit = 100) {
+    
+    $sView = stringResume(htmlspecialchars($this->view()), $iLimit);
+    $iLastSQuote = strrpos($sView, '&');
+    $iLastEQuote = strrpos($sView, ';');
+    
+    if ($iLastSQuote && $iLastEQuote < $iLastSQuote) $sView = substr($sView, 0, $iLastSQuote).'...';
+    return $sView;
+  }
+  
+  public function view($bIndent = false, $bFormat = false) {
+    
+    $oView = clone $this;
+    if ($bIndent) $oView->formatOutput();
+    
+    // if ($bFormat) return htmlentities($oView);
+    return $oView->__toString();
+  }
+  
+  public function dsp($bHtml = false) {
+    
+    echo $this->view();
   }
   
   public function __toString() {

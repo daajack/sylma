@@ -6,9 +6,12 @@ class Action_Controler {
   private static $oMessages = null;
   private static $aStats = array();
   
-  public static function init() {
+  public static function init($aStatuts) {
     
-    self::$oMessages = new Messages(array('error', 'warning', 'report', 'notice'));
+    self::$oMessages = new Messages($aStatuts);
+  }
+  
+  public static function loadInterfaces() {
     
     if ($oInterfaces = new XML_Document(PATH_INTERFACES)) {
       
@@ -116,7 +119,6 @@ class Action_Controler {
     
     if (Controler::isReady()) Controler::addMessage($mMessage, $sStatut, $aArguments);
     else self::getMessages()->addMessage(new Message($mMessage, $sStatut, $aArguments));
-    // else self::getMessage()->addMessage($mMessage, $sStatut, $aArguments);
     // echo new HTML_Tag('pre', $mMessage, array('class' => 'message-'.$sStatut));
   }
 }

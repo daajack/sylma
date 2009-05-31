@@ -398,6 +398,14 @@ class HTML_Strong extends HTML_Tag {
   }
 }
 
+class HTML_Em extends HTML_Tag {
+  
+  public function __construct($oChild = '', $aAttributes = array()) {
+    
+    parent::__construct('em', $oChild, $aAttributes);
+  }
+}
+
 class HTML_Img extends HTML_Tag {
   
   public function __construct($sSrc, $sAlt = '', $aAttributes = array()) {

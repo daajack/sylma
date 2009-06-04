@@ -1,9 +1,6 @@
 <?php
 
 
-class File_Controler {
-}
-
 class XML_Resource {
   
   protected $aRights = array();
@@ -14,6 +11,7 @@ class XML_Resource {
   
   private $bExist = false;
   private $iUserMode = null;
+  private $oParent = null;
   
   public function doExist($bExist = null) {
     
@@ -41,6 +39,11 @@ class XML_Resource {
     return $this->aRights['mode'];
   }
   
+  protected function getParent() {
+    
+    return $this->oParent;
+  }
+  
   protected function setUserMode($iMode) {
     
     $this->iUserMode = $iMode;
@@ -57,14 +60,16 @@ class XML_Directory extends XML_Resource {
   private $aDirectories = array();
   private $aFiles = array();
   
-  public function __construct($sPath, $sName, $aRights = array()) {
+  public function __construct($sPath, $sName, $aRights = array(), $oParent = null) {
     
-    $this->aRights = $aRights;
-    $this->sName = $sName;
-    $this->sPath = $sPath;
     $this->sFullPath = $sName ? $sPath.'/'.$sName : $sPath;
     
     if (is_dir(MAIN_DIRECTORY.$this->sFullPath)) {
+      
+      $this->aRights = $aRights;
+      $this->sName = $sName;
+      $this->sPath = $sPath;
+      $this->oParent = $oParent;
       
       $this->doExist(true);
       $this->loadRights();
@@ -72,7 +77,12 @@ class XML_Directory extends XML_Resource {
     } else Action_Controler::addMessage(xt('Fichier ou répertoire "%s" introuvable dans "%s"!', new HTML_Strong($sActualPath), new HTML_Strong($sPath)), 'error');
   }
   
-  public function getFile($aPath) {
+  public function getFile($sPath, $bDebug = true) {
+    
+    return $this->getDistantFile(array($sPath), $bDebug);
+  }
+  
+  public function getDistantFile($aPath, $bDebug = true) {
     
     if ($aPath) {
       
@@ -84,7 +94,7 @@ class XML_Directory extends XML_Resource {
           
           if (!array_key_exists($sName, $this->aFiles)) {
             
-            $oFile = new XML_File($this->sFullPath, $sName, $this->getRights());
+            $oFile = new XML_File($this->sFullPath, $sName, $this->getRights(), $this, $bDebug);
             
             if ($oFile->doExist()) $this->aFiles[$sName] = $oFile;
             else $this->aFiles[$sName] = null;
@@ -98,7 +108,7 @@ class XML_Directory extends XML_Resource {
         $sName = array_shift($aPath);
         $oSubDirectory = $this->getDirectory($sName, 4);
         
-        if ($oSubDirectory) return $oSubDirectory->getFile($aPath);
+        if ($oSubDirectory) return $oSubDirectory->getDistantFile($aPath);
       }
     }
     
@@ -109,15 +119,20 @@ class XML_Directory extends XML_Resource {
     
     if ($this->checkRights($iMode)) {
       
-      if (!array_key_exists($sName, $this->aDirectories)) {
+      if ($sName == '.') return $this;
+      else if ($sName == '..') return $this->getParent();
+      else {
         
-        $oDirectory = new XML_Directory($this->sFullPath, $sName, $this->getRights());
+        if (!array_key_exists($sName, $this->aDirectories)) {
+          
+          $oDirectory = new XML_Directory($this->sFullPath, $sName, $this->getRights(), $this);
+          
+          if ($oDirectory->doExist()) $this->aDirectories[$sName] = $oDirectory;
+          else $this->aDirectories[$sName] = null;
+        }
         
-        if ($oDirectory->doExist()) $this->aDirectories[$sName] = $oDirectory;
-        else $this->aDirectories[$sName] = null;
+        return $this->aDirectories[$sName];
       }
-      
-      return $this->aDirectories[$sName];
     }
     
     return false;
@@ -172,20 +187,34 @@ class XML_File extends XML_Resource {
   
   private $oDocument = null;
   
-  public function __construct($sPath, $sName, $aRights = array()) {
-    
-    $this->aRights = $aRights;
-    $this->sName = $sName;
-    $this->sPath = $sPath;
+  public function __construct($sPath, $sName, $aRights = array(), $oParent = null, $bDebug = true) {
     
     $this->sFullPath = $sName ? $sPath.'/'.$sName : $sPath;
     
     if (is_file(MAIN_DIRECTORY.$this->sFullPath)) {
       
-      $this->doExist(true);
-      if (Controler::getUser()) $this->setUserMode(Controler::getUser()->getMode($this->getOwner(), $this->getGroup(), $this->getMode()));
+      $this->aRights = $aRights;
+      $this->sName = $sName;
+      $this->sPath = $sPath;
+      $this->oParent = $oParent;
       
-    } else Action_Controler::addMessage(xt('Fichier "%s" introuvable dans "%s"!', new HTML_Strong($sName), new HTML_Strong($sPath)), 'error');
+      $this->doExist(true);
+      
+      if (Controler::getUser()) {
+        
+        $this->setUserMode(
+          Controler::getUser()->getMode(
+            $this->getOwner(),
+            $this->getGroup(),
+            $this->getMode()));
+      }
+      
+    } else if ($bDebug) Action_Controler::addMessage(xt('Fichier "%s" introuvable dans "%s"!', new HTML_Strong($sName), new HTML_Strong($sPath)), 'notice');
+  }
+  
+  public function getFullPath() {
+    
+    return $this->sFullPath;
   }
   
   public function getDocument() {

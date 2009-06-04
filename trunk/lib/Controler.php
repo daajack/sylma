@@ -26,10 +26,12 @@ class Controler {
   
   public static function trickMe($sDefaultModule, $sDefaultAction) {
     
+    global $aDefaultInitMessages;
+    
     $iStartTime = microtime(true);
     
-    XML_Controler::init(array('error', 'warning', '_report', 'notice'));
-    Action_Controler::init(array('error', 'warning', 'report', 'notice'));
+    XML_Controler::init($aDefaultInitMessages['xml']);
+    Action_Controler::init($aDefaultInitMessages['action']);
     
     self::$oDirectory = new XML_Directory('', '', array('owner' => 'root', 'group' => '0', 'mode' => '555'));
     
@@ -123,7 +125,7 @@ class Controler {
   
   // Ajout des infos système
   
-  public static function loadSettings() {
+  private static function loadSettings() {
     
     $oSettings = new XML_Document('/xml/root.xml', 'file');
     
@@ -138,7 +140,7 @@ class Controler {
     self::setReady();
   }
   
-  public static function loadContext($sDefaultModule, $sDefaultAction) {
+  private static function loadContext($sDefaultModule, $sDefaultAction) {
     
     $aArguments = array();
     
@@ -177,12 +179,12 @@ class Controler {
     self::$sOperationName = 'action'.ucfirst($sAction);
   }
   
-  public static function loadRights() {
+  private static function loadRights() {
     
     self::$aRights = self::getYAML('rights.yml');
   }
   
-  public static function loadRedirect() {
+  private static function loadRedirect() {
     
     $oRedirect = new Redirect();
     
@@ -217,7 +219,7 @@ class Controler {
     return $oRedirect;
   }
   
-  public static function includeClass() {
+  private static function includeClass() {
     
     $sClassName = self::getClassName();
     
@@ -265,7 +267,7 @@ class Controler {
     return self::$aRights;
   }
   
-  public static function getActionRights($sPath = null) {
+  private static function getActionRights($sPath = null) {
     
     if (!$sPath) $sPath = self::getAction();
     
@@ -276,7 +278,7 @@ class Controler {
     return $aActionRights;
   }
   
-  public static function getContent($oAction, $oRedirect) {
+  private static function getContent($oAction, $oRedirect) {
     
     $sOperationName = self::getOperationName();
     
@@ -291,7 +293,7 @@ class Controler {
     return $oResult;
   }
   
-  public static function addSystemInfos($oRedirect) {
+  private static function addSystemInfos($oRedirect) {
     
     $oMessage = new HTML_Strong(t('Authentification').' : ');
     
@@ -368,13 +370,13 @@ class Controler {
       XML_Controler::viewStats()), 'system');
   }
   
-  public static function doAJAXRedirect($oRedirect) {
+  private static function doAJAXRedirect($oRedirect) {
     
     self::doRedirect($oRedirect);
     self::getWindow()->setRedirect($oRedirect);
   }
   
-  public static function doHTTPRedirect($oRedirect) {
+  private static function doHTTPRedirect($oRedirect) {
     
     self::doRedirect($oRedirect);
     
@@ -384,7 +386,7 @@ class Controler {
     exit;
   }
   
-  public static function doRedirect($oRedirect) {
+  private static function doRedirect($oRedirect) {
     
     // Récupération et ajout dans le Redirect des messages en attente
     
@@ -453,7 +455,7 @@ class Controler {
             else if (is_object($mArgument)) {
               
               if ($mArgument instanceof XML_Element)
-                $aValue = array($mArgument->viewResume($iMaxLength), 'blue');
+                $aValue = array($mArgument->viewResume($iMaxLength, true), 'blue');
               else if ($mArgument instanceof XML_NodeList)
                 $aValue = array(xt('XML_NodeList(%s)', new HTML_Strong($mArgument->length)), 'green');
               else 
@@ -483,7 +485,7 @@ class Controler {
             $aArguments[] = $sValue;
           }
           
-          $aArguments[] = ', ';
+          $aArguments[] = new HTML_Strong(', ');
         }
         
         if ($aArguments) array_pop($aArguments);
@@ -542,7 +544,7 @@ class Controler {
     if (is_object($oUser) && get_class($oUser) == 'User') self::$oUser = $oUser;
   }
   
-  public static function loadUser() {
+  private static function loadUser() {
     
     // Une redirection a été effectuée
     
@@ -798,7 +800,7 @@ class Controler {
     $aPath = explode('/', $sPath);
     array_shift($aPath);
     
-    return self::getDirectory()->getFile($aPath);
+    return self::getDirectory()->getDistantFile($aPath);
   }
   
   public static function isAdmin() {
@@ -806,11 +808,6 @@ class Controler {
     if (DEBUG) return true;
     else if (self::getUser()) return self::getUser()->isMember('0');
     else return false;
-  }
-  
-  public static function useCache() {
-    
-    return self::$useCache;
   }
   
   public static function getClassName() {
@@ -837,22 +834,13 @@ class Controler {
     
     return Spyc::YAMLLoad(MAIN_DIRECTORY.'/'.$sFilePath);
   }
-  
-  // public static function getBloc($sKey) {
-    
-    // return self::getMessages()->getBloc($sKey);
-  // }
-  
-  // public static function setBloc($sKey, $sValue) {
-    
-    // return self::getMessages()->setBloc($sKey, $sValue);
-  // }
 }
 
 class Redirect {
   
   private $sPath = '/'; // URL cible
-  private $oSource = ''; // URL de provenance
+  private $oPath = null; // URL cible
+  private $oSource = null; // URL de provenance
   private $sWindowType = 'window';
   private $bIsReal = false; // Défini si le cookie a été redirigé ou non
   
@@ -867,7 +855,7 @@ class Redirect {
     $this->aArguments = $aArguments;
     $this->setArgument('post', $_POST);
     $this->setWindowType(Controler::getWindowType());
-    $this->updateSource();
+    // $this->updateSource();
   }
   
   public function getArgument($sKey) {
@@ -918,13 +906,18 @@ class Redirect {
   
   public function getPath() {
     
-    return $this->sPath;
+    // return $this->sPath;
+    return $this->oPath;
   }
   
   public function setPath($sPath) {
     
-    if ($sPath == '/' || $sPath != Controler::getPath()) $this->sPath = $sPath;
-    else Controler::errorRedirect(t('Un problème de redirection à été détecté !'));
+    $this->oPath = new XML_Path($sPath);
+    $this->sPath = $sPath;
+    
+    return $this->oPath;
+    // if ($sPath == '/' || $sPath != Controler::getPath()) $this->sPath = $sPath;
+    // else Controler::errorRedirect(t('Un problème de redirection à été détecté !'));
   }
   
   public function getSource() {
@@ -932,9 +925,9 @@ class Redirect {
     return $this->oSource;
   }
   
-  public function setSource($sSource, $aArguments) {
+  public function setSource($oPath) {
     
-    $this->oSource = new URL($sSource, $aArguments);
+    $this->oSource = $oPath;
   }
   
   public function updateSource() {
@@ -974,32 +967,7 @@ class Redirect {
   
   public function __toString() {
     
-    return $this->getPath();
-  }
-}
-
-class URL {
-  
-  private $sAction;
-  private $aArguments;
-  
-  public function __construct($sAction, $aArguments) {
-    
-    $this->sAction = $sAction;
-    $this->aArguments = $aArguments;
-  }
-  
-  public function getAction() {
-    
-    return $this->sAction;
-  }
-  
-  public function __toString() {
-    
-    if ($this->aArguments) $sArguments = '/'.implode('/', $this->aArguments);
-    else $sArguments = '';
-    
-    return $this->sAction.$sArguments;
+    return $this->sPath;
   }
 }
 

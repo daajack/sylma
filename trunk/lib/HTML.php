@@ -288,6 +288,17 @@ class HTML_Document extends XML_Helper {
   }
 }
 
+class HTML_Icone extends HTML_A {
+  
+  public function __construct($sHref = '', $sSrc = '', $sTitle = '', $aAttributes = array()) {
+    
+    parent::__construct($sHref, '', $aAttributes);
+    $this->add(new HTML_Img($sSrc, $sTitle, array('title' => $sTitle)));
+  }
+}
+
+/*** Real Tags ***/
+
 class HTML_Script extends HTML_Tag {
   
   public function __construct($sSrc = '', $oChild = null) {
@@ -352,14 +363,6 @@ class HTML_IEComment extends HTML_Comment {
   }
 }
 
-class HTML_Br extends HTML_Tag {
-  
-  public function __construct() {
-    
-    parent::__construct('br');
-  }
-}
-
 class HTML_A extends HTML_Tag {
   
   public function __construct($sHref = '', $oChild = '', $aAttributes = array()) {
@@ -372,20 +375,30 @@ class HTML_A extends HTML_Tag {
 /*
  * Crée une image cliquable en attribuant 'title'
  **/
-class HTML_Icone extends HTML_A {
-  
-  public function __construct($sHref = '', $sSrc = '', $sTitle = '', $aAttributes = array()) {
-    
-    parent::__construct($sHref, '', $aAttributes);
-    $this->add(new HTML_Img($sSrc, $sTitle, array('title' => $sTitle)));
-  }
-}
-
 class HTML_Span extends HTML_Tag {
   
   public function __construct($oChild = '', $aAttributes = array()) {
     
     parent::__construct('span', $oChild, $aAttributes);
+  }
+}
+
+class HTML_Img extends HTML_Tag {
+  
+  public function __construct($sSrc, $sAlt = '', $aAttributes = array()) {
+    
+    parent::__construct('img', null, $aAttributes);
+    $this->setAttribute('src', $sSrc);
+    $this->setAttribute('alt', $sAlt);
+  }
+}
+
+class HTML_Div extends HTML_Tag {
+  
+  public function __construct($mChildren = '', $aAttributes = array()) {
+    
+    parent::__construct('div', $mChildren, $aAttributes);
+    $this->forceClosure();
   }
 }
 
@@ -406,22 +419,19 @@ class HTML_Em extends HTML_Tag {
   }
 }
 
-class HTML_Img extends HTML_Tag {
+class HTML_Br extends HTML_Tag {
   
-  public function __construct($sSrc, $sAlt = '', $aAttributes = array()) {
+  public function __construct() {
     
-    parent::__construct('img', null, $aAttributes);
-    $this->setAttribute('src', $sSrc);
-    $this->setAttribute('alt', $sAlt);
+    parent::__construct('br');
   }
 }
 
-class HTML_Div extends HTML_Tag {
+class HTML_Hr extends HTML_Tag {
   
-  public function __construct($mChildren = '', $aAttributes = array()) {
+  public function __construct() {
     
-    parent::__construct('div', $mChildren, $aAttributes);
-    $this->forceClosure();
+    parent::__construct('hr');
   }
 }
 
@@ -476,25 +486,6 @@ class HTML_TableRow extends HTML_Tag {
         else $this->addCell($val);
       }
     }
-  }
-}
-
-/* TODO : Sera supprimer dans le prochain commit (si j'y pense) */
-
-class HTML_List extends HTML_Tag {
-  
-  function __construct($oContent = '', $aAttributes = array()) {
-    
-    parent::__construct('ul', $oContent, $aAttributes);
-  }
-  
-  function addItem($sContent, $aAttributes = array()) {
-    
-    $oItem = new HTML_Tag('li', $sContent, $aAttributes);
-    
-    $this->add($oItem);
-    
-    return $oItem;
   }
 }
 

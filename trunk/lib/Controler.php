@@ -30,12 +30,16 @@ class Controler {
     
     $iStartTime = microtime(true);
     
-    XML_Controler::init($aDefaultInitMessages['xml']);
     Action_Controler::init($aDefaultInitMessages['action']);
+    XML_Controler::init($aDefaultInitMessages['xml']);
     
     self::$oDirectory = new XML_Directory('', '', array('owner' => 'root', 'group' => '0', 'mode' => '555'));
     
-    self::loadSettings();
+    $aAllowedMessages = self::loadSettings();
+    
+    Action_Controler::getMessages()->setAllowedMessages($aAllowedMessages);
+    XML_Controler::getMessages()->setAllowedMessages($aAllowedMessages);
+    
     
     // Formatage de l'adresse
     
@@ -133,11 +137,14 @@ class Controler {
     // $oSettings->addNode('users', implode(',', array('root', 'john', 'serge', 'daajack')));
     // $oSettings->addNode('groups', implode(',', array('0', 'lemon', 'team', 'dev')));
     
-    self::$oMessages = new Messages(explode(',', $oSettings->read('//messages/allowed')));
+    $aAllowed = explode(',', $oSettings->read('//messages/allowed'));
+    self::$oMessages = new Messages($aAllowed);
     self::$aAllowedWindowType = $oSettings->query('//window/*')->toArray('name');
     
     // self::setArgument('settings', $oSettings);
     self::setReady();
+    
+    return $aAllowed;
   }
   
   private static function loadContext($sDefaultModule, $sDefaultAction) {
@@ -230,7 +237,7 @@ class Controler {
     
     // Contrôle de l'existence de la classe et de l'opération
     
-    if (self::isAdmin()) $sClassError = sprintf(t('Action impossible (la classe "%s" n\'existe pas) !'), new HTML_Strong($sClassName));
+    if (self::isAdmin()) $sClassError = xt('Action impossible (la classe "%s" n\'existe pas) !', new HTML_Strong($sClassName));
     else $sClassError = t('Page introuvable, veuillez corriger l\'adresse !');
     
     if (!class_exists($sClassName)) self::errorRedirect($sClassError);

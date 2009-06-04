@@ -28,7 +28,7 @@ class XML_Controler {
   
   public static function useStatut($sStatut) {
     
-    return self::getMessages()->useStatut($sStatut);
+    return self::getMessages()->useStatut('xml-'.$sStatut);
   }
   
   public static function getMessages() {
@@ -37,6 +37,8 @@ class XML_Controler {
   }
   
   public static function addMessage($mValue, $sStatut = 'notice', $aArguments = array()) {
+    
+    $sStatut = 'xml-'.$sStatut;
     
     if (FORMAT_MESSAGES) {
       

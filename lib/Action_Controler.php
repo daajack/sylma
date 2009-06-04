@@ -101,10 +101,12 @@ class Action_Controler {
   
   public static function useStatut($sStatut) {
     
-    return self::getMessages()->useStatut($sStatut);
+    return self::getMessages()->useStatut('action-'.$sStatut);
   }
   
   public static function addMessage($mValue, $sStatut = 'notice', $aArguments = array()) {
+    
+    $sStatut = 'action-'.$sStatut;
     
     if (FORMAT_MESSAGES) {
       
@@ -113,7 +115,7 @@ class Action_Controler {
         ' : ',
         $mValue);
       
-      if ($sStatut == 'error') $mMessage = array_merge($mMessage, array(new HTML_Br, Controler::getBacktrace()));
+      if ($sStatut == 'action-error') $mMessage = array_merge($mMessage, array(new HTML_Br, Controler::getBacktrace()));
       
     } else $mMessage = $mValue;
     

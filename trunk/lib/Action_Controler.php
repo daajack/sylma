@@ -49,13 +49,13 @@ class Action_Controler {
       } while ($sPrevClass && !array_key_exists($sPrevClass, self::$aInterfaces));
       
       if ($sPrevClass && array_key_exists($sPrevClass, self::$aInterfaces)) return self::$aInterfaces[$sPrevClass];
-      else self::addMessage(xt('Interface de classe "%s" introuvable !', new HTML_Strong($sClass)), 'error');
+      else self::addMessage(xt('Interface de classe "%s" introuvable !', new HTML_Strong($sClass)), 'warning');
     }
     
     return false;
   }
   
-  public static function getSpecial($sName, $oRedirect) {
+  public static function getSpecial($sName, $oAction, $oRedirect) {
     
     $oSpecials = new XML_Document(PATH_SPECIALS);
     
@@ -68,14 +68,14 @@ class Action_Controler {
           eval('$oObject = '.$sCall.';');
           
           if (isset($oObject)) return $oObject;
-          else self::addMessage(xt('L\'objet "%s" est nul !', new HTML_Strong($sCall)), 'error');
+          else self::addMessage(xt('L\'objet "%s" est nul !', new HTML_Strong($sCall)), 'warning');
         }
         
-      } else self::addMessage(xt('Pas de référence dans le fichier "%s",  !', new HTML_Strong(PATH_SPECIALS)), 'error');
+      } else self::addMessage(xt('Pas de référence dans le fichier "%s",  !', new HTML_Strong(PATH_SPECIALS)), 'warning');
       
-    } else self::addMessage(xt('La variable spéciale "%s" n\'existe pas !', new HTML_Strong($sName)), 'error');
+    } else self::addMessage(xt('La variable spéciale "%s" n\'existe pas !', new HTML_Strong($sName)), 'warning');
     
-    return false;
+    return null;
   }
   
   public static function getMessages() {

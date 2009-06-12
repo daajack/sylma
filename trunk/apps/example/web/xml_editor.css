@@ -1,0 +1,231 @@
+/* Document CSS */
+
+#xml-path > input, #xml-path > div { float: left; }
+#xml-path > div {
+  width: 50%;
+}
+
+#xml-editor {
+  cursor: default;
+  width: 70%;
+  margin: 1em auto;
+  padding: 1em;
+  border: 1px solid black;
+  font-size: 0.9em;
+  -moz-user-select:none;
+  /*background: url(img/xml_editor_bgnd.png) repeat-y 100% 0;*/
+}
+
+/* Tools */
+
+#xml-editor .circle-tools {
+  padding: 1px; /* TODO : Hack pourri */
+  position: absolute;
+  display: none;
+  cursor: pointer;
+  z-index: 10;
+  /*opacity: 0.9;
+  background-color: white;
+  border: 1px solid orange;
+  border-right-color: #AF770A;
+  border-bottom-color: #AF770A;*/
+
+}
+#xml-editor.rounded  .circle-tools { -moz-border-radius: 7px; }
+
+#xml-editor .circle-tools .tool {
+  padding: 1px;
+  position : absolute;
+  background-color: #aaa;
+  
+  color: #fff;
+  /*background-color: #fff;
+  border: 1px solid #ccc;*/
+  font-size: 0.9em;
+  font-weight: bold;
+  text-align: center;
+  /*opacity: 0.01;
+  background-color: #eee;
+  cursor: pointer;*/
+}
+
+#xml-editor .circle-tools .tool:hover { background-color: #ccc; color: #666; }
+#xml-editor.rounded .circle-tools .tool  { -moz-border-radius: 7px; }
+
+/* Element */
+
+#xml-editor .name, #xml-editor .text, #xml-editor .attribute { padding: 1px; }
+
+#xml-editor .element { padding: 2px; padding-right: 0; }
+#xml-editor .element.block .children { padding-bottom: 2px; }
+#xml-editor.rounded .element { -moz-border-radius : 8px 0px 0px 8px; }
+
+#xml-editor > .element { padding-right: 1px; }
+
+#xml-editor .element.selected { padding: 1px; border: 1px solid orange; }
+#xml-editor .element.selected:hover { border-color: orange; border-right-width: 2px; }
+#xml-editor .element:hover { padding: 0; border: 2px solid #eee; border-right-width: 0; }
+#xml-editor > .element:hover { border-right-width: 2px; }
+
+#xml-editor .element > .children.inline .element { padding: 1px; }
+#xml-editor .element:hover > .children.inline .element { padding: 0; border: 1px solid #eee; }
+
+#xml-editor .inline .header { }
+#xml-editor.rounded .children.inline .element { -moz-border-radius: 7px; }
+
+/* Name */
+
+#xml-editor .name {
+  
+  font-weight: bold;
+  /*font-size: 1.2em;*/
+  color: orange;
+  padding-left: 5px;
+}
+#xml-editor.rounded .name { -moz-border-radius: 4px; }
+
+#xml-editor.edit-name .name:hover {
+  background-color: #eee;
+  cursor: pointer;
+}
+
+#xml-editor .name.navigate { color: black; background-color: #eee; }
+
+#xml-editor .children.block > .element.inline .name {
+  float: left;
+  min-width: 80px;
+  padding-bottom: 0;
+  padding-top: 0;
+}
+
+#xml-editor .children.inline .element, #xml-editor .children.inline .name {
+  float: none;
+  display: inline;
+}
+
+/* Attributes */
+
+#xml-editor .attributes {
+  display: inline;
+  margin-left: 5px;
+}
+
+#xml-editor .attributes span, #xml-editor .attributes div {
+  
+  display: inline;
+}
+
+#xml-editor .attribute {
+  display: inline;
+  margin: 0 2px 0 2px;
+  font-style: italic;
+  color: #aaa;
+}
+
+#xml-editor .attribute-name {
+  font-weight: bold;
+}
+
+#xml-editor .attribute-equal {
+  padding: 0 5px 0 5px;
+  color: gray;
+}
+
+#xml-editor .attribute-value { white-space: nowrap; }
+
+#xml-editor.attribute.selected { border: 1px solid orange; }
+#xml-editor.edit-attribute .attribute:hover, #xml-editor .attribute.navigate {
+  background-color: #eee;
+  cursor: pointer;
+}
+
+#xml-editor .attribute.navigate { color: black; }
+
+/* Children */
+#xml-editor .block > .children {
+  
+  margin: 5px 0 4px 10px;
+  padding: 0 0 0 10px;
+  border-left: 1px solid #eee;
+}
+
+#xml-editor .block.last-child > .children {
+  margin-bottom: 2px;
+
+}
+
+#xml-editor .inline > .children { 
+  display: inline;
+}
+
+/* Text */
+
+#xml-editor .text { color: black; padding: 2px; }
+#xml-editor.edit-value .text:hover, #xml-editor .text.navigate {
+  background-color: #eee;
+  cursor: pointer;
+}
+
+#xml-editor .block .text {
+  
+  display: inline;
+}
+
+#xml-editor .inline .children.inline .text { margin: 0 5px 0 5px; }
+#xml-editor .inline .children.block .text {
+  
+  margin: 0 5px 0 5px;
+  border: 0;
+}
+
+/* Spacer */
+
+#xml-editor.edit-structure .children > .edit-spacer:hover,
+#xml-editor .children > .navigate.edit-spacer { background-color: orange !important; }
+
+#xml-editor.edit-structure .attributes > .edit-spacer:hover,
+#xml-editor .attributes > .navigate.edit-spacer  { background-color: blue; }
+
+#xml-editor.rounded .edit-spacer { -moz-border-radius: 7px; }
+#xml-editor .edit-spacer {
+  opacity: 0.01;
+  background-color: #eee;
+  cursor: pointer;
+}
+
+#xml-editor .element:hover > .children > .edit-spacer,
+#xml-editor .element:hover > .attributes .edit-spacer { opacity: 1.0 !important; }
+#xml-editor .navigate.edit-spacer { opacity: 1.0 !important; }
+
+#xml-editor .children > .edit-spacer:first-child, #xml-editor .children > .edit-spacer:last-child { background-color: #ccc; }
+#xml-editor .block > .edit-spacer {
+  position: absolute;
+  margin: -4px 0 0 -17px;
+  width: 12px;
+  height: 12px;
+}
+#xml-editor .children.block > .edit-spacer:first-child {
+  text-align: center;
+  color: white;
+  font-size: 0.9em;
+  font-weight: normal;
+  padding: 0 0 0 1px;
+  width: 11px;
+  height: 13px;
+}
+
+#xml-editor .children.block > .edit-spacer:last-child {
+  margin-left: -18px;
+  width: 14px;
+  height: 13px;
+}
+
+#xml-editor .inline .edit-spacer {
+  position: relative;
+  margin: 0;
+  padding: 0 12px 0 0;
+  height: 12px;
+  display: inline;
+}
+
+

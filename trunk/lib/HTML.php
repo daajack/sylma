@@ -253,12 +253,12 @@ class HTML_Document extends XML_Helper {
   
   public function addJS($sHref) {
     
-    $this->get('/ns:html/ns:head')->add(new HTML_Script($sHref));
+    if ($oHeader = $this->get('/ns:html/ns:head')) $oHeader->add(new HTML_Script($sHref));
   }
   
   public function addCSS($sHref = '') {
     
-    $this->get('/ns:html/ns:head')->add(new HTML_Style($sHref));
+    if ($oHeader = $this->get('/ns:html/ns:head')) $oHeader->add(new HTML_Style($sHref));
   }
   
   public function addIECSS($sHref = '', $sVersion = '') {
@@ -281,10 +281,13 @@ class HTML_Document extends XML_Helper {
     // return $doc->saveXML();
     
     $sDocType = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
-    $this->formatOutput = true;
+    //$this->formatOutput = true;
     // return $this->saveHTML();
     
-    return $sDocType."\n".parent::__toString(true);
+    $oView = new XML_Document($this);
+    $oView->formatOutput();
+    
+    return $sDocType."\n".$oView->__toString(true);
   }
 }
 

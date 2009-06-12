@@ -16,34 +16,33 @@ class Controler {
   private static $sWindowType = 'html';
   
   private static $oWindow;
+  private static $oSettings;
   
-  private static $sClassName = '';
-  private static $sOperationName = '';
-  
-  private static $sPath = '/';      // Chemin complet du fichier. Ex: /utilisateur/edit/1
+  private static $oPath = null;      // Chemin complet du fichier. Ex: /utilisateur/edit/1
   private static $aPaths = array(); // Liste des précédents chemins redirigés, ajoutés dans oRedirect
   private static $sAction = '';     // Chemin de l'action. Ex: /utilisateur/edit
   
-  public static function trickMe($sDefaultModule, $sDefaultAction) {
+  private static $iStartTime = 0;
+  
+  public static function trickMe() {
     
     global $aDefaultInitMessages;
     
-    $iStartTime = microtime(true);
+    self::$iStartTime = microtime(true);
     
     Action_Controler::init($aDefaultInitMessages['action']);
     XML_Controler::init($aDefaultInitMessages['xml']);
     
-    self::$oDirectory = new XML_Directory('', '', array('owner' => 'root', 'group' => '0', 'mode' => '555'));
+    self::$oDirectory = new XML_Directory('', '', array('owner' => 'root', 'group' => '0', 'mode' => '744'));
     
     $aAllowedMessages = self::loadSettings();
     
     Action_Controler::getMessages()->setAllowedMessages($aAllowedMessages);
     XML_Controler::getMessages()->setAllowedMessages($aAllowedMessages);
     
-    
     // Formatage de l'adresse
     
-    self::loadContext($sDefaultModule, $sDefaultAction);
+    self::loadContext();
     
     // Création du type de fenêtre
     
@@ -53,33 +52,13 @@ class Controler {
     
     if (!self::isWindowType('img')) {
       
-      // Chargement des droits
-      
-      self::loadRights();
-      
       // Récupération du cookie Redirect qui indique qu'une redirection a été effectuée
       
       $oRedirect = self::loadRedirect();
       
-      // Récupération du cookie User
+      // Récupération du cookie User : authentification
       
       self::setUser(self::loadUser());
-      
-      // Chargement des interfaces
-      
-      Action_Controler::loadInterfaces();
-      
-      // Configuration de la fenêtre
-      
-      if (self::isWindowType('html')) self::getWindow()->configure();
-      
-      // Include de la classe d'action
-      
-      $oAction = self::includeClass();
-      
-      // Authentification
-      
-      // if (!self::checkAuthentication()) self::accessRedirect();
       
       // DEBUG
       
@@ -90,11 +69,16 @@ class Controler {
         
       } else error_reporting(0);
       
+      // Chargement des interfaces
+      
+      Action_Controler::loadInterfaces();
+      
+      // Include de la classe d'action
+      
+      self::getPath()->parsePath();
+      $oResult = self::getWindow()->loadAction(new XML_Action(self::getPath(), $oRedirect));
+      
       /*** Lancement de l'action, récupuration du contenu / redirect ***/
-      
-      $oResult = self::getContent($oAction, $oRedirect);
-      
-      if (self::getMessages()->useStatut('system')) self::addSystemInfos($oRedirect);
       
       // Redirection ou ajout du contenu
       
@@ -109,7 +93,7 @@ class Controler {
         
         // Affichage
         
-        $oContent = self::getWindow()->setContent($oResult);
+        
       }
       
       if (self::isAdmin()) {
@@ -120,10 +104,6 @@ class Controler {
       }
     }
     
-    self::addMessage(array(
-      new HTML_Strong(t('Temps d\'exécution').' : '),
-      number_format(microtime(true) - $iStartTime, 3).' s'), 'system');
-    
     return self::getWindow();
   }
   
@@ -131,15 +111,15 @@ class Controler {
   
   private static function loadSettings() {
     
-    $oSettings = new XML_Document('/xml/root.xml', 'file');
+    self::$oSettings = new XML_Document('/xml/root.xml', 'file');
     
     // $oSettings->add(new XML_Document('/xml/actions.xml', 'file'));
     // $oSettings->addNode('users', implode(',', array('root', 'john', 'serge', 'daajack')));
     // $oSettings->addNode('groups', implode(',', array('0', 'lemon', 'team', 'dev')));
     
-    $aAllowed = explode(',', $oSettings->read('//messages/allowed'));
+    $aAllowed = explode(',', self::$oSettings->read('//messages/allowed'));
     self::$oMessages = new Messages($aAllowed);
-    self::$aAllowedWindowType = $oSettings->query('//window/*')->toArray('name');
+    self::$aAllowedWindowType = self::$oSettings->query('//window/*')->toArray('name');
     
     // self::setArgument('settings', $oSettings);
     self::setReady();
@@ -147,48 +127,19 @@ class Controler {
     return $aAllowed;
   }
   
-  private static function loadContext($sDefaultModule, $sDefaultAction) {
+  private static function loadContext() {
     
-    $aArguments = array();
+    $sPath = (isset($_GET['q']) && $_GET['q']) ? $_GET['q'] : '/';
+    array_shift($_GET);
     
-    // Lecture des arguments de l'adresse
+    // L'extension (si elle est correct) indique le type de fenêtre
     
-    if (isset($_GET['q']) && $_GET['q']) {
-      
-      self::setPath($_GET['q']);
-      $aArguments = explode('/', $_GET['q']);
-      
-      // Le premier argument (si il est correct) indique le type de fenêtre
-      
-      if (in_array($aArguments[0], self::$aAllowedWindowType)) self::setWindowType(array_shift($aArguments));
-    }
+    $oPath = new XML_Path('/'.$sPath, false, $_GET);
+    $sExtension = $oPath->parseExtension(true);
     
-    // Les 2 suivants indiquent respectivement la classe et la méthode à appeller dans self::getContent()
+    self::setPath($oPath);
     
-    if (count($aArguments) >= 2) {
-      
-      list($sModule, $sAction) = $aArguments;
-      self::addArguments(array_splice($aArguments, 2)); // Tous les argument suivants sont stockés
-      
-    } else {
-      
-      if (count($aArguments) && Controler::isAdmin()) self::addMessage(t('Pas assez d\'arguments !'), 'warning');
-      
-      $sModule = $sDefaultModule;
-      $sAction = $sDefaultAction;
-    }
-    
-    // Définit les noms des classes et fonctions correspondantes à l'adresse
-    
-    self::$sAction = "/$sModule/$sAction";
-    
-    self::$sClassName = ucfirst($sModule);
-    self::$sOperationName = 'action'.ucfirst($sAction);
-  }
-  
-  private static function loadRights() {
-    
-    self::$aRights = self::getYAML('rights.yml');
+    if (in_array($sExtension, self::$aAllowedWindowType)) self::setWindowType($sExtension);
   }
   
   private static function loadRedirect() {
@@ -269,11 +220,6 @@ class Controler {
     return false;
   }
   
-  public static function getRights() {
-    
-    return self::$aRights;
-  }
-  
   private static function getActionRights($sPath = null) {
     
     if (!$sPath) $sPath = self::getAction();
@@ -300,19 +246,21 @@ class Controler {
     return $oResult;
   }
   
-  private static function addSystemInfos($oRedirect) {
+  public static function getSystemInfos($oRedirect, $iStartTime) {
+    
+    $oMessages = new Messages(array('system'));
     
     $oMessage = new HTML_Strong(t('Authentification').' : ');
     
     if (self::getUser()->isReal()) {
       
-      self::addMessage(array(
+      $oMessages->addStringMessage(array(
         $oMessage,
         self::getUser()->getArgument('full_name')), 'system');
       
     } else {
       
-      self::addMessage(array(
+      $oMessages->addStringMessage(array(
         $oMessage, 
         new HTML_Tag('em', t('- aucun -'))), 'system');
     }
@@ -323,58 +271,58 @@ class Controler {
       
       if (self::getUser()->getGroups()) {
         
-        self::addMessage(array(
+        $oMessages->addStringMessage(array(
           $oMessage,
           implode(', ', self::getUser()->getGroups())), 'system');
           
       } else {
         
-        self::addMessage(array(
+        $oMessages->addStringMessage(array(
           $oMessage,
           new HTML_Tag('em', t('- aucun -'))), 'system');
       }
     }
     
-    self::addMessage(array(
+    $oMessages->addStringMessage(array(
       new HTML_Strong(t('Adresse').' : '),
-      self::getAction()), 'system');
+      (string) self::getPath()), 'system');
     
     $oMessage = new HTML_Strong(t('Redirection').' : ');
     
     if ($oRedirect->isReal()) {
       
-      self::addMessage(array(
+      $oMessages->addStringMessage(array(
         $oMessage, 
         $oRedirect->getSource()), 'system');
       
     } else {
       
-      self::addMessage(array(
+      $oMessages->addStringMessage(array(
         $oMessage,
         new HTML_Tag('em', t('- aucun -'))), 'system');
     }
     
-    self::addMessage(array(
+    $oMessages->addStringMessage(array(
       new HTML_Strong(t('Fenêtre').' : '), 
       self::getWindowType()), 'system');
     
-    self::addMessage(array(
-      new HTML_Strong(t('Action').' : '),
-      self::getClassName(),
-      '::',
-      self::getOperationName().'()'), 'system');
-    
-    self::addMessage(array(
+    $oMessages->addStringMessage(array(
       new HTML_Strong(t('Date & heure').' : '),
       date('j M Y').' - '.date('H:i')), 'system');
     
-    self::addMessage(array(
+    $oMessages->addStringMessage(array(
       new HTML_Strong(t('Messages').' : '),
       implode(', ', self::getMessages()->getAllowedMessages())), 'system');
     
-    self::addMessage(array(
+    $oMessages->addStringMessage(array(
       new HTML_Strong(t('Statistiques XML').' : '),
       XML_Controler::viewStats()), 'system');
+    
+    $oMessages->addStringMessage(array(
+      new HTML_Strong(t('Temps d\'exécution').' : '),
+      number_format(microtime(true) - self::$iStartTime, 3).' s'), 'system');
+    
+    return $oMessages;
   }
   
   private static function doAJAXRedirect($oRedirect) {
@@ -514,7 +462,7 @@ class Controler {
           
       } else {
         
-        $aResult[] = '['.$aLines[$i].'] '.$sFile.$sClass.'::'.$aTrace['function'].'(no display)';
+        $aResult[] = '['.$aLines[$i].'] '.$sFile.$sClass.'::'.$aTrace['function'].'(no display)'.new HTML_Br;
       }
       
       $i++;
@@ -598,6 +546,12 @@ class Controler {
     self::$oWindow = $oWindow;
   }
   
+  public static function getSettings($sQuery = '') {
+    
+    if ($sQuery) return self::$oSettings->read($sQuery);
+    return self::$oSettings;
+  }
+  
   public static function getWindow() {
     
     return self::$oWindow;
@@ -650,151 +604,17 @@ class Controler {
   
   public static function getPath() {
     
-    return self::$sPath;
+    return self::$oPath;
   }
   
-  public static function setPath($sPath) {
+  public static function setPath($oPath) {
     
-    self::$sPath = '/'.$sPath;
+    self::$oPath = $oPath;
   }
   
-  public static function browseDirectory($sPath, $aAllowedExt = array(), $aExcludedExt = array(), $aAllowedPath = array(), $aExcludedPath = array(), $iMaxLevel = 0) {
+  public static function browseDirectory($aAllowedExt = array(), $aExcludedPath = array(), $iMaxLevel = null) {
     
-    $oDocument = new XML_Document();
-    
-    if ($sPath && $sPath != '/') {
-      
-      if ($sPath{0} != '/') $sPath = '/'.$sPath;
-      
-      $iLastPosition = strrpos($sPath, '/');
-      $sName = substr($sPath, $iLastPosition + 1);
-      
-    } else { $sName = '/'; $sPath = ''; }
-    
-    $aPath = array(
-      MAIN_DIRECTORY, // Base dir - file
-      $sPath, // Origin dir - http
-      '', // Relative dir - origin relative
-      '');// Name
-    
-    $oDocument->set(self::buildFile($aPath, $aAllowedExt, $aExcludedExt, $aAllowedPath, $aExcludedPath, 0, $iMaxLevel));
-    
-    if ($oDocument->getRoot()) $oDocument->getRoot()->setAttributes(array(
-      'full-path' => '/'.$sPath,
-      'name' => $sName));
-    
-    return $oDocument;
-  }
-  
-  public static function buildFile($aPath, $aAllowedExt = array(), $aExcludedExt = array(), $aAllowedPath = array(), $aExcludedPath = array(), $iLevel = 0, $iMaxLevel = 0) {
-    
-    $sRelativePath = array_val(2, $aPath, '');
-    $sName = array_val(3, $aPath, '');
-    
-    $sRelativeName = implode('/', array_clear(array_slice($aPath, 2))); // origin relative
-    $sFullName = implode('/', array_clear(array_slice($aPath, 1))); // http
-    $sRealName = implode('/', array_clear($aPath)); // file
-    
-    if ($sRelativeName) $aPath[2] = $sRelativeName;
-    
-    if (file_exists($sRealName) && (!$iMaxLevel || ($iMaxLevel > $iLevel))) {
-      
-      if (strpbrk($sName, '.')) $sExtension = substr($sName, strrpos($sName, '.') + 1);
-      else $sExtension = '';
-      
-      if (
-        (!$aAllowedExt || !$sExtension || in_array(strtolower($sExtension), $aAllowedExt)) &&
-        (!$aExcludedExt || !$sExtension || !in_array(strtolower($sExtension), $aExcludedExt))) {
-        
-        if (is_dir($sRealName)) {
-          
-          if (
-          (!$aAllowedPath || !$sRelativeName || in_array($sRelativeName, $aAllowedPath)) &&
-          (!$aExcludedPath || !$sRelativeName || !in_array($sRelativeName, $aExcludedPath))) {
-            
-            // directory
-            
-            // $iMode = self::checkDirectoryRights($sRealName);
-            
-            $oDirectory = new XML_Tag('directory', null, array(
-              'full-path' => $sFullName,
-              'name' => $sName));
-            
-            if ($sRelativePath) $oDirectory->setAttribute('path', $sRelativePath.'/');
-            
-            $aFiles = scandir($sRealName, 0);
-            
-            foreach ($aFiles as $sFile) {
-              
-              if ($sFile != '.' && $sFile != '..') {
-                
-                $aPath[3] = $sFile;
-                
-                $oDirectory->add(self::buildFile(
-                  $aPath,
-                  $aAllowedExt,
-                  $aExcludedExt,
-                  $aAllowedPath,
-                  $aExcludedPath,
-                  $iLevel + 1,
-                  $iMaxLevel));
-              }
-            }
-            
-            return $oDirectory;
-          }
-          
-        } else {
-          
-          // file
-          
-          $oFile = new XML_Tag('file', null, array(
-            'full-path' => $sFullName,
-            'name' => $sName,
-            'extension' => $sExtension));
-          
-          if ($sRelativePath) $oFile->setAttribute('path', $sRelativePath.'/');
-          
-          return $oFile;
-        }
-      }
-    }
-    
-    return null;
-  }
-  
-  public static function listDirectory($sPath, $aExtensions) {
-    
-    $sPath = MAIN_DIRECTORY.'/'.$sPath;
-    
-    if (substr($sPath, -1) != '/') $sPath .= '/';
-    
-    $aValidFiles = array();
-    
-    if (file_exists($sPath)) {
-      
-      $aFiles = scandir($sPath);
-      
-      foreach ($aFiles as $sFile) {
-        
-        $iExtensionPosition = strrpos($sFile, '.');
-        $sExtension = $iExtensionPosition ? substr($sFile, $iExtensionPosition + 1) : '';
-        $sPathFile = $sPath.$sFile;
-        
-        if ($aExtensions) {
-          
-          // If extensions given get only there
-          
-          if ($sExtension && in_array(strtolower($sExtension), $aExtensions) && is_file($sPathFile))
-            $aValidFiles[] = $sFile;
-          
-          // Else, get all
-          
-        } else $aValidFiles[] = $sFile;
-      }
-    }
-        
-    return $aValidFiles;
+    return new XML_Document(self::getDirectory()->browse($aAllowedExt, $aExcludedPath, $iMaxLevel));
   }
   
   public static function getDirectory() {
@@ -802,12 +622,12 @@ class Controler {
     return self::$oDirectory;
   }
   
-  public static function getFile($sPath) {
+  public static function getFile($sPath, $bDebug = false) {
     
     $aPath = explode('/', $sPath);
     array_shift($aPath);
     
-    return self::getDirectory()->getDistantFile($aPath);
+    return self::getDirectory()->getDistantFile($aPath, $bDebug);
   }
   
   public static function isAdmin() {
@@ -846,7 +666,7 @@ class Controler {
 class Redirect {
   
   private $sPath = '/'; // URL cible
-  private $oPath = null; // URL cible
+  public $oPath = null; // URL cible
   private $oSource = null; // URL de provenance
   private $sWindowType = 'window';
   private $bIsReal = false; // Défini si le cookie a été redirigé ou non
@@ -854,11 +674,11 @@ class Redirect {
   private $aArguments = array();
   private $oMessages;
   
-  public function __construct($sPath = '/', $mMessages = array(), $aArguments = array()) {
+  public function __construct($sPath = '', $mMessages = array(), $aArguments = array()) {
     
     $this->resetMessages($mMessages);
     
-    $this->setPath($sPath);
+    if ($sPath) $this->setPath($sPath);
     $this->aArguments = $aArguments;
     $this->setArgument('post', $_POST);
     $this->setWindowType(Controler::getWindowType());
@@ -1022,7 +842,7 @@ class Messages extends XML_Helper {
       
       // Add in the allowed doc
       
-      if (in_array($sStatut, $this->getAllowedMessages()))
+      if ($this->useStatut($sStatut))
         $oMessage = $this->getBloc('allowed')->get($sStatut)->add($oMessage);
       
       return $oMessage;
@@ -1113,7 +933,7 @@ class Messages extends XML_Helper {
     
     if ($this->getBloc('allowed')->get('//message')) {
       
-      return $this->getBloc('allowed')->parseXSL(new XML_Document('/xml/messages.xsl'));
+      return $this->getBloc('allowed')->parseXSL(new XML_Document(Controler::getSettings('messages/template')));
       
     } else return null;
   }

@@ -127,7 +127,9 @@ class XML_Document extends DOMDocument {
     return $iMode;
   }
   
-  private function appendLoadRights() {
+  private function appendLoadRights($iMode) {
+    
+    $bSecured = false;
     
     if (!$this->isEmpty()) {
       
@@ -135,27 +137,31 @@ class XML_Document extends DOMDocument {
         
         $oNodes = $this->query('//*[@ls:owner or @ls:mode or @ls:group]', 'ls', NS_SECURITY);
         
-        foreach ($oNodes as $oNode) {
+        if ($oNodes->length) {
           
-          if ($oNode) {
-            
-            $bKeep = false;
-            $iMode = $this->getMode($oNode);
-            
-            if ($iMode) {
-              
-              if ($this instanceof XML_Action) $bKeep = (1 & $iMode); // Execution
-              else $bKeep = (4 & $iMode); // Read
-            }
-            
-            if (!$bKeep) $oNode->remove();
-          }
+          $bSecured = true;
+          if (XML_Controler::useStatut('report')) XML_Controler::addMessage($oNodes->length.' '.t('élément(s)  sécurisé(s) trouvé(s)'), 'report');
         }
         
-        if ($oNodes->length && XML_Controler::useStatut('report'))
-          XML_Controler::addMessage($oNodes->length.' '.t('élément(s)  sécurisé(s) trouvé(s)'), 'report');
+        $this->removeLoadRights($iMode, $oNodes);
+      }
+    }
+    
+    return $bSecured;
+  }
+  
+  private function removeLoadRights($iLoadMode, $oNodes) {
+    
+    foreach ($oNodes as $oNode) {
+      
+      if ($oNode) {
         
-      } //else if (XML_Controler::useStatut('report')) XML_Controler::addMessage(xt('Sécurisation annulée dans le document'), 'report');
+        $bKeep = false;
+        $iMode = $this->getMode($oNode);
+        
+        if ($iMode) $bKeep = ($iLoadMode & $iMode);
+        if (!$bKeep) $oNode->remove();
+      }
     }
   }
   
@@ -183,7 +189,10 @@ class XML_Document extends DOMDocument {
   
   public function loadFile($sPath) {
     
-    if ($oFile = Controler::getFile($sPath)) {
+    if ($this instanceof XML_Action) $iMode = 1;
+    else $iMode = 4;
+    
+    if (($oFile = Controler::getFile($sPath)) && $oFile->checkRights($iMode)) {
       
       if ($oFile->getDocument() === null) {
         
@@ -196,17 +205,19 @@ class XML_Document extends DOMDocument {
           
         } else {
           
-          $this->appendLoadRights();
-          
           if (XML_Controler::useStatut('report')) XML_Controler::addMessage(xt('Document : Chargement du fichier %s', new HTML_Strong($sPath)), 'report');
           XML_Controler::addStat('load');
           
           $oFile->setDocument(new XML_Document($this->getRoot())); // getRoot avoid parsing of specials classes
+          $oFile->isSecured($this->appendLoadRights($iMode));
         }
         
-      } else if (!$oFile->getDocument()->isEmpty()) $this->set($oFile->getDocument());
-      
-    } else XML_Controler::addMessage(xt('Document : Fichier inaccessible : %s', new HTML_Strong($sPath)), 'warning');
+      } else if (!$oFile->getDocument()->isEmpty()) {
+        
+        $this->set($oFile->getDocument());
+        if ($oFile->isSecured()) $this->appendLoadRights($iMode);
+      }
+    }
   }
   
   public function loadFreeFile($sPath) {
@@ -234,17 +245,17 @@ class XML_Document extends DOMDocument {
     // $this->appendLoadRights(); TODO or not
   }
   
-  /*
+  /**
    * Method loadFile() alias
-   **/
+   */
   public function load($sPath) {
     
     $this->loadFile($sPath);
   }
   
-  /*
+  /**
    * Method loadText() alias
-   **/
+   */
   public function loadXML() {
     
     return $this->loadText($sContent);
@@ -267,9 +278,9 @@ class XML_Document extends DOMDocument {
     return (bool) $this->get($sPath);
   }
   
-  /*
+  /**
    * Return a String from the result of the sQuery
-   **/
+   */
   
   public function read($sQuery = '', $sPrefix = '', $sUri = '') {
     
@@ -284,9 +295,9 @@ class XML_Document extends DOMDocument {
     } else return null;
   }
   
-  /*
+  /**
    * Return an XML_Element from the result of the sQuery
-   **/
+   */
   
   public function get($sQuery, $sPrefix = '', $sUri = '') {
     
@@ -311,7 +322,7 @@ class XML_Document extends DOMDocument {
           /* XML_Document */
           
           if ($mValue->getRoot()) $this->setChild($mValue->getRoot());
-          else XML_Controler::addMessage('Document->set() - Document vide', 'warning');
+          else XML_Controler::addMessage('Document->set() - Document vide', 'notice');
           
         } else if ($mValue instanceof XML_Element) {
           
@@ -377,7 +388,7 @@ class XML_Document extends DOMDocument {
       
       if ((bool) $oChild->getDocument() && ($oChild->getDocument() !== $this)) {
         
-        $oChild = $this->importNode($oChild, true);
+        $oChild = $this->importNode($oChild);
       }
       
       parent::appendChild($oChild);
@@ -389,9 +400,9 @@ class XML_Document extends DOMDocument {
     return $oChild;
   }
   
-  /*
+  /**
    * Method add() alias
-   **/
+   */
   public function appendChild() {
     
     $this->add(func_get_args());
@@ -420,7 +431,7 @@ class XML_Document extends DOMDocument {
     else return null;
   }
   
-  public function importNode($oChild, $bDepth) {
+  public function importNode($oChild, $bDepth = true) {
     
     if ($oChild) {
       
@@ -435,9 +446,9 @@ class XML_Document extends DOMDocument {
     } else XML_Controler::addMessage('Document->importNode : No object', 'error');
   }
   
-  /*
+  /**
    * Return a DOMNodeList from the result of the sQuery
-   **/
+   */
   
   public function query($sQuery, $sPrefix = '', $sUri = '') {
     
@@ -445,9 +456,9 @@ class XML_Document extends DOMDocument {
     else return new XML_NodeList;
   }
   
-  /*
+  /**
    * Extract the first result of a DOMNodeList if possible
-   **/
+   */
    
   public function queryArray($sQuery, $sPrefix = '', $sUri = '') {
     
@@ -464,9 +475,9 @@ class XML_Document extends DOMDocument {
     else return null;
   }
   
-  /*
+  /**
    * Extract a string value from a mixed variable
-   **/
+   */
   
   public function queryString($mValue) {
     
@@ -481,24 +492,33 @@ class XML_Document extends DOMDocument {
   
   public function parseXSL($oTemplate) {
     
-    $oStyleSheet = new XSLTProcessor();
-    $oStyleSheet->importStylesheet($oTemplate);
-    // Transformation et affichage du résultat
+    $oResult = null;
     
-    $oResult = new XML_Document();
-    $oResult->loadText($oStyleSheet->transformToXML($this));
-    XML_Controler::addStat('parse');
+    if ($oTemplate && !$oTemplate->isEmpty()) {
+      
+      $oStyleSheet = new XSLTProcessor();
+      $oStyleSheet->importStylesheet($oTemplate);
+      // Transformation et affichage du résultat
+      
+      $oResult = new XML_Document();
+      $oResult->loadText($oStyleSheet->transformToXML($this));
+      XML_Controler::addStat('parse');
+    }
     
     return $oResult;
   }
   
-  public function view($bInline = false) {
+  public function view($bEscape = false) {
     
     $oView = new XML_Document($this);
     $oView->formatOutput();
     
-    $oPre = new XML_Tag('pre');
-    $oPre->addText(wordwrap($oView, 110));
+    $oPre = new HTML_Tag('pre');
+    
+    if ($bEscape) $sResult = htmlspecialchars($oView);
+    else $sResult = (string) $oView;
+    
+    $oPre->addText($sResult);
     
     return $oPre;
   }
@@ -519,9 +539,19 @@ class XML_Document extends DOMDocument {
     echo $oPre;
   }
   
-  /*
+  /**
    * Method __toString() alias
-   **/
+   */
+  public function save($sPath) {
+    
+    if (($oFile = Controler::getFile($sPath)) && $oFile->checkRights(2)) {
+      
+      parent::save(MAIN_DIRECTORY.$sPath);
+      return true;
+      
+    } else return false;
+  }
+  
   public function saveXML() {
     
     return $this->__toString();
@@ -541,16 +571,23 @@ class XML_Document extends DOMDocument {
   }
 }
 
-/*
+/**
  * Alias of XML_Element
- **/
+ */
 class XML_Tag extends XML_Element { }
 
-/*
+/**
  * XML_Element ..
- **/
+ */
 class XML_Element extends DOMElement {
   
+  /**
+   * @param string $sName Full name of the element (prefix + local name)
+   * @param mixed $mContent Content of the element
+   * @param array $aAttributes Associated array of attributes
+   * @param string $sUri Associated namespace uri
+   * @param XML_Document $oDocument Document owner of the element
+   */
   public function __construct($sName = '', $mContent = '', $aAttributes = array(), $sUri = null, $oDocument = null) {
     
     $sName = trim((string) $sName);
@@ -564,13 +601,20 @@ class XML_Element extends DOMElement {
     if ($aAttributes) $this->addAttributes($aAttributes);
   }
   
+  /**
+   * @return XML_Document the document of current element (alias of $ownerDocument property)
+   */
   public function getDocument() {
     
     return $this->ownerDocument;
   }
   
-  /*** Reading ***/
-  
+  /**
+   * Create a DOMXPath object
+   * @param string $sPrefix Prefix of the namespace used in the query
+   * @param string $sUri Uri corresponding to the prefix precedly defined
+   * @return DOMXPath An XPath associated with querie's prefix
+   */
   private function buildXPath($sPrefix, $sUri) {
     
     $oXPath = new DOMXPath($this->getDocument());
@@ -605,6 +649,13 @@ class XML_Element extends DOMElement {
     return $oXPath;
   }
   
+  /**
+   * XPath Evaluation if {@link $sQuery} is not null else return {@link getValue()}
+   * @param string $sQuery Query to execute
+   * @param string $sPrefix Prefix of the namespace used in the query
+   * @param string $sUri Uri corresponding to the prefix precedly defined
+   * @return string Result of the XPath evaluation or {@link getValue()}
+   */
   public function read($sQuery = '', $sPrefix = '', $sUri = '') {
     
     if ($sQuery) {
@@ -631,16 +682,13 @@ class XML_Element extends DOMElement {
     // else return $this->getName();
   }
   
-  /*
+  /**
    * XPath Query
-   * @param $sQuery
-   *   Query to execute
-   * @param $sPrefix
-   *   Prefix of the namespace used in the query
-   * @param $sUri
-   *   Uri corresponding to the prefix precedly defined
-   **/
-  
+   * @param string $sQuery Query to execute
+   * @param string $sPrefix Prefix of the namespace used in the query
+   * @param string $sUri Uri corresponding to the prefix precedly defined
+   * @return XML_NodeList Result of the XPath query
+   */
   public function query($sQuery, $sPrefix = '', $sUri = '') {
     
     if (is_string($sQuery) && $sQuery) {
@@ -667,27 +715,34 @@ class XML_Element extends DOMElement {
     return new XML_NodeList;
   }
   
+  /**
+   * XPath Query
+   * @param string $sQuery Query to execute
+   * @param string $sPrefix Prefix of the namespace used in the query
+   * @param string $sUri Uri corresponding to the prefix precedly defined
+   * @return XML_Element The first element resulting from the XPath query
+   */
   public function get($sQuery, $sPrefix = '', $sUri = '') {
     
     return $this->getDocument()->queryOne($this->query($sQuery, $sPrefix, $sUri));
   }
   
-  public function test($sPath, $sPrefix = '', $sUri = '') {
-    
-    return (bool) $this->get($sPath, $sPrefix, $sUri);
-  }
-  
-  /*** Attributes ***/
-  
-  /*
-   * setAttributeNode()
-   **/
+  /**
+   * Add an attribute object to the element
+   * @param XML_Attribute $oAttribute Attribute to add to the element, may be owned by the document owner
+   * @return XML_Attribute The attribute passed in argument (?? normally)
+   */
   public function setAttributeNode($oAttribute) {
     
     // TODO : RIGHTS
-    parent::setAttributeNode($oAttribute);
+    return parent::setAttributeNode($oAttribute);
   }
   
+  /**
+   * Evaluate if the attribute has a boolean value (true or false or TRUE or FALSE)
+   * @param string $sAttribute Query to execute
+   * @return boolean|null The value of the attribute, or null if it's not a boolean value
+   */
   public function testAttribute($sAttribute) {
     
     $sValue = strtolower($this->getAttribute($sAttribute));
@@ -697,45 +752,72 @@ class XML_Element extends DOMElement {
     else return null;
   }
   
-  /*
-   * setAttribute()
-   **/
+  /**
+   * Set an attribute of the element, remove the attribute if $sValue is null
+   * @param string $sName The name of the attribute
+   * @param string $sValue The value of the attribute
+   */
   public function setAttribute($sName, $sValue = '') {
     
     // TODO : RIGHTS
-    if ($sValue) parent::setAttribute($sName, $sValue);
-    else $this->removeAttribute($sName);
+    if ($sValue) return parent::setAttribute($sName, $sValue);
+    else return $this->removeAttribute($sName);
   }
   
+  /**
+   * Import then add with {@link setAttributeNode()} an attribute object to the element
+   * @param XML_Attribute $oAttribute Attribute to add to the element
+   * @return XML_Attribute The attribute added to the element
+   */
   public function addAttribute($oAttribute) {
     
     if ($oAttribute->getDocument() && $oAttribute->getDocument() != $this->getDocument())
-      $oAttribute = $this->getDocument()->importNode($oAttribute);
+      $oAttribute = $this->getDocument()->importNode($oAttribute, false);
     
     $this->setAttributeNode($oAttribute);
     
     return $oAttribute;
   }
   
+  /**
+   * Remove all attributes then add the new ones via {@link addAttributes}
+   * @param array $aAttributes The associative array containing the name of the attribute in the key and the value in the array values
+   * @return array The associative array passed in argument
+   */
   public function setAttributes($aAttributes) {
     
     $this->cleanAttributes();
-    $this->addAttributes($aAttributes);
+    return $this->addAttributes($aAttributes);
   }
   
+  /**
+   * Set an associative array of attributes via {@link setAttribute()}
+   * @param array $aAttributes The associative array containing the name of the attribute in the key and the value in the array values
+   * @return array The associative array passed in argument
+   */
   public function addAttributes($aAttributes) {
     
     foreach ($aAttributes as $sKey => $sValue) $this->setAttribute($sKey, $sValue);
+    return $aAttributes;
   }
   
+  /**
+   * Return the value of the attribute named $sName
+   * @param array $sName The name of the attribute
+   * @param array $sUri The associative namespace uri of the attribute
+   * @return string The value of the attribute
+   */
   public function getAttribute($sName, $sUri = '') {
     
     if ($sUri) return parent::getAttributeNS($sUri, $sName);
     else return parent::getAttribute($sName);
   }
   
-  /*** Children ***/
-  
+  /**
+   * Remove the children then add the mixed values given in argument with {@link add()}
+   * @param XML_Document|XML_Element|XML_Attribute|XML_Text|XML_NodeList|string Value(s) to replace actual content
+   * @return XML_Element|XML_Text|XML_Attribute The value(s) given in argument
+   */
   public function set() {
     
     if (func_num_args() > 1) {
@@ -754,34 +836,32 @@ class XML_Element extends DOMElement {
       
       if (is_object($mValue)) {
         
+        $this->cleanChildren();
         if (($mValue instanceof XML_Document)) {
           
           // XML_Document
           
-          $this->cleanChildren();
           $this->add($mValue);
           
         } else if (($mValue instanceof XML_Element) || ($mValue instanceof XML_Text)) {
           
           // XML_Element, XML_Text
           
-          $this->cleanChildren();
           $mValue = $this->insertChild($mValue);
           
         } else if ($mValue instanceof XML_Attribute) {
           
           // XML_Attribute
           
-          $this->cleanAttributes();
           return $this->setAttributeNode($mValue);
           
         } else if ($mValue instanceof XML_NodeList) {
           
           // XML_NodeList
           
-          $this->cleanChildren();
           return $this->add($mValue);
-        }
+          
+        } else return $this->addText($mValue); // forced string
         
       } else if (is_array($mValue)) {
         
@@ -802,39 +882,71 @@ class XML_Element extends DOMElement {
     return null;
   }
   
+  /**
+   * Remove all the children of the element
+   */
   public function cleanChildren() {
     
     if ($this->hasChildren()) $this->getChildren()->remove();
   }
   
+  /**
+   * Remove all the attributes of the element
+   */
   public function cleanAttributes() {
     
     foreach ($this->attributes as $oAttribute) $this->removeAttributeNode($oAttribute);
   }
   
+  /**
+   * Add the mixed values given in argument with {@link insert()} at the end of the children's list
+   * @param XML_Document|XML_Element|XML_Attribute|XML_Text|XML_NodeList|string Value(s) to add to actual content
+   * @return XML_Element|XML_Text|XML_Attribute The last object added to content
+   */
   public function add() {
     
     return $this->insert(func_get_args());
   }
   
+  /**
+   * Add the mixed values given in argument with {@link insert()} at the top of the children's list
+   * @param XML_Document|XML_Element|XML_Attribute|XML_Text|XML_NodeList|string Value(s) to add to actual content
+   * @return XML_Element|XML_Text|XML_Attribute The last object added to content
+   */
   public function shift() {
     
     if (!$this->isEmpty()) return $this->insert(func_get_args(), $this->firstChild);
     else return $this->insert(func_get_args());
   }
   
+  /**
+   * Add the mixed values given in argument with {@link insert()} before the current element
+   * @param XML_Document|XML_Element|XML_Attribute|XML_Text|XML_NodeList|string Value(s) to add to actual content
+   * @return XML_Element|XML_Text|XML_Attribute The last object added to content
+   */
   public function insertBefore() {
     
     if (!$this->isRoot() && $this->getParent()) $this->getParent()->insert(func_get_args(), $this);
     else if (XML_Controler::useStatut('error')) XML_Controler::addMessage(t('Element : Impossible d\'insérer un noeud ici (root)'), 'error');
   }
   
+  /**
+   * Add the mixed values given in argument with {@link insert()} after the current element
+   * @param XML_Document|XML_Element|XML_Attribute|XML_Text|XML_NodeList|string Value(s) to add to actual content
+   * @return XML_Element|XML_Text|XML_Attribute The last object added to content
+   */
   public function insertAfter() {
     
     if ($this->nextSibling) $this->nextSibling->insertBefore(func_get_args());
     else if ($this->parentNode) $this->parentNode->add(func_get_args());
   }
   
+  /**
+   * Insert the value given in argument before the $oNext element, if null insert at the end of the children's list
+   * @param XML_Document|XML_Element|XML_Attribute|XML_Text|XML_NodeList|string $mValue The value to add to actual content
+   * @param XML_Element $oNext The element that will follow the value
+   * @return XML_Element|XML_Text|XML_Attribute The object added to content
+   */
   public function insert($mValue, $oNext = null) {
     
     if (is_object($mValue)) {
@@ -896,11 +1008,23 @@ class XML_Element extends DOMElement {
     return $mValue;
   }
   
+  /**
+   * Insert the string variable result given in argument before the $oNext element, if null insert at the end of the children's list
+   * @param mixed $sValue The value to add to actual content, will be transform to text
+   * @param XML_Element $oNext The element that will follow the value
+   * @return XML_Text The text element added to content
+   */
   public function insertText($sValue, $oNext = null) {
     
     return $this->insertChild(new XML_Text($sValue), $oNext);
   }
   
+  /**
+   * Insert the element given in argument before the $oNext element, if null insert at the end of the children's list
+   * @param XML_Element $oChild The element to add to actual content
+   * @param XML_Element $oNext The element that will follow the value
+   * @return XML_Element The element added to content
+   */
   public function insertChild($oChild, $oNext = null) {
     
     if ($oChild === $oNext) $oNext = null;
@@ -909,7 +1033,7 @@ class XML_Element extends DOMElement {
       
       if ((bool) $oChild->getDocument() && ($oChild->getDocument() !== $this->getDocument())) {
         
-        $oChild = $this->getDocument()->importNode($oChild, true);
+        $oChild = $this->getDocument()->importNode($oChild);
       }
       
       // TODO : RIGHTS
@@ -921,6 +1045,11 @@ class XML_Element extends DOMElement {
     } return null;
   }
   
+  /**
+   * Replace the actual element with the one given in argument
+   * @param XML_Element $oChild The element wish will replace the actual one
+   * @return XML_Element The element added to content
+   */
   public function replace($oChild) {
     
     if ($oChild != $this) {
@@ -933,42 +1062,75 @@ class XML_Element extends DOMElement {
     return $oChild;
   }
   
+  /**
+   * Remove the actual element
+   * @return mixed Don't know what :( TODO
+   */
   public function remove() {
     
     if ($this->parentNode) return $this->parentNode->removeChild($this);
     // else if ($this->getDocument()->getRoot() == $this) return $this->getDocument()->removeChild($this);
   }
   
+  /**
+   * Return the list of children of the current element with {@link $childNodes}
+   * @return XML_NodeList The children :)
+   */
   public function getChildren() {
     
     return new XML_NodeList($this->childNodes);
   }
   
+  /**
+   * Return the number of children of the current element
+   * @return integer The children's count
+   */
   public function countChildren() {
     
     return $this->childNodes->length;
   }
   
+  /**
+   * Test wether actual element has children or not
+   * @return boolean The children actual existenz fact (or not)
+   */
   public function hasChildren() {
     
     return $this->hasChildNodes();
   }
   
-  /*
-   * Alias function add()
-   **/
+  /**
+   * Alias function {@link add()}
+   */
   public function appendChild() {
   
     $this->add(func_get_args());
   }
   
-  /*** Node : Automatically created Element based on strings and arrays ***/
-  
+  /**
+   * Create with {@link XML_Document::createNode()} an element then insert with {@link insertChild()} it to the end of the children's list
+   * Faster than creating an element with "new"
+   * @param string $sName Full name of the element (prefix + local name)
+   * @param mixed $mContent Content of the element
+   * @param array $aAttributes Associated array of attributes
+   * @return XML_Element The element added to content
+   */
   public function addNode($sName, $oContent = '', $aAttributes = null) {
+    
+    // Node : Automatically created Element based on strings and arrays
     
     return $this->insertChild($this->getDocument()->createNode($sName, $oContent, $aAttributes));
   }
   
+  /**
+   * Create with {@link XML_Document::createNode()} an element then insert with {@link insertChild()} before the $oNext element, if null insert to the end of the children's list
+   * Faster than creating an element with "new"
+   * @param string $sName Full name of the element (prefix + local name)
+   * @param mixed $mContent Content of the element
+   * @param array $aAttributes Associated array of attributes
+   * @param XML_Element $oNext The element that will follow the value
+   * @return XML_Element The element added to content
+   */
   public function insertNode($sName, $oContent = '', $aAttributes = null, $oNext = null) {
     
     return $this->insertChild($this->getDocument()->createNode($sName, $oContent, $aAttributes), $oNext);

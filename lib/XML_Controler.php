@@ -17,7 +17,7 @@ class XML_Controler {
     $oResult = new XML_Document('statistics');
     
     $oResult->addArray(self::$aStats, 'category');
-    return $oResult->parseXSL(new XML_Document('/users/controler/stats.xsl'));
+    return $oResult->parseXSL(new XML_Document(Controler::getSettings('messages/statistic-template')));
   }
   
   public static function addStat($sKey, $iWeight = 1) {

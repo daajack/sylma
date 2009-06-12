@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lib xmlns:ls="http://www.sylma.org/security" ls:owner="root" ls:group="0" ls:mode="444">
+  <class name="XML_Document" path="/interfaces/xml_document.iml"/>
+  <class name="XML_Element" path="/interfaces/xml_element.iml"/>
+  <class name="Controler" path="/interfaces/controler.iml"/>
+  <class name="User" path="/interfaces/user.iml"/>
+  <class name="Redirect" path="/interfaces/redirect.iml"/>
+  <class name="Html" path="/interfaces/window.iml"/>
+  <class name="Action_Array" path="/interfaces/array.iml"/>
+  <class name="XML_Path" path="/interfaces/xml_path.iml"/>
+  <class name="XML_Action" path="/interfaces/xml_action.iml"/>
+</lib>

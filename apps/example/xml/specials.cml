@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lib xmlns:ls="http://www.sylma.org/security" ls:owner="root" ls:group="0" ls:mode="444">
+  <object name="controler" static="true" call="Controler"/>
+  <object name="window" call="Controler::getWindow()"/>
+  <object name="redirect" call="$oRedirect"/>
+  <object name="user" call="Controler::getUser()"/>
+  <object name="path" call="$oAction-&gt;getPath()"/>
+  <object name="self" call="$oAction"/>
+</lib>

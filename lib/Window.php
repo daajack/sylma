@@ -5,7 +5,7 @@
 
 interface Main {
   
-  public function setContent($mValue = '');
+  public function loadAction($oAction);
 }
 
 class Img {
@@ -40,21 +40,15 @@ class Img {
 
 class Html extends HTML_Document implements Main {
   
-  public function configure() {
+  public function loadAction($oAction) {
     
-    // $oTemplate = ;
-    // $oTemplate->set($this->get('//html'));
-    parent::__construct('/xml/html.xml');
-    
-    $this->addJS('/web/global.js');
-    $this->addCSS('/web/global.css');
-    $this->addCSS('/web/main.css');
+    parent::__construct(Controler::getSettings('window/html/template'));
     
     // Préparation / insertion des blocs
     
-    $aMenuPrimary = Controler::getRights();
+    $aMenuPrimary = Controler::getYAML('rights.yml');
     
-    if (Controler::getUser()->isReal()) unset($aMenuPrimary['/utilisateur/login']);
+    if (!Controler::getUser()->isMember(ANONYMOUS)) unset($aMenuPrimary['/utilisateur/login']);
     else unset($aMenuPrimary['/redirection/utilisateur/logout']);
     
     // Contenu
@@ -68,59 +62,44 @@ class Html extends HTML_Document implements Main {
     $this->get('//ns:h1//ns:span')->set(SITE_TITLE);
     $this->get("//ns:div[@id='sidebar']")->add(new AccessMenu('menu-primary', $aMenuPrimary));
     
-    // Messages & contenu
+    // Contenu
     
     $this->setBloc('content-title', new XML_Tag('h2'));
     $this->setBloc('content', new HTML_Tag('div', '', array('id' => 'content')));
-  }
-  
-  public function setContent($mValue = '') {
-    
-    $this->setBloc('action', $mValue);
-  }
-  
-  public function __toString() {
-    
-    // Infos système
-    
-    if (Controler::isAdmin() && Controler::getMessages()->getBloc('allowed')->get('//system/*')) {
-      
-      $oMessages = new Messages(array('system'), Controler::getMessages()->getMessages('system'));
-      
-      $oSystem = new HTML_Div();
-      $oSystem->addStyle('margin', '10px 5px');
-      
-      $oMessages = $oSystem->add($oMessages);
-      $oMessages->setAttribute('style', 'margin-top: 5px;');
-      
-      $this->get("//ns:div[@id='sidebar']")->shift($oSystem);
-    }
-    
-    // Supression des messages système dans le panneau de messages principal
-    
-    if ($oSystem = Controler::getMessages()->getBloc('allowed')->get('//system')) $oSystem->remove();
-    
-    // Contenu
     
     $this->get('//ns:title')->add(SITE_TITLE, ' - ', $this->getBloc('content-title')->read());
     
     $oContent = $this->getBloc('content');
     
     if (!$this->getBloc('content-title')->isEmpty()) $oContent->add($this->getBloc('content-title'));
-    $oContent->add($this->getBloc('action'));
+    
+    $oContent->add($oAction);
+    
+    // Messages
+    
     $oContent->shift(XML_Controler::getMessages(), Action_Controler::getMessages(), Controler::getMessages());
     
     $this->get("//ns:div[@id='center']")->add($oContent);
     
-    // Controler::getMessages()->setMessages('system');
+    // Infos système
     
-    return parent::__toString();
+    if (Controler::isAdmin()) {
+      
+      $oMessages = Controler::getSystemInfos($oAction->getRedirect());
+      
+      $oSystem = new HTML_Div();
+      $oSystem->addStyle('margin', '10px 5px');
+      
+      $oSystem->add($oMessages)->setAttribute('style', 'margin-top: 5px;');
+      
+      $this->get("//ns:div[@id='sidebar']")->shift($oSystem);
+    }
   }
 }
 
 class Redirection implements Main {
   
-  public function setContent($mValue = '') {
+  public function loadAction($oAction) {
     
     return Controler::errorRedirect('Redirection incorrecte !');
   }
@@ -145,12 +124,7 @@ class Popup extends HTML_Document implements Main {
     $this->setBloc('content', $oContent);
   }
   
-  public function setContent($mValue = '') {
-    
-    $this->getBloc('content')->setBloc('action', $mValue);
-  }
-  
-  public function __toString() {
+  public function loadAction($oAction) {
     
     // Supression des messages système dans le panneau de messages principal
     
@@ -160,9 +134,9 @@ class Popup extends HTML_Document implements Main {
     
     $this->getBloc('content')->addBloc('content-title');
     $this->getBloc('content')->addBloc('message');
-    $this->getBloc('content')->addBloc('action');
+    $this->getBloc('content')->add($oAction);
     
-    return parent::__toString();
+    $this->addBloc('content');
   }
 }
 
@@ -176,9 +150,9 @@ class Form extends XML_Helper implements Main {
     $this->setBloc('content-title', new HTML_Tag('h4', '', array('class' => 'ajax-title'), true));
   }
   
-  public function setContent($mValue = '') {
+  public function loadAction($oAction) {
     
-    $this->setBloc('content', $mValue);
+    $this->setBloc('content', $oAction);
   }
   
   public function addJS($sHref) {
@@ -242,21 +216,22 @@ class Form extends XML_Helper implements Main {
 
 class Simple extends XML_Tag implements Main {
   
-  public function setContent($mValue = '') {
+  public function loadAction($oAction) {
     
-    $this->add($mValue);
+    $this->add($oAction);
   }
 }
 
 class Xml extends XML_Document implements Main {
   
-  public function setContent($mValue = '') {
+  public function loadAction($oAction) {
     
     header('Content-type: text/xml');
-    if (is_string($mValue)) $this->addNode('root', $mValue);
-    else $this->set($mValue);
     
-    if (!$this->getRoot()) $this->appendChild(new XML_Element('message', $mValue));
+    $oResult = $oAction->parse();
+    
+    if (is_string($oResult)) $this->add('root', $oResult);
+    else $this->set($oResult);
   }
 }
 

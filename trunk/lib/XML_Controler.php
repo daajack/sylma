@@ -47,7 +47,7 @@ class XML_Controler {
         ' : ',
         $mValue);
       
-      if ($sStatut == 'error') $mMessage = array_merge($mMessage, array(new HTML_Br, Controler::getBacktrace()));
+      if ($sStatut == 'xml-error') $mMessage = array_merge($mMessage, array(new HTML_Br, Controler::getBacktrace()));
       
     } else $mMessage = $mValue;
     

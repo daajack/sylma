@@ -285,12 +285,9 @@ class XML_Document extends DOMDocument {
   public function read($sQuery = '', $sPrefix = '', $sUri = '') {
     
     if ($this->getRoot()) {
-      if ($sQuery) {
-        
-        if ($this->getRoot()) return $this->getRoot()->read($sQuery, $sPrefix, $sUri);
-        else return null;
-        
-      } else return $this->getRoot()->getValue();
+      
+      if ($sQuery) return $this->getRoot()->read($sQuery, $sPrefix, $sUri);
+      else return $this->getRoot()->getValue();
       
     } else return null;
   }
@@ -533,7 +530,7 @@ class XML_Document extends DOMDocument {
     $oView = new XML_Document($this);
     $oView->formatOutput();
     
-    $oPre = new XML_Tag('pre');
+    $oPre = new XML_Element('pre');
     $oPre->addText($oView);
     
     echo $oPre;
@@ -544,7 +541,7 @@ class XML_Document extends DOMDocument {
    */
   public function save($sPath) {
     
-    if (($oFile = Controler::getFile($sPath)) && $oFile->checkRights(2)) {
+    if ((!$oFile = Controler::getFile($sPath)) || $oFile->checkRights(2)) {
       
       parent::save(MAIN_DIRECTORY.$sPath);
       return true;
@@ -570,11 +567,6 @@ class XML_Document extends DOMDocument {
     return $sResult;
   }
 }
-
-/**
- * Alias of XML_Element
- */
-class XML_Tag extends XML_Element { }
 
 /**
  * XML_Element ..
@@ -642,7 +634,7 @@ class XML_Element extends DOMElement {
         
         // if (XML_Controler::useStatut('warning')) XML_Controler::addMessage(xt('Element : Aucun URI pour le préfix "%s" !', new HTML_Strong($sPrefix)), 'warning');
         // ////// LOOP CRASH TODO /////// //
-        return false;
+        return null;
       }
     }
     
@@ -660,20 +652,24 @@ class XML_Element extends DOMElement {
     
     if ($sQuery) {
       
-      $xPath = new DOMXPath($this->getDocument());
+      $mResult = '';
       
-      if ($sPrefix) $xPath->registerNamespace($sPrefix, $this->lookupNamespaceURI($sPrefix));
+      $oXPath = $this->buildXPath($sPrefix, $sUri);
       
-      $mResult = $this->buildXPath($sPrefix, $sUri)->evaluate($sQuery, $this);
-      $mResult = $this->getDocument()->queryString($mResult);
-      
-      XML_Controler::addStat('query');
-      
-      if ($mResult === null) {
+      if ($oXPath) {
         
-        $mResult = '';
-        if (XML_Controler::useStatut('warning')) XML_Controler::addMessage(xt("Element->read(%s) : Aucun résultat", $sQuery), 'warning');
-      }
+        $mResult = $oXPath->evaluate($sQuery, $this);
+        $mResult = $this->getDocument()->queryString($mResult);
+        
+        XML_Controler::addStat('query');
+        
+        if ($mResult === null) {
+          
+          $mResult = '';
+          if (XML_Controler::useStatut('report')) XML_Controler::addMessage(xt("Element->read(%s) : Aucun résultat", new HTML_Strong($sQuery)), 'report');
+        }
+        
+      } else if (XML_Controler::useStatut('report')) XML_Controler::addMessage(xt("Element->read(%s) : Impossible de crée l'objet XPath", new HTML_Strong($sQuery)), 'report');
       
       return $mResult;
       
@@ -693,18 +689,19 @@ class XML_Element extends DOMElement {
     
     if (is_string($sQuery) && $sQuery) {
       
-      $oPath = $this->buildXPath($sPrefix, $sUri);
+      $oXPath = $this->buildXPath($sPrefix, $sUri);
       
-      if ($oPath) {
+      if ($oXPath) {
         
-        $mResult = $oPath->query($sQuery, $this);
+        $mResult = $oXPath->query($sQuery, $this);
         
         XML_Controler::addStat('query');
         
         // if (!$mResult || !$mResult->length) XML_Controler::addMessage(xt("Element->query(%s) : Aucun résultat", new HTML_Strong($sQuery)), 'report');
         // ////// report & notice type will crash system, maybe something TODO /////// //
         return new XML_NodeList($mResult);
-      }
+        
+      } else if (XML_Controler::useStatut('report')) XML_Controler::addMessage(xt("Element->query(%s) : Impossible de crée l'objet XPath", new HTML_Strong($sQuery)), 'report');
       
     } else {
       
@@ -1359,8 +1356,8 @@ class XML_Text extends DOMText {
       if (method_exists($mContent, '__toString')) $mContent = (string) $mContent;
       else {
         
+        XML_Controler::addMessage(xt('Object " %s " cannot be converted to string !', new HTML_Strong(get_class($mContent))), 'error');
         $mContent = '';
-        XML_Controler::addMessage('Text : Object not allowed', 'error');
       }
     }
     
@@ -1509,11 +1506,11 @@ class XML_NodeList implements Iterator {
 
 class XML_Fragment extends DOMDocumentFragment { }
 
-class XSL_Document extends XML_Tag {
+class XSL_Document extends XML_Element {
   
   public function __construct() {
     
-    $this->insertChild(new XML_Tag('output', array('method' => 'xml', 'encoding' => 'utf-8'), true, 'xsl'));
+    $this->insertChild(new XML_Element('output', array('method' => 'xml', 'encoding' => 'utf-8'), true, 'xsl'));
     $this->setNamespace('xsl');
     
     $aAttributes = array(

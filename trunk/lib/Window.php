@@ -48,8 +48,8 @@ class Html extends HTML_Document implements Main {
     
     $aMenuPrimary = Controler::getYAML('rights.yml');
     
-    if (!Controler::getUser()->isMember(ANONYMOUS)) unset($aMenuPrimary['/utilisateur/login']);
-    else unset($aMenuPrimary['/redirection/utilisateur/logout']);
+    // if (!Controler::getUser()->isMember(ANONYMOUS)) unset($aMenuPrimary['/utilisateur/login']);
+    // else unset($aMenuPrimary['/redirection/utilisateur/logout']);
     
     // Contenu
     
@@ -64,16 +64,22 @@ class Html extends HTML_Document implements Main {
     
     // Contenu
     
-    $this->setBloc('content-title', new XML_Tag('h2'));
+    $this->setBloc('content-title', new HTML_Tag('h2'));
     $this->setBloc('content', new HTML_Tag('div', '', array('id' => 'content')));
-    
-    $this->get('//ns:title')->add(SITE_TITLE, ' - ', $this->getBloc('content-title')->read());
     
     $oContent = $this->getBloc('content');
     
-    if (!$this->getBloc('content-title')->isEmpty()) $oContent->add($this->getBloc('content-title'));
+    if ($oAction instanceof XML_Action) $this->getBloc('content-title')->add($oAction->read('le:settings/le:name', 'le', NS_EXECUTION));
     
-    $oContent->add($oAction);
+    if (!$this->getBloc('content-title')->read()) $this->getBloc('content-title')->add('Pas de titre');
+    $oContent->add($this->getBloc('content-title'));
+    
+    $this->get('//ns:title')->add(SITE_TITLE, ' - ', $this->getBloc('content-title')->read());
+    
+    $oResult = $oAction->parse();
+    
+    if (!$oResult instanceof Redirect) $oContent->add($oResult);
+    else return $oResult;
     
     // Messages
     
@@ -214,7 +220,7 @@ class Form extends XML_Helper implements Main {
   }
 }
 
-class Simple extends XML_Tag implements Main {
+class Simple extends XML_Element implements Main {
   
   public function loadAction($oAction) {
     

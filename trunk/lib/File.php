@@ -121,7 +121,12 @@ class XML_Directory extends XML_Resource {
       
       if ($sFile != '.' && $sFile != '..') {
         
-        if ($oDirectory = $this->getDirectory($sFile)) {
+        if (($oFile = $this->getFile($sFile)) && $oFile->getUserMode() != 0) {
+          
+          if (!in_array($oFile->getExtension(), $aExtensions)) $oFile = null;
+          else $oElement->add($oFile);
+          
+        } else if ($oTempDirectory = $this->getDirectory($sFile)) {
           
           if ($iDepth === null || $iDepth--) {
             
@@ -131,12 +136,46 @@ class XML_Directory extends XML_Resource {
               
               switch ($sPath{0}) {
                 
-                case '/' : if ($sPath == $oDirectory->getFullPath()) $bValid = false; break;
-                default : if ($sPath == $oDirectory->getName()) $bValid = false; break;
+                case '/' : if ($sPath == $oTempDirectory->getFullPath()) $bValid = false; break;
+                default : if ($sPath == $oTempDirectory->getName()) $bValid = false; break;
               }
             }
             
-            if ($bValid) $oElement->add($oDirectory->browse($aExtensions, $aPaths, $iDepth));
+            if ($bValid) $oElement->add($oTempDirectory->browse($aExtensions, $aPaths, $iDepth));
+          }
+        }
+      }
+    }
+    
+    if ($oElement->isEmpty() && $this->getUserMode() != 0) return null;
+    else return $oElement;
+  }
+  
+  public function browseTemp($aExtensions, $aPaths, $iDepth = null) {
+    
+    $aFiles = scandir(MAIN_DIRECTORY.$this->getFullPath(), 0);
+    $oElement = $this->parse();
+    
+    foreach ($aFiles as $sFile) {
+      
+      if ($sFile != '.' && $sFile != '..') {
+        
+        if (is_dir(MAIN_DIRECTORY.$this.'/'.$sFile) && $oTempDirectory = $this->getDirectory($sFile)) {
+          
+          if ($iDepth === null || $iDepth--) {
+            
+            $bValid = true;
+            
+            foreach ($aPaths as $sPath) {
+              
+              switch ($sPath{0}) {
+                
+                case '/' : if ($sPath == $oTempDirectory->getFullPath()) $bValid = false; break;
+                default : if ($sPath == $oTempDirectory->getName()) $bValid = false; break;
+              }
+            }
+            
+            if ($bValid) $oElement->add($oTempDirectory->browse($aExtensions, $aPaths, $iDepth));
           }
           
         } else if (($oFile = $this->getFile($sFile)) && $oFile->getUserMode() != 0) {
@@ -158,11 +197,14 @@ class XML_Directory extends XML_Resource {
       if (!array_key_exists($sName, $this->aFiles)) {
         
         $oFile = new XML_File($this->getFullPath(), $sName, $this->getRights(), $this, $bDebug);
+        // echo 'CF : '.$oFile.new HTML_Br;//.Controler::getBacktrace().new HTML_Br;
         
         if ($oFile->doExist()) {
           
           if (($oSettings = $this->getSettings()) && ($oFileSettings = $oSettings->get("file[@name='$sName']")))
             $oFile->loadElementRights($oFileSettings);
+          
+          // if (isset($oFileSettings)) echo $oFileSettings->view(true);
           
           if (Controler::getUser()) $this->aFiles[$sName] = $oFile;
           else return $oFile;
@@ -187,6 +229,7 @@ class XML_Directory extends XML_Resource {
       } else {
         
         $sName = array_shift($aPath);
+        
         $oSubDirectory = $this->getDirectory($sName);
         
         if ($oSubDirectory) return $oSubDirectory->getDistantFile($aPath, $bDebug);
@@ -212,7 +255,7 @@ class XML_Directory extends XML_Resource {
       if (!array_key_exists($sName, $this->aDirectories)) {
         
         $oDirectory = new XML_Directory($this->getFullPath(), $sName, $this->getRights(), $this);
-        
+        // echo 'CD : '.$oDirectory.new HTML_Br;//.Controler::getBacktrace().new HTML_Br;
         if ($oDirectory->doExist()) $this->aDirectories[$sName] = $oDirectory;
         else $this->aDirectories[$sName] = null;
       }
@@ -259,9 +302,15 @@ class XML_Directory extends XML_Resource {
   
   public function parse() {
     
-    return new XML_Tag('directory', null, array(
+    return new XML_Element('directory', null, array(
       'full-path' => $this->getFullPath(),
       'name' => $this->getName()));
+  }
+  
+  public function __destruct() {
+    
+    // echo 'DD : '.$this.new HTML_Br;
+    // echo $this.new HTML_Br.Controler::getBacktrace();
   }
   
   public function __toString() {
@@ -333,9 +382,15 @@ class XML_File extends XML_Resource {
     return false;
   }
   
+  public function __destruct() {
+    
+    // echo 'DF : '.$this.new HTML_Br;
+    // echo $this.new HTML_Br.Controler::getBacktrace();
+  }
+  
   public function parse() {
     
-    return new XML_Tag('file', null, array(
+    return new XML_Element('file', null, array(
       'full-path' => $this->getFullPath(),
       'name' => $this->getName(),
       'extension' => $this->getExtension()));

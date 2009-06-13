@@ -70,7 +70,6 @@ class Controler {
       } else error_reporting(0);
       
       // Chargement des interfaces
-      
       Action_Controler::loadInterfaces();
       
       // Include de la classe d'action
@@ -137,7 +136,7 @@ class Controler {
     $oPath = new XML_Path('/'.$sPath, false, $_GET);
     $sExtension = $oPath->parseExtension(true);
     
-    self::setPath($oPath);
+    self::$oPath = $oPath;
     
     if (in_array($sExtension, self::$aAllowedWindowType)) self::setWindowType($sExtension);
   }
@@ -607,14 +606,12 @@ class Controler {
     return self::$oPath;
   }
   
-  public static function setPath($oPath) {
+  public static function browseDirectory($aAllowedExt = array(), $aExcludedPath = array(), $iMaxLevel = null, $sOriginPath = '') {
     
-    self::$oPath = $oPath;
-  }
-  
-  public static function browseDirectory($aAllowedExt = array(), $aExcludedPath = array(), $iMaxLevel = null) {
+    $oDocument = new XML_Document(self::getDirectory()->browse($aAllowedExt, $aExcludedPath, $iMaxLevel));
+    $oDocument->getRoot()->setAttribute('path_to', $sOriginPath);
     
-    return new XML_Document(self::getDirectory()->browse($aAllowedExt, $aExcludedPath, $iMaxLevel));
+    return $oDocument;
   }
   
   public static function getDirectory() {
@@ -733,16 +730,14 @@ class Redirect {
   
   public function getPath() {
     
-    // return $this->sPath;
-    return $this->oPath;
+    return $this->sPath;
   }
   
   public function setPath($sPath) {
     
-    $this->oPath = new XML_Path($sPath);
     $this->sPath = $sPath;
     
-    return $this->oPath;
+    return $sPath;
     // if ($sPath == '/' || $sPath != Controler::getPath()) $this->sPath = $sPath;
     // else Controler::errorRedirect(t('Un problème de redirection à été détecté !'));
   }

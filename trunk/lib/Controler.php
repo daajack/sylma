@@ -87,19 +87,6 @@ class Controler {
         
         if (self::isWindowType('html') || self::isWindowType('redirection')) self::doHTTPRedirect($oResult);
         else self::doAJAXRedirect($oResult);
-        
-      } else {
-        
-        // Affichage
-        
-        
-      }
-      
-      if (self::isAdmin()) {
-        
-        // self::getMessages()->addMessages(XML_Controler::getMessages()->getMessages());
-        // self::getMessages()->addMessages(Action_Controler::getMessages()->getMessages());
-        self::getMessages()->addMessages(db::getQueries());
       }
     }
     
@@ -169,7 +156,7 @@ class Controler {
       } else {
         
         $oRedirect = new Redirect();
-        self::addMessage(t('Cookie Redirect perdu !'), 'warning');
+        self::addMessage(t('Session Redirect perdu !'), 'warning');
       }
     }
     
@@ -344,7 +331,7 @@ class Controler {
     
     // Récupération et ajout dans le Redirect des messages en attente
     
-    $oRedirect->getMessages()->addMessages(self::getMessages()->query('//message'));
+    $oRedirect->getMessages()->addMessages(self::getMessages()->getMessages());
     
     // Suppression des infos système
     
@@ -352,7 +339,7 @@ class Controler {
     
     // Ajout des messages requêtes si admin
     
-    if (self::isAdmin()) $oRedirect->getMessages()->addMessages(db::getQueries('old'));
+    if (self::isAdmin()) $oRedirect->getMessages()->addMessages(db::getQueries('old')->getMessages());
     
     $oRedirect->setArgument('messages', $oRedirect->getMessages()->saveXML());
     
@@ -517,7 +504,7 @@ class Controler {
         $oUser = $oAnonymous;
         
         unset($_SESSION['user']);
-        self::addMessage(t('Cookie User perdu !'), 'warning');
+        self::addMessage(t('Session utilisateur perdue !'), 'warning');
       }
       
     } else $oUser = $oAnonymous;
@@ -797,7 +784,7 @@ class Messages extends XML_Helper {
   
   private $aAllowedMessages = array();
   
-  public function __construct($aAllowedMessages, $mMessages = array()) {
+  public function __construct($aAllowedMessages = array(), $mMessages = array()) {
     
     parent::__construct('messages');
     $this->setBloc('allowed', new XML_Document('messages'));
@@ -817,7 +804,7 @@ class Messages extends XML_Helper {
     
     if (is_array($mMessage) || ($mMessage instanceof XML_NodeList)) return $this->addMessages($mMessage);
     else if (is_string($mMessage)) return $this->addStringMessage($mMessage);
-    else if ($mMessage instanceof XML_Element && $mMessage->getName() == 'message') {
+    else if (($mMessage instanceof XML_Element) && $mMessage->getName() == 'message') {
       
       $oMessage = $mMessage;
       

@@ -28,7 +28,7 @@ class User {
     unset($_SESSION['user']);
     $this->setReal(false);
     
-    Controler::addMessage(t('Cookie détruit !'), 'report');
+    Controler::addMessage(t('Session détruite !'), 'report');
   }
   
   public function isReal() {

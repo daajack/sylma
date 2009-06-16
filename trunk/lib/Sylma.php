@@ -14,4 +14,5 @@ require('Controler.php');
 require('User.php');
 require('File.php');
 require('Database.php');
+require('Window.php');
 require('spyc/spyc.php');

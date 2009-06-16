@@ -17,7 +17,7 @@ function xt () {
 
 function strtoxml ($sValue) {
   
-  $oDocument = new XML_Document('<div>'.$sValue.'</div>');
+  $oDocument = new XML_Document('<div xmlns="'.NS_XHTML.'">'.$sValue.'</div>');
   
   if ($oDocument->getRoot() && !$oDocument->getRoot()->isEmpty()) {
     
@@ -192,7 +192,7 @@ class XML_Document extends DOMDocument {
     if ($this instanceof XML_Action) $iMode = 1;
     else $iMode = 4;
     
-    if (($oFile = Controler::getFile($sPath)) && $oFile->checkRights($iMode)) {
+    if (($oFile = Controler::getFile($sPath, true)) && $oFile->checkRights($iMode)) {
       
       if ($oFile->getDocument() === null) {
         
@@ -527,13 +527,15 @@ class XML_Document extends DOMDocument {
   
   public function dsp($bHtml = false) {
     
+    echo $this->view(true);
+    /*
     $oView = new XML_Document($this);
     $oView->formatOutput();
     
     $oPre = new XML_Element('pre');
     $oPre->addText($oView);
     
-    echo $oPre;
+    echo $oPre;*/
   }
   
   /**
@@ -757,7 +759,7 @@ class XML_Element extends DOMElement {
   public function setAttribute($sName, $sValue = '') {
     
     // TODO : RIGHTS
-    if ($sValue) return parent::setAttribute($sName, $sValue);
+    if ($sValue !== '' && $sValue !== null) return parent::setAttribute($sName, $sValue);
     else return $this->removeAttribute($sName);
   }
   
@@ -934,8 +936,8 @@ class XML_Element extends DOMElement {
    */
   public function insertAfter() {
     
-    if ($this->nextSibling) $this->nextSibling->insertBefore(func_get_args());
-    else if ($this->parentNode) $this->parentNode->add(func_get_args());
+    if ($this->nextSibling) { $this->nextSibling->insertBefore(func_get_args()); echo 'ok'; }
+    else if ($this->parentNode) { echo 'pas ok'; $this->parentNode->add(func_get_args()); }
   }
   
   /**
@@ -1013,7 +1015,8 @@ class XML_Element extends DOMElement {
    */
   public function insertText($sValue, $oNext = null) {
     
-    return $this->insertChild(new XML_Text($sValue), $oNext);
+    if ($sValue || $sValue === 0) return $this->insertChild(new XML_Text($sValue), $oNext);
+    else return $sValue;
   }
   
   /**
@@ -1141,7 +1144,7 @@ class XML_Element extends DOMElement {
     
     foreach ($aChildren as $sKey => $sValue) {
       
-      if ($sName) $aResult[] = $this->addNode($sName, $sValue, array('name' => $sKey));
+      if ($sName) $aResult[] = $this->addNode($sName, $sValue, array('key' => $sKey));
       else if (!is_numeric($sKey)) $aResult[] = $this->addNode($sKey, $sValue);
       else $aResult[] = $this->addNode($sValue);
     }
@@ -1327,6 +1330,11 @@ class XML_Attribute extends DOMAttr {
   public function getDocument() {
     
     return $this->ownerDocument;
+  }
+  
+  public function remove() {
+    
+    $this->ownerElement->removeAttributeNode($this);
   }
   
   public function set($sValue) {

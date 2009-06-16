@@ -145,7 +145,7 @@ class XML_Action extends XML_Document {
       
       if (!$oMethod = $oInterface->get("ns:method[@path='$sActionMethod']")) {
         
-        Action_Controler::addMessage(xt('Méthode "%s" inexistante dans l\'interface "%s"', new HTML_Strong($oElement->getName(true)), new HTML_Strong($oInterface->get('ns:name'))), 'warning');
+        Action_Controler::addMessage(xt('Méthode "%s" inexistante dans l\'interface "%s"', new HTML_Strong($oElement->getName(true)), new HTML_Strong($oInterface->read('ns:name'))), 'warning');
         
       } else {
         
@@ -259,7 +259,12 @@ class XML_Action extends XML_Document {
               $oAction = new XML_Action($oPath, $oSubRedirect);
               $mResult = $oAction->parse();
               
-              if ($mResult instanceof Redirect) $mResult = null;
+              if ($mResult instanceof Redirect) {
+                
+                $this->setStatut(1);
+                $this->setRedirect($mResult);
+                $mResult = null;
+              }
               
               if ($oElement->hasChildren()) list($mSubResult, $bSubReturn) = $this->runInterfaceList($mResult, $oElement);
             }
@@ -271,6 +276,7 @@ class XML_Action extends XML_Document {
           case 'file' : 
             
             $mResult = new XML_Document($this->getAbsolutePath($oElement->getAttribute('path')));
+            
             // TODO relative path
             list($mSubResult, $bSubReturn) = $this->runInterfaceList($mResult, $oElement);
             
@@ -289,7 +295,8 @@ class XML_Action extends XML_Document {
             if (in_array($sSpecialName, $aPhp)) $mResult = $this->parseBaseType($sSpecialName, $oElement);
             else if ($mSpecial = Action_Controler::getSpecial($sSpecialName, $this, $this->getRedirect())) {
               
-              $mResult = '';
+              if (!$oElement->testAttribute('return')) $mResult = '';
+              else $mResult = $mSpecial;
               
               list($mSubResult, $bSubReturn) = $this->runInterfaceList($mSpecial, $oElement, is_string($mSpecial));
             }
@@ -523,13 +530,12 @@ class XML_Action extends XML_Document {
       xt('L\'argument "%s" n\'est pas dans la liste "%s"',
         new HTML_Strong($sActualFormat),
         new HTML_Strong(implode(', ', $aFormats))),
-        new HTML_Div(array(
-        new HTML_br,
+        new HTML_Tag('p', array(
         new HTML_Strong(t('Méthode').' : '),
         new HTML_Em($oElement->getParent()->viewResume(150, true)),
         new HTML_br,
         new HTML_Strong(t('Argument').' : '),
-        new HTML_Em($oElement->viewResume(150, true))))), 'error');
+        new HTML_Em($oElement->viewResume(150, true))))), 'warning');
     
     return false;
   }
@@ -622,7 +628,8 @@ class XML_Action extends XML_Document {
               
               $oResult = new XML_Document('temp');
               
-              $oSettings = $oDocument->get('le:settings')->remove();
+              if ($oSettings = $oDocument->get('le:settings')) $oSettings->remove();
+              
               $oMethod = new XML_Element('li:add', $oDocument->getRoot()->getChildren(), null, NS_INTERFACE);
               
               $this->runInterfaceMethod($oResult, $oMethod, Action_Controler::getInterface($oResult, $this->getRedirect()));

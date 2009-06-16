@@ -9,7 +9,32 @@ class db {
   private static $aArguments;
   private static $aQueries = array();
   
-  public static function query($sQuery = '') {
+  public static function queryXML($sQuery, $aHeaders = array()) {
+    
+    $oResult = self::query($sQuery);
+    
+    $bFirst = true;
+    $oDocument = new XML_Document('records');
+    
+    if ($aHeaders) $oDocument->addNode('headers')->addArray($aHeaders, 'field');
+    
+    while ($aRow = mysql_fetch_assoc($oResult)) {
+      
+      $oElement = $oDocument->addNode('row');
+      
+      foreach ($aRow as $sFieldKey => $sFieldValue) {
+        
+        $oElement->addNode($sFieldKey, $sFieldValue);
+      }
+    }
+    
+    // $oDocument->dsp();
+    $oResult = $oDocument->parseXSL(new XML_Document('/xml/query-table.xsl'));
+    // $oResult->dsp();
+    return $oResult;
+  }
+  
+  public static function query($sQuery) {
     
     $rResult = mysql_query($sQuery) or die (self::getError($sQuery));
     
@@ -80,16 +105,19 @@ class db {
   
   public static function getQueries($sStatut = 'new') {
     
-    $aResults = self::queryColorize(self::$aQueries);
+    $sStatut = 'query-'.$sStatut;
     
-    foreach ($aResults as &$oResult) {
+    $aResults = self::queryColorize(self::$aQueries);
+    $oMessages = new Messages(array($sStatut));
+    
+    foreach ($aResults as $sResult) {
       
-      $oDocument = new XML_Document;
-      $oDocument->loadText('<div>'.$oResult.'</div>');
-      $oResult = new Message($oDocument->getRoot(), 'query-'.$sStatut);
+      $oDocument = new XML_Document(new HTML_Div(strtoxml($sResult)));
+      
+      $oMessages->addMessage(new Message($oDocument->getRoot(), $sStatut));
     }
     
-    return $aResults;
+    return $oMessages;
   }
   
   public static function buildUpdate($aFields) {

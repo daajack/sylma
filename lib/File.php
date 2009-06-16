@@ -350,7 +350,7 @@ class XML_File extends XML_Resource {
             $this->getMode()));
       }
       
-    } else if ($bDebug) Action_Controler::addMessage(xt('Fichier "%s" introuvable dans "%s"!', new HTML_Strong($sName), new HTML_Strong($sPath)), 'notice');
+    } else if ($bDebug) Action_Controler::addMessage(xt('Fichier "%s" introuvable dans "%s" !', new HTML_Strong($sName), new HTML_Strong($sPath)), 'notice');
   }
   
   public function getExtension() {
@@ -377,7 +377,7 @@ class XML_File extends XML_Resource {
   public function checkRights($iMode) {
     
     if ($this->getUserMode() === null || ($iMode & $this->getUserMode())) return true;
-    else Action_Controler::addMessage(xt('Fichier "%s" : accès interdit !', new HTML_Strong($this->getFullPath())), 'warning');
+    else if (Controler::isAdmin()) Action_Controler::addMessage(xt('Fichier "%s" : accès interdit !', new HTML_Strong($this->getFullPath())), 'warning');
     
     return false;
   }

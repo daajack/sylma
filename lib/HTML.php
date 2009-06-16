@@ -409,7 +409,7 @@ class HTML_Strong extends HTML_Tag {
   
   public function __construct($oChild = '', $aAttributes = array()) {
     
-    $this->forceClosure();
+    // $this->forceClosure();
     parent::__construct('strong', $oChild, $aAttributes);
   }
 }

@@ -1,5 +1,10 @@
 <?php
 
+define('VIEW_QUERY', false);
+
+define('MODE_READ', 4);
+define('MODE_WRITE', 2);
+define('MODE_EXECUTION', 1);
 
 function xt () {
   
@@ -84,7 +89,10 @@ class XML_Helper extends XML_Document {
 
 class XML_Document extends DOMDocument {
   
-  public function __construct($mChildren = '') {
+  private $iMode = null;
+  private $sPath = null;
+  
+  public function __construct($mChildren = '', $iMode = MODE_READ) {
     
     parent::__construct('1.0', 'utf-8');
     
@@ -98,6 +106,8 @@ class XML_Document extends DOMDocument {
     $this->registerNodeClass('DOMCharacterData', 'XML_CData');
     $this->registerNodeClass('DOMDocumentFragment', 'XML_Fragment');
     
+    $this->setMode($iMode);
+    
     if ($mChildren) {
       
       // if Object else String
@@ -106,7 +116,12 @@ class XML_Document extends DOMDocument {
     }
   }
   
-  private function getMode($oNode) {
+  private function setMode($iMode) {
+    
+    $this->iMode = in_array($iMode, array(MODE_EXECUTION, MODE_WRITE, MODE_READ)) ? $iMode : MODE_READ;
+  }
+  
+  private function extractMode($oNode) {
     
     $iMode = 7;
     
@@ -127,7 +142,7 @@ class XML_Document extends DOMDocument {
     return $iMode;
   }
   
-  private function appendLoadRights($iMode) {
+  private function appendLoadRights() {
     
     $bSecured = false;
     
@@ -140,26 +155,35 @@ class XML_Document extends DOMDocument {
         if ($oNodes->length) {
           
           $bSecured = true;
-          if (XML_Controler::useStatut('report')) XML_Controler::addMessage($oNodes->length.' '.t('élément(s)  sécurisé(s) trouvé(s)'), 'report');
+          
+          if (XML_Controler::useStatut('report')) {
+            
+            $oPath = new HTML_Strong($this->sPath);
+            
+            if ($oNodes->length == 1) $oMessage = t('1 élément  sécurisé trouvé dans %s', $oPath);
+            else $oMessage = xt('%i éléments  sécurisés trouvés dans %s', $oNodes->length, $oPath);
+            
+            XML_Controler::addMessage($oMessage, 'report');
+          }
         }
         
-        $this->removeLoadRights($iMode, $oNodes);
+        $this->removeLoadRights($oNodes);
       }
     }
     
     return $bSecured;
   }
   
-  private function removeLoadRights($iLoadMode, $oNodes) {
+  private function removeLoadRights($oNodes) {
     
     foreach ($oNodes as $oNode) {
       
       if ($oNode) {
         
         $bKeep = false;
-        $iMode = $this->getMode($oNode);
+        $iMode = $this->extractMode($oNode);
         
-        if ($iMode) $bKeep = ($iLoadMode & $iMode);
+        if ($iMode) $bKeep = ($this->iMode & $iMode);
         if (!$bKeep) $oNode->remove();
       }
     }
@@ -189,10 +213,9 @@ class XML_Document extends DOMDocument {
   
   public function loadFile($sPath) {
     
-    if ($this instanceof XML_Action) $iMode = 1;
-    else $iMode = 4;
+    $this->sPath = $sPath;
     
-    if (($oFile = Controler::getFile($sPath, true)) && $oFile->checkRights($iMode)) {
+    if (($oFile = Controler::getFile($sPath, true)) && $oFile->checkRights($this->iMode)) {
       
       if ($oFile->getDocument() === null) {
         
@@ -209,13 +232,13 @@ class XML_Document extends DOMDocument {
           XML_Controler::addStat('load');
           
           $oFile->setDocument(new XML_Document($this->getRoot())); // getRoot avoid parsing of specials classes
-          $oFile->isSecured($this->appendLoadRights($iMode));
+          $oFile->isSecured($this->appendLoadRights());
         }
         
       } else if (!$oFile->getDocument()->isEmpty()) {
         
         $this->set($oFile->getDocument());
-        if ($oFile->isSecured()) $this->appendLoadRights($iMode);
+        if ($oFile->isSecured()) $this->appendLoadRights();
       }
     }
   }
@@ -243,6 +266,16 @@ class XML_Document extends DOMDocument {
     } else XML_Controler::addMessage('Document : Aucun contenu. La chaîne est vide !', 'error');
     
     // $this->appendLoadRights(); TODO or not
+  }
+  
+  public function save($sPath) {
+    
+    if ((!$oFile = Controler::getFile($sPath)) || $oFile->checkRights(MODE_WRITE)) {
+      
+      parent::save(MAIN_DIRECTORY.$sPath);
+      return true;
+      
+    } else return false;
   }
   
   /**
@@ -541,16 +574,6 @@ class XML_Document extends DOMDocument {
   /**
    * Method __toString() alias
    */
-  public function save($sPath) {
-    
-    if ((!$oFile = Controler::getFile($sPath)) || $oFile->checkRights(2)) {
-      
-      parent::save(MAIN_DIRECTORY.$sPath);
-      return true;
-      
-    } else return false;
-  }
-  
   public function saveXML() {
     
     return $this->__toString();
@@ -664,6 +687,7 @@ class XML_Element extends DOMElement {
         $mResult = $this->getDocument()->queryString($mResult);
         
         XML_Controler::addStat('query');
+        if (VIEW_QUERY) echo 'read : '.$sQuery.new HTML_Br;
         
         if ($mResult === null) {
           
@@ -698,6 +722,7 @@ class XML_Element extends DOMElement {
         $mResult = $oXPath->query($sQuery, $this);
         
         XML_Controler::addStat('query');
+        if (VIEW_QUERY) echo 'query : '.$sQuery.new HTML_Br;
         
         // if (!$mResult || !$mResult->length) XML_Controler::addMessage(xt("Element->query(%s) : Aucun résultat", new HTML_Strong($sQuery)), 'report');
         // ////// report & notice type will crash system, maybe something TODO /////// //

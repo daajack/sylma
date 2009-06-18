@@ -296,9 +296,9 @@ class Controler {
       new HTML_Strong(t('Date & heure').' : '),
       date('j M Y').' - '.date('H:i')), 'system');
     
-    $oMessages->addStringMessage(array(
-      new HTML_Strong(t('Messages').' : '),
-      implode(', ', self::getMessages()->getAllowedMessages())), 'system');
+    // $oMessages->addStringMessage(array(
+      // new HTML_Strong(t('Messages').' : '),
+      // implode(', ', self::getMessages()->getAllowedMessages())), 'system');
     
     $oMessages->addStringMessage(array(
       new HTML_Strong(t('Statistiques XML').' : '),
@@ -390,7 +390,7 @@ class Controler {
           if (FORMAT_MESSAGES) {
             
             if (is_string($mArgument))
-              $aValue = array("'".stringResume($mArgument, $iMaxLength)."'", 'gray');
+              $aValue = array("'".stringResume($mArgument, $iMaxLength)."'", '#333');
             else if (is_array($mArgument))
               $aValue = array(xt('array(%s)', new HTML_Strong(count($mArgument))), 'black');
             else if (is_object($mArgument)) {
@@ -601,9 +601,16 @@ class Controler {
     return $oDocument;
   }
   
-  public static function getDirectory() {
+  public static function getDirectory($sPath = '') {
     
-    return self::$oDirectory;
+    if ($sPath) {
+      
+      $aPath = explode('/', $sPath);
+      array_shift($aPath);
+      
+      return self::$oDirectory->getDistantDirectory($aPath);
+      
+    } else return self::$oDirectory;
   }
   
   public static function getFile($sPath, $bDebug = false) {

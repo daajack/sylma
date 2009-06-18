@@ -32,11 +32,11 @@ class Form_Controler {
     
     $aMsg = array();
     
-    if (!$aSchema) $aMsg[] = new Message(t('Le contrôle des champs n\'a pu s\'effectuer correctement. Impossible d\'enregistrer !', 'error'));
+    if (!$aSchema) $aMsg[] = new Message(t('Le contrÃ´le des champs n\'a pu s\'effectuer correctement. Impossible d\'enregistrer !', 'error'));
     
     foreach ($aSchema as $sKey => $aField) {
       
-      // Si le paramètre 'deco' est à true, la valeur n'est pas contrôlée
+      // Si le paramÃ¨tre 'deco' est Ã  true, la valeur n'est pas contrÃ´lÃ©e
       
       if (isset($aField['deco']) && $aField['deco']) continue;
       
@@ -49,8 +49,8 @@ class Form_Controler {
         
         if (isset($aField['required']) && $aField['required']) {
           
-          $sMessage = sprintf(t('Le champ "%s" est obligatoire.'), $oTitle);
-          $aMsg[] = new Message($sMessage, 'warning', array('field' => $sKey));
+          $oMessage = xt('Le champ "%s" est obligatoire.', $oTitle);
+          $aMsg[] = new Message($oMessage, 'warning', array('field' => $sKey));
         }
         
       } else {
@@ -70,8 +70,8 @@ class Form_Controler {
             
             if (!is_numeric($mValue) || $fValue != $iValue) {
               
-              $sMessage = sprintf(t('Le champ "%s" doit être un nombre entier.'), $oTitle);
-              $aMsg[] = new Message($sMessage, 'warning', array('field' => $sKey));
+              $oMessage = xt('Le champ "%s" doit Ãªtre un nombre entier.', $oTitle);
+              $aMsg[] = new Message($oMessage, 'warning', array('field' => $sKey));
             }
             
           break;
@@ -82,8 +82,8 @@ class Form_Controler {
             
             if (!is_numeric($mValue)) {
               
-              $sMessage = sprintf(t('Le champ "%s" doit être un nombre.'), $oTitle);
-              $aMsg[] = new Message($sMessage, 'warning', array('field' => $sKey));
+              $oMessage = xt('Le champ "%s" doit Ãªtre un nombre.', $oTitle);
+              $aMsg[] = new Message($oMessage, 'warning', array('field' => $sKey));
             }
             
           break;
@@ -100,15 +100,15 @@ class Form_Controler {
           
           case 'email' :
             
-            $sAtom   = '[-a-z0-9!#$%&\'*+\\/=?^_`{|}~]';   // caractères autorisés avant l'arobase
-            $sDomain = '([a-z0-9]([-a-z0-9]*[a-z0-9]+)?)'; // caractères autorisés après l'arobase (nom de domaine)
+            $sAtom   = '[-a-z0-9!#$%&\'*+\\/=?^_`{|}~]';   // caractÃ¨res autorisÃ©s avant l'arobase
+            $sDomain = '([a-z0-9]([-a-z0-9]*[a-z0-9]+)?)'; // caractÃ¨res autorisÃ©s aprÃ¨s l'arobase (nom de domaine)
             
             $sRegex = '/^'.$sAtom.'+(\.'.$sAtom.'+)*@('.$sDomain.'{1,63}\.)+'.$sDomain.'{2,63}$/i';
             
             if (!preg_match($sRegex, $mValue)) {
               
-              $sMessage = sprintf(t('Le champ "%s" n\'est pas une adresse mail valide.'), $oTitle);
-              $aMsg[] = new Message($sMessage, 'warning', array('field' => $sKey));
+              $oMessage = xt('Le champ "%s" n\'est pas une adresse mail valide.', $oTitle);
+              $aMsg[] = new Message($oMessage, 'warning', array('field' => $sKey));
             }
             
           break;
@@ -118,8 +118,8 @@ class Form_Controler {
         
         if (isset($aField['min-size']) && strlen($mValue) < $aField['min-size']) {
           
-          $sMessage = sprintf(t('Le champ "%s" doit faire au moins %s caractères'), $oTitle, new HTML_Strong($aField['min-size']));
-          $aMsg[] = new Message($sMessage, 'warning', array('field' => $sKey));
+          $oMessage = xt('Le champ "%s" doit faire au moins %s caractÃ¨res', $oTitle, new HTML_Strong($aField['min-size']));
+          $aMsg[] = new Message($oMessage, 'warning', array('field' => $sKey));
         }
       }
     }
@@ -133,7 +133,7 @@ class Form_Controler {
     
     foreach ($aSchema as $sField => $aField) {
       
-      // Si le filtre 'deco' est activé, le champs n'est pas inséré dans la base
+      // Si le filtre 'deco' est activÃ©, le champs n'est pas insÃ©rÃ© dans la base
       
       if (isset($aField['deco']) && $aField['deco']) continue;
       
@@ -162,7 +162,7 @@ class Form_Controler {
         
       } else {
         
-        // Booléen
+        // BoolÃ©en
         
         if ($sType == 'bool') $mValue = 0;
       }

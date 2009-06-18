@@ -16,12 +16,16 @@ class XML_Action extends XML_Document {
     
     $this->setRedirect($oRedirect);
     
-    parent::__construct((string) $this->getPath());
+    parent::__construct((string) $this->getPath(), MODE_EXECUTION);
   }
   
   private function getDirectory() {
     
-    return $this->getPath()->getFile()->getParent().'/';
+    $sParent = $this->getPath()->getFile()->getParent();
+    
+    $sParent = ($sParent == '/') ? $sParent : $sParent.'/';
+    
+    return $sParent;
   }
   
   public function getPath() {
@@ -45,7 +49,7 @@ class XML_Action extends XML_Document {
     else return $this->getDirectory().$sPath;
   }
   
-  private function loadInterface($oInterface, $oRedirect = null) {
+  private function loadInterface($oInterface) {
     
     $oResult = null;
     $sMethod = '';
@@ -57,8 +61,10 @@ class XML_Action extends XML_Document {
     if ($oConstruct = $oInterface->get('ns:method-construct')) {
       
       if ($oConstruct->hasChildren()) {
-        if ($oRedirect) $aArguments = $this->parseArguments($oConstruct, array(), 'index');
-        if (!$aArguments) {
+        
+        if ($this->getPath()->getArgument('index')) $aArguments = $this->parseArguments($oConstruct, array(), 'index');
+        
+        if (!$aArguments && ($oConstruct->query('ns:argument[@required="false"]')->length != $oConstruct->query('ns:argument')->length)) {
           
           Action_Controler::addMessage('Erreur dans les arguments, impossible de construire l\'objet', 'warning');
           return null;
@@ -95,14 +101,14 @@ class XML_Action extends XML_Document {
       
       if ($oChild->isElement()) {
         
-        if ($oChild->getNamespace() != NS_INTERFACE) Action_Controler::addMessage(xt('runInterfaceList() : Cet élément n\'est pas permis : %s', $oElement->viewResume()), 'error');
+        if ($oChild->getNamespace() != NS_INTERFACE) Action_Controler::addMessage(xt('runInterfaceList() : Cet élément n\'est pas permis : %s', $oElement->viewResume()), 'warning');
         else {
           
           list($mResult, $bReturn) = $this->runInterfaceMethod($mObject, $oChild, $oInterface, $bStatic);
           if ($bReturn) $aResults[] = $mResult;
         }
         
-      } else Action_Controler::addMessage(xt('runInterfaceList() : Noeud texte impossible ici : "%s"', new HTML_Strong($oChild)), 'error');
+      } else Action_Controler::addMessage(xt('runInterfaceList() : Noeud texte impossible ici : "%s"', new HTML_Strong($oChild)), 'warning');
     }
     
     if ($aResults) {
@@ -243,11 +249,24 @@ class XML_Action extends XML_Document {
             
             if (!isset($bDirect)) $bParse = true;
             
-            if ($sPath = $oElement->getAttribute('path')) {
+            if (!$sPath = $oElement->getAttribute('path')) {
+              
+              if (!$oElement->hasChildren()) {
+                
+                Action_Controler::addMessage(xt('Aucun chemin spécifié pour l\'action dans %s.', new HTML_Strong($this->getPath())), 'warning');
+                
+              } else {
+                
+                $sPath = (string) $this->buildArgument($oElement->getFirst());
+                $oElement->getFirst()->remove();
+              }
+            }
+            
+            if ($sPath) {
               
               $oPath = new XML_Path($this->getAbsolutePath($sPath), $bParse);
               
-              $oSubRedirect = clone $this->getRedirect();
+              $oRedirect = clone $this->getRedirect();
               
               if ($oElement->hasChildren()) {
                 
@@ -256,7 +275,7 @@ class XML_Action extends XML_Document {
                 $oPath->mergeAssoc($aArguments['assoc']);
               }
               
-              $oAction = new XML_Action($oPath, $oSubRedirect);
+              $oAction = new XML_Action($oPath, $oRedirect);
               $mResult = $oAction->parse();
               
               if ($mResult instanceof Redirect) {
@@ -275,7 +294,7 @@ class XML_Action extends XML_Document {
           
           case 'file' : 
             
-            $mResult = new XML_Document($this->getAbsolutePath($oElement->getAttribute('path')));
+            $mResult = new XML_Document($this->getAbsolutePath($oElement->getAttribute('path')), MODE_EXECUTION);
             
             // TODO relative path
             list($mSubResult, $bSubReturn) = $this->runInterfaceList($mResult, $oElement);
@@ -569,7 +588,7 @@ class XML_Action extends XML_Document {
       
       // Include du fichier
       
-      $sFile = MAIN_DIRECTORY.'/'.$sFile;
+      $sFile = MAIN_DIRECTORY.$sFile;
       
       if (file_exists($sFile)) require_once($sFile);
       else Action_Controler::addMessage(xt('Fichier "%s" introuvable !', new HTML_Strong($sFile)), 'warning');
@@ -628,7 +647,7 @@ class XML_Action extends XML_Document {
               
               $oResult = new XML_Document('temp');
               
-              if ($oSettings = $oDocument->get('le:settings')) $oSettings->remove();
+              if ($oSettings = $oDocument->get('le:settings', 'le', NS_EXECUTION)) $oSettings->remove();
               
               $oMethod = new XML_Element('li:add', $oDocument->getRoot()->getChildren(), null, NS_INTERFACE);
               
@@ -638,9 +657,36 @@ class XML_Action extends XML_Document {
               
             break;
             
+            case 'interface' :
+              
+              if (!$oSettings = $this->get('le:settings', 'le', NS_EXECUTION)) {
+                
+                Action_Controler::addMessage(xt('Action %s invalide, aucuns paramètres !', new HTML_Strong($this->getPath())), 'warning');
+                
+              } else {
+                
+                $sClass = $oSettings->read('le:class', 'le', NS_EXECUTION);
+                $oSettings->remove();
+                
+                if ($oRoot->hasChildren()) {
+                  
+                  $aArguments = $this->loadElementArguments($oRoot);
+                  $this->getPath()->pushIndex($aArguments['index']);
+                  $this->getPath()->mergeAssoc($aArguments['assoc']);
+                }
+                
+                if ($oInterface = Action_Controler::getInterface($sClass)) {
+                  
+                  $oResult = $this->loadInterface($oInterface);
+                  list($oSubResult, $bSubReturn) = $this->runInterfaceList($oResult, $oRoot);
+                }
+              }
+              
+            break;
+            
             default :
               
-              Action_Controler::addMessage(xt('Ceci n\'est pas un exécutable valide %s', new HTML_Strong($oRoot->getName())), 'warning');
+              Action_Controler::addMessage(xt('L\'élément racine %s n\'est pas un élément racine valide du fichier d\'action %s ', new HTML_Strong($oRoot->getName()), new HTML_Strong($this->getPath())), 'warning');
               
             break;
           }
@@ -651,7 +697,7 @@ class XML_Action extends XML_Document {
         
         case NS_INTERFACE :
           
-          $oResult = $this->loadInterface($oRoot, $this->getRedirect());
+          $oResult = $this->loadInterface($oRoot);
           
         break;
         
@@ -966,6 +1012,12 @@ class XML_Path {
     }
     
     return null;
+  }
+  
+  public function parse() {
+    
+    $sPath = (string) $this;
+    return new HTML_A($sPath, $sPath);
   }
   
   public function __toString() {

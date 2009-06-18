@@ -95,6 +95,7 @@ class XML_Directory extends XML_Resource {
   private $aDirectories = array();
   private $aFiles = array();
   private $oSettings = null;
+  private $bSettingsFiles = false;
   
   public function __construct($sPath, $sName, $aRights = array(), $oParent = null) {
     
@@ -112,7 +113,7 @@ class XML_Directory extends XML_Resource {
     }
   }
   
-  public function browse($aExtensions, $aPaths, $iDepth = null) {
+  public function browse($aExtensions, $aPaths = array(), $iDepth = null) {
     
     $aFiles = scandir(MAIN_DIRECTORY.$this->getFullPath(), 0);
     $oElement = $this->parse();
@@ -201,7 +202,7 @@ class XML_Directory extends XML_Resource {
         
         if ($oFile->doExist()) {
           
-          if (($oSettings = $this->getSettings()) && ($oFileSettings = $oSettings->get("file[@name='$sName']")))
+          if ((($oSettings = $this->getSettings()) && $this->bSettingsFiles) && ($oFileSettings = $oSettings->get("file[@name='$sName']")))
             $oFile->loadElementRights($oFileSettings);
           
           // if (isset($oFileSettings)) echo $oFileSettings->view(true);
@@ -214,6 +215,21 @@ class XML_Directory extends XML_Resource {
       
       return $this->aFiles[$sName];
     }
+    
+    return null;
+  }
+  
+  public function getDistantDirectory($aPath) {
+    
+    if ($aPath) {
+      
+      $sName = array_shift($aPath);
+      
+      $oSubDirectory = $this->getDirectory($sName);
+      
+      if ($oSubDirectory) return $oSubDirectory->getDistantDirectory($aPath);
+      
+    } else return $this;
     
     return null;
   }
@@ -282,6 +298,7 @@ class XML_Directory extends XML_Resource {
           $oSettings->loadFreeFile($sSettings);
           
           $this->oSettings = $oSettings;
+          if ($oSettings && $oSettings->get('//file')) $this->bSettingsFiles = true;
           
           $this->loadElementRights($oSettings, $iMode);
         }
@@ -377,7 +394,7 @@ class XML_File extends XML_Resource {
   public function checkRights($iMode) {
     
     if ($this->getUserMode() === null || ($iMode & $this->getUserMode())) return true;
-    else if (Controler::isAdmin()) Action_Controler::addMessage(xt('Fichier "%s" : accès interdit !', new HTML_Strong($this->getFullPath())), 'warning');
+    else if (Controler::isAdmin()) Action_Controler::addMessage(xt('Fichier "%s" : accès interdit !', new HTML_Strong($this->getFullPath())), 'error');
     
     return false;
   }

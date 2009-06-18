@@ -13,22 +13,40 @@ class Action_Controler {
   
   public static function loadInterfaces() {
     
-    if ($oInterfaces = new XML_Document(PATH_INTERFACES)) {
+    if (!$oDirectory = Controler::getDirectory(PATH_INTERFACES)) {
       
-      if ($oClasses = $oInterfaces->query('class')) {
+      self::addMessage(xt('Le répértoire des interfaces "%s" n\'existe pas !', new HTML_Strong(PATH_INTERFACES)), 'warning');
+      
+    } else {
+      
+      $oInterfaces = $oDirectory->browse(array('iml'));
+      
+      if (!$aInterfaces = $oInterfaces->query('//file')) {
         
-        foreach ($oInterfaces->query('class') as $oClass) {
+        self::addMessage(xt('Aucun fichier d\'interface à l\'emplacement "%s" indiqué !', new HTML_Strong(PATH_INTERFACES)), 'warning');
+        
+      } else {
+        
+        foreach ($aInterfaces as $oFile) {
           
-          $sName = $oClass->getAttribute('name');
-          $sPath = $oClass->getAttribute('path');
-          $oInterface = new XML_Document($sPath);
+          $sPath = $oFile->getAttribute('full-path');
+          $oInterface = new XML_Document($sPath, MODE_EXECUTION);
           
-          if (!$oInterface->isEmpty()) self::$aInterfaces[$sName] = $oInterface;
-          else self::addMessage(xt('Fichier d\'interface "%s" vide ou introuvable', new HTML_Strong($sPath)), 'error');
+          if ($oInterface->isEmpty()) {
+            
+            self::addMessage(xt('Fichier d\'interface "%s" vide', new HTML_Strong($sPath)), 'warning');
+            
+          } else {
+            
+            if (!$sName = $oInterface->read('ns:name')) {
+              
+              self::addMessage(xt('Fichier d\'interface "%s" invalide, aucune classe n\'est indiquée !', new HTML_Strong($sPath)), 'warning');
+              
+            } else self::$aInterfaces[$sName] = $oInterface;
+          }
         }
-        
-      } else self::addMessage(xt('Fichier des interfaces "%s" invalide, aucune classe trouvée !', new HTML_Strong(PATH_INTERFACES)), 'error');
-    } else self::addMessage(xt('Impossible de charger le fichier des interfaces à l\'adresse "%s"', new HTML_Strong(PATH_INTERFACES)), 'error');
+      }
+    }
   }
   
   public static function getInterface($oObject) {
@@ -57,7 +75,7 @@ class Action_Controler {
   
   public static function getSpecial($sName, $oAction, $oRedirect) {
     
-    $oSpecials = new XML_Document(PATH_SPECIALS);
+    $oSpecials = new XML_Document(PATH_SPECIALS, MODE_EXECUTION);
     
     if ($oSpecial = $oSpecials->get("object[@name='$sName']")) {
       if ($sCall = $oSpecial->getAttribute('call')) {
@@ -81,22 +99,6 @@ class Action_Controler {
   public static function getMessages() {
     
     return self::$oMessages;
-  }
-  
-  public static function viewStats() {
-    
-    // self::addStat('load', 1); // precog ;)
-    
-    $oResult = new XML_Document('statistics');
-    
-    $oResult->addArray(self::$aStats, 'category');
-    return $oResult->parseXSL(new XML_Document('/users/controler/stats.xsl'));
-  }
-  
-  public static function addStat($sKey, $iWeight = 1) {
-    
-    if (!array_key_exists($sKey, self::$aStats)) self::$aStats[$sKey] = $iWeight;
-    else self::$aStats[$sKey] += $iWeight;
   }
   
   public static function useStatut($sStatut) {

@@ -50,7 +50,7 @@ class Form_Controler {
         if (isset($aField['required']) && $aField['required']) {
           
           $oMessage = xt('Le champ "%s" est obligatoire.', $oTitle);
-          $aMsg[] = new Message($oMessage, 'warning', array('field' => $sKey));
+          $aMsg[] = new Message($oMessage, 'form/warning', array('field' => $sKey));
         }
         
       } else {
@@ -71,7 +71,7 @@ class Form_Controler {
             if (!is_numeric($mValue) || $fValue != $iValue) {
               
               $oMessage = xt('Le champ "%s" doit être un nombre entier.', $oTitle);
-              $aMsg[] = new Message($oMessage, 'warning', array('field' => $sKey));
+              $aMsg[] = new Message($oMessage, 'form/warning', array('field' => $sKey));
             }
             
           break;
@@ -83,7 +83,7 @@ class Form_Controler {
             if (!is_numeric($mValue)) {
               
               $oMessage = xt('Le champ "%s" doit être un nombre.', $oTitle);
-              $aMsg[] = new Message($oMessage, 'warning', array('field' => $sKey));
+              $aMsg[] = new Message($oMessage, 'form/warning', array('field' => $sKey));
             }
             
           break;
@@ -108,7 +108,7 @@ class Form_Controler {
             if (!preg_match($sRegex, $mValue)) {
               
               $oMessage = xt('Le champ "%s" n\'est pas une adresse mail valide.', $oTitle);
-              $aMsg[] = new Message($oMessage, 'warning', array('field' => $sKey));
+              $aMsg[] = new Message($oMessage, 'form/warning', array('field' => $sKey));
             }
             
           break;
@@ -119,7 +119,7 @@ class Form_Controler {
         if (isset($aField['min-size']) && strlen($mValue) < $aField['min-size']) {
           
           $oMessage = xt('Le champ "%s" doit faire au moins %s caractères', $oTitle, new HTML_Strong($aField['min-size']));
-          $aMsg[] = new Message($oMessage, 'warning', array('field' => $sKey));
+          $aMsg[] = new Message($oMessage, 'warning', 'form', array('field' => $sKey));
         }
       }
     }
@@ -151,13 +151,13 @@ class Form_Controler {
           $mValue = db::buildDate($sValue);
           
           // if (!$sValue) $sValue = 'NULL';
-          // else $sValue = db::buildString($sValue);
+          // else $sValue = db::formatString($sValue);
           
         } else {
           
           // Autres
           
-          $mValue = db::buildString($sValue); 
+          $mValue = db::formatString($sValue); 
         }
         
       } else {

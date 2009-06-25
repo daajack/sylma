@@ -3,7 +3,93 @@
  * Fichier des classes Field...
  **/
 
-class HTML_Form extends XML_Helper {
+class HTML_Form extends HTML_Tag {
+  
+  private $oSchema = null;
+  
+  public function __construct() {
+    
+    parent::__construct('form');
+    
+    Controler::getWindow()->addCSS('/web/form.css');
+    $this->setAttribute('method', 'post');
+    
+    $this->addNode('div', '', array('class' => 'form-content clear-block'), NS_XHTML);
+    $this->addNode('div', '', array('class' => 'form-action clear-block form-action-bottom'), NS_XHTML);
+  }
+  
+  public function setSchemas() {
+    
+    $this->oSchema = new XML_Document('schema');
+    
+    foreach (func_get_args() as $oDocument) {
+      
+      if (!$oDocument->isEmpty()) $this->oSchema->add($oDocument->getRoot()->getChildren());
+    }
+  }
+  
+  public function setContent() {
+    
+    $this->getChildren()->item(0)->add(func_get_args());
+  }
+  
+  public function buildField($oElement) {
+    
+    if ($this->oSchema) {
+      
+      $sField = $oElement->getAttribute('id');
+      
+      $bExist = ($oElement->testAttribute('real') !== false);
+      $oElement->setAttribute('real');
+      
+      if ($bExist && (!$oField = $this->oSchema->get("field[@id='$sField']"))) {
+        
+        Action_Controler::addMessage(xt('Le champs "%s" n\'existe pas dans le schéma associé !', new HTML_Strong($sField)), 'warning');
+        
+      } else {
+        
+        //$bMark = isset($aMessages[$sField]);
+        //$sValue = array_val($sField, $aValues, array_val('value', $aField, ''));
+        //$aField['value'] = $sValue;
+        // $aField['name'] = array_val('name', $aField, $sField);
+        
+        $bMark = false;
+        
+        if ($bExist) $aField = $oElement->merge($oField)->getChildren()->toArray();
+        else $aField = $oElement->getChildren()->toArray();
+        
+        $aField['id'] = $sField;
+        $aField['name'] = $sField;
+        
+        $oField = new HTML_Field($aField, $bMark);
+        
+        return $oField;
+      }
+    }
+    
+    return null;
+  }
+  
+  public function addAction() {
+    
+    foreach (func_get_args() as $mArgument) {
+      
+      if (is_string($mArgument)) {
+        
+        $oAction = new HTML_Input('submit');
+        $oAction->setValue($mArgument);
+        
+      } else {
+        
+        $oAction = $mArgument;
+      }
+      
+      $this->getChildren()->item(1)->add($oAction);
+    }
+  }
+}
+
+class HTML_Old_Form extends XML_Helper {
   
   private $bDisplayTop = false;
   private $bDisplayMark = true;
@@ -13,6 +99,7 @@ class HTML_Form extends XML_Helper {
     parent::__construct();
     
     $oForm = new HTML_Tag('form', $oValue, $aAttributes, $this);
+    
     $this->setBloc('form', $oForm);
     
     $this->setBloc('form-content', new HTML_Div('', array('class' => 'form-content clear-block')));
@@ -49,8 +136,8 @@ class HTML_Form extends XML_Helper {
       
       foreach ($oMessages->getMessages() as $oMessage) {
         
-        if ($aFields = $oMessage->query('arguments/field')) {
-          foreach ($aFields as $oField) $aMessages[$oField->read()] = $oMessage;
+        if ($oFields = $oMessage->query('arguments/field')) {
+          foreach ($oFields as $oField) $aMessages[$oField->read()] = $oMessage;
         }
       }
     }
@@ -77,6 +164,8 @@ class HTML_Form extends XML_Helper {
       if (array_val('disable', $aField) && $aField['disable']) continue; // Pas de rendu
       
       if (array_val('type', $aField) != 'display') {
+        
+        // Récupération de le valeur dans le tableau $aValues
         
         $bMark = isset($aMessages[$sField]);
         $sValue = array_val($sField, $aValues, array_val('value', $aField, ''));

@@ -155,11 +155,18 @@ class Form extends XML_Helper implements Main {
   }
 }
 
-class Simple extends XML_Element implements Main {
+class Simple implements Main {
+  
+  private $sContent;
   
   public function loadAction($oAction) {
     
-    $this->add($oAction);
+    $this->sContent = (string) $oAction->parse();
+  }
+  
+  public function __toString() {
+    
+    return $this->sContent;
   }
 }
 

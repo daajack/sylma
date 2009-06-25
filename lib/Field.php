@@ -1,9 +1,9 @@
 <?php
-/*
+/**
  * Fichier des classes Field...
- **/
+ */
 
-   /**
+/**
  * Génération d'un tag de saisie en fonction du schéma donné en argument :
  * 
  * Les schémas permettent de générer facilement des formulaires html, et de les contrôler à l'envoi.
@@ -16,12 +16,13 @@
  * 'class' et 'style' doivent être des tableaux qui rempliront les attributs correspondants
  * 'display' fixera le comportement du conteneur (float, inline ou default)
  */
+
 class HTML_Field extends XML_Document {
   
   private $aArguments = array();
   
   public function __construct($aNode = array(), $bMark = false) {
-    
+    // dsp($aNode);
     parent::__construct();
     
     if (array_val('disable', $aNode) && $aNode['disable']) return ''; // Pas de rendu
@@ -36,6 +37,7 @@ class HTML_Field extends XML_Document {
     $sDisplay = array_val('display', $aNode, 'float');
     $bRequired = array_val('required', $aNode, false);
     $iMinSize = array_val('min-size', $aNode, 0);
+    $bLocked = array_val('locked', $aNode, false);
     
     // Titre du label
     
@@ -111,7 +113,7 @@ class HTML_Field extends XML_Document {
       
       // Container
       
-      $oContainer = new HTML_Tag('div');
+      $oContainer = new HTML_Div();
       $oContainer->addClass('field-container');
       // $oContainer->setAttribute('id', $sId.'_container');
       $oContainer->addClass($sDisplay.'-block');
@@ -152,7 +154,18 @@ class HTML_Field extends XML_Document {
       
       if (array_key_exists('style', $aNode))
         foreach($aNode['style'] as $sKey => $sVal) $oContainer->addStyle($sKey, $sVal);
+      
+      if ($bLocked) {
         
+        $oInput->setAttribute('disabled', 'disabled');
+        /*
+        $oDisplay = new HTML_Span($oInput->getAttribute('value'));
+        $oDisplay->cloneAttribute($oInput, 'class');
+        
+        $oInput = $oDisplay;
+        */
+      }
+      
       if (in_array($sInput, array('checkbox', 'radio'))) {
         
         $oContainer->add($oInput);

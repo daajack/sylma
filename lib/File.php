@@ -69,7 +69,7 @@ class XML_Resource {
     
     if ($oSecurity = $oElement->get('security')) {
       
-      if (Action_Controler::useStatut('report')) Action_Controler::addMessage(xt('Ressource "%s" sécurisée ', new HTML_Strong($this->getFullPath())), 'report');
+      if (Controler::useStatut('report')) Controler::addMessage(xt('Ressource "%s" sécurisée ', new HTML_Strong($this->getFullPath())), 'file/report');
       
       $sOwner = $oSecurity->read('ls:owner', 'ls', NS_SECURITY);
       $sGroup = $oSecurity->read('ls:group', 'ls', NS_SECURITY);
@@ -125,7 +125,7 @@ class XML_Directory extends XML_Resource {
         if (($oFile = $this->getFile($sFile)) && $oFile->getUserMode() != 0) {
           
           if (!in_array($oFile->getExtension(), $aExtensions)) $oFile = null;
-          else $oElement->add($oFile);
+          else $oElement->add($oFile->parseXML());
           
         } else if ($oTempDirectory = $this->getDirectory($sFile)) {
           
@@ -303,7 +303,7 @@ class XML_Directory extends XML_Resource {
           $this->loadElementRights($oSettings, $iMode);
         }
        
-      } else if (Action_Controler::useStatut('report')) Action_Controler::addMessage(xt('Sécurisation suspendue dans "%s"', new HTML_Strong($this->getFullPath())), 'report');
+      } else if (Controler::useStatut('report')) Controler::addMessage(xt('Sécurisation suspendue dans "%s"', new HTML_Strong($this->getFullPath())), 'file/report');
     }
   }
   
@@ -312,7 +312,7 @@ class XML_Directory extends XML_Resource {
     $this->loadRights();
     
     if ($this->getUserMode() === null || ($iMode & $this->getUserMode())) return true;
-    else Action_Controler::addMessage(xt('Répertoire "%s" non authorisé !', new HTML_Strong()), 'warning');
+    else Controler::addMessage(xt('Répertoire "%s" non authorisé !', new HTML_Strong()), 'file/warning');
     
     return false;
   }
@@ -367,7 +367,7 @@ class XML_File extends XML_Resource {
             $this->getMode()));
       }
       
-    } else if ($bDebug) Action_Controler::addMessage(xt('Fichier "%s" introuvable dans "%s" !', new HTML_Strong($sName), new HTML_Strong($sPath)), 'notice');
+    } else if ($bDebug) Controler::addMessage(xt('Fichier "%s" introuvable dans "%s" !', new HTML_Strong($sName), new HTML_Strong($sPath)), 'file/notice');
   }
   
   public function getExtension() {
@@ -394,7 +394,7 @@ class XML_File extends XML_Resource {
   public function checkRights($iMode) {
     
     if ($this->getUserMode() === null || ($iMode & $this->getUserMode())) return true;
-    else if (Controler::isAdmin()) Action_Controler::addMessage(xt('Fichier "%s" : accès interdit !', new HTML_Strong($this->getFullPath())), 'error');
+    else if (Controler::isAdmin()) Controler::addMessage(xt('Fichier "%s" : accès interdit !', new HTML_Strong($this->getFullPath())), 'file/error');
     
     return false;
   }
@@ -406,6 +406,12 @@ class XML_File extends XML_Resource {
   }
   
   public function parse() {
+    
+    $sPath = $this->getFullPath();
+    return new HTML_A(PATH_EDITOR.'?path='.$sPath, $sPath);
+  }
+  
+  public function parseXML() {
     
     return new XML_Element('file', null, array(
       'full-path' => $this->getFullPath(),

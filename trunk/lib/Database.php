@@ -9,29 +9,66 @@ class db {
   private static $aArguments;
   private static $aQueries = array();
   
-  public static function queryXML($sQuery, $aHeaders = array()) {
+  public static function buildTable($oDocument, $aHeaders = array(), $sPath) {
+    
+    $oHeaders = new XML_Element('headers');
+    $oHeaders->addArray($aHeaders, 'field');
+    
+    if ($aHeaders) $oDocument->getRoot()->shift($oHeaders);
+    
+    $oDocument->getRoot()->setAttribute('path_to', $sPath);
+    
+    return $oDocument->parseXSL(new XML_Document('/xml/query-table.xsl'));
+  }
+  
+  public static function getXML($sQuery) {
     
     $oResult = self::query($sQuery);
+    $oDocument = new XML_Document();
     
-    $bFirst = true;
-    $oDocument = new XML_Document('records');
-    
-    if ($aHeaders) $oDocument->addNode('headers')->addArray($aHeaders, 'field');
-    
-    while ($aRow = mysql_fetch_assoc($oResult)) {
+    if (!mysql_num_rows($oResult)) {
       
-      $oElement = $oDocument->addNode('row');
+      Controler::addMessage('Aucun résultat pour la requête !', 'warning');
       
-      foreach ($aRow as $sFieldKey => $sFieldValue) {
-        
-        $oElement->addNode($sFieldKey, $sFieldValue);
-      }
+    } else {
+      
+      $aRow = mysql_fetch_assoc($oResult);
+      
+      $oDocument->set('record');
+      $oDocument->add(self::getXMLRow($aRow)->getChildren());
     }
     
-    // $oDocument->dsp();
-    $oResult = $oDocument->parseXSL(new XML_Document('/xml/query-table.xsl'));
-    // $oResult->dsp();
-    return $oResult;
+    return $oDocument;
+  }
+  
+  public static function queryXML($sQuery) {
+    
+    $oResult = self::query($sQuery);
+    $oDocument = new XML_Document();
+    
+    if (!mysql_num_rows($oResult)) {
+      
+      Controler::addMessage('Aucun résultat pour la requête !', 'warning');
+      
+    } else {
+      
+      $oDocument->set('records');
+      while ($aRow = mysql_fetch_assoc($oResult)) $oDocument->add(self::getXMLRow($aRow));
+    }
+    
+    return $oDocument;
+  }
+  
+  public static function getXMLRow($aRow, $sName = 'row') {
+    
+    $oElement = new XML_Element($sName);
+    
+    foreach ($aRow as $sFieldKey => $sFieldValue) {
+      
+      $oElement->addNode($sFieldKey, $sFieldValue);
+    }
+    
+    return $oElement;
   }
   
   public static function query($sQuery) {
@@ -47,7 +84,16 @@ class db {
       $sQuery = '['.$oCountRows.'] '.$sQuery;
     }
     
-    self::$aQueries[] = $sQuery;
+    // self::$aQueries[] = $sQuery;
+    
+    if (Controler::isAdmin()) {
+      
+      $sResult = self::queryColorize($sQuery);
+      
+      $oDocument = new XML_Document(new HTML_Div(strtoxml($sResult)));
+      
+      Controler::addMessage($oDocument->getRoot(), 'query');
+    }
     
     return $rResult;
   }
@@ -74,7 +120,7 @@ class db {
     mysql_query('SET CHARACTER SET utf8');
   }
   
-  private static function queryColorize($aQueries) {
+  private static function queryColorize($sQuery) {
     
     $aRemplacements = Array(
       
@@ -97,10 +143,9 @@ class db {
         '<span class="query-keyword-2">\1</span>',
     );
     
-    $aResults = preg_replace(array_keys($aRemplacements), $aRemplacements, $aQueries);
-    // echo htmlentities($aResults[0]);
+    $sResult = preg_replace(array_keys($aRemplacements), $aRemplacements, $sQuery);
     
-    return $aResults;
+    return $sResult;
   }
   
   public static function getQueries($sStatut = 'new') {
@@ -108,16 +153,16 @@ class db {
     $sStatut = 'query-'.$sStatut;
     
     $aResults = self::queryColorize(self::$aQueries);
-    $oMessages = new Messages(array($sStatut));
+    $aMessages = array();
     
     foreach ($aResults as $sResult) {
       
       $oDocument = new XML_Document(new HTML_Div(strtoxml($sResult)));
       
-      $oMessages->addMessage(new Message($oDocument->getRoot(), $sStatut));
+      $aMessages[] = new Message($oDocument->getRoot(), $sStatut);
     }
     
-    return $oMessages;
+    return $aMessages;
   }
   
   public static function buildUpdate($aFields) {
@@ -154,7 +199,7 @@ class db {
     else return 'NULL';
   }
   
-  public static function buildString($sString = '') {
+  public static function formatString($sString = '') {
     
     return addQuote(mysql_real_escape_string($sString));
   }

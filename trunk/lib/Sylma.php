@@ -11,6 +11,7 @@ require('Action_Controler.php');
 require('HTML_Form.php');
 require('Field.php');
 require('Controler.php');
+require('Messages.php');
 require('User.php');
 require('File.php');
 require('Database.php');

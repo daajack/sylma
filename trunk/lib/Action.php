@@ -56,7 +56,7 @@ class XML_Action extends XML_Document {
     $aArguments = array();
     
     $sClassName = $oInterface->read('ns:name');
-    $sFile = $this->getAbsolutePath($oInterface->read('ns:file'));
+    if ($sFile = $oInterface->read('ns:file')) $sFile = $this->getAbsolutePath($sFile);
     
     if ($oConstruct = $oInterface->get('ns:method-construct')) {
       
@@ -66,7 +66,7 @@ class XML_Action extends XML_Document {
         
         if (!$aArguments && ($oConstruct->query('ns:argument[@required="false"]')->length != $oConstruct->query('ns:argument')->length)) {
           
-          Action_Controler::addMessage('Erreur dans les arguments, impossible de construire l\'objet', 'warning');
+          Controler::addMessage('Erreur dans les arguments, impossible de construire l\'objet', 'action/warning');
           return null;
         }
       }
@@ -101,14 +101,18 @@ class XML_Action extends XML_Document {
       
       if ($oChild->isElement()) {
         
-        if ($oChild->getNamespace() != NS_INTERFACE) Action_Controler::addMessage(xt('runInterfaceList() : Cet élément n\'est pas permis : %s', $oElement->viewResume()), 'warning');
-        else {
+        if ($oChild->getNamespace() != NS_INTERFACE) {
+          
+          Controler::addMessage(array(xt('runInterfaceList() : L\'élément suivant n\'est pas permis dans %s ', $this->getPath()->parse()), new HTML_Tag('p', new HTML_Em($oChild->viewResume(150, true)))), 'action/error');
+          $oChild->remove();
+          
+        } else {
           
           list($mResult, $bReturn) = $this->runInterfaceMethod($mObject, $oChild, $oInterface, $bStatic);
           if ($bReturn) $aResults[] = $mResult;
         }
         
-      } else Action_Controler::addMessage(xt('runInterfaceList() : Noeud texte impossible ici : "%s"', new HTML_Strong($oChild)), 'warning');
+      } else Controler::addMessage(xt('runInterfaceList() : Noeud texte impossible ici : "%s"', new HTML_Strong($oChild)), 'action/warning');
     }
     
     if ($aResults) {
@@ -146,12 +150,11 @@ class XML_Action extends XML_Document {
         if ($oResult) $bReturn = true;
       }
       
-      
     } else {
       
       if (!$oMethod = $oInterface->get("ns:method[@path='$sActionMethod']")) {
         
-        Action_Controler::addMessage(xt('Méthode "%s" inexistante dans l\'interface "%s"', new HTML_Strong($oElement->getName(true)), new HTML_Strong($oInterface->read('ns:name'))), 'warning');
+        Controler::addMessage(xt('Méthode "%s" inexistante dans l\'interface "%s"', new HTML_Strong($oElement->getName(true)), new HTML_Strong($oInterface->read('ns:name'))), 'action/warning');
         
       } else {
         
@@ -163,16 +166,14 @@ class XML_Action extends XML_Document {
         
         if (!$sMethod = $oMethod->getAttribute('name')) {
           
-          Action_Controler::addMessage('Interface invalide, attribut \'nom\' manquant', 'error');
+          Controler::addMessage('Interface invalide, attribut \'nom\' manquant', 'action/error');
           
         } else {
           
           $aArgumentsPatch = $this->parseArguments($oMethod, $aArguments, $oElement->getAttribute('get-redirect'));
           
           if ($aArgumentsPatch) $oResult = $this->runMethod($mObject, $sMethod, $aArgumentsPatch, $bStatic);
-          else Action_Controler::addMessage(xt('Arguments invalides pour la méthode "%s"', new HTML_Strong($oElement->getName(true))), 'notice');
-          
-          // if (!isset($oResult) && Action_Controler::useStatut('report')) Action_Controler::addMessage(xt('Aucun résultat pour l\'élément : %s', $oElement->viewResume()), 'report');
+          else Controler::addMessage(xt('Arguments invalides pour la méthode "%s" dans "%s"', new HTML_Strong($oElement->getName(true)), $this->getPath()->parse()), 'action/notice');
           
           $bSubReturn = false;
           
@@ -205,12 +206,11 @@ class XML_Action extends XML_Document {
         
         if (!$oChild->useNamespace(NS_INTERFACE) || $oChild->getName(true) == 'argument') {
           
-          $mResult = $this->buildArgument($oChild);
+          $mResult = $this->buildArgument($oChild->remove());
           
           if ($sName = $oChild->getAttribute('name', NS_INTERFACE)) $aArguments['assoc'][$sName] = $mResult;
           else $aArguments['index'][] = $mResult;
           
-          $aArguments['element'][] = $oChild->remove();
           $aArguments['all'][] = $mResult;
         }
         
@@ -245,6 +245,31 @@ class XML_Action extends XML_Document {
             
             $bParse = false;
             
+          case 'interface' :
+            
+            if (!$sClassName = $oElement->getAttribute('class')) {
+              
+              Controler::addMessage(array(
+                xt('L\'élément %s doit spécifier une classe avec l\'attribut class', new HTML_Strong($oElement->getName())),
+                new HTML_Tag('p', new HTML_Em($oElement->viewResume()))), 'action/error');
+              
+            } else {
+              
+              $oInterface = Action_Controler::getInterface($sClassName);
+              $aArguments = array();
+              
+              if ($oConstruct = $oInterface->get('ns:method-construct')) {
+                
+                $aArguments = $this->parseArguments($oConstruct, $this->loadElementArguments($oElement), $oElement->getAttribute('get-redirect'));
+              }
+              
+              if ($sPath = $oInterface->read('ns:file')) $sPath = $this->getAbsolutePath($sPath);
+              
+              $mResult = $this->buildClass($sClassName, $sPath, $aArguments);
+            }
+            
+          break;
+          
           case 'action' :
             
             if (!isset($bDirect)) $bParse = true;
@@ -253,7 +278,7 @@ class XML_Action extends XML_Document {
               
               if (!$oElement->hasChildren()) {
                 
-                Action_Controler::addMessage(xt('Aucun chemin spécifié pour l\'action dans %s.', new HTML_Strong($this->getPath())), 'warning');
+                Controler::addMessage(xt('Aucun chemin spécifié pour l\'action dans %s.', new HTML_Strong($this->getPath())), 'action/warning');
                 
               } else {
                 
@@ -294,10 +319,47 @@ class XML_Action extends XML_Document {
           
           case 'file' : 
             
-            $mResult = new XML_Document($this->getAbsolutePath($oElement->getAttribute('path')), MODE_EXECUTION);
+            if (!($sPath = $oElement->getAttribute('path')) && !($sPath = $this->buildArgument($oElement->getFirst()->remove()))) {
+              
+              Controler::addMessage(array(
+                xt('Aucun chemin spécifié pour le fichier dans %s.', new HTML_Strong($this->getPath())),
+                new HTML_Tag('p', new HTML_Em($oElement->viewResume()))), 'action/warning');
+              
+            } else {
+              
+              $mResult = new XML_Document($this->getAbsolutePath($sPath), MODE_EXECUTION);
+              
+              // TODO relative path
+              list($mSubResult, $bSubReturn) = $this->runInterfaceList($mResult, $oElement);
+            }
             
-            // TODO relative path
-            list($mSubResult, $bSubReturn) = $this->runInterfaceList($mResult, $oElement);
+          break;
+          
+          case 'field' :
+            
+            if (!$this->oCurrentObject || !($this->oCurrentObject instanceof HTML_Form)) {
+              
+              Controler::addMessage(xt('Aucun formulaire n\'a été instancié avec le:form par l\'élément %s !', new HTML_Strong($oElement->viewResume())), 'action/error');
+              
+            } else {
+              
+              $mResult = $this->oCurrentObject->buildField($oElement);
+            }
+            
+          break;
+          
+          case 'form' :
+            
+            $oForm = new HTML_Form();
+            $oForm->cloneAttribute($oElement);
+            
+            $this->oCurrentObject = $oForm;
+            
+            // foreach ($oElement->getChildren() as $oChild) $oForm->add($this->buildArgument($oChild));
+            
+            $mResult = $oForm;
+            
+            if ($oElement->hasChildren()) $this->runInterfaceList($mResult, $oElement);
             
           break;
           
@@ -323,12 +385,17 @@ class XML_Action extends XML_Document {
           break;
           
         }
-      } else if ($oElement->useNamespace(NS_INTERFACE) && $oElement->getName(true) == 'argument') {
+      } else if ($oElement->useNamespace(NS_INTERFACE)) {
         
-        $mResult = $this->buildArgument($oElement->getFirst());
+        if (!$oElement->getName(true) == 'argument') {
+          
+          Controler::addMessage(xt('L\'appel de la méthode "%s" ici est interdit !', new HTML_Strong($oElement->viewResume())), 'action/error');
+          $mResult = null;
+          
+        } else $mResult = $this->buildArgument($oElement->getFirst());
         
       } else {
-        
+        // $oChild->replace($oResult);
         foreach ($oElement->getChildren() as $oChild) {
           
           if ($oChild->isElement()) {
@@ -417,7 +484,7 @@ class XML_Action extends XML_Document {
         
       } else {
         
-        Action_Controler::addMessage(xt('Type %s incorrect pour la récupération d\'argument Redirect dans %s', new HTML_Strong($sRedirect), new HTML_Em($oMethod->viewResume())), 'warning');
+        Controler::addMessage(xt('Type %s incorrect pour la récupération d\'argument Redirect dans %s', new HTML_Strong($sRedirect), new HTML_Em($oMethod->viewResume())), 'action/warning');
         $sRedirect = '';
       }
     }
@@ -462,7 +529,7 @@ class XML_Action extends XML_Document {
         
       } else {
         
-        Action_Controler::addMessage(xt('Pas assez d\'arguments dans %s!', new HTML_Strong($oMethod->getName())), 'warning');
+        Controler::addMessage(xt('Pas assez d\'arguments dans %s!', new HTML_Strong($oMethod->getName())), 'action/warning');
         $bError = true;
       }
       
@@ -486,7 +553,7 @@ class XML_Action extends XML_Document {
           if ($oChild->hasChildren()) foreach ($oChild->getChildren() as $oFormat) $aFormats[] = $oFormat->read();
           else $aFormats[] = $oChild->getAttribute('format');
           
-          $bError = !$this->validArgumentType($mArgument, $aFormats, $oChild);
+          $bError = !$this->validArgumentType($mArgument, $aFormats, $oMethod);
           
           if (!$bError) {
             
@@ -501,8 +568,8 @@ class XML_Action extends XML_Document {
           
         } else if ($oChild->testAttribute('required') !== false) {
           
-          Action_Controler::addMessage(xt('L\'argument requis %s est absent',
-            new HTML_Strong($oChild->getAttribute('name'))), 'warning');
+          Controler::addMessage(xt('L\'argument requis %s est absent',
+            new HTML_Strong($oChild->getAttribute('name'))), 'action/warning');
           
           $bError = true;
         }
@@ -545,16 +612,16 @@ class XML_Action extends XML_Document {
       if (in_array($sActualFormat, $aFormats)) return true;
     }
     
-    Action_Controler::addMessage(array(
+    Controler::addMessage(array(
       xt('L\'argument "%s" n\'est pas dans la liste "%s"',
         new HTML_Strong($sActualFormat),
         new HTML_Strong(implode(', ', $aFormats))),
         new HTML_Tag('p', array(
         new HTML_Strong(t('Méthode').' : '),
-        new HTML_Em($oElement->getParent()->viewResume(150, true)),
+        new HTML_Em($oElement->viewResume(150, true)),
         new HTML_br,
         new HTML_Strong(t('Argument').' : '),
-        new HTML_Em($oElement->viewResume(150, true))))), 'warning');
+        Controler::formatResource($mArgument)))), 'action/warning');
     
     return false;
   }
@@ -573,11 +640,11 @@ class XML_Action extends XML_Document {
       $sArguments = $aArguments ? $aArguments['string'] : '';
       
       eval("\$oResult = $sObject$sCaller\$sMethodName($sArguments);");
-      if (Action_Controler::useStatut('report')) Action_Controler::addMessage(t('Evaluation : ')."$sObject$sCaller$sMethodName(".count($aArguments['arguments']).");", 'report');
+      if (Controler::useStatut('action/report')) Controler::addMessage(t('Evaluation : ')."$sObject$sCaller$sMethodName(".count($aArguments['arguments']).");", 'action/report');
       
       return $oResult;
       
-    } else Action_Controler::addMessage(xt('La méthode "%s" n\'existe pas dans la classe "%s" !', new HTML_Strong($sMethodName.'()'), get_class($mObject)), 'error');
+    } else Controler::addMessage(xt('La méthode "%s" n\'existe pas dans la classe "%s" !', new HTML_Strong($sMethodName.'()'), get_class($mObject)), 'action/error');
     
     return null;
   }
@@ -591,7 +658,7 @@ class XML_Action extends XML_Document {
       $sFile = MAIN_DIRECTORY.$sFile;
       
       if (file_exists($sFile)) require_once($sFile);
-      else Action_Controler::addMessage(xt('Fichier "%s" introuvable !', new HTML_Strong($sFile)), 'warning');
+      else Controler::addMessage(xt('Fichier "%s" introuvable !', new HTML_Strong($sFile)), 'action/warning');
     }
     
     // Contrôle de l'existence de la classe
@@ -607,11 +674,11 @@ class XML_Action extends XML_Document {
       // Création de la classe
       
       eval("\$oAction = new \$sClassName($sAction);");
-      if (Action_Controler::useStatut('report')) Action_Controler::addMessage(t('Evaluation : ')."\$oAction = new $sClassName($iArguments);", 'report');
+      if (Controler::useStatut('action/report')) Controler::addMessage(t('Evaluation : ')."\$oAction = new $sClassName($iArguments);", 'action/report');
       
       return $oAction;
       
-    } else Action_Controler::addMessage($sError, 'notice');
+    } else Controler::addMessage($sError, 'action/warning');
   }
   
   public function setRedirect($oRedirect) {
@@ -661,7 +728,7 @@ class XML_Action extends XML_Document {
               
               if (!$oSettings = $this->get('le:settings', 'le', NS_EXECUTION)) {
                 
-                Action_Controler::addMessage(xt('Action %s invalide, aucuns paramètres !', new HTML_Strong($this->getPath())), 'warning');
+                Controler::addMessage(xt('Action %s invalide, aucuns paramètres !', new HTML_Strong($this->getPath())), 'action/warning');
                 
               } else {
                 
@@ -686,7 +753,7 @@ class XML_Action extends XML_Document {
             
             default :
               
-              Action_Controler::addMessage(xt('L\'élément racine %s n\'est pas un élément racine valide du fichier d\'action %s ', new HTML_Strong($oRoot->getName()), new HTML_Strong($this->getPath())), 'warning');
+              Controler::addMessage(xt('L\'élément racine %s n\'est pas un élément racine valide du fichier d\'action %s ', new HTML_Strong($oRoot->getName()), new HTML_Strong($this->getPath())), 'action/warning');
               
             break;
           }
@@ -703,7 +770,7 @@ class XML_Action extends XML_Document {
         
         default :
           
-          Action_Controler::addMessage(xt('Ceci n\'est pas un interface valide %s', new HTML_Strong($oRoot->getName())), 'warning');
+          Controler::addMessage(xt('Ceci n\'est pas un interface valide %s', new HTML_Strong($oRoot->getName())), 'action/warning');
           
         break;
 
@@ -729,7 +796,7 @@ class XML_Action extends XML_Document {
       case 0 : // Pas de document (404)
       default :
         
-        Action_Controler::addMessage(xt('Action "%s" impossible, pas de document !', new HTML_Strong($this->getPath())), 'warning');
+        Controler::addMessage(xt('Action "%s" impossible, pas de document !', new HTML_Strong($this->getPath())), 'action/warning');
         return 'Pas de document !!!';
         
       break;
@@ -868,12 +935,12 @@ class XML_Path {
         else if ($oDirectory->checkRights(1)) {
           
           $bError = true;
-          Action_Controler::addMessage(xt('Le listing de répertoire n\'est pas encore possible :| : "%s"', new HTML_Strong($oDirectory)), 'warning');
+          Controler::addMessage(xt('Le listing de répertoire n\'est pas encore possible :| : "%s"', new HTML_Strong($oDirectory)), 'action/warning');
           
         } else {
           
           $bError = true;
-          Action_Controler::addMessage(xt('Le répertoire "%s" ne peut pas être listé, droits insuffisants', new HTML_Strong($oDirectory)), 'warning');
+          Controler::addMessage(xt('Le répertoire "%s" ne peut pas être listé, droits insuffisants', new HTML_Strong($oDirectory)), 'action/warning');
         }
         
       } else array_shift($aPath);
@@ -944,7 +1011,7 @@ class XML_Path {
   public function setArgument($sArgument, $aArgument = array()) {
     
     if (is_array($aArgument)) $this->aArguments[$sArgument] = $aArgument;
-    else Action_Controler::addMessage(xt('Liste d\'argument invalide, ce n\'est pas un tableau'), 'error');
+    else Controler::addMessage(xt('Liste d\'argument invalide, ce n\'est pas un tableau'), 'action/error');
   }
   
   public function getArgument($sArgument = null) {
@@ -1017,7 +1084,7 @@ class XML_Path {
   public function parse() {
     
     $sPath = (string) $this;
-    return new HTML_A($sPath, $sPath);
+    return new HTML_A(PATH_EDITOR.'?path='.$sPath, $sPath);
   }
   
   public function __toString() {

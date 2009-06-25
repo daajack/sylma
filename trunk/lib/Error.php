@@ -20,9 +20,9 @@ function userErrorHandler($errno, $errstr, $errfile, $errline) {
         
     } else $oMessage = "ERREUR [$errno] $errstr - [$errline] - $errfile : ".Controler::getBacktrace();
     
-    if (Controler::isReady()) Controler::getMessages()->addMessage(new Message($oMessage, 'error'));
+    if (Controler::isReady()) Controler::addMessage($oMessage, 'error');
     else if (DEBUG) echo $oMessage;
-    
+    //echo $oMessage;
     return true;
   }
   

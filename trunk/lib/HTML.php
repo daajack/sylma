@@ -10,18 +10,11 @@
 class HTML_Tag extends XML_Element {
   
   private $aStyles = array();
-  private $aClasses = array();
   private $bForceClosure = false;
   
   public function __construct($sName = '', $oContent = '', $aAttributes = array()) {
     
     parent::__construct($sName, $oContent, $aAttributes, NS_XHTML);
-  }
-  
-  public function addClass($sValue) {
-    
-    if ($sValue) $this->aClasses[$sValue] = true;
-    return $sValue;
   }
   
   public function addClasses() {
@@ -65,13 +58,6 @@ class HTML_Tag extends XML_Element {
   }
   
   public function parse() {
-    
-    if ($this->aClasses) {
-      
-      $sClasses = implode(' ', array_keys($this->aClasses));
-      if ($oClass = $this->getAttribute('class')) $sClasses = $oClass->value . ' ' . $sClasses;
-      $this->setAttribute('class', $sClasses);
-    }
     
     if ($this->aStyles) {
       
@@ -496,16 +482,22 @@ class HTML_Ul extends HTML_Tag {
   
   function __construct($mChildren = '', $aAttributes = array(), $aChildAttributes = array()) {
     
-    parent::__construct('ul', $aAttributes);
+    parent::__construct('ul', null, $aAttributes);
     $this->forceClosure();
     if (is_array($mChildren)) foreach ($mChildren as $oChild) $this->addItem($oChild, $aChildAttributes);
     else if ($mChildren) $this->addItem($mChildren, $aChildAttributes);
   }
   
+  function addMultiItem() {
+    
+    $aArguments = func_get_args();
+    
+    return $this->addNode('li', $aArguments, null, NS_XHTML);
+  }
+  
   function addItem($sContent, $aAttributes = array()) {
     
-    $oItem = $this->add(new HTML_Tag('li', $sContent, $aAttributes));
-    return $oItem;
+    return $this->addNode('li', $sContent, $aAttributes, NS_XHTML);
   }
 }
 

@@ -30,15 +30,14 @@ class Controler {
     
     self::$iStartTime = microtime(true);
     
-    Action_Controler::init($aDefaultInitMessages['action']);
-    XML_Controler::init($aDefaultInitMessages['xml']);
+    self::$oMessages = new Messages();
+    self::$oDirectory = new XML_Directory('', '', array('owner' => 'root', 'group' => '0', 'mode' => '700'));
     
-    self::$oDirectory = new XML_Directory('', '', array('owner' => 'root', 'group' => '0', 'mode' => '744'));
+    // Récupération du cookie User : authentification
+    
+    self::setUser(self::loadUser());
     
     $aAllowedMessages = self::loadSettings();
-    
-    Action_Controler::getMessages()->setAllowedMessages($aAllowedMessages);
-    XML_Controler::getMessages()->setAllowedMessages($aAllowedMessages);
     
     // Formatage de l'adresse
     
@@ -46,7 +45,6 @@ class Controler {
     
     // Création du type de fenêtre
     
-    // $sWindow = ucfirst($oRedirect->getWindowType());
     $sWindow = ucfirst(self::getWindowType());
     self::setWindow(new $sWindow);
     
@@ -55,10 +53,6 @@ class Controler {
       // Récupération du cookie Redirect qui indique qu'une redirection a été effectuée
       
       $oRedirect = self::loadRedirect();
-      
-      // Récupération du cookie User : authentification
-      
-      self::setUser(self::loadUser());
       
       // DEBUG
       
@@ -97,20 +91,25 @@ class Controler {
   
   private static function loadSettings() {
     
-    self::$oSettings = new XML_Document('/xml/root.xml', 'file');
-    
+    self::$oSettings = new XML_Document('/xml/root.xml', MODE_EXECUTION);
+    //self::$oSettings->dsp();
     // $oSettings->add(new XML_Document('/xml/actions.xml', 'file'));
     // $oSettings->addNode('users', implode(',', array('root', 'john', 'serge', 'daajack')));
     // $oSettings->addNode('groups', implode(',', array('0', 'lemon', 'team', 'dev')));
     
-    $aAllowed = explode(',', self::$oSettings->read('//messages/allowed'));
-    self::$oMessages = new Messages($aAllowed);
+    // $aAllowed = explode(',', self::$oSettings->read('//messages/allowed'));
+    
+    $oAllowed = new XML_Document(self::getSettings('messages/allowed/@path'));
+    
+    $aMessages = self::getMessages()->getMessages();
+    self::$oMessages = new Messages($oAllowed, $aMessages);
+    
     self::$aAllowedWindowType = self::$oSettings->query('//window/*')->toArray('name');
     
     // self::setArgument('settings', $oSettings);
     self::setReady();
     
-    return $aAllowed;
+    return $oAllowed;
   }
   
   private static function loadContext() {
@@ -163,29 +162,6 @@ class Controler {
     return $oRedirect;
   }
   
-  private static function includeClass() {
-    
-    $sClassName = self::getClassName();
-    
-    $sPath = "action/$sClassName.php";
-    
-    if (file_exists(MAIN_DIRECTORY.'/'.$sPath)) include_once($sPath);
-    else if (self::isAdmin()) self::addMessage(sprintf(t('Fichier "%s" introuvable !'), $sPath), 'warning');
-    
-    // Contrôle de l'existence de la classe et de l'opération
-    
-    if (self::isAdmin()) $sClassError = xt('Action impossible (la classe "%s" n\'existe pas) !', new HTML_Strong($sClassName));
-    else $sClassError = t('Page introuvable, veuillez corriger l\'adresse !');
-    
-    if (!class_exists($sClassName)) self::errorRedirect($sClassError);
-    
-    // Création de la classe
-    
-    $oAction = new $sClassName;
-    
-    return $oAction;
-  }
-  
   public static function checkAuthentication($sPath = null) {
     
     if (!$sPath) $sPath = self::getAction();
@@ -232,83 +208,36 @@ class Controler {
     return $oResult;
   }
   
-  public static function getSystemInfos($oRedirect, $iStartTime) {
+  public static function getSystemInfos($oRedirect) {
     
-    $oMessages = new Messages(array('system'));
+    $oView = new HTML_Ul(null, array('id' => 'system'));
     
     $oMessage = new HTML_Strong(t('Authentification').' : ');
     
-    if (self::getUser()->isReal()) {
-      
-      $oMessages->addStringMessage(array(
-        $oMessage,
-        self::getUser()->getArgument('full_name')), 'system');
-      
-    } else {
-      
-      $oMessages->addStringMessage(array(
-        $oMessage, 
-        new HTML_Tag('em', t('- aucun -'))), 'system');
-    }
+    if (self::getUser()->isReal()) $oView->addMultiItem($oMessage, self::getUser()->getArgument('full_name'));
+    else $oView->addMultiItem($oMessage, new HTML_Tag('em', t('- aucun -')));
     
     if (self::getUser()->isReal()) {
       
       $oMessage = new HTML_Strong(t('Groupe(s)').' : ');
       
-      if (self::getUser()->getGroups()) {
-        
-        $oMessages->addStringMessage(array(
-          $oMessage,
-          implode(', ', self::getUser()->getGroups())), 'system');
-          
-      } else {
-        
-        $oMessages->addStringMessage(array(
-          $oMessage,
-          new HTML_Tag('em', t('- aucun -'))), 'system');
-      }
+      if (self::getUser()->getGroups()) $oView->addMultiItem($oMessage, implode(', ', self::getUser()->getGroups()));
+      else $oView->addMultiItem($oMessage, new HTML_Tag('em', t('- aucun -')));
     }
     
-    $oMessages->addStringMessage(array(
-      new HTML_Strong(t('Adresse').' : '),
-      (string) self::getPath()), 'system');
+    $oView->addMultiItem(new HTML_Strong(t('Adresse').' : '), self::getPath());
     
     $oMessage = new HTML_Strong(t('Redirection').' : ');
     
-    if ($oRedirect->isReal()) {
-      
-      $oMessages->addStringMessage(array(
-        $oMessage, 
-        $oRedirect->getSource()), 'system');
-      
-    } else {
-      
-      $oMessages->addStringMessage(array(
-        $oMessage,
-        new HTML_Tag('em', t('- aucun -'))), 'system');
-    }
+    if ($oRedirect->isReal()) $oView->addMultiItem($oMessage, $oRedirect->getSource()->getOriginalPath());
+    else $oView->addMultiItem($oMessage, new HTML_Tag('em', t('- aucun -')));
     
-    $oMessages->addStringMessage(array(
-      new HTML_Strong(t('Fenêtre').' : '), 
-      self::getWindowType()), 'system');
+    $oView->addMultiItem(new HTML_Strong(t('Fenêtre').' : '), self::getWindowType());
+    $oView->addMultiItem(new HTML_Strong(t('Date & heure').' : '), date('j M Y').' - '.date('H:i'));
+    $oView->addMultiItem(new HTML_Strong(t('Statistiques XML').' : '), XML_Controler::viewStats());
+    $oView->addMultiItem(new HTML_Strong(t('Temps d\'exécution').' : '), number_format(microtime(true) - self::$iStartTime, 3).' s');
     
-    $oMessages->addStringMessage(array(
-      new HTML_Strong(t('Date & heure').' : '),
-      date('j M Y').' - '.date('H:i')), 'system');
-    
-    // $oMessages->addStringMessage(array(
-      // new HTML_Strong(t('Messages').' : '),
-      // implode(', ', self::getMessages()->getAllowedMessages())), 'system');
-    
-    $oMessages->addStringMessage(array(
-      new HTML_Strong(t('Statistiques XML').' : '),
-      XML_Controler::viewStats()), 'system');
-    
-    $oMessages->addStringMessage(array(
-      new HTML_Strong(t('Temps d\'exécution').' : '),
-      number_format(microtime(true) - self::$iStartTime, 3).' s'), 'system');
-    
-    return $oMessages;
+    return $oView;
   }
   
   private static function doAJAXRedirect($oRedirect) {
@@ -339,18 +268,59 @@ class Controler {
     
     // Ajout des messages requêtes si admin
     
-    if (self::isAdmin()) $oRedirect->getMessages()->addMessages(db::getQueries('old')->getMessages());
+    // if (self::isAdmin()) $oRedirect->getMessages()->addMessages(db::getQueries('old')->getMessages());
     
     $oRedirect->setArgument('messages', $oRedirect->getMessages()->saveXML());
     
-    // $oRedirect->setSource(Controler::getPath());
+    $oRedirect->setSource(Controler::getPath());
     
     // Redirection
     
     $_SESSION['redirect'] = serialize($oRedirect);
   }
   
-  public static function getBacktrace($sStatut = 'system') {
+  public static function formatResource($mArgument, $iMaxLength = 120, $bFormat = true) {
+    
+    if (FORMAT_MESSAGES && $bFormat) {
+      
+      if (is_string($mArgument))
+        $aValue = array("'".stringResume($mArgument, $iMaxLength)."'", '#999');
+      else if (is_array($mArgument))
+        $aValue = array(xt('array(%s)', new HTML_Strong(count($mArgument))), 'black');
+      else if (is_object($mArgument)) {
+        
+        if ($mArgument instanceof XML_Element)
+          $aValue = array($mArgument->viewResume($iMaxLength, true), 'blue');
+        else if ($mArgument instanceof XML_NodeList)
+          $aValue = array(xt('XML_NodeList(%s)', new HTML_Strong($mArgument->length)), 'green');
+        else 
+          $aValue = array(get_class($mArgument), 'red');
+        
+      } else if ($mArgument === null) $aValue = array('NULL', 'magenta');
+      else $aValue = array('undefined', 'orange');
+      
+      return new HTML_Span($aValue[0], array('style' => 'color: '.$aValue[1].';'));
+      
+    } else {
+      
+      if (is_string($mArgument))
+        $sValue = "'".stringResume($mArgument, $iMaxLength)."'";
+      else if (is_array($mArgument))
+        $sValue = 'array('.count($mArgument).')';
+      else if (is_object($mArgument)) {
+
+        if ($mArgument instanceof XML_NodeList)
+          $sValue = 'XML_NodeList('.$mArgument->length.')';
+        else 
+          $sValue = array(get_class($mArgument), 'red');
+      } else if ($mArgument === null) $sValue = 'NULL';
+      else $sValue = 'undefined';
+      
+      return $sValue;
+    }
+  }
+  
+  public static function getBacktrace($bFormat = true) {
     
     $aResult = array(); $aLines = array(); $i = 0;
     
@@ -387,45 +357,7 @@ class Controler {
         
         foreach ($aTrace['args'] as $mArgument) {
           
-          if (FORMAT_MESSAGES) {
-            
-            if (is_string($mArgument))
-              $aValue = array("'".stringResume($mArgument, $iMaxLength)."'", '#333');
-            else if (is_array($mArgument))
-              $aValue = array(xt('array(%s)', new HTML_Strong(count($mArgument))), 'black');
-            else if (is_object($mArgument)) {
-              
-              if ($mArgument instanceof XML_Element)
-                $aValue = array($mArgument->viewResume($iMaxLength, true), 'blue');
-              else if ($mArgument instanceof XML_NodeList)
-                $aValue = array(xt('XML_NodeList(%s)', new HTML_Strong($mArgument->length)), 'green');
-              else 
-                $aValue = array(get_class($mArgument), 'red');
-              
-            } else if ($mArgument === null) $aValue = array('NULL', 'magenta');
-            else $aValue = array('undefined', 'orange');
-            
-            $aArguments[] = new HTML_Span($aValue[0], array('style' => 'color: '.$aValue[1].';'));
-            
-          } else {
-            
-            if (is_string($mArgument))
-              $sValue = "'".stringResume($mArgument, $iMaxLength)."'";
-            else if (is_array($mArgument))
-              $sValue = 'array('.count($mArgument).')';
-            else if (is_object($mArgument)) {
-              
-              if ($mArgument instanceof XML_NodeList)
-                $sValue = 'XML_NodeList('.$mArgument->length.')';
-              else 
-                $sValue = array(get_class($mArgument), 'red');
-              
-            } else if ($mArgument === null) $sValue = 'NULL';
-            else $sValue = 'undefined';
-            
-            $aArguments[] = $sValue;
-          }
-          
+          $aArguments[] = self::formatResource($mArgument, $iMaxLength, $bFormat);
           $aArguments[] = new HTML_Strong(', ');
         }
         
@@ -434,7 +366,7 @@ class Controler {
         $oArguments = new HTML_Span($aArguments);
       }
       
-      if (FORMAT_MESSAGES) {
+      if (FORMAT_MESSAGES && $bFormat) {
         
         $aResult[] = new HTML_Div(array(
           '[',
@@ -522,9 +454,16 @@ class Controler {
     return self::$oMessages;
   }
   
-  public static function addMessage($mMessage = '- message vide -', $sStatut = 'notice', $aArgs = array()) {
+  public static function addMessage($mMessage = '- message vide -', $sCategory = 'notice', $aArgs = array()) {
     
-    self::getMessages()->addMessage(new Message($mMessage, $sStatut, $aArgs));
+    //if ($sStatut == 'error' && in_array($sCategory, array('action', 'xml'))) $mMessage = array($mMessage, Controler::getBacktrace());
+    
+    self::getMessages()->addMessage(new Message($mMessage, $sCategory, $aArgs));
+  }
+  
+  public static function useStatut($sStatut) {
+    
+    return self::getMessages()->useStatut($sStatut);
   }
   
   public static function setWindow($oWindow) {
@@ -589,7 +528,7 @@ class Controler {
   }
   
   public static function getPath() {
-    
+    //echo self::getBacktrace();
     return self::$oPath;
   }
   
@@ -657,7 +596,7 @@ class Controler {
 class Redirect {
   
   private $sPath = '/'; // URL cible
-  public $oPath = null; // URL cible
+  private $oPath = null; // URL cible
   private $oSource = null; // URL de provenance
   private $sWindowType = 'window';
   private $bIsReal = false; // Défini si le cookie a été redirigé ou non
@@ -673,7 +612,6 @@ class Redirect {
     $this->aArguments = $aArguments;
     $this->setArgument('post', $_POST);
     $this->setWindowType(Controler::getWindowType());
-    // $this->updateSource();
   }
   
   public function getArgument($sKey) {
@@ -708,7 +646,8 @@ class Redirect {
   
   public function resetMessages($mMessages = array()) {
     
-    $this->oMessages = new Messages(Controler::getMessages()->getAllowedMessages(), $mMessages);
+    $this->oMessages = new Messages(new XML_Document(Controler::getSettings('messages/allowed')), $mMessages);
+    // $this->oMessages = new Messages(Controler::getMessages()->getAllowedMessages(), $mMessages); TODO
   }
   
   public function getMessages($sStatut = null) {
@@ -724,14 +663,13 @@ class Redirect {
   
   public function getPath() {
     
-    return $this->sPath;
+    return $this->oPath;
   }
   
-  public function setPath($sPath) {
+  public function setPath($oPath) {
     
-    $this->sPath = $sPath;
-    
-    return $sPath;
+    $this->oPath = $oPath;
+    return $oPath;
     // if ($sPath == '/' || $sPath != Controler::getPath()) $this->sPath = $sPath;
     // else Controler::errorRedirect(t('Un problème de redirection à été détecté !'));
   }
@@ -741,22 +679,13 @@ class Redirect {
     return $this->oSource;
   }
   
-  public function setSource($oPath) {
+  public function setSource($oSource) {
     
-    $this->oSource = $oPath;
+    $this->oSource = $oSource;
+    return $oSource;
   }
   
-  public function updateSource() {
-    
-    $this->setSource(Controler::getAction(), Controler::getArguments());
-  }
-  
-  public function isSourceAction($sSource) {
-    
-    return ($this->oSource->getAction() == $sSource);
-  }
-  
-  public function isSourcePath($sSource) {
+  public function isSource($sSource) {
     
     return ((string) $this->oSource == $sSource);
   }
@@ -783,160 +712,6 @@ class Redirect {
   
   public function __toString() {
     
-    return $this->sPath;
+    return (string) $this->oPath;
   }
 }
-
-class Messages extends XML_Helper {
-  
-  private $aAllowedMessages = array();
-  
-  public function __construct($aAllowedMessages = array(), $mMessages = array()) {
-    
-    parent::__construct('messages');
-    $this->setBloc('allowed', new XML_Document('messages'));
-    
-    $this->setAllowedMessages($aAllowedMessages);
-    $this->addMessage($mMessages);
-  }
-  
-  public function addMessage() {
-    
-    $aArguments = func_get_args();
-    
-    if (!$aArguments) return null;
-    
-    if (count($aArguments) > 1) return $this->addMessages($aArguments);
-    else $mMessage = $aArguments[0];
-    
-    if (is_array($mMessage) || ($mMessage instanceof XML_NodeList)) return $this->addMessages($mMessage);
-    else if (is_string($mMessage)) return $this->addStringMessage($mMessage);
-    else if (($mMessage instanceof XML_Element) && $mMessage->getName() == 'message') {
-      
-      $oMessage = $mMessage;
-      
-      // TODO: foreach ($oMessage->aArguments as $oArgument) $this->setArgument('fields'][ += $oMessage[]
-      // $this->aMessages[$oMessage->getStatut()][] = $oMessage;
-      
-      $sStatut = $oMessage->read('statut');
-      
-      // Add the stat if not exists
-      
-      if (!$oAllStatut = $this->get($sStatut))
-        $oAllStatut = $this->addNode($sStatut);
-      
-      // Add in the main doc
-      
-      $oAllStatut->add($oMessage);
-      
-      // Add in the allowed doc
-      
-      if ($this->useStatut($sStatut))
-        $oMessage = $this->getBloc('allowed')->get($sStatut)->add($oMessage);
-      
-      return $oMessage;
-      
-    } else return $this->addStringMessage($mMessage);
-  }
-  
-  /*
-   * Add a message from a String
-   * 
-   * @param $mMessage
-   *   The message format String
-   * @param $sStatut
-   *   The stat of the message format String
-   * @param $aArguments
-   *   The arguments of the message format Array
-   * @return
-   *   A pointer to the node added
-   **/
-  public function addStringMessage($mMessage, $sStatut = 'notice', $aArguments = array()) {
-    
-    return $this->addMessage(new Message($mMessage, $sStatut, $aArguments));
-    if (is_array($aArguments) && isset($aArguments['show_array'])) $this->addStringMessage(implosion(' => ', '<br />', $aArguments['show_array']), $sStatut);
-  }
-  
-  /*
-   * Ajoute une liste de messages dans la pile
-   * 
-   * @param $aMessages
-   *   Un tableau contenant les messages à ajouter
-   **/
-  public function addMessages($aMessages) {
-    
-    $aResult = array();
-    foreach ($aMessages as $oMessage) $aResult[] = $this->addMessage($oMessage);
-    
-    return $aResult;
-  }
-  
-  /*
-   * Récupère les messages sous forme de liste
-   * 
-   * @param $sStatut
-   *   Si donné, seul les messages du statut correspondant seront récupérés
-   **/
-  public function getMessages($sStatut = null) {
-    
-    if ($sStatut) {
-      
-      $oResult = $this->query("$sStatut/*");
-      
-    } else {
-      
-      $oResult = $this->query("//message");
-    }
-    
-    if (!$oResult->length) $oResult = array();
-    
-    return $oResult;
-  }
-  
-  public function useStatut($sStatut) {
-    
-    return (in_array($sStatut, $this->getAllowedMessages()));
-  }
-  
-  public function hasMessages($sStatut = null) {
-    
-    return $this->getMessages($sStatut);
-  }
-  
-  public function getAllowedMessages() {
-    
-    return $this->aAllowedMessages;
-  }
-  
-  public function setAllowedMessages($aStatuts = array()) {
-    
-    $this->aAllowedMessages = $aStatuts;
-    
-    // Add allowed statuts in docs
-    $this->addArray($aStatuts);
-    
-    $this->getBloc('allowed')->add($this->getChildren());
-  }
-  
-  public function parse() {
-    
-    if ($this->getBloc('allowed')->get('//message')) {
-      
-      return $this->getBloc('allowed')->parseXSL(new XML_Document(Controler::getSettings('messages/template')));
-      
-    } else return null;
-  }
-}
-
-class Message extends XML_Element {
-  
-  public function __construct($mMessage, $sStatut = 'notice', $aArgs = array()) {
-    
-    parent::__construct('message');
-    
-    $this->addNode('content', $mMessage);
-    $this->addNode('statut', $sStatut);
-    $this->addNode('arguments')->addArray($aArgs);
-  }
-}
-

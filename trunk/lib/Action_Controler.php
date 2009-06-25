@@ -3,19 +3,14 @@
 class Action_Controler {
   
   private static $aInterfaces = array();
-  private static $oMessages = null;
+  private static $oInterfaces = null;
   private static $aStats = array();
   
-  public static function init($aStatuts) {
-    
-    self::$oMessages = new Messages($aStatuts);
-  }
-  
-  public static function loadInterfaces() {
+  public static function buildInterfacesIndex() {
     
     if (!$oDirectory = Controler::getDirectory(PATH_INTERFACES)) {
       
-      self::addMessage(xt('Le répértoire des interfaces "%s" n\'existe pas !', new HTML_Strong(PATH_INTERFACES)), 'warning');
+      Controler::addMessage(xt('Le répértoire des interfaces "%s" n\'existe pas !', new HTML_Strong(PATH_INTERFACES)), 'warning', 'action');
       
     } else {
       
@@ -23,9 +18,11 @@ class Action_Controler {
       
       if (!$aInterfaces = $oInterfaces->query('//file')) {
         
-        self::addMessage(xt('Aucun fichier d\'interface à l\'emplacement "%s" indiqué !', new HTML_Strong(PATH_INTERFACES)), 'warning');
+        Controler::addMessage(xt('Aucun fichier d\'interface à l\'emplacement "%s" indiqué !', new HTML_Strong(PATH_INTERFACES)), 'warning', 'action');
         
       } else {
+        
+        $oIndex = new XML_Document('interfaces');
         
         foreach ($aInterfaces as $oFile) {
           
@@ -34,19 +31,73 @@ class Action_Controler {
           
           if ($oInterface->isEmpty()) {
             
-            self::addMessage(xt('Fichier d\'interface "%s" vide', new HTML_Strong($sPath)), 'warning');
+            Controler::addMessage(xt('Fichier d\'interface "%s" vide', new HTML_Strong($sPath)), 'warning', 'action');
             
           } else {
             
             if (!$sName = $oInterface->read('ns:name')) {
               
-              self::addMessage(xt('Fichier d\'interface "%s" invalide, aucune classe n\'est indiquée !', new HTML_Strong($sPath)), 'warning');
+              Controler::addMessage(xt('Fichier d\'interface "%s" invalide, aucune classe n\'est indiquée !', new HTML_Strong($sPath)), 'warning', 'action');
               
-            } else self::$aInterfaces[$sName] = $oInterface;
+            } else {
+              
+              $oIndex->addNode('interface', $sPath, array('class' => $sName));
+            }
           }
+        }
+        
+        $oIndex->save(PATH_INTERFACES.'/../interfaces.cml');
+      }
+    }
+  }
+  
+  public static function loadInterfaces() {
+    
+    //self::buildInterfacesIndex();
+    self::$oInterfaces = new XML_Document(PATH_INTERFACES.'/../interfaces.cml', MODE_EXECUTION);
+  }
+  
+  public static function loadInterface($sClass) {
+    
+    $oInterface = null;
+    
+    if (array_key_exists($sClass, self::$aInterfaces)) {
+      
+      $oInterface = self::$aInterfaces[$sClass];
+      
+    } else {
+      
+      if ($oElement = self::$oInterfaces->get("interface[@class='$sClass']")) {
+        
+        $sPath = $oElement->read();
+        $oInterface = new XML_Document($sPath, MODE_EXECUTION);
+        
+        if ($oInterface->isEmpty()) {
+          
+          Controler::addMessage(xt('Fichier d\'interface "%s" vide', new HTML_Strong($sPath)), 'warning', 'action');
+          
+        } else {
+          
+          if ($sExtends = $oInterface->read('ns:extends')) {
+            
+            if ($oSubInterface = self::loadInterface($sExtends)) {
+              
+              $oInterface->add($oSubInterface->query('ns:method'));
+              
+            } else {
+              
+              Controler::addMessage(xt('Extension de la classe "%s" impossible, interface de classe "%s" introuvable !', new HTML_Strong($sClass), new HTML_Strong($sExtends)), 'warning', 'action');
+            }
+            
+          }
+          
+          self::$aInterfaces[$sClass] = $oInterface;
+          if (Controler::useStatut('report')) Controler::addMessage(xt('Chargement de l\'interface "%s"', new HTML_Strong($sPath)), 'report', 'action');
         }
       }
     }
+    
+    return $oInterface;
   }
   
   public static function getInterface($oObject) {
@@ -54,8 +105,7 @@ class Action_Controler {
     if (is_object($oObject)) $sClass = get_class($oObject);
     else $sClass = $oObject;
     
-    if (array_key_exists($sClass, self::$aInterfaces)) return self::$aInterfaces[$sClass];
-    else {
+    if (!$oInterface = self::loadInterface($sClass)) {
       
       $sPrevClass = $sClass;
       
@@ -64,13 +114,14 @@ class Action_Controler {
         $sTempClass = $sPrevClass;
         $sPrevClass = get_parent_class($sPrevClass);
         
-      } while ($sPrevClass && !array_key_exists($sPrevClass, self::$aInterfaces));
+        if ($sPrevClass) $oInterface = self::loadInterface($sPrevClass);
+        
+      } while ($sPrevClass && !$oInterface);
       
-      if ($sPrevClass && array_key_exists($sPrevClass, self::$aInterfaces)) return self::$aInterfaces[$sPrevClass];
-      else self::addMessage(xt('Interface de classe "%s" introuvable !', new HTML_Strong($sClass)), 'warning');
+      if (!$oInterface) Controler::addMessage(xt('Interface de classe "%s" introuvable !', new HTML_Strong($sClass)), 'warning', 'action');
     }
     
-    return false;
+    return $oInterface;
   }
   
   public static function getSpecial($sName, $oAction, $oRedirect) {
@@ -86,44 +137,14 @@ class Action_Controler {
           eval('$oObject = '.$sCall.';');
           
           if (isset($oObject)) return $oObject;
-          else self::addMessage(xt('L\'objet "%s" est nul !', new HTML_Strong($sCall)), 'warning');
+          else Controler::addMessage(xt('L\'objet "%s" est nul !', new HTML_Strong($sCall)), 'warning', 'action');
         }
         
-      } else self::addMessage(xt('Pas de référence dans le fichier "%s",  !', new HTML_Strong(PATH_SPECIALS)), 'warning');
+      } else Controler::addMessage(xt('Pas de référence dans le fichier "%s",  !', new HTML_Strong(PATH_SPECIALS)), 'warning', 'action');
       
-    } else self::addMessage(xt('La variable spéciale "%s" n\'existe pas !', new HTML_Strong($sName)), 'warning');
+    } else Controler::addMessage(xt('La variable spéciale "%s" n\'existe pas !', new HTML_Strong($sName)), 'warning', 'action');
     
     return null;
-  }
-  
-  public static function getMessages() {
-    
-    return self::$oMessages;
-  }
-  
-  public static function useStatut($sStatut) {
-    
-    return self::getMessages()->useStatut('action-'.$sStatut);
-  }
-  
-  public static function addMessage($mValue, $sStatut = 'notice', $aArguments = array()) {
-    
-    $sStatut = 'action-'.$sStatut;
-    
-    if (FORMAT_MESSAGES) {
-      
-      $mMessage = array(
-        new HTML_Strong('Action', array('style' => 'text-decoration: underline;')),
-        ' : ',
-        $mValue);
-      
-      if ($sStatut == 'action-error') $mMessage = array_merge($mMessage, array(new HTML_Br, Controler::getBacktrace()));
-      
-    } else $mMessage = $mValue;
-    
-    if (Controler::isReady()) Controler::addMessage($mMessage, $sStatut, $aArguments);
-    else self::getMessages()->addMessage(new Message($mMessage, $sStatut, $aArguments));
-    // echo new HTML_Tag('pre', $mMessage, array('class' => 'message-'.$sStatut));
   }
 }
 

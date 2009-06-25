@@ -1,10 +1,12 @@
 /* Document Javascript */
 var bKillFirebug = true;
 var oXMLEditor;
+var sPathEditor = '/editeur';
 
 $(document).ready(function() {
 
-  oXMLEditor = new XML_Editor('#xml-editor', '/users/editor/xml-editor/interface/load.xml', 'bright');
+  oXMLEditor = new XML_Editor('#xml-editor', sPathEditor + '/interface/load.xml', 'fade');
+  if ($('#xml-path').attr('value')) oXMLEditor.load();
 });
 
 if (window.console && window.console.firebug && bKillFirebug) {
@@ -76,6 +78,14 @@ if (window.console && window.console.firebug && bKillFirebug) {
   });
 }
 
+window.onbeforeunload = function(event){
+  
+  if (!oXMLEditor.bSaved && confirm('Le document n\'a pas été sauvé, voulez-vous le sauver maintenant ?')) {
+    
+    oXMLEditor.save();
+  } //else event.preventDefault();
+};
+
 $(window).keydown(function(event){
   
   // $('#xml-messages').html(event.keyCode);
@@ -94,9 +104,6 @@ function XML_Editor(sId, sPath, sStyle) {
   
   this.init = function() {
     
-    this.iWidth = 70;
-    this.oDocument = undefined;
-    
     this.oSettings = document.implementation.createDocument('', 'settings', null);
     this.oClipboard = this.oSettings.createElement('clipboard');
     this.oSettings.documentElement.appendChild(this.oClipboard);
@@ -110,9 +117,9 @@ function XML_Editor(sId, sPath, sStyle) {
   
   this.save = function(sType) {
     
-    if (!this.isLoaded) { alert('Aucun document chargé'); return false; }
+    if (!this.bLoaded) { alert('Aucun document chargé'); return false; }
     
-    var sUrl = '/users/editor/xml-editor/interface/save.xml';
+    var sUrl = sPathEditor + '/interface/save.xml';
     var sMode = $("#xml-file").data('mode');
     
     var oDocument = document.implementation.createDocument("", "", null);
@@ -137,6 +144,7 @@ function XML_Editor(sId, sPath, sStyle) {
     oRoot.appendChild(oData);
     oDocument.appendChild(oRoot);
     
+    
     $.ajax({
       
       type: 'POST',
@@ -155,41 +163,79 @@ function XML_Editor(sId, sPath, sStyle) {
       }
     });
     
+    this.bSaved = true;
+    
+    return true;
+  }
+  
+  this.reload = function(sPath) {
+    
+    var sOldPath = $('#xml-path').attr('value');
+    $('#xml-path').attr('value', sPath);
+    
+    if (!this.load()) {
+      
+      $('#xml-path').attr('value', sOldPath);
+      return false;
+    }
+    
     return true;
   }
   
   this.load = function() {
     
-    var self = this;
-    $.ajax({
+    if (this.bSaved || confirm('Le document n\'a pas été sauvé, êtes vous sûr de vouloir annuler les changements ?')) {
       
-      type: 'POST',
-      url: this.sPath,
-      data: 'path=' + $('#xml-path').val() + '&mode=' + $("#xml-file").data('mode'),
-      dataType: 'xml',
-      success: function(sResult) {
+      var self = this;
+      $.ajax({
         
-        self.isLoaded = true;
-        
-        // Effets
-        switch (self.sStyle) {
+        type: 'POST',
+        url: this.sPath,
+        data: 'path=' + $('#xml-path').val() + '&mode=' + $("#xml-file").data('mode'),
+        dataType: 'xml',
+        success: function(sResult) {
           
-          case 'bright' : 
-          case 'none' : self.build(sResult); break;
-          case 'fade' : $(self.sId).fadeOut("slow", function() { self.build(sResult); }); break;
-          default : break;
+          self.bLoaded = true;
+          
+          // Effets
+          switch (self.sStyle) {
+            
+            case 'bright' : 
+            case 'none' : self.build(sResult); break;
+            case 'fade' : $(self.sId).fadeOut("slow", function() { self.build(sResult); }); break;
+            default : break;
+          }
+        },
+        complete : function(sResult, sState) { // sState : parsererror, success
+          
+          if (sState == 'parsererror') alert('XML invalide');
         }
-      },
-      complete : function(sResult, sState) { // sState : parsererror, success
-        
-        if (sState == 'parsererror') alert('XML invalide');
-      }
-    });
+      });
+      
+      return true;
+      
+    } else return false;
+  }
+  
+  this.getAbsolutePath = function(sPath) {
+    
+    if (sPath[0] == '/') return sPath;
+    else return this.sDirectory + '/' + sPath;
   }
   
   this.build = function(oDocument) {
     
     this.oDocument = oDocument;
+    var sPath = $('#xml-path').attr('value');
+    
+    var aPath = sPath.split('/');
+    if (aPath.length > 1) {
+      
+      for (var i = 0; i < aPath.length - 1; i++) {
+        
+        if (aPath[i]) this.sDirectory += '/' + aPath[i];
+      }
+    }
     
     $(this.sId).empty();
     
@@ -207,15 +253,15 @@ function XML_Editor(sId, sPath, sStyle) {
     
     $(this.oTools).hover(function() {}, function() { $(this).data('ref-node').hideTools(); });
     
-    var oNode = XML_Extend(oDocument.firstChild).build(this.oTools);
+    var oNode = XML_Extend(oDocument.firstChild).build(this);
     $(this.sId).append(oNode);
     
     // Effects
     
     switch (this.sStyle) {
       
-      case 'bright' : $(this.sId).css('background-color', '#feff9f').animate({ backgroundColor : '#fff'}, 700); break;
-      case 'fade' : $(this.sId).fadeIn("slow"); break;
+      case 'bright' : $(this.sId).css('background-color', '#feff9f').animate({ backgroundColor : '#000'}, 700); break;
+      case 'fade' :/* $(this.sId).css('visibility', 'visible'); */$(this.sId).slideDown("slow"); break;
       default : break;
     }
   }
@@ -224,7 +270,7 @@ function XML_Editor(sId, sPath, sStyle) {
     
     this.iWidth += 20;
     
-    if (this.iWidth > 90) this.iWidth = 50;
+    if (this.iWidth > 96) this.iWidth = 76;
     $(this.sId).width(this.iWidth + '%');
   }
   
@@ -233,9 +279,14 @@ function XML_Editor(sId, sPath, sStyle) {
     $(this.oTools).data('invert-mouse', !$(this.oTools).data('invert-mouse'));
   }
   
+  this.oDocument = undefined;
+  this.sDirectory = '';
+  this.iWidth = 96;
   this.sId = sId;
   this.sPath = sPath;
   this.sStyle = sStyle;
+  this.bLoaded = false;
+  this.bSaved = true;
   
   this.init();
 }
@@ -284,16 +335,20 @@ var XML_Element = {
 
   },
   
-  build : function(oTools) {
+  build : function(oEditor) {
     
-    $(this).data('tools', $(oTools));
+    if (oEditor) {
+      
+      $(this).data('editor', oEditor);
+      $(this).data('tools', $(oEditor.oTools));
+    }
     
     var oNode;
     
     switch(this.nodeType) {
       
       case 1 : oNode = this.buildElement(); break;
-      case 2 : oNode = this.buildAttribute(); break;
+      case 2 : oNode = this.buildAttribute(oEditor, this); break;
       case 3 : oNode = this.buildText(); break;
     }
     
@@ -307,7 +362,7 @@ var XML_Element = {
     
     var oOldNode = $(this).data('html-node');
     
-    this.build($(this).data('tools'));
+    this.build();
     
     $(this).data('html-node').append($(this).data('tools'));
     //if ($(this).data('tools').parentNode == oOldNode) 
@@ -321,6 +376,7 @@ var XML_Element = {
     
     var oXMLDocument = this.ownerDocument;
     var oTools = $(this).data('tools');
+    var oEditor = $(this).data('editor');
     
     var oNode = HTML_Tag('div', '', {});
     // Node
@@ -360,7 +416,7 @@ var XML_Element = {
         
         if (isFirst) oAttributes.appendChild(this.buildSpacer(i, 'attribute'));
         
-        if (oAttribute == undefined || this.attributes[i] == oAttribute) $(oAttributes).append(this.attributes[i].build(oTools));
+        if (oAttribute == undefined || this.attributes[i] == oAttribute) $(oAttributes).append(this.attributes[i].build(oEditor));
         else $(oAttributes).append($(this.attributes[i]).data('html-node'))
         
         if (isLast) oAttributes.appendChild(this.buildSpacer(i + 1, 'attribute'));
@@ -407,7 +463,7 @@ var XML_Element = {
         
         // Child
         
-        if (oChild == undefined || oChild == this.childNodes[i]) $(oChildren).append(this.childNodes[i].build(oTools));
+        if (oChild == undefined || oChild == this.childNodes[i]) $(oChildren).append(this.childNodes[i].build(oEditor));
         else alert(oChild);$(oChildren).append($(this.childNodes[i]).data('html-node'));
         
         // Spacer
@@ -521,37 +577,84 @@ var XML_Element = {
     return $(oNode);
   },
   
-  buildAttribute : function() {
+  buildAttribute : function(oEditor, oXMLNode) {
     
     var oNode = HTML_Tag('div', '', {});
+    var self = this;
     
     $(oNode).addClass('attribute');
     
-    oName = HTML_Tag('span', this.nodeName, {'class' : 'attribute-name'});
-    oEqual = HTML_Tag('span', ':', {'class' : 'attribute-equal'});
-    oValue = HTML_Tag('span', this.nodeValue, {'class' : 'attribute-value'});
-    
-    $(oNode).mousedown(function(e) {
+    if (this.nodeName == 'path') {
       
-      var isClicked = false, refNode = $(this).data('ref-node');
+      var sPath = oEditor.getAbsolutePath(this.nodeValue);
       
-      if ($(refNode).data('tools').data('invert-mouse')) isClicked = e.button == 0;
-      else isClicked = e.button == 2;
-      
-      if (isClicked) {
+      if (oXMLNode.ownerElement.localName == 'action') {
         
-        refNode.showTools(e, [
-          ['Modifier', 'M', 'attributeRename'],
-          ['Supprimer', 'S', 'attributeDelete'],
-          ['Couper', 'X', 'attributeCut'],
-          ['Copier', 'C', 'attributeCopy'],
-        ]);
+        var sResult = $.ajax({'url' : '/users/controler/interfaces/xml_path.simple?' + sPath, 'async' : false}).responseText;
+        if (sResult) sPath = sResult;
+      }
+      
+      var oName = HTML_Tag('span', this.nodeName, {'class' : 'attribute-name'});
+      var oEqual = HTML_Tag('span', '=', {'class' : 'attribute-equal'});
+      var oValue = HTML_Tag('a', this.nodeValue, {
+        'href' : sPathEditor + '?path=' + sPath,
+        'class' : 'attribute-value attribute-path',
+        'onclick' : 'return true;'});
+      
+      $(oValue).mousedown(function(e) {
         
-      } else refNode.elementAction(e, $(refNode).data('tools').data('action-attribute')['method']); 
+        // oEditor.reload(sPath);
+        e.stopPropagation();
+      });
       
-      return false;
+      $(oNode).mousedown(function(e) {
+        
+        var isClicked = false, refNode = $(this).data('ref-node');
+        
+        if ($(refNode).data('tools').data('invert-mouse')) isClicked = e.button == 0;
+        else isClicked = e.button == 2;
+        
+        if (isClicked) {
+          
+          refNode.showTools(e, [
+            ['Modifier', 'M', 'attributeRename'],
+            ['Supprimer', 'S', 'attributeDelete'],
+            ['Couper', 'X', 'attributeCut'],
+            ['Copier', 'C', 'attributeCopy'],
+          ]);
+          
+        } else refNode.elementAction(e, $(refNode).data('tools').data('action-attribute')['method']); 
+        
+        return false;
+      });
       
-    });
+    } else {
+      
+      var oName = HTML_Tag('span', this.nodeName, {'class' : 'attribute-name'});
+      var oEqual = HTML_Tag('span', '=', {'class' : 'attribute-equal'});
+      var oValue = HTML_Tag('span', this.nodeValue, {'class' : 'attribute-value'});
+      
+      $(oNode).mousedown(function(e) {
+        
+        var isClicked = false, refNode = $(this).data('ref-node');
+        
+        if ($(refNode).data('tools').data('invert-mouse')) isClicked = e.button == 0;
+        else isClicked = e.button == 2;
+        
+        if (isClicked) {
+          
+          refNode.showTools(e, [
+            ['Modifier', 'M', 'attributeRename'],
+            ['Supprimer', 'S', 'attributeDelete'],
+            ['Couper', 'X', 'attributeCut'],
+            ['Copier', 'C', 'attributeCopy'],
+          ]);
+          
+        } else refNode.elementAction(e, $(refNode).data('tools').data('action-attribute')['method']); 
+        
+        return false;
+      });
+    }
     
     oNode.appendChild(oName);
     oNode.appendChild(oEqual);
@@ -621,6 +724,7 @@ var XML_Element = {
   
   elementAction : function(e, sName) {
     
+    $(this).data('editor').bSaved = false;
     $(this).data('tools').data('n-caller', $(e.currentTarget));
     
     if (this[sName]) this[sName]();
@@ -707,13 +811,26 @@ var XML_Element = {
     
     if (sName) {
       
-      oChild = XML_Extend(this.ownerDocument.createElement(sName));
+      oChild = this.createNodeNS(sName);
       
       if (oChild) this.elementAdd(oChild);
       else alert('Nom invalide !');
     }
     
     return oChild;
+  },
+  
+  createNodeNS : function(sName) {
+    
+    var aName = sName.split(':');
+    
+    if (aName.length == 2) var sActualUri = this.lookupNamespaceURI(aName[0]);
+    else sActualUri = this.lookupNamespaceURI(null);
+    
+    if (sActualUri) var oElement = this.ownerDocument.createElementNS(sActualUri, sName);
+    else var oElement = this.ownerDocument.createElement(sName);
+    
+    return XML_Extend(oElement);
   },
   
   elementCreateText : function() {
@@ -776,11 +893,11 @@ var XML_Element = {
     
     // Modifification du nom du noeud
     
-    var sNom = prompt('Nouveau nom (sans espace) :', this.nodeName);
+    var sName = prompt('Nouveau nom (sans espace) :', this.nodeName);
     
-    if (sNom) {
+    if (sName) {
       
-      var oXMLNode = XML_Extend(this.ownerDocument.createElement(sNom));
+      var oXMLNode = this.createNodeNS(sName);;
       
       if (!oXMLNode) alert('Nom incorrect !');
       else {

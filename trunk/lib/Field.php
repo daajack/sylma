@@ -55,6 +55,7 @@ class HTML_Field extends XML_Document {
       case 'float' :
       case 'email' :
       case 'integer' :  $oInput = new HTML_Input; $aClasses[] = 'field-text';  break;
+      case 'wiki' :     $sInput = 'wiki';
       case 'blob' :     $oInput = new HTML_Textarea; $aClasses[] = 'field-textarea'; break;
       case 'bool' :     $sInput = 'checkbox';
       case 'checkbox' : $oInput = new HTML_Checkbox; $aClasses[] = 'field-bool'; break;

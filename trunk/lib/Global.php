@@ -62,9 +62,9 @@ function formatPrice($fNumber) {
   else return '';
 }
 
-function stringResume($sValue, $iLength = 50) {
+function stringResume($mValue, $iLength = 50) {
   
-  $sValue = (string) $sValue;
+  $sValue = (string) $mValue;
   
   if (strlen($sValue) > $iLength) return substr($sValue, 0, $iLength).'...';
   else return $sValue;

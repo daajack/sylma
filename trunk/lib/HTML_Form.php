@@ -6,6 +6,7 @@
 class HTML_Form extends HTML_Tag {
   
   private $oSchema = null;
+  private $oValues = null;
   
   public function __construct() {
     
@@ -16,6 +17,22 @@ class HTML_Form extends HTML_Tag {
     
     $this->addNode('div', '', array('class' => 'form-content clear-block'), NS_XHTML);
     $this->addNode('div', '', array('class' => 'form-action clear-block form-action-bottom'), NS_XHTML);
+  }
+  
+  public function getValue($sPath) {
+    
+    if ($this->oValues) return $this->oValues->read($sPath);
+    else return null;
+  }
+  
+  public function setValues() {
+    
+    $this->oValues = new XML_Document('record');
+    
+    foreach (func_get_args() as $oDocument) {
+      
+      if (!$oDocument->isEmpty()) $this->oValues->add($oDocument->getRoot()->getChildren());
+    }
   }
   
   public function setSchemas() {
@@ -44,7 +61,7 @@ class HTML_Form extends HTML_Tag {
       
       if ($bExist && (!$oField = $this->oSchema->get("field[@id='$sField']"))) {
         
-        Action_Controler::addMessage(xt('Le champs "%s" n\'existe pas dans le schéma associé !', new HTML_Strong($sField)), 'warning');
+        Controler::addMessage(xt('Le champs "%s" n\'existe pas dans le schéma associé !', new HTML_Strong($sField)), 'action/warning');
         
       } else {
         
@@ -53,6 +70,7 @@ class HTML_Form extends HTML_Tag {
         //$aField['value'] = $sValue;
         // $aField['name'] = array_val('name', $aField, $sField);
         
+        
         $bMark = false;
         
         if ($bExist) $aField = $oElement->merge($oField)->getChildren()->toArray();
@@ -60,6 +78,7 @@ class HTML_Form extends HTML_Tag {
         
         $aField['id'] = $sField;
         $aField['name'] = $sField;
+        if ($sValue = $this->getValue($sField)) $aField['value'] = $sValue;
         
         $oField = new HTML_Field($aField, $bMark);
         
@@ -68,6 +87,11 @@ class HTML_Form extends HTML_Tag {
     }
     
     return null;
+  }
+  
+  public function addCancel() {
+    
+    $this->addAction(new HTML_Button(t('Annuler'), 'history.go(-1);'));
   }
   
   public function addAction() {

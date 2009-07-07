@@ -4,6 +4,7 @@ class XML_Action extends XML_Document {
   
   private $sPath = '';
   private $sName = '';
+  private $aVariables = array();
   private $oRedirect = null;
   private $iStatut = 0;
   
@@ -57,13 +58,14 @@ class XML_Action extends XML_Document {
     
     $sClassName = $oInterface->read('ns:name');
     if ($sFile = $oInterface->read('ns:file')) $sFile = $this->getAbsolutePath($sFile);
-    
+    // dsp('Création d\'un interface');
+    // dsp($this->getPath()->getArgument('index'));
+    // dsp($this->getPath()->getArgument('assoc'));
     if ($oConstruct = $oInterface->get('ns:method-construct')) {
       
       if ($oConstruct->hasChildren()) {
         
-        if ($this->getPath()->getArgument('index')) $aArguments = $this->parseArguments($oConstruct, array(), 'index');
-        
+        $aArguments = $this->parseArguments($oConstruct, array(), true);
         if (!$aArguments && ($oConstruct->query('ns:argument[@required="false"]')->length != $oConstruct->query('ns:argument')->length)) {
           
           Controler::addMessage('Erreur dans les arguments, impossible de construire l\'objet', 'action/warning');
@@ -76,7 +78,7 @@ class XML_Action extends XML_Document {
     
     if (($sMethod = $this->getPath()->getIndex()) && is_string($sMethod)) {
       
-      $oElement = new XML_Element('li:'.$sMethod, null, array('get-redirect' => 'index'), NS_INTERFACE);
+      $oElement = new XML_Element('li:'.$sMethod, null, array('get-redirect' => 'true'), NS_INTERFACE);
       list($oSubResult, $bSubResult) = $this->runInterfaceMethod($oObject, $oElement, $this);
       
       if ($bSubResult) $oResult = $oSubResult;
@@ -85,6 +87,22 @@ class XML_Action extends XML_Document {
     } else $oResult = $oObject;
     
     return $oResult;
+  }
+  
+  private function getVariable($sKey) {
+    
+    if (array_key_exists($sKey, $this->aVariables)) return $this->aVariables[$sKey];
+    else {
+      
+      Controler::addMessage(xt('La variable "%s" n\'existe pas !', new HTML_Strong($sKey)), 'action/error');
+      return null;
+    }
+  }
+  
+  private function setVariable($sKey, $mValue) {
+    
+    if ($mValue) $this->aVariables[$sKey] = $mValue;
+    else if (array_key_exists($sKey, $this->aVariables)) unset($this->aVariables[$sKey]);
   }
   
   private function runInterfaceList($mObject, $oElement, $bStatic = false) {
@@ -109,10 +127,11 @@ class XML_Action extends XML_Document {
         } else {
           
           list($mResult, $bReturn) = $this->runInterfaceMethod($mObject, $oChild, $oInterface, $bStatic);
+          
           if ($bReturn) $aResults[] = $mResult;
         }
         
-      } else Controler::addMessage(xt('runInterfaceList() : Noeud texte impossible ici : "%s"', new HTML_Strong($oChild)), 'action/warning');
+      } else Controler::addMessage(array(xt('runInterfaceList() : Noeud texte "%s" impossible dans %s', new HTML_Strong($oChild), $this->getPath()->parse()), $oElement->messageParse()), 'action/error');
     }
     
     if ($aResults) {
@@ -144,7 +163,7 @@ class XML_Action extends XML_Document {
           $aArguments[] = $this->buildArgument($oChild);
       }
       
-      if ($oElement->testAttribute('return')) {
+      if ($oElement->testAttribute('return') !== false) {
         
         foreach ($aArguments as $mArgument) if ($mArgument) $oResult = $mArgument;
         if ($oResult) $bReturn = true;
@@ -170,10 +189,17 @@ class XML_Action extends XML_Document {
           
         } else {
           
-          $aArgumentsPatch = $this->parseArguments($oMethod, $aArguments, $oElement->getAttribute('get-redirect'));
+          $aArgumentsPatch = $this->parseArguments($oMethod, $aArguments, $oElement->testAttribute('get-redirect'));
           
           if ($aArgumentsPatch) $oResult = $this->runMethod($mObject, $sMethod, $aArgumentsPatch, $bStatic);
           else Controler::addMessage(xt('Arguments invalides pour la méthode "%s" dans "%s"', new HTML_Strong($oElement->getName(true)), $this->getPath()->parse()), 'action/notice');
+          
+          if ($sVariable = $oElement->getAttribute('set-variable')) {
+            
+            // dsp(Controler::getUser()->getDirectory());
+            $this->setVariable($sVariable, $oResult);
+            if (Controler::useStatut('action/report')) Controler::addMessage(xt('Ajout de la variable "%s" : %s', $sVariable, Controler::formatResource($oResult)), 'action/report');
+          }
           
           $bSubReturn = false;
           
@@ -194,9 +220,9 @@ class XML_Action extends XML_Document {
     
     $aArguments = array(
       'assoc' => array(),
-      'index' => array(),
-      'all' => array(),
-      'element' =>  array());
+      'index' => array());
+      // 'all' => array(),
+      // 'element' =>  array());
     
     foreach ($oElement->getChildren() as $oChild) {
       
@@ -204,31 +230,39 @@ class XML_Action extends XML_Document {
       
       if ($oChild->isElement()) {
         
-        if (!$oChild->useNamespace(NS_INTERFACE) || $oChild->getName(true) == 'argument') {
-          
+        if (!$oChild->useNamespace(NS_INTERFACE)) {
+          // $oChild->dsp();
           $mResult = $this->buildArgument($oChild->remove());
-          
+          // $oChild->dsp();
+          // echo new HTML_P(Controler::formatResource($mResult));
           if ($sName = $oChild->getAttribute('name', NS_INTERFACE)) $aArguments['assoc'][$sName] = $mResult;
           else $aArguments['index'][] = $mResult;
           
-          $aArguments['all'][] = $mResult;
+          // $aArguments['all'][] = $mResult;
         }
         
       } else {
         
-        $aArguments['index'][] = $aArguments['all'][] = (string) $oChild;
-        $aArguments['element'][] = $oChild->remove();
+        $aArguments['index'][] = (string) $oChild;
+        $oChild->remove();
+        // $aArguments['element'][] = 
       }
     }
-    
+    // echo new HTML_Hr;
+    // $oElement->dsp();
+    // dsp($aArguments);
+    // echo new HTML_Hr;
     return $aArguments;
   }
   
   private function buildArgument($oElement) {
     
     $mResult = null;
-    $mSubResult = null;
+    $mObject = null;
+    $bRun = false;
+    $bStatic = false;
     
+    $mSubResult = null;
     $bSubReturn = false;
     
     if ($oElement->isText()) {
@@ -241,10 +275,40 @@ class XML_Action extends XML_Document {
         
         switch ($oElement->getName(true)) {
           
-          case 'direct-action' :
+          case 'argument' :
             
-            $bParse = false;
+            if ($oElement->hasChildren()) $mResult = $this->buildArgument($oElement->getFirst());
+            else $mResult = null;
             
+          break;
+          
+          case 'get-argument' :
+            
+            $bKeep = $oElement->testAttribute('keep');
+            
+            if ($sName = $oElement->getAttribute('name')) $mResult = $this->getPath()->getAssoc($sName, $bKeep);
+            else if ($iIndex = $oElement->getAttribute('index')) $mResult = $this->getPath()->getIndex($iIndex, $bKeep);
+            else $mResult = $this->getPath()->getIndex(0, $bKeep);
+            
+            $bRun = true;
+            
+          break;
+          
+          case 'get-variable' :
+            
+            if (!$sVariable = $oElement->getAttribute('name')) {
+              
+              Controler::addMessage(array(t('Aucune variable définie !'), $oElement->messageParse()), 'action/warning');
+              
+            } else {
+              
+              $mResult = $this->getVariable($sVariable);
+              
+              $bRun = true;
+            }
+            
+          break;
+          
           case 'interface' :
             
             if (!$sClassName = $oElement->getAttribute('class')) {
@@ -260,7 +324,7 @@ class XML_Action extends XML_Document {
               
               if ($oConstruct = $oInterface->get('ns:method-construct')) {
                 
-                $aArguments = $this->parseArguments($oConstruct, $this->loadElementArguments($oElement), $oElement->getAttribute('get-redirect'));
+                $aArguments = $this->parseArguments($oConstruct, $this->loadElementArguments($oElement));
               }
               
               if ($sPath = $oInterface->read('ns:file')) $sPath = $this->getAbsolutePath($sPath);
@@ -269,6 +333,10 @@ class XML_Action extends XML_Document {
             }
             
           break;
+          
+          case 'direct-action' :
+            
+            $bParse = false;
           
           case 'action' :
             
@@ -291,26 +359,35 @@ class XML_Action extends XML_Document {
               
               $oPath = new XML_Path($this->getAbsolutePath($sPath), $bParse);
               
-              $oRedirect = clone $this->getRedirect();
-              
-              if ($oElement->hasChildren()) {
+              if ((string) $oPath == (string) $this->getPath()) {
                 
-                $aArguments = $this->loadElementArguments($oElement);
-                $oPath->pushIndex($aArguments['index']);
-                $oPath->mergeAssoc($aArguments['assoc']);
-              }
-              
-              $oAction = new XML_Action($oPath, $oRedirect);
-              $mResult = $oAction->parse();
-              
-              if ($mResult instanceof Redirect) {
+                Controler::addMessage(array(
+                  xt('Récursivité dans l\'action, chemin "%s" invalide !', $oPath->parse()),
+                  $oElement->messageParse()), 'action/error');
                 
-                $this->setStatut(1);
-                $this->setRedirect($mResult);
-                $mResult = null;
+              } else {
+                
+                $oRedirect = clone $this->getRedirect();
+                
+                if ($oElement->hasChildren()) {
+                  
+                  $aArguments = $this->loadElementArguments($oElement);
+                  $oPath->pushIndex($aArguments['index']);
+                  $oPath->mergeAssoc($aArguments['assoc']);
+                }
+                // dsp($aArguments);
+                $oAction = new XML_Action($oPath, $oRedirect);
+                $mResult = $oAction->parse();
+                
+                if ($mResult instanceof Redirect) {
+                  
+                  $this->setStatut(1);
+                  $this->setRedirect($mResult);
+                  $mResult = null;
+                }
+                
+                $bRun = true;
               }
-              
-              if ($oElement->hasChildren()) list($mSubResult, $bSubReturn) = $this->runInterfaceList($mResult, $oElement);
             }
             //runInterfaceMethod($mObject, new XML_Element('method-construct', $oElement->getChildren(), Action_Controler::getInterface($mObject);, $oRedirect, $bStatic = false)
             // TODO relative path
@@ -329,8 +406,7 @@ class XML_Action extends XML_Document {
               
               $mResult = new XML_Document($this->getAbsolutePath($sPath), MODE_EXECUTION);
               
-              // TODO relative path
-              list($mSubResult, $bSubReturn) = $this->runInterfaceList($mResult, $oElement);
+              $bRun = true;
             }
             
           break;
@@ -374,43 +450,62 @@ class XML_Action extends XML_Document {
             $aPhp = array('array', 'string', 'null', 'integer');
             
             if (in_array($sSpecialName, $aPhp)) $mResult = $this->parseBaseType($sSpecialName, $oElement);
-            else if ($mSpecial = Action_Controler::getSpecial($sSpecialName, $this, $this->getRedirect())) {
+            else if ($aSpecial = Action_Controler::getSpecial($sSpecialName, $this, $this->getRedirect())) {
               
-              if (!$oElement->testAttribute('return')) $mResult = '';
-              else $mResult = $mSpecial;
-              
-              list($mSubResult, $bSubReturn) = $this->runInterfaceList($mSpecial, $oElement, is_string($mSpecial));
+              list($mSubResult, $bSubReturn) = $this->runInterfaceList($aSpecial['variable'], $oElement, $aSpecial['static']);
             }
             
           break;
           
         }
-      } else if ($oElement->useNamespace(NS_INTERFACE)) {
         
-        if (!$oElement->getName(true) == 'argument') {
-          
-          Controler::addMessage(xt('L\'appel de la méthode "%s" ici est interdit !', new HTML_Strong($oElement->viewResume())), 'action/error');
-          $mResult = null;
-          
-        } else $mResult = $this->buildArgument($oElement->getFirst());
+        if (Controler::useStatut('action/report'))
+          Controler::addMessage(array(
+            xt('Construction : %s', Controler::formatResource($mResult, true)),
+            $oElement->messageParse()), 'action/report');
         
-      } else {
-        // $oChild->replace($oResult);
-        foreach ($oElement->getChildren() as $oChild) {
+        if ($bRun && $oElement->hasChildren()) {
           
-          if ($oChild->isElement()) {
-            
-            $oResult = $this->buildArgument($oChild);
-            $oChild->replace($oResult);
-          }
+          if (!$mObject) $mObject = $mResult;
+          list($mSubResult, $bSubReturn) = $this->runInterfaceList($mResult, $oElement, $bStatic);
         }
         
-        $mResult = $oElement;
+        if ($oElement->testAttribute('return') === false) $mResult = null;
+        
+        if (Controler::useStatut('action/report') && $bSubReturn)
+          Controler::addMessage(array(
+            xt('Return sub-result : %s', Controler::formatResource($mSubResult, true)),
+            $oElement->messageParse()), 'action/report');
+        
+      } else if ($oElement->useNamespace(NS_INTERFACE)) {
+      
+        Controler::addMessage(xt('L\'appel de la méthode "%s" ici est interdit !', new HTML_Strong($oElement->viewResume())), 'action/error');
+        $mResult = null;
+        
+      } else {
+        
+        $oElementResult = clone $oElement;
+        $oElementResult->cleanChildren();
+        $oChildren = $oElement->getChildren();
+        
+        for ($i = 0; $i < $oChildren->length; $i++) {
+          
+          $oElementResult->add($this->buildArgument($oChildren->item($i)));
+        }
+        
+        $mResult = $oElementResult;
       }
     }
     
-    if ($bSubReturn) return $mSubResult;
-    return $mResult;
+    $mRealResult = $bSubReturn ? $mSubResult : $mResult;
+    if ($mRealResult == '/explorer/interface.iml') {
+      //echo Controler::getBacktrace();
+      
+      // Controler::addMessage(array(
+        // xt('Construction : %s', Controler::formatResource($mResult, true)),
+        // $oElement->messageParse()), 'notice');
+    }
+    return $mRealResult;
   }
   
   private function parseBaseType($sName, $oElement) {
@@ -445,8 +540,8 @@ class XML_Action extends XML_Document {
         
       break;
       
-      case 'boolean' : $mArgument = ($this->buildArgument($oElement->getFirst())); break;
-      case 'integer' : $mArgument = intval($this->buildArgument($oElement->getFirst())); break;
+      case 'boolean' : $mResult = ($this->buildArgument($oElement->getFirst())); break;
+      case 'integer' : $mResult = intval($this->buildArgument($oElement->getFirst())); break;
       
       case 'string' :
         
@@ -469,35 +564,18 @@ class XML_Action extends XML_Document {
     return $mResult;
   }
   
-  private function parseArguments($oMethod, $aArguments, $sRedirect) {
+  private function parseArguments($oMethod, $aSourceArguments, $bRedirect = false) {
     
     $bAssoc = false;
     
-    // Mix Redirect Arguments with Executable arguments
-    
-    if ($sRedirect) {
-      
-      if (in_array($sRedirect, array('assoc', 'index'))) {
-        
-        if ($sRedirect == 'assoc') $bAssoc = true;
-        $aArguments[$sRedirect] = $this->getPath()->getArgument($sRedirect);
-        
-      } else {
-        
-        Controler::addMessage(xt('Type %s incorrect pour la récupération d\'argument Redirect dans %s', new HTML_Strong($sRedirect), new HTML_Em($oMethod->viewResume())), 'action/warning');
-        $sRedirect = '';
-      }
-    }
-    
+    if ($bRedirect) $aArguments = array_merge($this->getPath()->getArgument('index'), $this->getPath()->getArgument('assoc'));
+    else $aArguments = array_merge($aSourceArguments['index'], $aSourceArguments['assoc']);
+    // if ($bRedirect) dsp($aArguments);
     // CALL argument
     
     $oChildren = $oMethod->getChildren();
     
     $aResultArguments = array();
-    
-    if ($bAssoc) $aArguments = $aArguments['assoc'];
-    else $aArguments = array_values($aArguments['index']);
-    
     $bError = false;
     
     if ($oChildren->length == 1 && $oChildren->item(0)->getName() == 'multiple-arguments') {
@@ -522,7 +600,7 @@ class XML_Action extends XML_Document {
               $aResultArguments[] = $mArgument;
               
               // remove oRedirect argument
-              if ($sRedirect == 'index') $this->getPath()->getIndex();
+              if ($bRedirect) $this->getPath()->getIndex();
             }
           }
         }
@@ -536,34 +614,42 @@ class XML_Action extends XML_Document {
     } else {
       
       // Normal arguments (defined number)
-      
-      foreach($oChildren as $mIndex => $oChild) {
+      // dsp($oMethod->getName().' :: '.$oMethod->getAttribute('path').' '.Controler::formatResource($bRedirect));
+      // dsp($aArguments);
+      foreach($oChildren as $iArgument => $oChild) {
         
         $sName = $oChild->getAttribute('name');
+        $bAssoc = $bExist = false;
         
-        if ($bAssoc) $sKey = $sName;
-        else $sKey = $mIndex;
-        
-        if (array_key_exists($sKey, $aArguments)) {
+        if ($sName && array_key_exists($sName, $aArguments)) {
           
-          $mArgument = $aArguments[$sKey];
+          $mArgument = $aArguments[$sName];
+          $bAssoc = $bExist = true;
+          
+        } else if (array_key_exists($iArgument, $aArguments)) {
+          
+          $mArgument = $aArguments[$iArgument];
+          $bExist = true;
+        }
+        
+        if ($bExist) {
+          
+          if ($bRedirect) {
+            
+            if ($bAssoc) $this->getPath()->getAssoc($sName);
+            else $this->getPath()->getIndex();
+          }
           
           $aFormats = array();
           
           if ($oChild->hasChildren()) foreach ($oChild->getChildren() as $oFormat) $aFormats[] = $oFormat->read();
-          else $aFormats[] = $oChild->getAttribute('format');
+          else if ($sFormat = $oChild->getAttribute('format')) $aFormats[] = $sFormat;
           
           $bError = !$this->validArgumentType($mArgument, $aFormats, $oMethod);
           
           if (!$bError) {
             
             $aResultArguments[] = $mArgument;
-            
-            if ($sRedirect) {
-              
-              if ($bAssoc) $this->getPath()->getAssoc($sKey);
-              else $this->getPath()->getIndex();
-            }
           }
           
         } else if ($oChild->testAttribute('required') !== false) {
@@ -593,7 +679,9 @@ class XML_Action extends XML_Document {
     return false;
   }
   
-  private function validArgumentType($mArgument, $aFormats, $oElement) {
+  private function validArgumentType(&$mArgument, $aFormats, $oElement) {
+    
+    if (!$aFormats) return true;
     
     if (is_object($mArgument)) {
       
@@ -604,8 +692,16 @@ class XML_Action extends XML_Document {
       
       if (is_numeric($mArgument)) {
         
-        if (ctype_digit($mArgument)) $sActualFormat = 'php-integer';
-        else $sActualFormat = 'php-float';
+        if (is_integer($mArgument) || ctype_digit($mArgument)) {
+          
+          $sActualFormat = 'php-integer';
+          $mArgument = intval($mArgument);
+          
+        } else {
+          
+          $sActualFormat = 'php-float';
+          $mArgument = floatval($mArgument);
+        }
         
       } else $sActualFormat = 'php-'.strtolower(gettype($mArgument));
       
@@ -613,15 +709,11 @@ class XML_Action extends XML_Document {
     }
     
     Controler::addMessage(array(
-      xt('L\'argument "%s" n\'est pas dans la liste "%s"',
-        new HTML_Strong($sActualFormat),
+      xt('L\'argument "%s" (%s) n\'est pas du type : "%s"',
+        Controler::formatResource($mArgument),
+        new HTML_em($sActualFormat),
         new HTML_Strong(implode(', ', $aFormats))),
-        new HTML_Tag('p', array(
-        new HTML_Strong(t('Méthode').' : '),
-        new HTML_Em($oElement->viewResume(150, true)),
-        new HTML_br,
-        new HTML_Strong(t('Argument').' : '),
-        Controler::formatResource($mArgument)))), 'action/warning');
+        $oElement->messageParse()), 'action/warning');
     
     return false;
   }
@@ -630,7 +722,7 @@ class XML_Action extends XML_Document {
     
     // Contrôle de l'existence de la méthode
     
-    if (method_exists($mObject, $sMethodName)) {
+    if (method_exists($mObject, $sMethodName) || method_exists($mObject, '__call')) {
       
       // Lancement de l'action
       $oResult = null;
@@ -640,7 +732,21 @@ class XML_Action extends XML_Document {
       $sArguments = $aArguments ? $aArguments['string'] : '';
       
       eval("\$oResult = $sObject$sCaller\$sMethodName($sArguments);");
-      if (Controler::useStatut('action/report')) Controler::addMessage(t('Evaluation : ')."$sObject$sCaller$sMethodName(".count($aArguments['arguments']).");", 'action/report');
+      
+      if (Controler::useStatut('action/report')) {
+        
+        $aDspArguments = array();
+        foreach ($aArguments['arguments'] as $mArgument) $aDspArguments[] = Controler::formatResource($mArgument, false);
+        
+        $oArguments = new XML_NodeList($aDspArguments);
+        
+        Controler::addMessage(array(
+        t('Evaluation : '),
+        Controler::formatResource($oResult),
+        " = $sObject$sCaller$sMethodName(",
+        $oArguments->implode(', '),
+        ");"), 'action/report');
+      }
       
       return $oResult;
       
@@ -670,11 +776,23 @@ class XML_Action extends XML_Document {
     if (class_exists($sClassName)) {
       
       $sAction = $aArguments ? $aArguments['string'] : '';
-      $iArguments = $aArguments ? count($aArguments['arguments']) : 0;
+      
       // Création de la classe
       
       eval("\$oAction = new \$sClassName($sAction);");
-      if (Controler::useStatut('action/report')) Controler::addMessage(t('Evaluation : ')."\$oAction = new $sClassName($iArguments);", 'action/report');
+      
+      if (Controler::useStatut('action/report')) {
+        
+        $aDspArguments = array();
+        foreach ($aArguments['arguments'] as $mArgument) $aDspArguments[] = Controler::formatResource($mArgument);
+        
+        $oArguments = new XML_NodeList($aDspArguments);
+        
+        Controler::addMessage(array(
+        t('Evaluation : ')."\$oAction = new $sClassName(",
+        $oArguments->implode(', '),
+        ");"), 'action/report');
+      }
       
       return $oAction;
       
@@ -691,6 +809,108 @@ class XML_Action extends XML_Document {
     return $this->oRedirect;
   }
   
+  public function loadSettings($oSettings) {
+    
+    $bResult = true;
+    $iArgument = 0;
+    
+    if ($oSettings && $oSettings->hasChildren()) {
+      
+      foreach ($oSettings->getChildren() as $oChild) {
+        
+        switch ($oChild->getName(true)) {
+          
+          case 'name' : break;
+          case 'argument' :
+            
+            $bRequired = ($oChild->testAttribute('required') !== false);
+            $bAssoc = false;
+            
+            if ($mKey = $oChild->getAttribute('name')) {
+              
+              $bAssoc = true;
+              $mArgument = $this->getPath()->getAssoc($mKey, true);
+              
+            } else {
+              
+              if ($mKey = $oChild->getAttribute('index')) $mArgument = $this->getPath()->getIndex($mKey, true);
+              else {
+                
+                $mKey = $iArgument;
+                $mArgument = $this->getPath()->getIndex($mKey, true);
+                $iArgument++;
+              }
+            }
+            
+            if ($bRequired && $mArgument === null) {
+              
+              Controler::addMessage(xt('L\'argument "%s" est manquant dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'error');
+              $bResult = false;
+              
+            } else {
+              
+              // Argument is here
+              
+              if ($mArgument) {
+                
+                // Argument has value
+                
+                $aFormats = array();
+                
+                if ($sFormat = $oChild->getAttribute('format')) $aFormats[] = $sFormat;
+                else if ($oFormat = $oChild->get('le:formats', 'le', NS_EXECUTION)) {
+                  
+                  $aFormats = $oFormat->getChildren()->toArray();
+                }
+                
+                if (!$this->validArgumentType($mArgument, $aFormats, $oChild)) {
+                  
+                  Controler::addMessage(xt('L\'argument "%s" est au mauvais format dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'error');
+                  $bResult = false;
+                  
+                } else {
+                  
+                  // Argument is good format
+                  
+                  if (($oValidate = $oChild->get('le:validate', 'le', NS_EXECUTION)) &&
+                    $oValidate->hasChildren() &&
+                    !$this->buildArgument($oValidate->getFirst())) {
+                    
+                    Controler::addMessage(xt('L\'argument "%s" est invalide dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'error');
+                    $bResult = false;
+                  }
+                }
+              }
+              
+              if ((!$mArgument || !$bResult) && ($oDefault = $oChild->get('le:default', 'le', NS_EXECUTION)) && $oDefault->hasChildren()) {
+                
+                $bResult = true;
+                
+                // Argument has no value and is required
+                
+                if ((!$mResult = $this->buildArgument($oDefault->getFirst())) && $oDefault->testAttribute('required') !== false) {
+                  
+                  Controler::addMessage(xt('Argument "%s" valeur par défaut invalide dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'action/error');
+                  $bResult = false;
+                  
+                } else if ($mResult) {
+                  
+                  if ($bAssoc) $this->getPath()->setAssoc($mKey, $mResult);
+                  else $this->getPath()->setIndex($mKey, $mResult);
+                }
+              }
+            }
+            
+          break;
+        }
+      }
+      
+      $oSettings->remove();
+    }
+    
+    return $bResult;
+  }
+  
   public function parse() {
     
     $oResult = null;
@@ -699,6 +919,9 @@ class XML_Action extends XML_Document {
       
       $oRoot = $this->getRoot();
       $oDocument = new XML_Document($oRoot);
+      
+      if (Controler::useStatut('action/report'))
+        Controler::addMessage(array(xt('Exécution du fichier : "%s"', $this->getPath()->parse()), new HTML_Hr), 'action/report');
       
       switch ($oRoot->getNamespace()) {
         
@@ -712,15 +935,15 @@ class XML_Action extends XML_Document {
             
             case 'action' :
               
-              $oResult = new XML_Document('temp');
-              
-              if ($oSettings = $oDocument->get('le:settings', 'le', NS_EXECUTION)) $oSettings->remove();
-              
-              $oMethod = new XML_Element('li:add', $oDocument->getRoot()->getChildren(), null, NS_INTERFACE);
-              
-              $this->runInterfaceMethod($oResult, $oMethod, Action_Controler::getInterface($oResult, $this->getRedirect()));
-              
-              if (!$oResult->isEmpty()) $oResult = $oResult->getRoot()->getChildren();
+              if ($this->loadSettings($oDocument->get('le:settings', 'le', NS_EXECUTION))) {
+                
+                $oResult = new XML_Document('temp');
+                
+                $oMethod = new XML_Element('li:add', $oDocument->getRoot()->getChildren(), null, NS_INTERFACE);
+                $this->runInterfaceMethod($oResult, $oMethod, Action_Controler::getInterface($oResult, $this->getRedirect()));
+                
+                if (!$oResult->isEmpty()) $oResult = $oResult->getRoot()->getChildren();
+              }
               
             break;
             
@@ -790,6 +1013,12 @@ class XML_Action extends XML_Document {
       case 2 : // Success
         
         return $oResult;
+        
+      break;
+      
+      case 3 : // Error
+        
+        Controler::addMessage(xt('Action "%s" impossible, argument(s) invalide(s) !', new HTML_Strong($this->getPath())), 'error');
         
       break;
       
@@ -868,7 +1097,8 @@ class XML_Path {
   public function __construct($sPath, $bParse = true, $aArguments = array()) {
     
     // Remove arguments following '?' of type ..?arg1=val&arg2=val..
-    
+    // echo $sPath;
+    // dsp($aArguments);
     if ($iAssoc = strpos($sPath, '?')) {
       
       $sAssoc = substr($sPath, $iAssoc + 1);
@@ -902,6 +1132,9 @@ class XML_Path {
     $this->sOriginalPath = $sPath;
     $this->setPath($sPath);
     if ($bParse) $this->parsePath();
+    
+    // echo $sPath;
+    // dsp($this->aArguments);
   }
   
   public function parsePath() {
@@ -952,7 +1185,7 @@ class XML_Path {
       if ($bUseIndex) $this->sOriginalPath = (string) $oFile->getParent();
       else $this->sOriginalPath = (string) $oFile;
       
-      if ($sExtension = $this->getExtension()) $this->sOriginalPath .= '.'.$sExtension;
+      // if ($sExtension = $this->getExtension()) $this->sOriginalPath .= '.'.$sExtension;
       
       $this->setFile($oFile);
       $this->pushIndex($aPath);
@@ -976,6 +1209,12 @@ class XML_Path {
     }
     
     return $this->getExtension();
+  }
+  
+  public function getDirectory() {
+    
+    if ($this->getFile()) return $this->getFile()->getParent();
+    else return null;
   }
   
   public function getFile() {
@@ -1036,10 +1275,21 @@ class XML_Path {
     else array_push($this->aArguments['index'], $mArguments);
   }
   
-  public function setAssoc($sKey, $sName = '') {
+  private function setKey($sArray, $sKey, $mValue) {
     
-    if ($sName) $this->aArguments['assoc'][$sKey] = $sName;
-    else if (array_key_exists($sKey, $this->aArguments['assoc'])) unset($this->aArguments['assoc'][$sKey]);
+    if ($mValue) $this->aArguments[$sArray][$sKey] = $mValue;
+    else if (array_key_exists($sKey, $this->aArguments[$sArray])) unset($this->aArguments[$sArray][$sKey]);
+  }
+  
+  public function setIndex($iKey, $mValue = '') {
+    
+    $this->setKey('index', $sKey, $mValue);
+    if ($mValue) $this->aArguments['index'] = array_values($this->aArguments['index']);
+  }
+  
+  public function setAssoc($sKey, $mValue = '') {
+    
+    $this->setKey('assoc', $sKey, $mValue);
   }
   
   public function mergeAssoc($aArguments) {
@@ -1055,25 +1305,25 @@ class XML_Path {
     return implode('/', $aIndex);
   }
   
-  public function getIndex($iKey = 0, $bRemove = true) {
+  public function getIndex($iKey = 0, $bKeep = false) {
     
-    $mResult = $this->getKey('index', $iKey, $bRemove);
-    if ($mResult !== null) $this->aArguments['index'] = array_values($this->aArguments['index']);
-    //echo Controler::getBacktrace();
+    $mResult = $this->getKey('index', $iKey, $bKeep);
+    if ($mResult !== null) $this->aArguments['index'] = array_merge($this->aArguments['index']);
+    
     return $mResult;
   }
   
-  public function getAssoc($sKey, $bRemove = true) {
+  public function getAssoc($sKey, $bKeep = false) {
     
-    return $this->getKey('assoc', $sKey, $bRemove);
+    return $this->getKey('assoc', $sKey, $bKeep);
   }
   
-  private function getKey($sArray, $mKey, $bRemove) {
+  private function getKey($sArray, $mKey, $bKeep) {
     
     if (array_key_exists($mKey, $this->aArguments[$sArray])) {
       
       $mResult = $this->aArguments[$sArray][$mKey];
-      if ($bRemove) unset($this->aArguments[$sArray][$mKey]);
+      if (!$bKeep) unset($this->aArguments[$sArray][$mKey]);
       
       return $mResult;
     }

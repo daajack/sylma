@@ -11,14 +11,17 @@ class db {
   
   public static function buildTable($oDocument, $aHeaders = array(), $sPath) {
     
-    $oHeaders = new XML_Element('headers');
-    $oHeaders->addArray($aHeaders, 'field');
-    
-    if ($aHeaders) $oDocument->getRoot()->shift($oHeaders);
-    
-    $oDocument->getRoot()->setAttribute('path_to', $sPath);
-    
-    return $oDocument->parseXSL(new XML_Document('/xml/query-table.xsl'));
+    if ($oDocument && !$oDocument->isEmpty()) {
+      
+      $oHeaders = new XML_Element('headers');
+      $oHeaders->addArray($aHeaders, 'field');
+      
+      if ($aHeaders) $oDocument->getRoot()->shift($oHeaders);
+      
+      $oDocument->getRoot()->setAttribute('path_to', $sPath);
+      
+      return $oDocument->parseXSL(new XML_Document('/xml/query-table.xsl'));
+    }
   }
   
   public static function getXML($sQuery) {
@@ -26,9 +29,9 @@ class db {
     $oResult = self::query($sQuery);
     $oDocument = new XML_Document();
     
-    if (!mysql_num_rows($oResult)) {
+    if (!$oResult || !mysql_num_rows($oResult)) {
       
-      Controler::addMessage('Aucun résultat pour la requête !', 'warning');
+      Controler::addMessage('Aucun résultat pour la requête !', 'query/warning');
       
     } else {
       
@@ -46,9 +49,9 @@ class db {
     $oResult = self::query($sQuery);
     $oDocument = new XML_Document();
     
-    if (!mysql_num_rows($oResult)) {
+    if (!$oResult || !mysql_num_rows($oResult)) {
       
-      Controler::addMessage('Aucun résultat pour la requête !', 'warning');
+      Controler::addMessage('Aucun résultat pour la requête !', 'query/warning');
       
     } else {
       
@@ -73,13 +76,13 @@ class db {
   
   public static function query($sQuery) {
     
-    $rResult = mysql_query($sQuery) or die (self::getError($sQuery));
+    $rResult = mysql_query($sQuery) or (self::getError($sQuery));
     
     if (substr($sQuery, 0, 6) == 'SELECT') {
       
       $iCountRows = mysql_affected_rows();
       if (!$iCountRows) $iCountRows = '0';
-      if ($iCountRows < 10) $iCountRows = '0'.$iCountRows;
+      if ($iCountRows < 10 && $iCountRows > 0) $iCountRows = '0'.$iCountRows;
       $oCountRows = new HTML_Strong($iCountRows, array('style' => 'color: red;'));
       $sQuery = '['.$oCountRows.'] '.$sQuery;
     }
@@ -92,7 +95,7 @@ class db {
       
       $oDocument = new XML_Document(new HTML_Div(strtoxml($sResult)));
       
-      Controler::addMessage($oDocument->getRoot(), 'query');
+      Controler::addMessage($oDocument->getRoot(), 'query/view');
     }
     
     return $rResult;
@@ -100,16 +103,18 @@ class db {
   
   public static function getError($sQuery) {
     
-    $oMessages = new Messages(array('error'));
+    // $oMessages = new Messages(new XML_Element('error'));
     
     if (Controler::isAdmin()) {
       
-      $oMessages->addStringMessage(t('Erreur MySQL').' : '.mysql_error(self::$rDb), 'error');
-      $oMessages->addStringMessage($sQuery, 'error');
+      Controler::addMessage(
+        array(new HTML_Strong(t('Erreur MySQL')),
+        ' : '.mysql_error(self::$rDb),
+        new HTML_P(new HTML_Em($sQuery))), 'error');
       
-    } else $oMessages->addStringMessage(t('Erreur dans la base de données !'), 'error');
+    } else Controler::addMessage(t('Erreur dans la base de données !'), 'query/error');
     
-    Controler::errorRedirect($oMessages->getMessages());
+    // Controler::errorRedirect($oMessages->getMessages());
   }
   
   public static function connect() {

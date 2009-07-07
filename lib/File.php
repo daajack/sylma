@@ -63,11 +63,11 @@ class XML_Resource {
     return $this->aRights;
   }
   
-  protected function loadElementRights($oElement) {
+  protected function buildUserMode($oElement = null) {
     
     $iMode = null;
     
-    if ($oSecurity = $oElement->get('security')) {
+    if ($oElement && ($oSecurity = $oElement->get('security'))) {
       
       if (Controler::useStatut('report')) Controler::addMessage(xt('Ressource "%s" sécurisée ', new HTML_Strong($this->getFullPath())), 'file/report');
       
@@ -113,23 +113,38 @@ class XML_Directory extends XML_Resource {
     }
   }
   
+  public function unbrowse() {
+    
+    $oResult = $this->parse();
+    $oParent = $this;
+    
+    while ($oParent = $oParent->getParent()) {
+      
+      $oResult->shift($oParent);
+    }
+    
+    return $oResult;
+  }
+  
   public function browse($aExtensions, $aPaths = array(), $iDepth = null) {
     
     $aFiles = scandir(MAIN_DIRECTORY.$this->getFullPath(), 0);
     $oElement = $this->parse();
     
-    foreach ($aFiles as $sFile) {
+    if ($iDepth === null || $iDepth > 0) {
       
-      if ($sFile != '.' && $sFile != '..') {
+      $iDepth--;
+      
+      foreach ($aFiles as $sFile) {
         
-        if (($oFile = $this->getFile($sFile)) && $oFile->getUserMode() != 0) {
+        if ($sFile != '.' && $sFile != '..') {
           
-          if (!in_array($oFile->getExtension(), $aExtensions)) $oFile = null;
-          else $oElement->add($oFile->parseXML());
-          
-        } else if ($oTempDirectory = $this->getDirectory($sFile)) {
-          
-          if ($iDepth === null || $iDepth--) {
+          if (($oFile = $this->getFile($sFile)) && $oFile->getUserMode() != 0) {
+            
+            if ($aExtensions && !in_array($oFile->getExtension(), $aExtensions)) $oFile = null;
+            else $oElement->add($oFile->parseXML());
+            
+          } else if ($oDirectory = $this->getDirectory($sFile)) {
             
             $bValid = true;
             
@@ -137,12 +152,16 @@ class XML_Directory extends XML_Resource {
               
               switch ($sPath{0}) {
                 
-                case '/' : if ($sPath == $oTempDirectory->getFullPath()) $bValid = false; break;
-                default : if ($sPath == $oTempDirectory->getName()) $bValid = false; break;
+                case '/' : if ($sPath == $oDirectory->getFullPath()) $bValid = false; break;
+                default : if ($sPath == $oDirectory->getName()) $bValid = false; break;
               }
             }
             
-            if ($bValid) $oElement->add($oTempDirectory->browse($aExtensions, $aPaths, $iDepth));
+            if ($bValid) {
+              
+              if ($iDepth === null || $iDepth) $oElement->add($oDirectory->browse($aExtensions, $aPaths, $iDepth));
+              else $oElement->add($oDirectory);
+            }
           }
         }
       }
@@ -198,14 +217,12 @@ class XML_Directory extends XML_Resource {
       if (!array_key_exists($sName, $this->aFiles)) {
         
         $oFile = new XML_File($this->getFullPath(), $sName, $this->getRights(), $this, $bDebug);
-        // echo 'CF : '.$oFile.new HTML_Br;//.Controler::getBacktrace().new HTML_Br;
         
         if ($oFile->doExist()) {
           
           if ((($oSettings = $this->getSettings()) && $this->bSettingsFiles) && ($oFileSettings = $oSettings->get("file[@name='$sName']")))
-            $oFile->loadElementRights($oFileSettings);
-          
-          // if (isset($oFileSettings)) echo $oFileSettings->view(true);
+            $oFile->buildUserMode($oFileSettings);
+          else $oFile->buildUserMode();
           
           if (Controler::getUser()) $this->aFiles[$sName] = $oFile;
           else return $oFile;
@@ -300,9 +317,10 @@ class XML_Directory extends XML_Resource {
           $this->oSettings = $oSettings;
           if ($oSettings && $oSettings->get('//file')) $this->bSettingsFiles = true;
           
-          $this->loadElementRights($oSettings, $iMode);
-        }
-       
+          $this->buildUserMode($oSettings);
+          
+        } else $this->buildUserMode();
+        
       } else if (Controler::useStatut('report')) Controler::addMessage(xt('Sécurisation suspendue dans "%s"', new HTML_Strong($this->getFullPath())), 'file/report');
     }
   }
@@ -311,17 +329,26 @@ class XML_Directory extends XML_Resource {
     
     $this->loadRights();
     
-    if ($this->getUserMode() === null || ($iMode & $this->getUserMode())) return true;
-    else Controler::addMessage(xt('Répertoire "%s" non authorisé !', new HTML_Strong()), 'file/warning');
+    if ($this->getUserMode() && ($iMode & $this->getUserMode())) return true;
     
     return false;
   }
   
   public function parse() {
     
+    if (!$sName = $this->getName()) {
+      
+      $sName = t('<racine>');
+      $sPath = '/';
+      
+    } else $sPath = $this->getFullPath();
+    
     return new XML_Element('directory', null, array(
-      'full-path' => $this->getFullPath(),
-      'name' => $this->getName()));
+      'full-path' => $sPath,
+      'owner' => $this->getOwner(),
+      'group' => $this->getGroup(),
+      'mode' => $this->getMode(),
+      'name' => $sName));
   }
   
   public function __destruct() {
@@ -341,17 +368,20 @@ class XML_File extends XML_Resource {
   private $oDocument = null;
   private $bSecured = false;
   private $sExtension = '';
+  private $iSize = 0;
   
   public function __construct($sPath, $sName, $aRights = array(), $oParent = null, $bDebug = true) {
     
     $this->sFullPath = $sName ? $sPath.'/'.$sName : $sPath;
+    $sPath = MAIN_DIRECTORY.$this->getFullPath();
     
-    if (is_file(MAIN_DIRECTORY.$this->getFullPath())) {
+    if (is_file($sPath)) {
       
       $this->aRights = $aRights;
       $this->sName = $sName;
       $this->sPath = $sPath;
       $this->oParent = $oParent;
+      $this->iSize = filesize($sPath);
       
       if ($iExtension = strrpos($sName, '.')) $this->sExtension = substr($sName, $iExtension + 1);
       else $this->sExtension = '';
@@ -375,6 +405,11 @@ class XML_File extends XML_Resource {
     return $this->sExtension;
   }
   
+  public function getSize() {
+    
+    return $this->iSize;
+  }
+  
   public function getDocument() {
     
     return $this->oDocument;
@@ -393,8 +428,8 @@ class XML_File extends XML_Resource {
   
   public function checkRights($iMode) {
     
-    if ($this->getUserMode() === null || ($iMode & $this->getUserMode())) return true;
-    else if (Controler::isAdmin()) Controler::addMessage(xt('Fichier "%s" : accès interdit !', new HTML_Strong($this->getFullPath())), 'file/error');
+    if ($this->getUserMode() && ($iMode & $this->getUserMode())) return true;
+    //else if (Controler::isAdmin()) Controler::addMessage(xt('Fichier "%s" : accès interdit !', new HTML_Strong($this->getFullPath())), 'file/error');
     
     return false;
   }
@@ -413,9 +448,17 @@ class XML_File extends XML_Resource {
   
   public function parseXML() {
     
+    $iSize = ($this->getSize() / 1000);
+    
+    if ($iSize < 1) $iSize = 1;
+    
     return new XML_Element('file', null, array(
       'full-path' => $this->getFullPath(),
       'name' => $this->getName(),
+      'owner' => $this->getOwner(),
+      'group' => $this->getGroup(),
+      'mode' => $this->getMode(),
+      'size' => $iSize,
       'extension' => $this->getExtension()));
   }
 }

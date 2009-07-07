@@ -239,12 +239,14 @@ class HTML_Document extends XML_Helper {
   
   public function addJS($sHref) {
     
-    if ($oHeader = $this->get('/ns:html/ns:head')) $oHeader->add(new HTML_Script($sHref));
+    if (($oHeader = $this->get('/ns:html/ns:head')) &&
+      !$oHeader->get("ns:script[@src='$sHref']")) $oHeader->add(new HTML_Script($sHref));
   }
   
   public function addCSS($sHref = '') {
     
-    if ($oHeader = $this->get('/ns:html/ns:head')) $oHeader->add(new HTML_Style($sHref));
+    if (($oHeader = $this->get('/ns:html/ns:head')) &&
+      !$oHeader->get("ns:link[@href='$sHref']")) $oHeader->add(new HTML_Style($sHref));
   }
   
   public function addIECSS($sHref = '', $sVersion = '') {
@@ -413,6 +415,14 @@ class HTML_Br extends HTML_Tag {
   public function __construct() {
     
     parent::__construct('br');
+  }
+}
+
+class HTML_P extends HTML_Tag {
+  
+  public function __construct($oChildren = null, $aAttributes = array()) {
+    
+    parent::__construct('p', $oChildren, $aAttributes);
   }
 }
 

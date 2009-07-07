@@ -8,33 +8,44 @@ interface Main {
   public function loadAction($oAction);
 }
 
-class Img {
+class Img implements Main {
+  
+  private $oFile = null;
+  
+  public function loadAction($oFile) {
+    
+    if ($oFile instanceof XML_File) $this->oFile = $oFile;
+  }
   
   public function __toString() {
     
-    $sFilePath = MAIN_DIRECTORY.Controler::getAction();
-    $aAllowedExtensions = array('jpg', 'png', 'gif');
-    
-    if (file_exists($sFilePath)) {
+    if ($this->oFile) {
       
-      $iExtensionPosition = strrpos($sFilePath, '.');
-      $sExtension = $iExtensionPosition ? substr($sFilePath, $iExtensionPosition + 1) : '';
+      $sFilePath = (string) $this->oFile;
+      
+      $sExtension = $this->oFile->getExtension();
       if ($sExtension == 'jpg') $sExtension = 'jpeg';
       
-      header("Content-type: image/".$sExtension);
+      $aExtensions = array('jpeg', 'png', 'gif');
       
-      $sFunction = 'imagecreatefrom'.strtolower($sExtension);
+      if (in_array($sExtension, $aExtensions)) {
+        
+        Controler::setContentType($sExtension);
+        
+        $sFunction = 'imagecreatefrom'.strtolower($sExtension);
+        
+        $im = @$sFunction(MAIN_DIRECTORY.$sFilePath)
+        or die("Cannot Initialize new GD image stream");
+        
+        imagefilter($im, IMG_FILTER_GRAYSCALE);
+        
+        $sFunction = 'image'.$sExtension;
+        
+        $sFunction($im);
+        imagedestroy($im);
+      }
       
-      $im = @$sFunction($sFilePath)
-      or die("Cannot Initialize new GD image stream");
-      
-      // imagefilter($im, IMG_FILTER_GRAYSCALE);
-      
-      $sFunction = 'image'.$sExtension;
-      
-      $sFunction($im);
-      imagedestroy($im);
-    }
+    } else Controler::error404();
   }
 }
 
@@ -43,41 +54,6 @@ class Redirection implements Main {
   public function loadAction($oAction) {
     
     return Controler::errorRedirect('Redirection incorrecte !');
-  }
-}
-
-class Popup extends HTML_Document implements Main {
-  
-  public function __construct() {
-    
-    parent::__construct('/template/popup');
-    
-    $this->addCSS('/web/global.css');
-    $this->addCSS('/web/popup.css');
-    
-    // Contenu
-    
-    $oContent = new HTML_Tag('div', '', array('id' => 'content'));
-    $oContent->setBloc('content-title', new HTML_Tag('h2'));
-    $oContent->setBloc('message', Controler::getMessages()); // pointeur
-    
-    $this->setBloc('content-title', $oContent->getBloc('content-title'));
-    $this->setBloc('content', $oContent);
-  }
-  
-  public function loadAction($oAction) {
-    
-    // Supression des messages système dans le panneau de messages principal
-    
-    Controler::getMessages()->setMessages('system');
-    
-    // Contenu
-    
-    $this->getBloc('content')->addBloc('content-title');
-    $this->getBloc('content')->addBloc('message');
-    $this->getBloc('content')->add($oAction);
-    
-    $this->addBloc('content');
   }
 }
 
@@ -155,13 +131,46 @@ class Form extends XML_Helper implements Main {
   }
 }
 
-class Simple implements Main {
+class Txt implements Main {
   
-  private $sContent;
+  private $sContent = '';
   
   public function loadAction($oAction) {
     
-    $this->sContent = (string) $oAction->parse();
+    if ($oAction) {
+      
+      if ($oAction instanceof XML_Action) {
+        
+        $this->sContent = (string) $oAction->parse();
+        
+      } else if ($oAction instanceof XML_File) {
+        
+        /*
+        $oFinfo = new finfo(FILEINFO_MIME, ini_get('mime_magic.magicfile')); // Retourne le type mime
+        
+        if (!$oFinfo) {
+          
+          $this->sContent = "Échec de l'ouverture de la base de données fileinfo";
+          
+        } else {
+          
+          if($sMime = $oFinfo->file(MAIN_DIRECTORY.$sPath)) {
+            
+            $this->sContent = $sMime.'hello';
+            $oFinfo->close();
+            
+          } else $this->sContent = 'Mime introuvable !';
+          
+        }
+        */
+        
+        Controler::setContentType(Controler::getPath()->getExtension());
+        
+        $this->sContent = file_get_contents(MAIN_DIRECTORY.$oAction);
+        
+      } else $this->sContent = (string) $oAction;
+      
+    } else Controler::error404();
   }
   
   public function __toString() {
@@ -174,12 +183,23 @@ class Xml extends XML_Document implements Main {
   
   public function loadAction($oAction) {
     
-    header('Content-type: text/xml');
+    Controler::setContentType('xml');
     
-    $oResult = $oAction->parse();
-    
-    if (is_string($oResult)) $this->add('root', $oResult);
-    else $this->set($oResult);
+    if ($oAction instanceof XML_Action) {
+      
+      $oResult = $oAction->parse();
+      
+      if (is_string($oResult)) $this->add('root', $oResult);
+      else $this->set($oResult);
+      
+    } else if ($oAction instanceof XML_File) {
+      
+      $this->set(new XML_Document((string) $oAction));
+      
+    } else {
+      
+      $this->set(new XML_Element('root', (string) $oAction));
+    }
   }
 }
 

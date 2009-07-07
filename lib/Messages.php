@@ -3,6 +3,7 @@
 class Messages extends XML_Document {
   
   private $aAllowedMessages = array();
+  private $aStatuts = array();
   
   public function __construct($oSchema = null, $mMessages = array()) {
     
@@ -61,9 +62,9 @@ class Messages extends XML_Document {
    * @return
    *   A pointer to the node added
    **/
-  public function addStringMessage($mMessage, $sCategory = 'user', $aArguments = array()) {
+  public function addStringMessage($mMessage, $sPath = 'user', $aArguments = array()) {
     
-    return $this->addMessage(new Message($mMessage, $sCategory, $aArguments));
+    return $this->addMessage(new Message($mMessage, $sPath, $aArguments));
   }
   
   /*
@@ -95,9 +96,10 @@ class Messages extends XML_Document {
   }
   
   public function useStatut($sPath) {
-    // return true;
     
-    return ($this->get($sPath));
+    if (!array_key_exists($sPath, $this->aStatuts)) $this->aStatuts[$sPath] = ($this->get($sPath));
+    
+    return $this->aStatuts[$sPath];
   }
   
   public function hasMessages($sPath = '') {

@@ -196,9 +196,9 @@ class XML_Document extends DOMDocument {
   public function startString($sString) {
     
     // if Path else XML String else new XML_Element
-    if ($sString{0} == '/') $this->loadFile($sString);
-    else if ($sString{0} == '<') $this->loadText($sString);
-    else $this->set(new XML_Element($sString, '', null, '', $this));
+    if ($sString{0} == '/') return $this->loadFile($sString);
+    else if ($sString{0} == '<') return $this->loadText($sString);
+    else return $this->set(new XML_Element($sString, '', null, '', $this));
   }
   
   public function createNode($sName, $oContent = '', $aAttributes = null, $sUri = null) {
@@ -415,7 +415,7 @@ class XML_Document extends DOMDocument {
         
         // If String load as XML String
         
-      } else if (is_string($mValue)) $this->startString($mValue);
+      } else if (is_string($mValue)) $mValue = $this->startString($mValue);
       
       return $mValue;
       
@@ -994,10 +994,19 @@ class XML_Element extends DOMElement {
     foreach ($this->attributes as $oAttribute) $this->removeAttributeNode($oAttribute);
   }
   
-  public function cloneAttribute($oElement, $sAttribute = null) {
+  public function cloneAttribute($oElement, $mAttribute = null) {
     
-    if ($sAttribute) $this->setAttribute($sAttribute, $oElement->getAttribute($sAttribute));
-    else {
+    if ($mAttribute) {
+      
+      if (is_array($mAttribute))
+        foreach ($mAttribute as $sAttribute) {
+          if ($oElement->hasAttribute($sAttribute))
+            $this->cloneAttribute($oElement, $sAttribute);
+        }
+      else
+        $this->setAttribute($mAttribute, $oElement->getAttribute($mAttribute));
+      
+    } else {
       
       foreach ($oElement->getAttributes() as $oAttribute)
         $this->setAttribute($oAttribute->getName(), $oAttribute->getValue());

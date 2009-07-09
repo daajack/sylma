@@ -8,6 +8,20 @@ interface Main {
   public function loadAction($oAction);
 }
 
+class Any implements Main {
+  
+  public function loadAction($oFile) {
+    
+    $sPath = MAIN_DIRECTORY.'/'.$oFile;
+    
+    // header('Content-Description: File Transfer');
+    // header('Content-Type: application/pdf');
+    header('Content-Length: ' . $oFile->getSize());
+    header('Content-Disposition: attachment; filename=' . basename($sPath));
+    readfile($sPath);
+  }
+}
+
 class Img implements Main {
   
   private $oFile = null;
@@ -176,6 +190,32 @@ class Txt implements Main {
   public function __toString() {
     
     return $this->sContent;
+  }
+}
+
+class WindowAction extends XML_Document implements Main {
+  
+  public function loadAction($oAction) {
+    
+    Controler::setContentType('xml');
+    
+    $oRoot = $this->set('action');
+    $oRoot->addNode('messages', Controler::getMessages()->parse());
+    $oContent = $oRoot->addNode('content');
+    
+    if ($oAction instanceof XML_Action) {
+      
+      $oResult = $oAction->parse();
+      $oContent->add($oResult);
+      
+    } else if ($oAction instanceof XML_File) {
+      
+      $oContent->add(new XML_Document((string) $oAction));
+      
+    } else {
+      
+      $oContent->add($oAction);
+    }
   }
 }
 

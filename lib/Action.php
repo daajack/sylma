@@ -221,37 +221,33 @@ class XML_Action extends XML_Document {
     $aArguments = array(
       'assoc' => array(),
       'index' => array());
-      // 'all' => array(),
-      // 'element' =>  array());
     
-    foreach ($oElement->getChildren() as $oChild) {
-      
-      // !li || li:argument
+    // $oTempElement = clone $oElement;
+    
+    foreach ($oElement->getChildren() as $iKey => $oChild) {
       
       if ($oChild->isElement()) {
         
         if (!$oChild->useNamespace(NS_INTERFACE)) {
-          // $oChild->dsp();
+          
+          if ($oChild->getName(true) == 'argument' && $oChild->useNamespace(NS_EXECUTION))
+            $sName = $oChild->getAttribute('name');
+          else $sName = '';
+          
           $mResult = $this->buildArgument($oChild->remove());
-          // $oChild->dsp();
-          // echo new HTML_P(Controler::formatResource($mResult));
-          if ($sName = $oChild->getAttribute('name', NS_INTERFACE)) $aArguments['assoc'][$sName] = $mResult;
+          
+          if ($sName) $aArguments['assoc'][$sName] = $mResult;
           else $aArguments['index'][] = $mResult;
           
-          // $aArguments['all'][] = $mResult;
         }
         
       } else {
         
         $aArguments['index'][] = (string) $oChild;
         $oChild->remove();
-        // $aArguments['element'][] = 
       }
     }
-    // echo new HTML_Hr;
-    // $oElement->dsp();
-    // dsp($aArguments);
-    // echo new HTML_Hr;
+    
     return $aArguments;
   }
   
@@ -282,11 +278,30 @@ class XML_Action extends XML_Document {
             
           break;
           
+          case 'test-argument' :
+            
+            $oArgument = new XML_Element('le:get-argument', null, array(
+              'keep' => 'true',
+              'name' => $oElement->getAttribute('name')), NS_EXECUTION);
+            
+            if ($oElement->hasChildren()) {
+              
+              $mArgument = $this->buildArgument($oArgument);
+              
+              if ((($oElement->testAttribute('value') !== false) && $mArgument) ||
+                (($oElement->testAttribute('value') === false) && !$mArgument)) {
+                
+                $mResult = $this->buildArgument($oElement->getFirst());
+              }
+            }
+            
+          break;
+          
           case 'get-argument' :
             
             $bKeep = $oElement->testAttribute('keep');
             
-            if ($sName = $oElement->getAttribute('name')) $mResult = $this->getPath()->getAssoc($sName, $bKeep);
+            if ($sName = $oElement->getAttribute('name')) $mResult = $this->getPath()->getAssoc($sName, ($bKeep !== false));
             else if ($iIndex = $oElement->getAttribute('index')) $mResult = $this->getPath()->getIndex($iIndex, $bKeep);
             else $mResult = $this->getPath()->getIndex(0, $bKeep);
             
@@ -372,10 +387,11 @@ class XML_Action extends XML_Document {
                 if ($oElement->hasChildren()) {
                   
                   $aArguments = $this->loadElementArguments($oElement);
+                  
                   $oPath->pushIndex($aArguments['index']);
                   $oPath->mergeAssoc($aArguments['assoc']);
                 }
-                // dsp($aArguments);
+                
                 $oAction = new XML_Action($oPath, $oRedirect);
                 $mResult = $oAction->parse();
                 
@@ -466,7 +482,6 @@ class XML_Action extends XML_Document {
         
         if ($bRun && $oElement->hasChildren()) {
           
-          if (!$mObject) $mObject = $mResult;
           list($mSubResult, $bSubReturn) = $this->runInterfaceList($mResult, $oElement, $bStatic);
         }
         
@@ -498,12 +513,17 @@ class XML_Action extends XML_Document {
     }
     
     $mRealResult = $bSubReturn ? $mSubResult : $mResult;
-    if ($mRealResult == '/explorer/interface.iml') {
-      //echo Controler::getBacktrace();
+    
+    if ($oElement->isElement() && $oElement->getName(true) == 'action' && $oElement->useNamespace(NS_EXECUTION) && is_object($mRealResult)) {
       
-      // Controler::addMessage(array(
-        // xt('Construction : %s', Controler::formatResource($mResult, true)),
-        // $oElement->messageParse()), 'notice');
+      if (($mRealResult instanceof XML_Document) || ($mRealResult instanceof XML_Element)) {
+        
+        $mRealResult->cloneAttribute($oElement, array('class', 'style', 'id'));
+        
+      } else if ($mRealResult instanceof XML_NodeList && $mRealResult->length) {
+        
+        $mRealResult->item(0)->cloneAttribute($oElement, array('class', 'style'));
+      }
     }
     return $mRealResult;
   }
@@ -872,12 +892,15 @@ class XML_Action extends XML_Document {
                   
                   // Argument is good format
                   
-                  if (($oValidate = $oChild->get('le:validate', 'le', NS_EXECUTION)) &&
-                    $oValidate->hasChildren() &&
-                    !$this->buildArgument($oValidate->getFirst())) {
+                  if (($oValidate = $oChild->get('le:validate', 'le', NS_EXECUTION)) && $oValidate->hasChildren() && !$this->buildArgument($oValidate->getFirst())) {
                     
                     Controler::addMessage(xt('L\'argument "%s" est invalide dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'error');
                     $bResult = false;
+                    
+                  } else if (Controler::useStatut('action/report')) {
+                    
+                    $sArgumentType = $bAssoc ? 'assoc' : 'index';
+                    Controler::addMessage(xt('Argument : %s &lt; %s', Controler::formatResource($mArgument), new HTML_Em($sArgumentType)), 'action/report');
                   }
                 }
               }
@@ -894,6 +917,12 @@ class XML_Action extends XML_Document {
                   $bResult = false;
                   
                 } else if ($mResult) {
+                  
+                  if (Controler::useStatut('action/report')) {
+                    
+                    $sArgumentType = $bAssoc ? 'assoc' : 'index';
+                    Controler::addMessage(xt('Argument par défaut : %s &gt; %s', Controler::formatResource($mResult), new HTML_Em($sArgumentType)), 'action/report');
+                  }
                   
                   if ($bAssoc) $this->getPath()->setAssoc($mKey, $mResult);
                   else $this->getPath()->setIndex($mKey, $mResult);
@@ -1294,7 +1323,7 @@ class XML_Path {
   
   public function mergeAssoc($aArguments) {
     
-    array_merge($this->aArguments['assoc'], $aArguments);
+    $this->aArguments['assoc'] = array_merge($this->aArguments['assoc'], $aArguments);
   }
   
   public function getAllIndex($bRemove = true) {

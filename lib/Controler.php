@@ -56,7 +56,7 @@ class Controler {
       
       self::getWindow()->loadAction($oFile);
       
-    } else if (in_array(self::getPath()->getExtension(), array('', 'eml', 'htm', 'html', 'xml', 'txt', 'popup'))) {
+    } else if (in_array(self::getPath()->getExtension(), array('', 'eml', 'htm', 'html', 'xml', 'txt', 'popup', 'action'))) {
       
       /* An action */
       
@@ -141,7 +141,8 @@ class Controler {
     self::$oPath = $oPath;
     
     $oWindow = self::getSettings()->get("window/*[extensions[contains(text(), '$sExtension')]]");
-    if (!$oWindow) $oWindow = self::getSettings()->get('window/html');
+    if (!$oWindow) $oWindow = new XML_Element('any');
+    //$oWindow = self::getSettings()->get('window/html');
     
     self::$oWindowSettings = $oWindow;
   }

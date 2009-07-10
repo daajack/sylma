@@ -51,7 +51,7 @@ class Img implements Main {
         $im = @$sFunction(MAIN_DIRECTORY.$sFilePath)
         or die("Cannot Initialize new GD image stream");
         
-        imagefilter($im, IMG_FILTER_GRAYSCALE);
+        // imagefilter($im, IMG_FILTER_GRAYSCALE);
         
         $sFunction = 'image'.$sExtension;
         

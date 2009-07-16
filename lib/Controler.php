@@ -48,7 +48,7 @@ class Controler {
     self::setWindow(new $sWindow);
     
     if (($sExtension = Controler::getPath()->getExtension()) &&
-     !in_array($sExtension, array('eml', 'iml')) && 
+     (!in_array($sExtension, array('eml', 'iml')) || strtobool(self::getPath()->getAssoc('no-action'))) && 
      ($oFile = self::getFile(Controler::getPath().'.'.$sExtension)) &&
      $oFile->checkRights(MODE_READ)) {
       
@@ -330,7 +330,7 @@ class Controler {
     if (FORMAT_MESSAGES) {
       
       if (is_string($mArgument))
-        $aValue = array("'".stringResume($mArgument, $iMaxLength)."'", '#999');
+        $aValue = array("'".stringResume(htmlspecialchars($mArgument), $iMaxLength)."'", '#999');
       else if (is_bool($mArgument))
         $aValue = $mArgument ? array('TRUE', 'green') :  array('FALSE', 'red');
       else if (is_numeric($mArgument))
@@ -352,9 +352,11 @@ class Controler {
             strtoupper($mArgument->getName()),
             $oContainer), array('class' => 'element')), 'blue');
           
-        } else if ($mArgument instanceof XML_NodeList)
+        } else if ($mArgument instanceof XML_NodeList) {
+          
           $aValue = array(xt('XML_NodeList(%s)', new HTML_Strong($mArgument->length)), 'green');
-        else {
+          
+        } else {
           
           $sValue = get_class($mArgument);
           if (in_array($sValue, array('XML_Directory', 'XML_File'))) $sValue = stringResume($mArgument, 150);
@@ -547,7 +549,7 @@ class Controler {
   
   public static function addMessage($mMessage = '- message vide -', $sPath = 'notice', $aArgs = array()) {
     
-    if (in_array($sPath, array('action/error', 'file/error'))) $mMessage = array($mMessage, Controler::getBacktrace());
+    // if (in_array($sPath, array('action/error', 'file/error'))) $mMessage = array($mMessage, Controler::getBacktrace());
     
     self::getMessages()->addMessage(new Message($mMessage, $sPath, $aArgs));
   }

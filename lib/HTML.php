@@ -67,7 +67,7 @@ class HTML_Tag extends XML_Element {
     }
     
     // if ($this->bForceClosure && !$this->hasChildren()) $this->add(' ');
-    // if ($this->bForceClosure && !$this->read()) $this->add(' ');
+    if ($this->bForceClosure && !$this->read()) $this->add(' ');
     //echo 'hello : '.$this->getName().' / ';
   }
   
@@ -275,7 +275,7 @@ class HTML_Document extends XML_Helper {
     $oView = new XML_Document($this);
     $oView->formatOutput();
     
-    return $sDocType."\n".$oView->__toString(true);
+    return $sDocType."\n".$oView->__toString(false);
   }
 }
 
@@ -303,7 +303,7 @@ class HTML_Script extends HTML_Tag {
       
       $this->setAttribute('src', $sSrc);
       $this->forceClosure();
-      
+      $this->add(' ');
     } else $this->add($oChild);
   }
 }

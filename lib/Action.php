@@ -752,12 +752,7 @@ class XML_Action extends XML_Document {
       $sArguments = $aArguments ? $aArguments['string'] : '';
       
       eval("\$oResult = $sObject$sCaller\$sMethodName($sArguments);");
-      /*
-      if ($sMethodName == 'addJS') {
-        echo $aArguments['arguments'][0];
-        Controler::getWindow()->get('//ns:head')->dsp();
-      }
-      */
+      
       if (Controler::useStatut('action/report')) {
         
         $aDspArguments = array();
@@ -1241,7 +1236,7 @@ class XML_Path {
     
     $sPath = $this->getPath();
     
-    preg_match('/\.(\w+)/', $sPath, $aResult, PREG_OFFSET_CAPTURE);
+    preg_match('/\.(\w+)$/', $sPath, $aResult, PREG_OFFSET_CAPTURE);
     
     if (count($aResult) == 2 && ($sExtension = $aResult[1][0])) {
       

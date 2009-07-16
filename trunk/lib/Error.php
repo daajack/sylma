@@ -14,9 +14,9 @@ function userErrorHandler($errno, $errstr, $errfile, $errline) {
       $oMessage->add(
         new HTML_Strong("ERREUR [$errno] "),
         xt($errstr),
-        new HTML_Tag('i', " - [$errline] - $errfile"),
-        new HTML_Br,
-        Controler::getBacktrace());
+        new HTML_Tag('i', " - [$errline] - $errfile"));
+        // new HTML_Br,
+        // Controler::getBacktrace());
         
     } else $oMessage = "ERREUR [$errno] $errstr - [$errline] - $errfile : ".Controler::getBacktrace();
     

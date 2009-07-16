@@ -221,9 +221,12 @@ class WindowAction extends XML_Document implements Main {
 
 class Xml extends XML_Document implements Main {
   
+  private $sMode = '';
+  
   public function loadAction($oAction) {
     
     Controler::setContentType('xml');
+    $this->sMode = Controler::getPath()->getAssoc('xml-mode');
     
     if ($oAction instanceof XML_Action) {
       
@@ -240,6 +243,19 @@ class Xml extends XML_Document implements Main {
       
       $this->set(new XML_Element('root', (string) $oAction));
     }
+  }
+  
+  public function __toString() {
+    
+    if ($this->sMode == 'html') {
+      
+      $oView = new XML_Document($this);
+      $oView->formatOutput();
+      
+      return $oView->__toString(true);
+    }
+    
+    else return parent::__toString();
   }
 }
 

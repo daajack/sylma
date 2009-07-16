@@ -25,6 +25,13 @@ function array_clear($aArray, $sDefault = '') {
   return $aCopyArray;
 }
 
+function strtobool($sValue, $bDefault = null) {
+  
+  if ($sValue == 'true') return true;
+  else if ($sValue == 'false') return false;
+  else return $bDefault;
+}
+
 /*
  * Renvoie la première valeur non nulle envoyée en argument, si aucune, renvoie la dernière valeur
  **/

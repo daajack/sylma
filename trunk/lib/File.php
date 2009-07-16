@@ -359,7 +359,8 @@ class XML_Directory extends XML_Resource {
   
   public function __toString() {
     
-    return $this->getFullPath();
+    if ($this->getFullPath()) return $this->getFullPath();
+    else return '/';
   }
 }
 

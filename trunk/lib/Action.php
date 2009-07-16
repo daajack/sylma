@@ -752,7 +752,12 @@ class XML_Action extends XML_Document {
       $sArguments = $aArguments ? $aArguments['string'] : '';
       
       eval("\$oResult = $sObject$sCaller\$sMethodName($sArguments);");
-      
+      /*
+      if ($sMethodName == 'addJS') {
+        echo $aArguments['arguments'][0];
+        Controler::getWindow()->get('//ns:head')->dsp();
+      }
+      */
       if (Controler::useStatut('action/report')) {
         
         $aDspArguments = array();
@@ -760,10 +765,19 @@ class XML_Action extends XML_Document {
         
         $oArguments = new XML_NodeList($aDspArguments);
         
+        if (!$bStatic) {
+          
+          eval("\$oObject = $sObject;");
+          $mObject = Controler::formatResource($oObject);
+          
+        } else $mObject = $sObject;
+        
         Controler::addMessage(array(
         t('Evaluation : '),
         Controler::formatResource($oResult),
-        " = $sObject$sCaller$sMethodName(",
+        " = ",
+        $mObject,
+        "$sCaller$sMethodName(",
         $oArguments->implode(', '),
         ");"), 'action/report');
       }
@@ -894,13 +908,13 @@ class XML_Action extends XML_Document {
                   
                   if (($oValidate = $oChild->get('le:validate', 'le', NS_EXECUTION)) && $oValidate->hasChildren() && !$this->buildArgument($oValidate->getFirst())) {
                     
-                    Controler::addMessage(xt('L\'argument "%s" est invalide dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'error');
+                    Controler::addMessage(xt('L\'argument "%s" est invalide dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'action/error');
                     $bResult = false;
                     
                   } else if (Controler::useStatut('action/report')) {
                     
                     $sArgumentType = $bAssoc ? 'assoc' : 'index';
-                    Controler::addMessage(xt('Argument : %s &lt; %s', Controler::formatResource($mArgument), new HTML_Em($sArgumentType)), 'action/report');
+                    Controler::addMessage(xt('Argument : %s [%s]', Controler::formatResource($mArgument), new HTML_Em($sArgumentType)), 'action/report');
                   }
                 }
               }
@@ -916,7 +930,7 @@ class XML_Action extends XML_Document {
                   Controler::addMessage(xt('Argument "%s" valeur par défaut invalide dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'action/error');
                   $bResult = false;
                   
-                } else if ($mResult) {
+                } else if ($mResult !== null) {
                   
                   if (Controler::useStatut('action/report')) {
                     

@@ -822,13 +822,9 @@ class XML_Element extends DOMElement {
    * @param string $sAttribute Query to execute
    * @return boolean|null The value of the attribute, or null if it's not a boolean value
    */
-  public function testAttribute($sAttribute) {
+  public function testAttribute($sAttribute, $bDefault = null) {
     
-    $sValue = strtolower($this->getAttribute($sAttribute));
-    
-    if ($sValue == 'true') return true;
-    else if ($sValue == 'false') return false;
-    else return null;
+    return strtobool(strtolower($this->getAttribute($sAttribute)), $bDefault);
   }
   
   /**

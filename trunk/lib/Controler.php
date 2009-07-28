@@ -131,6 +131,7 @@ class Controler {
     
     $oPath = new XML_Path('/'.$sPath, false, $_GET);
     if (!$sExtension = $oPath->parseExtension(true)) $sExtension = 'html';
+    $sExtension = strtolower($sExtension);
     
     if (self::isAdmin() && $oPath->getIndex(0, true) == 'show-report') {
       
@@ -301,9 +302,16 @@ class Controler {
     self::doRedirect($oRedirect);
     
     // Redirection
-    header("Location: $oRedirect");
     
-    exit;
+    $sPath = (string) $oRedirect;
+    
+    if ($sPath) {
+      
+      header("Location: $sPath");
+      exit;
+      
+    } else self::errorRedirect('Redirection incorrect !');
+    
   }
   
   private static function doRedirect($oRedirect) {

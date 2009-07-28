@@ -277,7 +277,7 @@ class XML_Document extends DOMDocument {
       
       $sPath = MAIN_DIRECTORY.$sPath;
       
-      unlink($sPath);
+      if (file_exists($sPath)) unlink($sPath);
       parent::save($sPath);
       
       return true;
@@ -835,6 +835,7 @@ class XML_Element extends DOMElement {
   public function setAttribute($sName, $sValue = '') {
     
     // TODO : RIGHTS
+    
     if ($sValue !== '' && $sValue !== null) return parent::setAttribute($sName, $sValue);
     else return $this->removeAttribute($sName);
   }

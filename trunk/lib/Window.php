@@ -37,7 +37,7 @@ class Img implements Main {
       
       $sFilePath = (string) $this->oFile;
       
-      $sExtension = $this->oFile->getExtension();
+      $sExtension = strtolower($this->oFile->getExtension());
       if ($sExtension == 'jpg') $sExtension = 'jpeg';
       
       $aExtensions = array('jpeg', 'png', 'gif');

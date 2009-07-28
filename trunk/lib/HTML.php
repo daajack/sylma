@@ -360,6 +360,7 @@ class HTML_A extends HTML_Tag {
     
     parent::__construct('a', $oChild, $aAttributes);
     $this->setAttribute('href', $sHref);
+    $this->forceClosure();
   }
 }
 
@@ -397,8 +398,8 @@ class HTML_Strong extends HTML_Tag {
   
   public function __construct($oChild = '', $aAttributes = array()) {
     
-    // $this->forceClosure();
     parent::__construct('strong', $oChild, $aAttributes);
+    $this->forceClosure();
   }
 }
 

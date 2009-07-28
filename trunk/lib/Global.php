@@ -32,6 +32,11 @@ function strtobool($sValue, $bDefault = null) {
   else return $bDefault;
 }
 
+function booltostr($bValue) {
+  
+  return $bValue ? 'true' : 'false';
+}
+
 /*
  * Renvoie la première valeur non nulle envoyée en argument, si aucune, renvoie la dernière valeur
  **/

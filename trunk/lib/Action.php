@@ -105,6 +105,15 @@ class XML_Action extends XML_Document {
     else if (array_key_exists($sKey, $this->aVariables)) unset($this->aVariables[$sKey]);
   }
   
+  private function setVariableElement($oElement, $mVariable) {
+    
+    if ($sVariable = $oElement->getAttribute('set-variable')) {
+      
+      $this->setVariable($sVariable, $mVariable);
+      if (Controler::useStatut('action/report')) Controler::addMessage(xt('Ajout de la variable "%s" : %s', $sVariable, Controler::formatResource($mVariable)), 'action/report');
+    }
+  }
+  
   private function runInterfaceList($mObject, $oElement, $bStatic = false) {
     
     $mResult = null;
@@ -194,12 +203,7 @@ class XML_Action extends XML_Document {
           if ($aArgumentsPatch) $oResult = $this->runMethod($mObject, $sMethod, $aArgumentsPatch, $bStatic);
           else Controler::addMessage(xt('Arguments invalides pour la méthode "%s" dans "%s"', new HTML_Strong($oElement->getName(true)), $this->getPath()->parse()), 'action/notice');
           
-          if ($sVariable = $oElement->getAttribute('set-variable')) {
-            
-            // dsp(Controler::getUser()->getDirectory());
-            $this->setVariable($sVariable, $oResult);
-            if (Controler::useStatut('action/report')) Controler::addMessage(xt('Ajout de la variable "%s" : %s', $sVariable, Controler::formatResource($oResult)), 'action/report');
-          }
+          $this->setVariableElement($oElement, $oResult);
           
           $bSubReturn = false;
           
@@ -281,8 +285,9 @@ class XML_Action extends XML_Document {
           case 'test-argument' :
             
             $oArgument = new XML_Element('le:get-argument', null, array(
-              'keep' => 'true',
-              'name' => $oElement->getAttribute('name')), NS_EXECUTION);
+              'keep' => 'true'), NS_EXECUTION);
+            
+            if ($sName = $oElement->getAttribute('name')) $oArgument->setAttribute('name', $sName);
             
             if ($oElement->hasChildren()) {
               
@@ -420,7 +425,12 @@ class XML_Action extends XML_Document {
               
             } else {
               
-              $mResult = new XML_Document($this->getAbsolutePath($sPath), MODE_EXECUTION);
+              $iMode = MODE_EXECUTION;
+              
+              if (($iTempMode = $oElement->getAttribute('mode')) && in_array($iTempMode, array(MODE_READ, MODE_WRITE, MODE_EXECUTION)))
+                $iMode = $iTempMode;
+              
+              $mResult = new XML_Document($this->getAbsolutePath($sPath), $iMode);
               
               $bRun = true;
             }
@@ -463,7 +473,7 @@ class XML_Action extends XML_Document {
           default :
             
             if (!isset($sSpecialName)) $sSpecialName = $oElement->getName(true);
-            $aPhp = array('array', 'string', 'null', 'integer');
+            $aPhp = array('array', 'string', 'null', 'integer', 'boolean');
             
             if (in_array($sSpecialName, $aPhp)) $mResult = $this->parseBaseType($sSpecialName, $oElement);
             else if ($aSpecial = Action_Controler::getSpecial($sSpecialName, $this, $this->getRedirect())) {
@@ -474,6 +484,8 @@ class XML_Action extends XML_Document {
           break;
           
         }
+        
+        $this->setVariableElement($oElement, $mResult);
         
         if (Controler::useStatut('action/report'))
           Controler::addMessage(array(
@@ -520,7 +532,7 @@ class XML_Action extends XML_Document {
         
         $mRealResult->cloneAttribute($oElement, array('class', 'style', 'id'));
         
-      } else if ($mRealResult instanceof XML_NodeList && $mRealResult->length) {
+      } else if ($mRealResult instanceof XML_NodeList && $mRealResult->length && $mRealResult->item(0)->isElement()) {
         
         $mRealResult->item(0)->cloneAttribute($oElement, array('class', 'style'));
       }
@@ -560,7 +572,7 @@ class XML_Action extends XML_Document {
         
       break;
       
-      case 'boolean' : $mResult = ($this->buildArgument($oElement->getFirst())); break;
+      case 'boolean' : $mResult = (bool) $this->buildArgument($oElement->getFirst()); break;
       case 'integer' : $mResult = intval($this->buildArgument($oElement->getFirst())); break;
       
       case 'string' :
@@ -812,14 +824,19 @@ class XML_Action extends XML_Document {
       
       if (Controler::useStatut('action/report')) {
         
-        $aDspArguments = array();
-        foreach ($aArguments['arguments'] as $mArgument) $aDspArguments[] = Controler::formatResource($mArgument);
-        
-        $oArguments = new XML_NodeList($aDspArguments);
+        if ($aArguments) {
+          
+          $aDspArguments = array();
+          foreach ($aArguments['arguments'] as $mArgument) $aDspArguments[] = Controler::formatResource($mArgument);
+          
+          $oArguments = new XML_NodeList($aDspArguments);
+          $sArguments = $oArguments->implode(', ');
+          
+        } else $sArguments = '';
         
         Controler::addMessage(array(
         t('Evaluation : ')."\$oAction = new $sClassName(",
-        $oArguments->implode(', '),
+        $sArguments,
         ");"), 'action/report');
       }
       
@@ -1064,7 +1081,7 @@ class XML_Action extends XML_Document {
       default :
         
         Controler::addMessage(xt('Action "%s" impossible, pas de document !', new HTML_Strong($this->getPath())), 'action/warning');
-        return 'Pas de document !!!';
+        return 'Pas de document !';
         
       break;
     }
@@ -1321,7 +1338,7 @@ class XML_Path {
   
   public function setIndex($iKey, $mValue = '') {
     
-    $this->setKey('index', $sKey, $mValue);
+    $this->setKey('index', $iKey, $mValue);
     if ($mValue) $this->aArguments['index'] = array_values($this->aArguments['index']);
   }
   

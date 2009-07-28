@@ -141,7 +141,7 @@ class XML_Directory extends XML_Resource {
           
           if (($oFile = $this->getFile($sFile)) && $oFile->getUserMode() != 0) {
             
-            if ($aExtensions && !in_array($oFile->getExtension(), $aExtensions)) $oFile = null;
+            if ($aExtensions && !in_array(strtolower($oFile->getExtension()), $aExtensions)) $oFile = null;
             else $oElement->add($oFile->parseXML());
             
           } else if ($oDirectory = $this->getDirectory($sFile)) {
@@ -208,6 +208,25 @@ class XML_Directory extends XML_Resource {
     
     if ($oElement->isEmpty() && $this->getUserMode() != 0) return null;
     else return $oElement;
+  }
+  
+  public function getFiles($aExtensions = array(), $sPreg = '') {
+    
+    $this->browse(array(), array(), 1);
+    $aResult = array();
+    
+    if ($aExtensions) {
+      
+      foreach ($this->aFiles as $sFile => $oFile) {
+        
+        if ($oFile &&
+          (!$aExtensions || in_array(strtolower($oFile->getExtension()), $aExtensions)) &&
+          (!$sPreg || preg_match($sPreg, $sFile))) $aResult[$sFile] = $oFile;
+      }
+      
+    } else $aResult = $this->aFiles;
+    
+    return $aResult;
   }
   
   public function getFile($sName, $bDebug = false) {
@@ -288,7 +307,7 @@ class XML_Directory extends XML_Resource {
       if (!array_key_exists($sName, $this->aDirectories)) {
         
         $oDirectory = new XML_Directory($this->getFullPath(), $sName, $this->getRights(), $this);
-        // echo 'CD : '.$oDirectory.new HTML_Br;//.Controler::getBacktrace().new HTML_Br;
+        
         if ($oDirectory->doExist()) $this->aDirectories[$sName] = $oDirectory;
         else $this->aDirectories[$sName] = null;
       }
@@ -297,6 +316,26 @@ class XML_Directory extends XML_Resource {
     }
     
     return null;
+  }
+  
+  public function addDirectory($sName) {
+    
+    $oDirectory = null;
+    
+    if ($this->checkRights(MODE_WRITE)) {
+      
+      if (!$oDirectory = $this->getDirectory($sName)) {
+        
+        mkdir(MAIN_DIRECTORY.$this.'/'.$sName, 0700);
+        
+        unset($this->aDirectories[$sName]);
+        $oDirectory = $this->getDirectory($sName);
+        
+        Controler::addMessage(xt('Création du répertoire %s', new HTML_Strong($oDirectory)), 'file/notice');
+      }
+    }
+    
+    return $oDirectory;
   }
   
   private function loadRights() {
@@ -370,6 +409,7 @@ class XML_File extends XML_Resource {
   private $bSecured = false;
   private $sExtension = '';
   private $iSize = 0;
+  private $iChanged = 0;
   
   public function __construct($sPath, $sName, $aRights = array(), $oParent = null, $bDebug = true) {
     
@@ -382,7 +422,9 @@ class XML_File extends XML_Resource {
       $this->sName = $sName;
       $this->sPath = $sPath;
       $this->oParent = $oParent;
+      
       $this->iSize = filesize($sPath);
+      $this->iChanged = filemtime($sPath);
       
       if ($iExtension = strrpos($sName, '.')) $this->sExtension = substr($sName, $iExtension + 1);
       else $this->sExtension = '';
@@ -401,6 +443,11 @@ class XML_File extends XML_Resource {
     } else if ($bDebug) Controler::addMessage(xt('Fichier "%s" introuvable dans "%s" !', new HTML_Strong($sName), new HTML_Strong($sPath)), 'file/notice');
   }
   
+  public function getLastChange() {
+    
+    return $this->iChanged;
+  }
+  
   public function getExtension() {
     
     return $this->sExtension;
@@ -413,6 +460,7 @@ class XML_File extends XML_Resource {
   
   public function getDocument() {
     
+    // if (!$this->oDocument) return new XML_Document((string) $this);
     return $this->oDocument;
   }
   
@@ -433,6 +481,25 @@ class XML_File extends XML_Resource {
     //else if (Controler::isAdmin()) Controler::addMessage(xt('Fichier "%s" : accès interdit !', new HTML_Strong($this->getFullPath())), 'file/error');
     
     return false;
+  }
+  
+  public function delete() {
+    
+    if ($this->checkRights(MODE_WRITE)) {
+      
+      unlink(MAIN_DIRECTORY.$this);
+      Controler::addMessage(xt('Suppression du fichier %s', new HTML_Strong($this)), 'file/notice');
+    }
+  }
+  
+  public function save($sContent) {
+    
+    if ($this->checkRights(MODE_WRITE)) {
+      
+      $sPath = MAIN_DIRECTORY.$this;
+      unlink($sPath);
+      file_put_contents($sPath, $sContent);
+    }
   }
   
   public function __destruct() {
@@ -459,6 +526,9 @@ class XML_File extends XML_Resource {
       'owner' => $this->getOwner(),
       'group' => $this->getGroup(),
       'mode' => $this->getMode(),
+      'read' => booltostr($this->checkRights(MODE_READ)),
+      'write' => booltostr($this->checkRights(MODE_WRITE)),
+      'execution' => booltostr($this->checkRights(MODE_EXECUTION)),
       'size' => $iSize,
       'extension' => $this->getExtension()));
   }

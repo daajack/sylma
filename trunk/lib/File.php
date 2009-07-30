@@ -302,7 +302,7 @@ class XML_Directory extends XML_Resource {
     
     if ($sName == '.') return $this;
     else if ($sName == '..') return $this->getParent();
-    else {
+    else if ($sName) {
       
       if (!array_key_exists($sName, $this->aDirectories)) {
         
@@ -322,7 +322,7 @@ class XML_Directory extends XML_Resource {
     
     $oDirectory = null;
     
-    if ($this->checkRights(MODE_WRITE)) {
+    if ($sName && $this->checkRights(MODE_WRITE)) {
       
       if (!$oDirectory = $this->getDirectory($sName)) {
         
@@ -373,6 +373,18 @@ class XML_Directory extends XML_Resource {
     return false;
   }
   
+  public function delete() {
+    
+    $bResult = false;
+    
+    if ($this->checkRights(MODE_WRITE)) {
+      
+      if ($bResult = rmdir(MAIN_DIRECTORY.$this)) Controler::addMessage(xt('Suppression du répertoire %s', $this), 'file/notice');
+    }
+    
+    return $bResult;
+  }
+  
   public function parse() {
     
     if (!$sName = $this->getName()) {
@@ -387,6 +399,9 @@ class XML_Directory extends XML_Resource {
       'owner' => $this->getOwner(),
       'group' => $this->getGroup(),
       'mode' => $this->getMode(),
+      'read' => booltostr($this->checkRights(MODE_READ)),
+      'write' => booltostr($this->checkRights(MODE_WRITE)),
+      'execution' => booltostr($this->checkRights(MODE_EXECUTION)),
       'name' => $sName));
   }
   
@@ -488,7 +503,7 @@ class XML_File extends XML_Resource {
     if ($this->checkRights(MODE_WRITE)) {
       
       unlink(MAIN_DIRECTORY.$this);
-      Controler::addMessage(xt('Suppression du fichier %s', new HTML_Strong($this)), 'file/notice');
+      Controler::addMessage(xt('Suppression du fichier %s', $this->parse()), 'file/notice');
     }
   }
   
@@ -500,12 +515,6 @@ class XML_File extends XML_Resource {
       unlink($sPath);
       file_put_contents($sPath, $sContent);
     }
-  }
-  
-  public function __destruct() {
-    
-    // echo 'DF : '.$this.new HTML_Br;
-    // echo $this.new HTML_Br.Controler::getBacktrace();
   }
   
   public function parse() {

@@ -6,55 +6,6 @@ class Action_Controler {
   private static $oInterfaces = null;
   private static $aStats = array();
   
-  public static function buildInterfacesIndex() {
-    
-    if (!$oDirectory = Controler::getDirectory(PATH_INTERFACES)) {
-      
-      Controler::addMessage(xt('Le répértoire des interfaces "%s" n\'existe pas !', new HTML_Strong(PATH_INTERFACES)), 'action/warning');
-      
-    } else {
-      
-      $oInterfaces = $oDirectory->browse(array('iml'));
-      
-      if (!$aInterfaces = $oInterfaces->query('//file')) {
-        
-        Controler::addMessage(xt('Aucun fichier d\'interface à l\'emplacement "%s" indiqué !', new HTML_Strong(PATH_INTERFACES)), 'action/warning');
-        
-      } else {
-        
-        $oIndex = new XML_Document('interfaces');
-        
-        foreach ($aInterfaces as $oFile) {
-          
-          $sPath = $oFile->getAttribute('full-path');
-          $oInterface = new XML_Document($sPath, MODE_EXECUTION);
-          
-          if ($oInterface->isEmpty()) {
-            
-            Controler::addMessage(xt('Fichier d\'interface "%s" vide', new HTML_Strong($sPath)), 'action/warning');
-            
-          } else {
-            
-            if (!$sName = $oInterface->read('ns:name')) {
-              
-              Controler::addMessage(xt('Fichier d\'interface "%s" invalide, aucune classe n\'est indiquée !', new HTML_Strong($sPath)), 'action/warning');
-              
-            } else {
-              
-              $oIndex->addNode('interface', $sPath, array('class' => $sName));
-            }
-          }
-        }
-        
-        $sPath = PATH_INTERFACES.'/../interfaces.cml';
-        $oPath = new XML_Path($sPath, false);
-        
-        $oIndex->save($oPath);
-        Controler::addMessage(xt('Interface d\'actions %s regénéré !', $oPath->parse()), 'success');
-      }
-    }
-  }
-  
   public static function loadInterfaces() {
     
     // self::buildInterfacesIndex();
@@ -141,12 +92,12 @@ class Action_Controler {
     if ($oSpecial = $oSpecials->get("object[@name='$sName']")) {
       if ($sCall = $oSpecial->getAttribute('call')) {
         
-        if ($oSpecial->getAttribute('static') == 'true') return array('variable' => $sCall, 'static' => true);
+        if ($oSpecial->testAttribute('static')) return array('variable' => $sCall, 'static' => true, 'return' => false);
         else {
           
           eval('$oObject = '.$sCall.';');
           
-          if (isset($oObject)) return array('variable' => $oObject, 'static' => false);
+          if (isset($oObject)) return array('variable' => $oObject, 'static' => false, 'return' => $oSpecial->testAttribute('return'));
           else Controler::addMessage(xt('L\'objet "%s" est nul !', new HTML_Strong($sCall)), 'action/warning');
         }
         

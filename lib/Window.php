@@ -217,6 +217,14 @@ class WindowAction extends XML_Document implements Main {
       $oContent->add($oAction);
     }
   }
+  
+  public function __toString() {
+    
+    $oView = new XML_Document($this);
+    $oView->formatOutput();
+    
+    return $oView->__toString();
+  }
 }
 
 class Xml extends XML_Document implements Main {

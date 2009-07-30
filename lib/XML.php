@@ -318,30 +318,6 @@ class XML_Document extends DOMDocument {
     return (bool) $this->get($sPath);
   }
   
-  /**
-   * Return a String from the result of the sQuery
-   */
-  /*
-  public function read($sQuery = '', $sPrefix = '', $sUri = '') {
-    
-    if ($this->getRoot()) {
-      
-      if ($sQuery) return $this->getRoot()->read($sQuery, $sPrefix, $sUri);
-      else return $this->getRoot()->getValue();
-      
-    } else return null;
-  }
-  */
-  /**
-   * Return an XML_Element from the result of the sQuery
-   */
-  /*
-  public function get($sQuery, $sPrefix = '', $sUri = '') {
-    
-    if ($this->getRoot()) return $this->getRoot()->get($sQuery, $sPrefix, $sUri);
-    else return null;
-  }
-  */
   public function set() {
     
     if (func_num_args() > 1) {
@@ -474,13 +450,6 @@ class XML_Document extends DOMDocument {
     
     return null;
   }
-  /*
-  public function addArray($aChildren, $sName = '') {
-    
-    if ($this->getRoot()) return $this->getRoot()->addArray($aChildren, $sName);
-    else return null;
-  }
-  */
   public function importNode($oChild, $bDepth = true) {
     
     if ($oChild) {
@@ -496,16 +465,6 @@ class XML_Document extends DOMDocument {
     } else Controler::addMessage('Document->importNode : No object', 'xml/error');
   }
   
-  /**
-   * Return a DOMNodeList from the result of the sQuery
-   */
-  /*
-  public function query($sQuery, $sPrefix = '', $sUri = '') {
-    
-    if ($this->getRoot()) return $this->getRoot()->query($sQuery, $sPrefix, $sUri);
-    else return new XML_NodeList;
-  }
-  */
   /**
    * Extract the first result of a DOMNodeList if possible
    */

@@ -6,7 +6,7 @@ class XML_Action extends XML_Document {
   private $sName = '';
   private $aVariables = array();
   private $oRedirect = null;
-  private $iStatut = 0;
+  private $sStatut = 'void';
   
   public function __construct($mPath, $oRedirect = null) {
     
@@ -36,12 +36,12 @@ class XML_Action extends XML_Document {
   
   private function getStatut() {
     
-    return $this->iStatut;
+    return $this->sStatut;
   }
   
-  private function setStatut($iStatut) {
+  private function setStatut($sStatut) {
     
-    $this->iStatut = $iStatut;
+    $this->sStatut = $sStatut;
   }
   
   private function getAbsolutePath($sPath) {
@@ -94,7 +94,7 @@ class XML_Action extends XML_Document {
     if (array_key_exists($sKey, $this->aVariables)) return $this->aVariables[$sKey];
     else {
       
-      Controler::addMessage(xt('La variable "%s" n\'existe pas !', new HTML_Strong($sKey)), 'action/error');
+      Controler::addMessage(xt('La variable "%s" n\'existe pas dans %s !', new HTML_Strong($sKey), $this->getPath()->parse()), 'action/error');
       return null;
     }
   }
@@ -234,9 +234,11 @@ class XML_Action extends XML_Document {
         
         if (!$oChild->useNamespace(NS_INTERFACE)) {
           
-          if ($oChild->getName(true) == 'argument' && $oChild->useNamespace(NS_EXECUTION))
-            $sName = $oChild->getAttribute('name');
-          else $sName = '';
+          if (!$sName = $oChild->getAttribute('name', NS_EXECUTION)) {
+            
+            if ($oChild->getName(true) == 'argument' && $oChild->useNamespace(NS_EXECUTION)) $sName = $oChild->getAttribute('name');
+            else $sName = '';
+          }
           
           $mResult = $this->buildArgument($oChild->remove());
           
@@ -360,7 +362,7 @@ class XML_Action extends XML_Document {
           
           case 'action' :
             
-            if (!isset($bDirect)) $bParse = true;
+            if (!isset($bParse)) $bParse = true;
             
             if (!$sPath = $oElement->getAttribute('path')) {
               
@@ -400,18 +402,23 @@ class XML_Action extends XML_Document {
                 $oAction = new XML_Action($oPath, $oRedirect);
                 $mResult = $oAction->parse();
                 
-                if ($mResult instanceof Redirect) {
+                switch ($oAction->getStatut()) {
                   
-                  $this->setStatut(1);
-                  $this->setRedirect($mResult);
-                  $mResult = null;
+                  case 'success' : break;
+                  case 'redirect' : 
+                    
+                    $this->setStatut('redirect');
+                    $this->setRedirect($mResult);
+                    $mResult = null;
+                    
+                  break;
+                  
+                  default : $mResult = null; break;
                 }
                 
                 $bRun = true;
               }
             }
-            //runInterfaceMethod($mObject, new XML_Element('method-construct', $oElement->getChildren(), Action_Controler::getInterface($mObject);, $oRedirect, $bStatic = false)
-            // TODO relative path
             
           break;
           
@@ -478,6 +485,7 @@ class XML_Action extends XML_Document {
             if (in_array($sSpecialName, $aPhp)) $mResult = $this->parseBaseType($sSpecialName, $oElement);
             else if ($aSpecial = Action_Controler::getSpecial($sSpecialName, $this, $this->getRedirect())) {
               
+              if ($aSpecial['return']) $mResult = $aSpecial['variable'];
               list($mSubResult, $bSubReturn) = $this->runInterfaceList($aSpecial['variable'], $oElement, $aSpecial['static']);
             }
             
@@ -1051,36 +1059,41 @@ class XML_Action extends XML_Document {
           Controler::addMessage(xt('Ceci n\'est pas un interface valide %s', new HTML_Strong($oRoot->getName())), 'action/warning');
           
         break;
-
+        
       }
       
-      if (!$this->getStatut()) $this->setStatut(2);
+      if ($this->getStatut() == 'void') $this->setStatut('success');
+      if (is_object($oResult) && $oResult instanceof Redirect) {
+        
+        $this->setStatut('redirect');
+        $this->setRedirect($oResult);
+      }
     }
     
     switch ($this->getStatut()) {
       
-      case 1 : // Redirect
+      case 'redirect' :
         
         return $this->getRedirect();
         
       break;
       
-      case 2 : // Success
+      case 'success' : // Success
         
         return $oResult;
         
       break;
       
-      case 3 : // Error
+      case 'error' : // Error
         
         Controler::addMessage(xt('Action "%s" impossible, argument(s) invalide(s) !', new HTML_Strong($this->getPath())), 'error');
         
       break;
       
-      case 0 : // Pas de document (404)
+      case 'void' : // Pas de document (404)
       default :
         
-        Controler::addMessage(xt('Action "%s" impossible, pas de document !', new HTML_Strong($this->getPath())), 'action/warning');
+        Controler::addMessage(xt('Action "%s" impossible, document inexistant ou invalide !', $this->getPath()->parse()), 'action/warning');
         return 'Pas de document !';
         
       break;

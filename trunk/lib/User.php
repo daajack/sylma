@@ -100,16 +100,16 @@ class User {
     
     if ($oNode === null) $oNode = new XML_Element('null');
     
-    if (!$sOwner) XML_Controler::addMessage(xt('Sécurité : "user" invalide ! - %s', new HTML_Tag('em', $oNode->viewResume())), 'warning');
-    else if (strlen($sMode) < 3 || !is_numeric($sMode)) { echo (!is_numeric($sMode)).' '.$sMode;XML_Controler::addMessage(xt('Sécurité : "mode" invalide ! - %s', new HTML_Tag('em', $oNode->viewResume())), 'warning');}
-    else if (!strlen($sGroup)) XML_Controler::addMessage(xt('Sécurité : "group" invalide ! - %s', new HTML_Tag('em', $oNode->viewResume())), 'warning');
+    if (!$sOwner) Controler::addMessage(xt('Sécurité : "user" invalide ! - %s', new HTML_Tag('em', $oNode->viewResume())), 'xml/warning');
+    else if (strlen($sMode) < 3 || !is_numeric($sMode)) { echo (!is_numeric($sMode)).' '.$sMode;Controler::addMessage(xt('Sécurité : "mode" invalide ! - %s', new HTML_Tag('em', $oNode->viewResume())), 'xml/warning');}
+    else if (!strlen($sGroup)) Controler::addMessage(xt('Sécurité : "group" invalide ! - %s', new HTML_Tag('em', $oNode->viewResume())), 'xml/warning');
     else {
       
       $iOwner = intval($sMode{0});
       $iGroup = intval($sMode{1});
       $iPublic = intval($sMode{2});
       
-      if ($iOwner > 7 || $iGroup > 7 || $iPublic > 7) XML_Controler::addMessage(xt('Sécurité : Attribut "mode" invalide !', new HTML_Tag('em', $oNode->viewResume())), 'warning');
+      if ($iOwner > 7 || $iGroup > 7 || $iPublic > 7) Controler::addMessage(xt('Sécurité : Attribut "mode" invalide !', new HTML_Tag('em', $oNode->viewResume())), 'xml/warning');
       else {
         
         $iMode = $iPublic;

@@ -217,7 +217,7 @@ class XML_Document extends DOMDocument {
     
     if (($oFile = Controler::getFile($sPath, true)) && $oFile->checkRights($this->iMode)) {
       
-      if ($oFile->getDocument() === null) {
+      if (!$oFile->isLoaded()) {
         
         parent::load(MAIN_DIRECTORY.$sPath);
         
@@ -271,18 +271,29 @@ class XML_Document extends DOMDocument {
   
   public function save($sPath) {
     
-    if ((!$oFile = Controler::getFile($sPath)) || $oFile->checkRights(MODE_WRITE)) {
+    $sName = substr(strrchr($sPath, '/'), 1);
+    $sDirectory = substr($sPath, 0, strlen($sPath) - strlen($sName) - 1);
+    
+    if ($oDirectory = Controler::getDirectory($sDirectory)) {
       
-      $this->formatOutput = true;
+      if ($oDirectory->checkRights(MODE_WRITE) && (!$oFile = Controler::getFile($sPath)) || $oFile->checkRights(MODE_WRITE)) {
+        
+        $this->formatOutput = true;
+        
+        $sPath = MAIN_DIRECTORY.$sPath;
+        
+        if ($oFile) unlink($sPath);
+        parent::save($sPath);
+        
+        $oDirectory->updateFile($sName);
+        
+        return true;
+        
+      } else Controler::addMessage(xt('Droits insuffisants pour sauvegarder le fichier à cet emplacement %s !', new HTML_Strong($sPath)), 'file/error');
       
-      $sPath = MAIN_DIRECTORY.$sPath;
-      
-      if (file_exists($sPath)) unlink($sPath);
-      parent::save($sPath);
-      
-      return true;
-      
-    } else return false;
+    } else Controler::addMessage(xt('Le répertoire de destination n\'existe pas : %s !', new HTML_Strong($sPath)), 'file/error');
+    
+    return false;
   }
   
   /**
@@ -517,10 +528,8 @@ class XML_Document extends DOMDocument {
       XML_Controler::addStat('parse');
       
       if ($oResult->isEmpty()) {
-        // echo htmlspecialchars($sResult);
-        Controler::addMessage(array(
-          xt('Résultat invalide pour la transformation XSL !'),
-          new HTML_Tag('p', $sResult)), 'xml/warning');
+        
+        Controler::addMessage(t('Résultat invalide pour la transformation XSL !'), 'xml/warning');
       }
     }
     

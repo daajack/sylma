@@ -43,6 +43,20 @@ class XML_Resource {
     return $this->sFullPath;
   }
   
+  public function getParents($oTarget = null) {
+    
+    $oParent = $this;
+    $aResult = array();
+    
+    while (($oParent = $oParent->getParent()) && (!$oTarget || ($oParent != $oTarget))) {
+      
+      array_unshift($aResult, $oParent);
+    }
+    
+    if ($oTarget && !$oParent) return null;
+    else return $aResult;
+  }
+  
   public function getParent() {
     
     return $this->oParent;
@@ -133,7 +147,7 @@ class XML_Directory extends XML_Resource {
     
     if ($iDepth === null || $iDepth > 0) {
       
-      $iDepth--;
+      if ($iDepth) $iDepth--;
       
       foreach ($aFiles as $sFile) {
         
@@ -210,10 +224,12 @@ class XML_Directory extends XML_Resource {
     else return $oElement;
   }
   
-  public function getFiles($aExtensions = array(), $sPreg = '') {
+  public function getFiles($aExtensions = array(), $sPreg = null, $iDepth = 0) {
     
     $this->browse(array(), array(), 1);
     $aResult = array();
+    
+    // Files of current directory
     
     if ($aExtensions) {
       
@@ -221,12 +237,30 @@ class XML_Directory extends XML_Resource {
         
         if ($oFile &&
           (!$aExtensions || in_array(strtolower($oFile->getExtension()), $aExtensions)) &&
-          (!$sPreg || preg_match($sPreg, $sFile))) $aResult[$sFile] = $oFile;
+          (!$sPreg || preg_match($sPreg, $sFile))) $aResult[] = $oFile;
       }
       
-    } else $aResult = $this->aFiles;
+    } else $aResult = array_values($this->aFiles);
+    
+    // Recursion in sub-directory
+    
+    if ($iDepth === null || $iDepth > 0) {
+      
+      if ($iDepth) $iDepth--;
+      
+      foreach ($this->aDirectories as $oDirectory) {
+        
+        if ($oDirectory) $aResult = array_merge($aResult, $oDirectory->getFiles($aExtensions, $sPreg, $iDepth));
+      }
+    }
     
     return $aResult;
+  }
+  
+  public function updateFile($sName) {
+    
+    if (array_key_exists($sName, $this->aFiles)) unset($this->aFiles[$sName]);
+    return $this->getFile($sName);
   }
   
   public function getFile($sName, $bDebug = false) {
@@ -473,9 +507,15 @@ class XML_File extends XML_Resource {
     return $this->iSize;
   }
   
+  public function isLoaded() {
+    
+    return (bool) $this->oDocument;
+  }
+  
   public function getDocument() {
     
-    // if (!$this->oDocument) return new XML_Document((string) $this);
+    if (!$this->oDocument) $oDocument = new XML_Document((string) $this);
+    
     return $this->oDocument;
   }
   
@@ -503,6 +543,7 @@ class XML_File extends XML_Resource {
     if ($this->checkRights(MODE_WRITE)) {
       
       unlink(MAIN_DIRECTORY.$this);
+      $this->getParent()->updateFile($this->getName());
       Controler::addMessage(xt('Suppression du fichier %s', $this->parse()), 'file/notice');
     }
   }

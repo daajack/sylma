@@ -27,8 +27,8 @@ function array_clear($aArray, $sDefault = '') {
 
 function strtobool($sValue, $bDefault = null) {
   
-  if ($sValue == 'true') return true;
-  else if ($sValue == 'false') return false;
+  if (strtolower($sValue) == 'true') return true;
+  else if (strtolower($sValue) == 'false') return false;
   else return $bDefault;
 }
 

@@ -580,7 +580,14 @@ class XML_Action extends XML_Document {
         
       break;
       
-      case 'boolean' : $mResult = (bool) $this->buildArgument($oElement->getFirst()); break;
+      case 'boolean' :
+        
+        $mResult = $this->buildArgument($oElement->getFirst());
+        
+        if (is_string($mResult)) $mResult = strtobool($mResult, true);
+        else $mResult = (bool) $mResult;
+        
+      break;
       case 'integer' : $mResult = intval($this->buildArgument($oElement->getFirst())); break;
       
       case 'string' :
@@ -939,7 +946,7 @@ class XML_Action extends XML_Document {
                 }
               }
               
-              if ((!$mArgument || !$bResult) && ($oDefault = $oChild->get('le:default', 'le', NS_EXECUTION)) && $oDefault->hasChildren()) {
+              if (($mArgument === null || !$bResult) && ($oDefault = $oChild->get('le:default', 'le', NS_EXECUTION)) && $oDefault->hasChildren()) {
                 
                 $bResult = true;
                 

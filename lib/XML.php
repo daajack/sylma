@@ -594,7 +594,7 @@ class XML_Document extends DOMDocument {
         
         eval('$oResult = $oRoot->$sMethod('.implode(', ', $aEvalArguments).');');
         
-      } else Controler::addMessage(xt('NodeList : Méthode %s introuvable', new HTML_Strong($sMethod)), 'xml/error');
+      } else Controler::addMessage(xt('Document : Méthode %s introuvable', new HTML_Strong($sMethod)), 'xml/error');
     }
     
     return $oResult;
@@ -1559,6 +1559,7 @@ class XML_NodeList implements Iterator {
       
       switch ($sMode) {
         
+        case 'id' : $aResults[$oNode->getAttribute('id')] = $oNode->getChildren()->toArray(); break;
         case 'name' : $aResults[] = $oNode->getName(); break;
         
         default :

@@ -489,7 +489,7 @@ class XML_File extends XML_Resource {
             $this->getMode()));
       }
       
-    } else if ($bDebug) Controler::addMessage(xt('Fichier "%s" introuvable dans "%s" !', new HTML_Strong($sName), new HTML_Strong($sPath)), 'file/notice');
+    } else if ($bDebug) Controler::addMessage(xt('Fichier "%s" introuvable dans "%s" !', new HTML_Strong($sName), new HTML_Strong($oParent)), 'file/notice');
   }
   
   public function getLastChange() {

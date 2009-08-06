@@ -200,7 +200,6 @@ class WindowAction extends XML_Document implements Main {
     Controler::setContentType('xml');
     
     $oRoot = $this->set('action');
-    $oRoot->addNode('messages', Controler::getMessages()->parse());
     $oContent = $oRoot->addNode('content');
     
     if ($oAction instanceof XML_Action) {
@@ -216,6 +215,8 @@ class WindowAction extends XML_Document implements Main {
       
       $oContent->add($oAction);
     }
+    
+    $oRoot->addNode('messages', Controler::getMessages()->parse());
   }
   
   public function __toString() {

@@ -85,8 +85,6 @@ class Controler {
     return self::getWindow();
   }
   
-  // Ajout des infos système
-  
   private static function setLevelReport() {
     
     if (self::isAdmin()) {
@@ -100,9 +98,7 @@ class Controler {
   
   private static function loadSettings() {
     
-    self::$oSettings = new XML_Document('/xml/root.xml', MODE_EXECUTION);
-    
-    // $aAllowed = explode(',', self::$oSettings->read('//messages/allowed'));
+    self::$oSettings = new XML_Document(PATH_SETTINGS, MODE_EXECUTION);
     
     $oAllowed = new XML_Document(self::getSettings('messages/allowed/@path'));
     
@@ -165,12 +161,12 @@ class Controler {
         
         $oRedirect->setReal();
         
-        $oMessages = new XML_Document;
-        $oMessages->loadText($oRedirect->getArgument('messages'));
+        $oMessages = $oRedirect->getDocument('messages');
+        // $oMessages = new XML_Document;
+        // $oMessages->loadText($oRedirect->getArgument('messages'));
         $aMessages = $oMessages->query('//lm:message', 'lm', NS_MESSAGES);
         
         $oRedirect->resetMessages($aMessages);
-        // $oRedirect->resetMessages();
         
         if ($aMessages->length) self::getMessages()->addMessages($aMessages);
         
@@ -324,12 +320,13 @@ class Controler {
     
     // if (self::isAdmin()) $oRedirect->getMessages()->addMessages(db::getQueries('old')->getMessages());
     
-    $oRedirect->setArgument('messages', $oRedirect->getMessages()->saveXML());
+    $oRedirect->setDocument('messages', $oRedirect->getMessages());
+    // $oRedirect->setArgument('messages', $oRedirect->getMessages()->saveXML());
     
     $oRedirect->setSource(Controler::getPath());
     
     // Redirection
-    
+    //echo self::formatResource(serialize($oRedirect));exit;
     $_SESSION['redirect'] = serialize($oRedirect);
   }
   
@@ -682,6 +679,7 @@ class Redirect {
   private $bIsReal = false; // Défini si le cookie a été redirigé ou non
   
   private $aArguments = array();
+  private $aDocuments = array();
   private $oMessages;
   
   public function __construct($sPath = '', $mMessages = array(), $aArguments = array()) {
@@ -696,7 +694,7 @@ class Redirect {
   
   public function getArgument($sKey) {
     
-    return (array_key_exists($sKey, $this->aArguments)) ? $this->aArguments[$sKey] : false;
+    return (array_key_exists($sKey, $this->aArguments)) ? $this->aArguments[$sKey] : null;
   }
   
   public function setArgumentKey($sArgument, $sKey, $mValue = '') {
@@ -722,6 +720,16 @@ class Redirect {
   public function getArguments() {
     
     return $this->aArguments;
+  }
+  
+  public function getDocument($sKey) {
+    
+    return (array_key_exists($sKey, $this->aDocuments)) ? $this->aDocuments[$sKey] : null;
+  }
+  
+  public function setDocument($sKey, $oDocument) {
+    
+    $this->aDocuments[$sKey] = $oDocument;
   }
   
   public function resetMessages($mMessages = array()) {
@@ -787,6 +795,17 @@ class Redirect {
   public function isReal() {
     
     return $this->bIsReal;
+  }
+  
+  public function __sleep() {
+    
+    foreach ($this->aDocuments as $sKey => $oDocument) $this->aDocuments[$sKey] = (string) $oDocument;
+    return array_keys(get_object_vars(&$this));
+  }
+  
+  public function __wakeup() {
+    
+    foreach ($this->aDocuments as $sKey => $sDocument) $this->aDocuments[$sKey] = new XML_Document($sDocument);
   }
   
   public function __toString() {

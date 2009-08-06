@@ -276,18 +276,18 @@ class XML_Document extends DOMDocument {
     
     if ($oDirectory = Controler::getDirectory($sDirectory)) {
       
-      if ($oDirectory->checkRights(MODE_WRITE) && (!$oFile = Controler::getFile($sPath)) || $oFile->checkRights(MODE_WRITE)) {
+      if ($oDirectory->checkRights(MODE_WRITE) && ((!$oFile = Controler::getFile($sPath)) || $oFile->checkRights(MODE_WRITE))) {
         
         $this->formatOutput = true;
         
         $sPath = MAIN_DIRECTORY.$sPath;
         
         if ($oFile) unlink($sPath);
-        parent::save($sPath);
+        $bResult = parent::save($sPath);
         
         $oDirectory->updateFile($sName);
         
-        return true;
+        return $bResult;
         
       } else Controler::addMessage(xt('Droits insuffisants pour sauvegarder le fichier à cet emplacement %s !', new HTML_Strong($sPath)), 'file/error');
       

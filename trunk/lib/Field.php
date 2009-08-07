@@ -99,7 +99,7 @@ class HTML_Field extends XML_Document {
       
       $oLabel = new HTML_Tag('label');
       $oLabel->setAttribute('for', $sId);
-      if ($bMark) $oInput->setAttribute('onfocus', "this.style.color = 'black'");
+      if ($bMark) $oInput->setAttribute('onfocus', "$(this).parent().removeClass('field-mark');");
       
       foreach ($aClasses as $sClass) $oLabel->addClass($sClass);
       

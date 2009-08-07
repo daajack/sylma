@@ -7,6 +7,7 @@ class HTML_Form extends HTML_Tag {
   
   private $oSchema = null;
   private $oValues = null;
+  private $aMessages = array();
   
   public function __construct() {
     
@@ -17,6 +18,12 @@ class HTML_Form extends HTML_Tag {
     
     $this->addNode('div', '', array('class' => 'form-content clear-block'), NS_XHTML);
     $this->addNode('div', '', array('class' => 'form-action clear-block form-action-bottom'), NS_XHTML);
+    
+    
+    if ($aMessages = Controler::getMessages()->getMessages('form/warning')) {
+      
+      foreach ($aMessages as $oMessage) if ($sKey = $oMessage->read('arguments/field')) $this->aMessages[$sKey] = $oMessage;
+    }
   }
   
   public function getValue($sPath) {
@@ -65,13 +72,11 @@ class HTML_Form extends HTML_Tag {
         
       } else {
         
+        $bMark = array_key_exists($sField, $this->aMessages);
         //$bMark = isset($aMessages[$sField]);
         //$sValue = array_val($sField, $aValues, array_val('value', $aField, ''));
         //$aField['value'] = $sValue;
         // $aField['name'] = array_val('name', $aField, $sField);
-        
-        
-        $bMark = false;
         
         if ($bExist) $aField = $oElement->merge($oField)->getChildren()->toArray();
         else $aField = $oElement->getChildren()->toArray();

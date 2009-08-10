@@ -15,7 +15,8 @@ class Any implements Main {
     $sPath = MAIN_DIRECTORY.'/'.$oFile;
     
     // header('Content-Description: File Transfer');
-    // header('Content-Type: application/pdf');
+    
+    Controler::setContentType($oFile->getExtension());
     header('Content-Length: ' . $oFile->getSize());
     header('Content-Disposition: attachment; filename=' . basename($sPath));
     readfile($sPath);

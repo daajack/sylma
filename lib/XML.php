@@ -276,7 +276,9 @@ class XML_Document extends DOMDocument {
     
     if ($oDirectory = Controler::getDirectory($sDirectory)) {
       
-      if ($oDirectory->checkRights(MODE_WRITE) && ((!$oFile = Controler::getFile($sPath)) || $oFile->checkRights(MODE_WRITE))) {
+      $bAccess = ($oFile = Controler::getFile($sPath)) ? $oFile->checkRights(MODE_WRITE) : $oDirectory->checkRights(MODE_WRITE);
+      
+      if ($bAccess) {
         
         $this->formatOutput = true;
         
@@ -980,12 +982,10 @@ class XML_Element extends DOMElement {
   
   public function merge($oElement) {
     
-    $aResult = array_merge($oElement->getChildren()->toArray(), $this->getChildren()->toArray());
+    $oResult = new XML_Element($this->getName(), $this->getChildren(), $this->getAttributes(), $this->getNamespace());
+    foreach ($oElement->getChildren() as $oChild) $oResult->add($oChild);
     
-    $oResult = new XML_Element($this->getName(), '', array(), $this->getNamespace());
     $oResult->cloneAttribute($oElement);
-    
-    $oResult->addArray($aResult);
     
     return $oResult;
   }
@@ -1565,7 +1565,8 @@ class XML_NodeList implements Iterator {
         default :
           
           // if ($oNode->isEmpty()) $aResults[] = $oNode->getName();
-          $aResults[$oNode->getName()] = $oNode->getValue();
+          if ($oNode->isText()) dsp((string) $oNode);
+          else $aResults[$oNode->getName()] = $oNode->getValue();
       }
     }
     

@@ -63,7 +63,7 @@ class HTML_Form extends HTML_Tag {
       
       $sField = $oElement->getAttribute('id');
       
-      $bExist = ($oElement->testAttribute('real') !== false);
+      $bExist = ($oElement->testAttribute('real', true));
       $oElement->setAttribute('real');
       
       if ($bExist && (!$oField = $this->oSchema->get("field[@id='$sField']"))) {
@@ -73,13 +73,27 @@ class HTML_Form extends HTML_Tag {
       } else {
         
         $bMark = array_key_exists($sField, $this->aMessages);
-        //$bMark = isset($aMessages[$sField]);
-        //$sValue = array_val($sField, $aValues, array_val('value', $aField, ''));
-        //$aField['value'] = $sValue;
-        // $aField['name'] = array_val('name', $aField, $sField);
         
-        if ($bExist) $aField = $oElement->merge($oField)->getChildren()->toArray();
-        else $aField = $oElement->getChildren()->toArray();
+        if ($bExist) {
+          
+          $oResult = $oElement->merge($oField);
+          $aField = array();
+          
+          if ($oArguments = $oResult->get('arguments')) {
+            
+            $aField['arguments'] = $oArguments->getChildren()->toArray();
+            $oArguments->remove();
+          }
+          
+          if ($oOptions = $oResult->get('options')) {
+            
+            $aField['options'] = explode(',', $oOptions->read());
+            $oOptions->remove();
+          }
+          
+          $aField = array_merge($aField, $oResult->getChildren()->toArray());
+          
+        } else $aField = $oElement->getChildren()->toArray();
         
         $aField['id'] = $sField;
         $aField['name'] = $sField;
@@ -115,6 +129,14 @@ class HTML_Form extends HTML_Tag {
       
       $this->getChildren()->item(1)->add($oAction);
     }
+  }
+  
+  public function parse() {
+    
+    $oMark = new HTML_Div(t('Les champs marqués d\'un astérisque sont obligatoires.'));
+    $oMark->addClasses('clear-block', 'form-required');
+    
+    $this->getLast()->insertBefore($oMark);
   }
 }
 

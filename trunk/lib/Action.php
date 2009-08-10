@@ -756,11 +756,12 @@ class XML_Action extends XML_Document {
     }
     
     Controler::addMessage(array(
-      xt('L\'argument "%s" (%s) n\'est pas du type : "%s"',
+      xt('L\'argument "%s" (%s) n\'est pas du type : "%s" dans %s',
         Controler::formatResource($mArgument),
         new HTML_em($sActualFormat),
-        new HTML_Strong(implode(', ', $aFormats))),
-        $oElement->messageParse()), 'action/warning');
+        new HTML_Strong(implode(', ', $aFormats)),
+        $this->getPath()->parse()),
+      $oElement->messageParse()), 'action/warning');
     
     return false;
   }

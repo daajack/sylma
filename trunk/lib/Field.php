@@ -22,7 +22,7 @@ class HTML_Field extends XML_Document {
   private $aArguments = array();
   
   public function __construct($aNode = array(), $bMark = false) {
-    // dsp($aNode);
+    
     parent::__construct();
     
     if (array_val('disable', $aNode) && $aNode['disable']) return ''; // Pas de rendu
@@ -44,6 +44,7 @@ class HTML_Field extends XML_Document {
     $sTitle = t(array_val('title', $aNode, '-défaut-'));
     
     if ($sType != 'bool') $sTitle .= ' :';
+    if ($bRequired) $sTitle .= ' *';
     
     // Input
     
@@ -103,14 +104,7 @@ class HTML_Field extends XML_Document {
       
       foreach ($aClasses as $sClass) $oLabel->addClass($sClass);
       
-      if ($bRequired) {
-        
-        $mTitle = new HTML_Tag('strong');
-        $mTitle->add($sTitle);
-        
-      } else $mTitle = $sTitle;
-      
-      $oLabel->add($mTitle);
+      $oLabel->add($sTitle);
       
       // Container
       

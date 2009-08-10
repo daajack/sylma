@@ -273,6 +273,8 @@ class HTML_Document extends XML_Helper {
     // return $this->saveHTML();
     
     $oView = new XML_Document($this);
+    
+    $oView->query('//@ls:owner | //@ls:mode | //@ls:group', 'ls', NS_SECURITY)->remove();
     $oView->formatOutput();
     
     return $sDocType."\n".$oView->__toString(false);

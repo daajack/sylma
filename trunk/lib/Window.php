@@ -10,16 +10,27 @@ interface Main {
 
 class Any implements Main {
   
+  private $oFile = null;
+  
   public function loadAction($oFile) {
     
-    $sPath = MAIN_DIRECTORY.'/'.$oFile;
+    $this->oFile = $oFile;
+  }
+  
+  public function __toString() {
     
-    // header('Content-Description: File Transfer');
+    if ($this->oFile) {
+      
+      $sPath = MAIN_DIRECTORY.'/'.$this->oFile;
+      
+      Controler::setContentType($this->oFile->getExtension());
+      header('Content-Length: ' . $this->oFile->getSize());
+      header('Content-Disposition: attachment; filename=' . basename($sPath));
+      // header('Content-Description: File Transfer');
+      readfile($sPath);
+    }
     
-    Controler::setContentType($oFile->getExtension());
-    header('Content-Length: ' . $oFile->getSize());
-    header('Content-Disposition: attachment; filename=' . basename($sPath));
-    readfile($sPath);
+    return '';
   }
 }
 

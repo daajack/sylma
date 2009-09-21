@@ -76,9 +76,9 @@ class HTML_Form extends HTML_Tag {
         
         if ($bExist) {
           
-          $oResult = $oElement->merge($oField);
+          $oResult = $oElement->merge($oField, true);
           $aField = array();
-          
+          //$oResult->dsp();
           if ($oArguments = $oResult->get('arguments')) {
             
             $aField['arguments'] = $oArguments->getChildren()->toArray();
@@ -97,7 +97,8 @@ class HTML_Form extends HTML_Tag {
         
         $aField['id'] = $sField;
         $aField['name'] = $sField;
-        if ($sValue = $this->getValue($sField)) $aField['value'] = $sValue;
+        
+        if (!array_key_exists('value', $aField) && ($sValue = $this->getValue($sField))) $aField['value'] = $sValue;
         
         $oField = new HTML_Field($aField, $bMark);
         

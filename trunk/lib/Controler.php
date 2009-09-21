@@ -27,7 +27,7 @@ class Controler {
     self::$iStartTime = microtime(true);
     
     self::$oMessages = new Messages();
-    self::$oDirectory = new XML_Directory('', '', array('owner' => 'root', 'group' => '0', 'mode' => '700'));
+    self::$oDirectory = new XML_Directory('', '', array('owner' => 'root', 'group' => '0', 'mode' => '700', 'user-mode' => null));
     
     // Authentification : récupération du cookie User
     
@@ -290,6 +290,7 @@ class Controler {
   public static function error404() {
     
     header('HTTP/1.0 404 Not Found');
+    echo 'Erreur 404 :\'(';
     exit;
   }
   
@@ -321,16 +322,14 @@ class Controler {
     // if (self::isAdmin()) $oRedirect->getMessages()->addMessages(db::getQueries('old')->getMessages());
     
     $oRedirect->setDocument('messages', $oRedirect->getMessages());
-    // $oRedirect->setArgument('messages', $oRedirect->getMessages()->saveXML());
-    
     $oRedirect->setSource(Controler::getPath());
     
     // Redirection
-    //echo self::formatResource(serialize($oRedirect));exit;
+    
     $_SESSION['redirect'] = serialize($oRedirect);
   }
   
-  public static function formatResource($mArgument, $bDecode = false, $iMaxLength = 120, $bElementDisplay = true) {
+  public static function formatResource($mArgument, $bDecode = false, $iMaxLength = 120, $bElementDisplay = false) {
     
     if (FORMAT_MESSAGES) {
       
@@ -341,7 +340,7 @@ class Controler {
       else if (is_numeric($mArgument))
         $aValue = array($mArgument, 'green');
       else if (is_array($mArgument))
-        $aValue = array(xt('array(%s)', new HTML_Strong(count($mArgument))), 'black');
+        $aValue = array(xt('array(%s)', new HTML_Strong(count($mArgument))), 'orange');
       else if (is_object($mArgument)) {
         
         // Objects
@@ -430,7 +429,7 @@ class Controler {
         
         foreach ($aTrace['args'] as $mArgument) {
           
-          $aArguments[] = self::formatResource($mArgument, false, $iMaxLength, false);
+          $aArguments[] = self::formatResource($mArgument, false, $iMaxLength);
           $aArguments[] = new HTML_Strong(', ');
         }
         
@@ -482,7 +481,13 @@ class Controler {
     $aMessages = array($mMessages);
     if (self::isAdmin()) $aMessages[] = self::getBacktrace();
     
-    self::doHTTPRedirect(new Redirect(PATH_ERROR, new Message($aMessages, $sStatut)));
+    Controler::addMessage($mMessages, $sStatut);
+    //$oRedirect = new Redirect(PATH_ERROR, new Message($aMessages, $sStatut));
+    //echo Controler::getBacktrace();
+    self::doHTTPRedirect(new Redirect(PATH_ERROR));
+    // else echo 'Aucun message'.new HTML_Br;
+    
+    // self::doHTTPRedirect(new Redirect(PATH_ERROR, new Message($aMessages, $sStatut)));
   }
   
   public static function setUser($oUser = null) {
@@ -520,6 +525,12 @@ class Controler {
   public static function getUser() {
     
     return self::$oUser;
+  }
+  
+  public static function getAbsolutePath($sTarget, $sSource) {
+    
+    if ($sTarget{0} == '/') return $sTarget;
+    else return $sSource.$sTarget;
   }
   
   public static function setWindow($oWindow) {
@@ -687,6 +698,7 @@ class Redirect {
     $this->resetMessages($mMessages);
     
     if ($sPath) $this->setPath($sPath);
+    
     $this->aArguments = $aArguments;
     $this->setArgument('post', $_POST);
     $this->setWindowType(Controler::getWindowType());

@@ -25,6 +25,18 @@ function array_clear($aArray, $sDefault = '') {
   return $aCopyArray;
 }
 
+function array_remove($sKey, &$aArray, $bDebug = true) {
+  
+  if ($bDebug || array_key_exists($sKey, $aArray)) {
+    
+    $mValue = $aArray[$sKey];
+    unset($aArray[$sKey]);
+    
+  } else $mValue = null;
+  
+  return $mValue;
+}
+
 function strtobool($sValue, $bDefault = null) {
   
   if (strtolower($sValue) == 'true') return true;
@@ -56,7 +68,7 @@ function nonull_val() {
  **/
 function addQuote($mValue) {
   
-  if (is_string($mValue)) return "'$mValue'";
+  if (is_string($mValue)) return "'".addslashes($mValue)."'";
   else if (is_array($mValue)) {
     
     foreach ($mValue as &$mSubValue) $mSubValue = addQuote($mSubValue);
@@ -103,8 +115,26 @@ function implosion($sSepFusion, $sepImplode, $aArray) {
 }
 
 /*
+ * Conversion in UTF-8 of the characters : & " < >
+ **/
+function xmlize($sString) {
+  
+  return htmlspecialchars($sString, ENT_COMPAT, 'UTF-8');
+}
+
+/*
  * Pour le débuggage, affiche une variable dans un tag <pre> qui affiche les retours à la ligne
  **/
+function dspr($mVar) {
+  
+  echo new HTML_Tag('pre', Controler::formatResource($mVar));
+}
+
+function dspm($mVar, $sStatut = 'success') {
+  
+  Controler::addMessage($mVar, $sStatut);
+}
+
 function dsp($mVar) {
   
   echo '<pre>';

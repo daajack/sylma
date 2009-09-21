@@ -13,7 +13,6 @@ class User {
     else $this->setReal(false);
     
     $this->setName($sName);
-    
     $this->setGroups($aGroups);
     $this->setArguments($aArguments);
   }
@@ -100,16 +99,16 @@ class User {
     
     if ($oNode === null) $oNode = new XML_Element('null');
     
-    if (!$sOwner) Controler::addMessage(xt('Sécurité : "user" invalide ! - %s', new HTML_Tag('em', $oNode->viewResume())), 'xml/warning');
+    if (!$sOwner) { Controler::addMessage(xt('Sécurité : "user" inexistant ! %s', $oNode->messageParse()), 'xml/warning'); echo Controler::getBacktrace(); }
     else if (strlen($sMode) < 3 || !is_numeric($sMode)) { echo (!is_numeric($sMode)).' '.$sMode;Controler::addMessage(xt('Sécurité : "mode" invalide ! - %s', new HTML_Tag('em', $oNode->viewResume())), 'xml/warning');}
-    else if (!strlen($sGroup)) Controler::addMessage(xt('Sécurité : "group" invalide ! - %s', new HTML_Tag('em', $oNode->viewResume())), 'xml/warning');
+    else if (!strlen($sGroup)) Controler::addMessage(xt('Sécurité : "group" inexistant ! %s', $oNode->messageParse()), 'xml/warning');
     else {
       
       $iOwner = intval($sMode{0});
       $iGroup = intval($sMode{1});
       $iPublic = intval($sMode{2});
       
-      if ($iOwner > 7 || $iGroup > 7 || $iPublic > 7) Controler::addMessage(xt('Sécurité : Attribut "mode" invalide !', new HTML_Tag('em', $oNode->viewResume())), 'xml/warning');
+      if ($iOwner > 7 || $iGroup > 7 || $iPublic > 7) Controler::addMessage(xt('Sécurité : Attribut "mode" invalide !', $oNode->messageParse()), 'xml/warning');
       else {
         
         $iMode = $iPublic;
@@ -127,7 +126,7 @@ class User {
   public function parse() {
     
     $oNode = new HTML_Div(array(
-      new HTML_A(PATH_USER_EDIT.$this->getName(), $this->getArgument('full_name')),
+      new HTML_A(PATH_USER_EDIT.$this->getName(), $this->getArgument('full-name')),
       ' ('.implode(', ', $this->getGroups()).')'), array('id' => 'user-info'));
     
     return $oNode;

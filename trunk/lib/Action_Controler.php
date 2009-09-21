@@ -35,7 +35,7 @@ class Action_Controler {
         
         if ($oInterface->isEmpty()) {
           
-          Controler::addMessage(xt('Fichier d\'interface "%s" vide', new HTML_Strong($sPath)), 'action/warning');
+          Controler::addMessage(xt('Fichier d\'interface "%s" vide', $oInterface->parseFile()), 'action/warning');
           
         } else {
           
@@ -53,7 +53,7 @@ class Action_Controler {
           }
           
           self::$aInterfaces[$sClass] = $oInterface;
-          if (Controler::useStatut('report')) Controler::addMessage(xt('Chargement de l\'interface "%s"', new HTML_Strong($sPath)), 'action/report');
+          if (Controler::useStatut('report')) Controler::addMessage(xt('Chargement de l\'interface "%s"', $oInterface->parseFile()), 'action/report');
         }
       }
     }

@@ -90,7 +90,7 @@ class XML_Helper extends XML_Document {
 class XML_Document extends DOMDocument {
   
   private $iMode = null;
-  private $sPath = null;
+  private $oFile = null;
   
   public function __construct($mChildren = '', $iMode = MODE_READ) {
     
@@ -125,7 +125,9 @@ class XML_Document extends DOMDocument {
     
     $iMode = 7;
     
-    if (!($oNode->hasAttributeNS(NS_SECURITY, 'owner') && $oNode->hasAttributeNS(NS_SECURITY, 'mode') && $oNode->hasAttributeNS(NS_SECURITY, 'group'))) {
+    if (!($oNode->hasAttributeNS(NS_SECURITY, 'owner') &&
+      $oNode->hasAttributeNS(NS_SECURITY, 'mode') &&
+      $oNode->hasAttributeNS(NS_SECURITY, 'group'))) {
       
       Controler::addMessage(xt('Sécurité : Élément sécurisé incomplet : %s', new HTML_Tag('em', $oNode->viewResume())), 'xml/warning');
       
@@ -213,13 +215,16 @@ class XML_Document extends DOMDocument {
   
   public function loadFile($sPath) {
     
-    $this->sPath = $sPath;
-    
     if (($oFile = Controler::getFile($sPath, true)) && $oFile->checkRights($this->iMode)) {
+      
+      $this->oFile = $oFile;
       
       if (!$oFile->isLoaded()) {
         
+        // not yet loaded
+        
         parent::load(MAIN_DIRECTORY.$sPath);
+        if (Controler::useStatut('xml/report')) Controler::addMessage(xt('Chargement du fichier %s', $oFile->parse()), 'xml/report');
         
         if ($this->isEmpty()) {
           
@@ -228,31 +233,30 @@ class XML_Document extends DOMDocument {
           
         } else {
           
-          if (Controler::useStatut('xml/report')) Controler::addMessage(xt('Chargement du fichier %s', $oFile->parse()), 'xml/report');
           XML_Controler::addStat('load');
           
-          $oFile->setDocument(new XML_Document($this->getRoot())); // getRoot avoid parsing of specials classes
-          $oFile->isSecured($this->appendLoadRights());
+          $oFile->setDocument(new XML_Document($this->getRoot())); // getRoot avoid parsing of specials classes like actions
+          $oFile->isFileSecured($this->appendLoadRights());
         }
         
-      } else if (!$oFile->getDocument()->isEmpty()) {
+      } else if (!$oFile->getFreeDocument()->isEmpty()) {
         
-        $this->set($oFile->getDocument());
-        if ($oFile->isSecured()) $this->appendLoadRights();
+        // already loaded
+        
+        $this->set($oFile->getFreeDocument());
+        if ($oFile->isFileSecured()) $this->appendLoadRights();
       }
-    }
+      
+    } else Controler::addMessage(xt('Fichier %s introuvable', new HTML_Strong($sPath)), 'xml/warning');
   }
   
   public function loadFreeFile($sPath) {
     
     parent::load(MAIN_DIRECTORY.$sPath);
+    if (Controler::useStatut('xml/report')) Controler::addMessage(xt('Chargement [libre] du fichier %s', $oFile->parse()), 'xml/report');
     
-    if ($this->isEmpty()) if (Controler::useStatut('warning')) Controler::addMessage(xt('Document (free) : Aucun contenu dans %s', new HTML_Strong($sPath)), 'xml/warning');
-    else {
-      
-      if (Controler::useStatut('xml/report')) Controler::addMessage(xt('Document (free) : Chargement du fichier %s', new HTML_Strong($sPath)), 'xml/report');
-      XML_Controler::addStat('load');
-    }
+    if ($this->isEmpty()) Controler::addMessage(xt('Aucun contenu [libre] dans %s', $oFile->parse()), 'xml/warning');
+    else XML_Controler::addStat('load');
   }
   
   public function loadText($sContent) {
@@ -260,13 +264,18 @@ class XML_Document extends DOMDocument {
     if ($sContent) {
       
       parent::loadXML($sContent);
-      if ($this->isEmpty()) Controler::addMessage('Document : contenu invalide', 'xml/warning');
+      if ($this->isEmpty()) Controler::addMessage(t('Document : Chargement texte impossible, contenu invalide'), 'xml/warning');
       
       XML_Controler::addStat('read');
       
-    } else Controler::addMessage('Document : Aucun contenu. La chaîne est vide !', 'xml/error');
+    } else Controler::addMessage(t('Document : Chargement texte impossible, la chaîne est vide !'), 'xml/error');
     
     // $this->appendLoadRights(); TODO or not
+  }
+  
+  public function getFile() {
+    
+    return $this->oFile;
   }
   
   public function save($sPath) {
@@ -276,24 +285,56 @@ class XML_Document extends DOMDocument {
     
     if ($oDirectory = Controler::getDirectory($sDirectory)) {
       
+      $bSecuredFile = ($sName == SECURITY_FILE);
       $bAccess = ($oFile = Controler::getFile($sPath)) ? $oFile->checkRights(MODE_WRITE) : $oDirectory->checkRights(MODE_WRITE);
       
-      if ($bAccess) {
+      // TEMPORARY System fo avoiding erasing of protected files from not admin users
+      
+      if ((!$bSecuredFile && $bAccess) || ($bSecuredFile && Controler::isAdmin())) {
         
-        $this->formatOutput = true;
+        if ($oFile && $oFile->isFileSecured()) {
+          
+          // Secured File
+          
+          $oDocument = $oFile->getDocument();
+          $bSecured = false;
+          
+          $oNodes = $oDocument->query('//*[@ls:owner or @ls:mode or @ls:group]', 'ls', NS_SECURITY);
+          
+          if ($oNodes->length) {
+            
+            foreach ($oNodes as $oNode) {
+              
+              if ($oNode) {
+                
+                $iMode = $this->extractMode($oNode);
+                
+                if (!$bSecured && $iMode) $bSecured = !(MODE_WRITE & $iMode);
+              }
+            }
+          }
+          
+        } else $bSecured = false; // Not secured file
         
-        $sPath = MAIN_DIRECTORY.$sPath;
-        
-        if ($oFile) unlink($sPath);
-        $bResult = parent::save($sPath);
-        
-        $oDirectory->updateFile($sName);
+        if (!$bSecured || Controler::isAdmin()) {
+          
+          $this->formatOutput = true;
+          
+          $sPath = MAIN_DIRECTORY.$sPath;
+          
+          if ($oFile) unlink($sPath);
+          $bResult = parent::save($sPath);
+          
+          $oDirectory->updateFile($sName);
+          
+        } else Controler::addMessage(xt('Le fichier %s contient des balises protégées, le système ne permet actuellement pas de modifier ce type de fichier, veuillez contacter l\'administrateur !', new HTML_Strong($sPath)), 'error');
+
         
         return $bResult;
         
-      } else Controler::addMessage(xt('Droits insuffisants pour sauvegarder le fichier à cet emplacement %s !', new HTML_Strong($sPath)), 'file/error');
+      } else Controler::addMessage(xt('Droits insuffisants pour sauvegarder le fichier dans %s !', new HTML_Strong($sPath)), 'file/error');
       
-    } else Controler::addMessage(xt('Le répertoire de destination n\'existe pas : %s !', new HTML_Strong($sPath)), 'file/error');
+    } else Controler::addMessage(xt('Le répertoire de destination %s n\'existe pas !', new HTML_Strong($sPath)), 'file/error');
     
     return false;
   }
@@ -413,10 +454,10 @@ class XML_Document extends DOMDocument {
     return null;
   }
   
-  public function addNode($sName, $oContent = '', $aAttributes = null) {
+  public function addNode($sName, $oContent = '', $aAttributes = null, $sUri = '') {
     
-    if ($this->getRoot()) return $this->getRoot()->addNode($sName, $oContent, $aAttributes);
-    else return $this->setChild($this->createNode($sName, $oContent, $aAttributes));
+    if ($this->getRoot()) return $this->getRoot()->addNode($sName, $oContent, $aAttributes, $sUri);
+    else return $this->setChild($this->createNode($sName, $oContent, $aAttributes, $sUri));
   }
   
   public function setChild($oChild) {
@@ -514,28 +555,15 @@ class XML_Document extends DOMDocument {
   
   public function parseXSL($oTemplate) {
     
-    $oResult = null;
+    if (is_object($oTemplate)) {
+      
+      if (!$oTemplate instanceof XSL_Document) $oTemplate = new XSL_Document($oTemplate);
+      
+      return $oTemplate->parseDocument($this);
+      
+    } else Controler::addMessage(xt('Template %s invalide !', Controler::formatResource($oTemplate)), 'xml/error');
     
-    if ($oTemplate && !$oTemplate->isEmpty()) {
-      
-      $oStyleSheet = new XSLTProcessor();
-      $oStyleSheet->importStylesheet($oTemplate);
-      
-      // Transformation et affichage du résultat
-      
-      $sResult = $oStyleSheet->transformToXML($this);
-      
-      $oResult = new XML_Document();
-      $oResult->loadText($sResult);
-      XML_Controler::addStat('parse');
-      
-      if ($oResult->isEmpty()) {
-        
-        Controler::addMessage(t('Résultat invalide pour la transformation XSL !'), 'xml/warning');
-      }
-    }
-    
-    return $oResult;
+    return null;
   }
   
   public function view($bContainer = true, $bIndent = true, $bFormat = false) {
@@ -564,7 +592,7 @@ class XML_Document extends DOMDocument {
   
   public function dsp($bHtml = false) {
     
-    echo $this->view(true);
+    echo $this->view(true, true, $bHtml);
     /*
     $oView = new XML_Document($this);
     $oView->formatOutput();
@@ -583,6 +611,12 @@ class XML_Document extends DOMDocument {
     return $this->__toString();
   }
   
+  public function parseFile() {
+    
+    if ($this->getFile()) return $this->getFile()->parse();
+    else return new HTML_Em(t('- aucun chemin -'));
+  }
+  
   public function __call($sMethod, $aArguments) {
     
     $oResult = null;
@@ -597,7 +631,8 @@ class XML_Document extends DOMDocument {
         eval('$oResult = $oRoot->$sMethod('.implode(', ', $aEvalArguments).');');
         
       } else Controler::addMessage(xt('Document : Méthode %s introuvable', new HTML_Strong($sMethod)), 'xml/error');
-    }
+      
+    } else Controler::addMessage(xt('Document vide : Impossible d\'appliquer la méthode %s', new HTML_Strong($sMethod)), 'xml/error');
     
     return $oResult;
   }
@@ -980,10 +1015,18 @@ class XML_Element extends DOMElement {
     }
   }
   
-  public function merge($oElement) {
+  public function merge($oElement, $bSelfPrior = false) {
     
     $oResult = new XML_Element($this->getName(), $this->getChildren(), $this->getAttributes(), $this->getNamespace());
-    foreach ($oElement->getChildren() as $oChild) $oResult->add($oChild);
+    
+    foreach ($oElement->getChildren() as $oChild) {
+      
+      if ($oSame = $oResult->get($oChild->getName(), $oChild->getPrefix(), $oChild->getNamespace())) {
+        
+        if (!$bSelfPrior) $oSame->replace($oChild);
+        
+      } else $oResult->add($oChild);
+    }
     
     $oResult->cloneAttribute($oElement);
     
@@ -1565,7 +1608,7 @@ class XML_NodeList implements Iterator {
         default :
           
           // if ($oNode->isEmpty()) $aResults[] = $oNode->getName();
-          if ($oNode->isText()) dsp((string) $oNode);
+          if ($oNode->isText()) $aResults[] = $oNode->getValue();
           else $aResults[$oNode->getName()] = $oNode->getValue();
       }
     }
@@ -1589,8 +1632,8 @@ class XML_NodeList implements Iterator {
         for ($i = 0; $i < count($aArguments); $i++) $aEvalArguments[] = "\$aArguments[$i]";
         
         eval('$oResult = $oNode->$sMethod('.implode(', ', $aEvalArguments).');');
-      }
-      else Controler::addMessage(xt('NodeList : Méthode %s introuvable', new HTML_Strong($sMethod)), 'xml/error');
+        
+      } else Controler::addMessage(xt('NodeList : Méthode %s introuvable', new HTML_Strong($sMethod)), 'xml/error');
     }
   }
   
@@ -1612,6 +1655,14 @@ class XML_NodeList implements Iterator {
   public function current() {
     
     return $this->aNodes[$this->iIndex];
+  }
+  
+  public function view() {
+    
+    $aResult = array();
+    foreach ($this->aNodes as $oNode) $aResult[] = $oNode->view(true, true, false);
+    
+    return new HTML_Div($aResult);
   }
   
   public function valid() {
@@ -1641,20 +1692,101 @@ class XML_NodeList implements Iterator {
 
 class XML_Fragment extends DOMDocumentFragment { }
 
-class XSL_Document extends XML_Element {
+class XSL_Document extends XML_Document {
   
-  public function __construct() {
+  private $oProcessor = null;
+  
+  public function __construct($mChildren = '', $iMode = MODE_READ) {
     
-    $this->insertChild(new XML_Element('output', array('method' => 'xml', 'encoding' => 'utf-8'), true, 'xsl'));
-    $this->setNamespace('xsl');
+    $this->oProcessor = new XSLTProcessor();
+    if ($mChildren) parent::__construct($mChildren, $iMode);
+    else {
+      
+      parent::__construct(new XML_Element('xsl:stylesheet', null, array('xmlns' => NS_XHTML, 'version' => '1.0'), NS_XSLT), $iMode);
+      
+      //new XML_Element('output', array('method' => 'xml', 'encoding' => 'utf-8'), true, 'xsl'));
+      // 'xmlns:fo'    => 'http://www.w3.org/1999/XSL/Format',
+      // 'xmlns:axsl'  => 'http://www.w3.org/1999/XSL/TransformAlias',
+    }
+  }
+  
+  public function removeParameter($sLocalName, $sUri = '') {
     
-    $aAttributes = array(
-      'version'     => '1.0',
-      'xmlns:xsl'   => 'http://www.w3.org/1999/XSL/Transform',
-      'xmlns:fo'    => 'http://www.w3.org/1999/XSL/Format',
-      'xmlns:axsl'  => 'http://www.w3.org/1999/XSL/TransformAlias',
-    );
+    $bResult = $this->getProcessor()->removeParameter($sUri, $sLocalName);
     
-    parent::__construct('stylesheet', '', $aAttributes);
+    if (!$bResult) Controler::addMessage(xt('Suppression impossible du paramètre %s - [%s]', new HTML_Strong($sName), new HTML_Strong($sValue), new HTML_Strong($sUri)), 'xml/warning');
+    return $bResult;
+  }
+  
+  public function setParameter($sName, $sValue, $sUri = '') {
+    
+    $bResult = $this->getProcessor()->setParameter($sUri, $sName, $sValue);
+    
+    if (!$bResult) Controler::addMessage(xt('Création impossible du paramètre %s impossible avec la valeur %s - [%s]', new HTML_Strong($sName), new HTML_Strong($sValue), new HTML_Strong($sUri)), 'xml/warning');
+    return $bResult;
+  }
+  
+  public function getParameter($sLocalName, $sUri = '') {
+    
+    $mResult = $this->getProcessor()->getParameter($sUri, $sLocalName);
+    
+    if (!$mResult) Controler::addMessage(xt('Aucun résultat pour le paramètre %s - [%s]', new HTML_Strong($sName), new HTML_Strong($sUri)), 'xml/warning');
+    return $mResult;
+  }
+  
+  private function getProcessor() {
+    
+    return $this->oProcessor;
+  }
+  
+  public function includeExternals() {
+    
+    if ($oExternals = $this->query('/*/xsl:include | /*/xsl:import', 'xsl', NS_XSLT)) {
+      
+      foreach ($oExternals as $oExternal) {
+        
+        if ($sHref = $oExternal->getAttribute('href')) {
+          
+          if ($this->getFile()) $sPath = Controler::getAbsolutePath($sHref, $this->getFile()->getParent().'/');
+          else $sPath = Controler::getAbsolutePath($sHref, '/');
+          
+          $oTemplate = new XSL_Document($sPath);
+          
+          if (!$oTemplate->isEmpty()) {
+            
+            $oTemplate->includeExternals();
+            
+            switch ($oExternal->getName(true)) {
+              
+              case 'include' : $oExternal->replace($oTemplate->getChildren()); break;
+              case 'import' : $this->shift($oTemplate->getChildren()); break;
+            }
+          }
+        }
+        
+        $oExternal->remove();
+      }
+    }
+  }
+  
+  public function parseDocument($oDocument) {
+    
+    $oResult = null;
+    
+    if ($oDocument && !$oDocument->isEmpty() && !$this->isEmpty()) {
+      
+      $this->includeExternals();
+      $this->getProcessor()->importStylesheet($this);
+      
+      $sResult = $this->getProcessor()->transformToXML($oDocument);
+      $oResult = new XML_Document($sResult);
+      
+      XML_Controler::addStat('parse');
+      
+      if ($oResult->isEmpty()) Controler::addMessage(t('Aucun résultat de la transformation XSL !'), 'xml/warning');
+    }
+    
+    return $oResult;
+    
   }
 }

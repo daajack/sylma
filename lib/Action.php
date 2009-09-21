@@ -46,8 +46,7 @@ class XML_Action extends XML_Document {
   
   private function getAbsolutePath($sPath) {
     
-    if ($sPath{0} == '/') return $sPath;
-    else return $this->getDirectory().$sPath;
+    return Controler::getAbsolutePath($sPath, $this->getDirectory());
   }
   
   private function loadInterface($oInterface) {
@@ -352,6 +351,7 @@ class XML_Action extends XML_Document {
               if ($sPath = $oInterface->read('ns:file')) $sPath = $this->getAbsolutePath($sPath);
               
               $mResult = $this->buildClass($sClassName, $sPath, $aArguments);
+              $bRun = true;
             }
             
           break;
@@ -422,7 +422,10 @@ class XML_Action extends XML_Document {
             
           break;
           
+          case 'template' : $sClass = 'XSL_Document';
           case 'file' : 
+            
+            if (!isset($sClass)) $sClass = 'XML_Document';
             
             if (!($sPath = $oElement->getAttribute('path')) && !($sPath = $this->buildArgument($oElement->getFirst()->remove()))) {
               
@@ -437,7 +440,7 @@ class XML_Action extends XML_Document {
               if (($iTempMode = $oElement->getAttribute('mode')) && in_array($iTempMode, array(MODE_READ, MODE_WRITE, MODE_EXECUTION)))
                 $iMode = $iTempMode;
               
-              $mResult = new XML_Document($this->getAbsolutePath($sPath), $iMode);
+              $mResult = new $sClass($this->getAbsolutePath($sPath), $iMode);
               
               $bRun = true;
             }
@@ -1224,9 +1227,12 @@ class XML_Path {
     $oDirectory = Controler::getDirectory();
     $oFile = null;
     
-    $aPath = explode('/', $this->getPath());
-    
-    array_shift($aPath);
+    if ($this->getPath() == '/') $aPath = array();
+    else {
+      
+      $aPath = explode('/', $this->getPath());
+      array_shift($aPath);
+    }
     
     do {
       
@@ -1241,7 +1247,7 @@ class XML_Path {
       if (!$oFile && (!$aPath || !$oSubDirectory)) {
         
         if ($oFile = $oDirectory->getFile('index.eml')) $bUseIndex = true;
-        else if ($oDirectory->checkRights(1)) {
+        else if ($oDirectory->checkRights(MODE_EXECUTION)) {
           
           $bError = true;
           Controler::addMessage(xt('Le listing de répertoire n\'est pas encore possible :| : "%s"', new HTML_Strong($oDirectory)), 'action/warning');

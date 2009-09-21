@@ -32,7 +32,7 @@ class Form_Controler {
     
     $aMsg = array();
     
-    if (!$aSchema) $aMsg[] = new Message(t('Le contrôle des champs n\'a pu s\'effectuer correctement. Impossible d\'enregistrer !', 'error'));
+    if (!$aSchema) $aMsg[] = new Message(t('Le contrôle des champs n\'a pu s\'effectuer correctement. Impossible de continuer !', 'error'));
     
     foreach ($aSchema as $sKey => $aField) {
       
@@ -127,7 +127,7 @@ class Form_Controler {
     return $aMsg;
   }
   
-  public function importPost($aSchema) {
+  public function importPost($aSchema, $bXML = false) {
     
     $aFields = array();
     
@@ -157,7 +157,8 @@ class Form_Controler {
           
           // Autres
           
-          $mValue = db::formatString($sValue); 
+          if ($bXML) $mValue = addQuote(xmlize($sValue));
+          else $mValue = db::formatString($sValue); 
         }
         
       } else {

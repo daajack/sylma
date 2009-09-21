@@ -13,7 +13,7 @@ require('Field.php');
 require('Controler.php');
 require('Messages.php');
 require('User.php');
-require('File.php');
+require('Resource.php');
 require('Database.php');
 require('Window.php');
 require('spyc/spyc.php');

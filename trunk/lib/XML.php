@@ -1208,6 +1208,14 @@ class XML_Element extends DOMElement {
     // else if ($this->getDocument()->getRoot() == $this) return $this->getDocument()->removeChild($this);
   }
   
+  public function move($oElement) {
+    
+    $oResult = $oElement->add($this);
+    $this->remove();
+    
+    return $oResult;
+  }
+  
   /**
    * Return the list of children of the current element with {@link $childNodes}
    * @return XML_NodeList The children :)
@@ -1406,7 +1414,7 @@ class XML_Element extends DOMElement {
     else return $sView;
   }
   
-  public function view($bContainer = true, $bIndent = false, $bFormat = true) {
+  public function view($bContainer = true, $bIndent = false, $bFormat = false) {
     
     $oResult = clone $this;
     

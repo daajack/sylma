@@ -329,7 +329,7 @@ class Controler {
     $_SESSION['redirect'] = serialize($oRedirect);
   }
   
-  public static function formatResource($mArgument, $bDecode = false, $iMaxLength = 120, $bElementDisplay = false) {
+  public static function formatResource($mArgument, $bDecode = false, $iMaxLength = 120, $bElementDisplay = true) {
     
     if (FORMAT_MESSAGES) {
       

@@ -7,6 +7,7 @@ require('XML.php');
 require('XML_Controler.php');
 require('HTML.php');
 require('Action.php');
+require('ActionScript.php');
 require('Action_Controler.php');
 require('HTML_Form.php');
 require('Field.php');

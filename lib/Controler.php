@@ -23,7 +23,7 @@ class Controler {
   public static function trickMe() {
     
     global $aDefaultInitMessages;
-    
+    // file_put_contents('temp-'.uniqid().'.txt', $_SERVER['QUERY_STRING']);
     self::$iStartTime = microtime(true);
     
     self::$oMessages = new Messages();
@@ -290,7 +290,7 @@ class Controler {
   public static function error404() {
     
     header('HTTP/1.0 404 Not Found');
-    echo 'Erreur 404 :\'(';
+    // echo 'Erreur 404 :\'(';
     exit;
   }
   
@@ -329,7 +329,7 @@ class Controler {
     $_SESSION['redirect'] = serialize($oRedirect);
   }
   
-  public static function formatResource($mArgument, $bDecode = false, $iMaxLength = 120, $bElementDisplay = true) {
+  public static function formatResource($mArgument, $bDecode = false, $iMaxLength = 120) {
     
     if (FORMAT_MESSAGES) {
       
@@ -339,15 +339,38 @@ class Controler {
         $aValue = $mArgument ? array('TRUE', 'green') :  array('FALSE', 'red');
       else if (is_numeric($mArgument))
         $aValue = array($mArgument, 'green');
-      else if (is_array($mArgument))
-        $aValue = array(xt('array(%s)', new HTML_Strong(count($mArgument))), 'orange');
-      else if (is_object($mArgument)) {
+      else if (is_array($mArgument)) {
+        
+        // Arrays
+        
+        if (count($mArgument)) {
+          
+          $oContent = new HTML_Div(null, array('style' => 'display: inline;'));
+          foreach ($mArgument as $mKey => $mValue) $oContent->add(self::formatResource($mKey), ' => ', self::formatResource($mValue, false));
+        } else $oContent = '';
+        
+        $aValue = array(xt('array[%s](%s)', new HTML_Strong(count($mArgument)), $oContent), 'orange');
+        
+      } else if (is_object($mArgument)) {
         
         // Objects
         
-        if ($mArgument instanceof XML_Element) {
+        if ($mArgument instanceof XML_Document && !($mArgument instanceof XML_Action)) {
           
-          if ($bElementDisplay) $oContainer = $mArgument->view(true, true, $bDecode);
+          /* XML_Document */
+          
+          if (MESSAGES_SHOW_XML) $oContainer = $mArgument->view(true, true, $bDecode);
+          else $oContainer = new HTML_Span();
+          
+          $oContainer->addClass('hidden');
+          
+          $aValue = array(new HTML_Div(array(
+            get_class($mArgument),
+            $oContainer), array('class' => 'element')), 'purple');
+          
+        } else if ($mArgument instanceof XML_Element) {
+          
+          if (MESSAGES_SHOW_XML) $oContainer = $mArgument->view(true, true, $bDecode);
           else $oContainer = new HTML_Span();
           
           $oContainer->addClass('hidden');
@@ -358,7 +381,13 @@ class Controler {
           
         } else if ($mArgument instanceof XML_NodeList) {
           
-          $aValue = array(xt('XML_NodeList(%s)', new HTML_Strong($mArgument->length)), 'green');
+          if ($mArgument->length) {
+            
+            $oContent = new HTML_Div(null, array('style' => 'display: inline;'));
+            foreach ($mArgument as $mKey => $mValue) $oContent->add(self::formatResource($mKey), ' => ', self::formatResource($mValue, false));
+          } else $oContent = '';
+          
+          $aValue = array(xt('XML_NodeList[%s](%s)', new HTML_Strong($mArgument->length), $oContent), 'green');
           
         } else {
           
@@ -566,6 +595,8 @@ class Controler {
   public static function addMessage($mMessage = '- message vide -', $sPath = 'notice', $aArgs = array()) {
     
     // if (in_array($sPath, array('action/error', 'file/error'))) $mMessage = array($mMessage, Controler::getBacktrace());
+    
+    if (Controler::isAdmin() && MESSAGES_BACKTRACE && strstr($sPath, 'error')) $mMessage = array($mMessage, Controler::getBacktrace());
     
     self::getMessages()->addMessage(new Message($mMessage, $sPath, $aArgs));
   }

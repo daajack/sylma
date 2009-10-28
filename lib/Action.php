@@ -7,6 +7,7 @@ class XML_Action extends XML_Document {
   private $aVariables = array();
   private $oRedirect = null;
   private $sStatut = 'void';
+  private $aProcessors = array();
   
   public function __construct($mPath, $oRedirect = null) {
     
@@ -55,35 +56,36 @@ class XML_Action extends XML_Document {
     $sMethod = '';
     $aArguments = array();
     
-    $sClassName = $oInterface->read('ns:name');
-    if ($sFile = $oInterface->read('ns:file')) $sFile = $this->getAbsolutePath($sFile);
-    // dsp('Création d\'un interface');
-    // dsp($this->getPath()->getArgument('index'));
-    // dsp($this->getPath()->getArgument('assoc'));
-    if ($oConstruct = $oInterface->get('ns:method-construct')) {
+    if ($oInterface = Action_Controler::setInterface($oInterface)) {
       
-      if ($oConstruct->hasChildren()) {
+      $sClassName = $oInterface->read('ns:name');
+      if ($sFile = $oInterface->read('ns:file')) $sFile = $this->getAbsolutePath($sFile);
+      
+      if ($oConstruct = $oInterface->get('ns:method-construct')) {
         
-        $aArguments = $this->parseArguments($oConstruct, array(), true);
-        if (!$aArguments && ($oConstruct->query('ns:argument[@required="false"]')->length != $oConstruct->query('ns:argument')->length)) {
+        if ($oConstruct->hasChildren()) {
           
-          Controler::addMessage('Erreur dans les arguments, impossible de construire l\'objet', 'action/warning');
-          return null;
+          $aArguments = $this->parseArguments($oConstruct, array(), true);
+          if (!$aArguments && ($oConstruct->query('ns:argument[@required="false"]')->length != $oConstruct->query('ns:argument')->length)) {
+            
+            Controler::addMessage('Erreur dans les arguments, impossible de construire l\'objet', 'action/warning');
+            return null;
+          }
         }
       }
+      
+      $oObject = $this->buildClass($sClassName, $sFile, $aArguments);
+      
+      if (($sMethod = $this->getPath()->getIndex()) && is_string($sMethod)) {
+        
+        $oElement = new XML_Element('li:'.$sMethod, null, array('get-redirect' => 'true'), NS_INTERFACE);
+        list($oSubResult, $bSubResult) = $this->runInterfaceMethod($oObject, $oElement, $this);
+        
+        if ($bSubResult) $oResult = $oSubResult;
+        else $oResult = $oObject;
+        
+      } else $oResult = $oObject;
     }
-    
-    $oObject = $this->buildClass($sClassName, $sFile, $aArguments);
-    
-    if (($sMethod = $this->getPath()->getIndex()) && is_string($sMethod)) {
-      
-      $oElement = new XML_Element('li:'.$sMethod, null, array('get-redirect' => 'true'), NS_INTERFACE);
-      list($oSubResult, $bSubResult) = $this->runInterfaceMethod($oObject, $oElement, $this);
-      
-      if ($bSubResult) $oResult = $oSubResult;
-      else $oResult = $oObject;
-      
-    } else $oResult = $oObject;
     
     return $oResult;
   }
@@ -127,22 +129,33 @@ class XML_Action extends XML_Document {
       
       if ($oChild->isElement()) {
         
-        if ($oChild->getNamespace() != NS_INTERFACE) {
-          
-          Controler::addMessage(array(xt('runInterfaceList() : L\'élément suivant n\'est pas permis dans %s ', $this->getPath()->parse()), new HTML_Tag('p', new HTML_Em($oChild->viewResume(150, true)))), 'action/error');
-          $oChild->remove();
-          
-        } else {
+        if ($oChild->getNamespace() == NS_INTERFACE) {
           
           list($mResult, $bReturn) = $this->runInterfaceMethod($mObject, $oChild, $oInterface, $bStatic);
           
           if ($bReturn) $aResults[] = $mResult;
+          
+        } else if ($oProcessor = $this->getProcessor($oChild->getNamespace())) {
+          
+          $mResult = $this->loadProcessor($oChild, $oProcessor);
+          //$oChild->remove();
+          
+          if (Controler::useStatut('action/report')) Controler::addMessage(array(
+            t('Construction [ifc] :'),
+            Controler::formatResource($mResult),
+            $oChild->messageParse()), 'action/report');
+          
+        } else {
+          
+          Controler::addMessage(array(xt('runInterfaceList() : L\'élément suivant n\'est pas permis dans %s ', $this->getPath()->parse()), $oChild->messageParse()), 'action/error');
+          $oChild->remove();
         }
         
-      } else Controler::addMessage(array(xt('runInterfaceList() : Noeud texte "%s" impossible dans %s', new HTML_Strong($oChild), $this->getPath()->parse()), $oElement->messageParse()), 'action/error');
+      } else $aResults[] = $oElement->getValue();
     }
     
     if ($aResults) {
+      
       if (count($aResults) == 1) $mResult = $aResults[0];
       else $mResult = new XML_NodeList($aResults);
     }
@@ -181,7 +194,7 @@ class XML_Action extends XML_Document {
       
       if (!$oMethod = $oInterface->get("ns:method[@path='$sActionMethod']")) {
         
-        Controler::addMessage(xt('Méthode "%s" inexistante dans l\'interface "%s"', new HTML_Strong($oElement->getName(true)), new HTML_Strong($oInterface->read('ns:name'))), 'action/warning');
+        Controler::addMessage(array(xt('Méthode "%s" inexistante dans l\'interface "%s"', new HTML_Strong($oElement->getName(true)), new HTML_Strong($oInterface->read('ns:name'))), $oElement->messageParse()), 'action/warning');
         
       } else {
         
@@ -256,299 +269,368 @@ class XML_Action extends XML_Document {
     return $aArguments;
   }
   
-  private function buildArgument($oElement) {
+  private function buildArgumentAction($oElement, $bParse) {
     
-    $mResult = null;
-    $mObject = null;
+    // get the path
+    
+    if (!$sPath = $oElement->getAttribute('path')) {
+      
+      if (!$oElement->hasChildren()) {
+        
+        Controler::addMessage(xt('Aucun chemin spécifié pour l\'action dans %s.', new HTML_Strong($this->getPath())), 'action/warning');
+        
+      } else {
+        
+        $sPath = (string) $this->buildArgument($oElement->getFirst());
+        $oElement->getFirst()->remove();
+      }
+    }
+    
+    if ($sPath) {
+      
+      $oPath = new XML_Path($this->getAbsolutePath($sPath), $bParse);
+      
+      if ((string) $oPath == (string) $this->getPath()) {
+        
+        Controler::addMessage(array(xt('Récursivité dans l\'action, chemin "%s" invalide !', $oPath->parse()), $oElement->messageParse()), 'action/error');
+        
+      } else {
+        
+        $oRedirect = clone $this->getRedirect();
+        
+        if ($oElement->hasChildren()) {
+          
+          $aArguments = $this->loadElementArguments($oElement);
+          
+          $oPath->pushIndex($aArguments['index']);
+          $oPath->mergeAssoc($aArguments['assoc']);
+        }
+        
+        $oAction = new XML_Action($oPath, $oRedirect);
+        $mResult = $oAction->parse();
+        
+        switch ($oAction->getStatut()) {
+          
+          case 'success' : break;
+          case 'redirect' : 
+            
+            $this->setStatut('redirect');
+            $this->setRedirect($mResult);
+            $mResult = null;
+            
+          break;
+          
+          default : $mResult = null; break;
+        }
+        
+        $bRun = true;
+      }
+    }
+    
+    return array($mResult, $bRun);
+  }
+  
+  private function buildArgumentExecution($oElement) {
+    
     $bRun = false;
-    $bStatic = false;
+    $mResult = null;
     
     $mSubResult = null;
     $bSubReturn = false;
     
-    if ($oElement->isText()) {
+    switch ($oElement->getName(true)) {
       
-      $mResult = (string) $oElement;
-      
-    } else { // XML_Element
-      
-      if ($oElement->useNamespace(NS_EXECUTION)) {
+      case 'argument' :
         
-        switch ($oElement->getName(true)) {
+        if ($oElement->hasChildren()) $mResult = $this->buildArgument($oElement->getFirst());
+        else $mResult = null;
+        
+      break;
+      
+      case 'test-argument' :
+        
+        $oArgument = new XML_Element('le:get-argument', null, array(
+          'keep' => 'true'), NS_EXECUTION);
+        
+        if ($sName = $oElement->getAttribute('name')) $oArgument->setAttribute('name', $sName);
+        
+        if ($oElement->hasChildren()) {
           
-          case 'argument' :
-            
-            if ($oElement->hasChildren()) $mResult = $this->buildArgument($oElement->getFirst());
-            else $mResult = null;
-            
-          break;
+          $mArgument = $this->buildArgument($oArgument);
           
-          case 'test-argument' :
+          if ((($oElement->testAttribute('value') !== false) && $mArgument) ||
+            (($oElement->testAttribute('value') === false) && !$mArgument)) {
             
-            $oArgument = new XML_Element('le:get-argument', null, array(
-              'keep' => 'true'), NS_EXECUTION);
-            
-            if ($sName = $oElement->getAttribute('name')) $oArgument->setAttribute('name', $sName);
-            
-            if ($oElement->hasChildren()) {
-              
-              $mArgument = $this->buildArgument($oArgument);
-              
-              if ((($oElement->testAttribute('value') !== false) && $mArgument) ||
-                (($oElement->testAttribute('value') === false) && !$mArgument)) {
-                
-                $mResult = $this->buildArgument($oElement->getFirst());
-              }
-            }
-            
-          break;
-          
-          case 'get-argument' :
-            
-            $bKeep = $oElement->testAttribute('keep');
-            
-            if ($sName = $oElement->getAttribute('name')) $mResult = $this->getPath()->getAssoc($sName, ($bKeep !== false));
-            else if ($iIndex = $oElement->getAttribute('index')) $mResult = $this->getPath()->getIndex($iIndex, $bKeep);
-            else $mResult = $this->getPath()->getIndex(0, $bKeep);
-            
-            $bRun = true;
-            
-          break;
-          
-          case 'get-variable' :
-            
-            if (!$sVariable = $oElement->getAttribute('name')) {
-              
-              Controler::addMessage(array(t('Aucune variable définie !'), $oElement->messageParse()), 'action/warning');
-              
-            } else {
-              
-              $mResult = $this->getVariable($sVariable);
-              
-              $bRun = true;
-            }
-            
-          break;
-          
-          case 'interface' :
-            
-            if (!$sClassName = $oElement->getAttribute('class')) {
-              
-              Controler::addMessage(array(
-                xt('L\'élément %s doit spécifier une classe avec l\'attribut class', new HTML_Strong($oElement->getName())),
-                new HTML_Tag('p', new HTML_Em($oElement->viewResume()))), 'action/error');
-              
-            } else {
-              
-              $oInterface = Action_Controler::getInterface($sClassName);
-              $aArguments = array();
-              
-              if ($oConstruct = $oInterface->get('ns:method-construct')) {
-                
-                $aArguments = $this->parseArguments($oConstruct, $this->loadElementArguments($oElement));
-              }
-              
-              if ($sPath = $oInterface->read('ns:file')) $sPath = $this->getAbsolutePath($sPath);
-              
-              $mResult = $this->buildClass($sClassName, $sPath, $aArguments);
-              $bRun = true;
-            }
-            
-          break;
-          
-          case 'direct-action' :
-            
-            $bParse = false;
-          
-          case 'action' :
-            
-            if (!isset($bParse)) $bParse = true;
-            
-            if (!$sPath = $oElement->getAttribute('path')) {
-              
-              if (!$oElement->hasChildren()) {
-                
-                Controler::addMessage(xt('Aucun chemin spécifié pour l\'action dans %s.', new HTML_Strong($this->getPath())), 'action/warning');
-                
-              } else {
-                
-                $sPath = (string) $this->buildArgument($oElement->getFirst());
-                $oElement->getFirst()->remove();
-              }
-            }
-            
-            if ($sPath) {
-              
-              $oPath = new XML_Path($this->getAbsolutePath($sPath), $bParse);
-              
-              if ((string) $oPath == (string) $this->getPath()) {
-                
-                Controler::addMessage(array(
-                  xt('Récursivité dans l\'action, chemin "%s" invalide !', $oPath->parse()),
-                  $oElement->messageParse()), 'action/error');
-                
-              } else {
-                
-                $oRedirect = clone $this->getRedirect();
-                
-                if ($oElement->hasChildren()) {
-                  
-                  $aArguments = $this->loadElementArguments($oElement);
-                  
-                  $oPath->pushIndex($aArguments['index']);
-                  $oPath->mergeAssoc($aArguments['assoc']);
-                }
-                
-                $oAction = new XML_Action($oPath, $oRedirect);
-                $mResult = $oAction->parse();
-                
-                switch ($oAction->getStatut()) {
-                  
-                  case 'success' : break;
-                  case 'redirect' : 
-                    
-                    $this->setStatut('redirect');
-                    $this->setRedirect($mResult);
-                    $mResult = null;
-                    
-                  break;
-                  
-                  default : $mResult = null; break;
-                }
-                
-                $bRun = true;
-              }
-            }
-            
-          break;
-          
-          case 'template' : $sClass = 'XSL_Document';
-          case 'file' : 
-            
-            if (!isset($sClass)) $sClass = 'XML_Document';
-            
-            if (!($sPath = $oElement->getAttribute('path')) && !($sPath = $this->buildArgument($oElement->getFirst()->remove()))) {
-              
-              Controler::addMessage(array(
-                xt('Aucun chemin spécifié pour le fichier dans %s.', new HTML_Strong($this->getPath())),
-                new HTML_Tag('p', new HTML_Em($oElement->viewResume()))), 'action/warning');
-              
-            } else {
-              
-              $iMode = MODE_EXECUTION;
-              
-              if (($iTempMode = $oElement->getAttribute('mode')) && in_array($iTempMode, array(MODE_READ, MODE_WRITE, MODE_EXECUTION)))
-                $iMode = $iTempMode;
-              
-              $mResult = new $sClass($this->getAbsolutePath($sPath), $iMode);
-              
-              $bRun = true;
-            }
-            
-          break;
-          
-          case 'field' :
-            
-            if (!$this->oCurrentObject || !($this->oCurrentObject instanceof HTML_Form)) {
-              
-              Controler::addMessage(xt('Aucun formulaire n\'a été instancié avec le:form par l\'élément %s !', new HTML_Strong($oElement->viewResume())), 'action/error');
-              
-            } else {
-              
-              $mResult = $this->oCurrentObject->buildField($oElement);
-            }
-            
-          break;
-          
-          case 'form' :
-            
-            $oForm = new HTML_Form();
-            $oForm->cloneAttribute($oElement);
-            
-            $this->oCurrentObject = $oForm;
-            
-            // foreach ($oElement->getChildren() as $oChild) $oForm->add($this->buildArgument($oChild));
-            
-            $mResult = $oForm;
-            
-            if ($oElement->hasChildren()) $this->runInterfaceList($mResult, $oElement);
-            
-          break;
-          
-          case 'php' :
-          case 'special' : 
-            
-            $sSpecialName = $oElement->getAttribute('name');
-            
-          default :
-            
-            if (!isset($sSpecialName)) $sSpecialName = $oElement->getName(true);
-            $aPhp = array('array', 'string', 'null', 'integer', 'boolean');
-            
-            if (in_array($sSpecialName, $aPhp)) $mResult = $this->parseBaseType($sSpecialName, $oElement);
-            else if ($aSpecial = Action_Controler::getSpecial($sSpecialName, $this, $this->getRedirect())) {
-              
-              if ($aSpecial['return']) $mResult = $aSpecial['variable'];
-              list($mSubResult, $bSubReturn) = $this->runInterfaceList($aSpecial['variable'], $oElement, $aSpecial['static']);
-            }
-            
-          break;
-          
+            $mResult = $this->buildArgument($oElement->getFirst());
+          }
         }
         
-        $this->setVariableElement($oElement, $mResult);
+      break;
+      
+      case 'get-argument' :
         
-        if (Controler::useStatut('action/report'))
-          Controler::addMessage(array(
-            xt('Construction : %s', Controler::formatResource($mResult, true)),
-            $oElement->messageParse()), 'action/report');
+        $bKeep = $oElement->testAttribute('keep');
         
-        if ($bRun && $oElement->hasChildren()) {
+        if ($sName = $oElement->getAttribute('name')) $mResult = $this->getPath()->getAssoc($sName, ($bKeep !== false));
+        else if ($iIndex = $oElement->getAttribute('index')) $mResult = $this->getPath()->getIndex($iIndex, $bKeep);
+        else $mResult = $this->getPath()->getIndex(0, $bKeep);
+        
+        $bRun = true;
+        
+      break;
+      
+      case 'get-variable' :
+        
+        if (!$sVariable = $oElement->getAttribute('name')) {
           
-          list($mSubResult, $bSubReturn) = $this->runInterfaceList($mResult, $oElement, $bStatic);
+          Controler::addMessage(array(t('Aucune variable définie !'), $oElement->messageParse()), 'action/warning');
+          
+        } else {
+          
+          $mResult = $this->getVariable($sVariable);
+          
+          $bRun = true;
         }
         
-        if ($oElement->testAttribute('return') === false) $mResult = null;
-        
-        if (Controler::useStatut('action/report') && $bSubReturn)
-          Controler::addMessage(array(
-            xt('Return sub-result : %s', Controler::formatResource($mSubResult, true)),
-            $oElement->messageParse()), 'action/report');
-        
-      } else if ($oElement->useNamespace(NS_INTERFACE)) {
+      break;
       
-        Controler::addMessage(xt('L\'appel de la méthode "%s" ici est interdit !', new HTML_Strong($oElement->viewResume())), 'action/error');
-        $mResult = null;
+      case 'interface' :
+        
+        if (!$sClassName = $oElement->getAttribute('class')) {
+          
+          Controler::addMessage(array(
+            xt('L\'élément %s doit spécifier une classe avec l\'attribut class', new HTML_Strong($oElement->getName())),
+            new HTML_Tag('p', new HTML_Em($oElement->viewResume()))), 'action/error');
+          
+        } else {
+          
+          $oInterface = Action_Controler::getInterface($sClassName);
+          $aArguments = array();
+          
+          if ($oConstruct = $oInterface->get('ns:method-construct')) {
+            
+            $aArguments = $this->parseArguments($oConstruct, $this->loadElementArguments($oElement));
+          }
+          
+          if ($sPath = $oInterface->read('ns:file')) $sPath = $this->getAbsolutePath($sPath);
+          
+          $mResult = $this->buildClass($sClassName, $sPath, $aArguments);
+          $bRun = true;
+        }
+        
+      break;
+      
+      case 'direct-action' :
+        
+        $bParse = false;
+      
+      case 'action' :
+        
+        if (!isset($bParse)) $bParse = true;
+        list($mResult, $bRun) = $this->buildArgumentAction($oElement, $bParse);
+        
+      break;
+      
+      case 'template' : $sClass = 'XSL_Document';
+      case 'file' : 
+        
+        if (!isset($sClass)) $sClass = 'XML_Document';
+        
+        if (!($sPath = $oElement->getAttribute('path')) && !($sPath = $this->buildArgument($oElement->getFirst()->remove()))) {
+          
+          Controler::addMessage(array(
+            xt('Aucun chemin spécifié pour le fichier dans %s.', new HTML_Strong($this->getPath())),
+            new HTML_Tag('p', new HTML_Em($oElement->viewResume()))), 'action/warning');
+          
+        } else {
+          
+          $iMode = MODE_EXECUTION;
+          
+          if (($iTempMode = $oElement->getAttribute('mode')) && in_array($iTempMode, array(MODE_READ, MODE_WRITE, MODE_EXECUTION)))
+            $iMode = $iTempMode;
+          
+          $mResult = new $sClass($this->getAbsolutePath($sPath), $iMode);
+          
+          $bRun = true;
+        }
+        
+      break;
+      
+      case 'recall' :
+        
+        if ($oElement->hasChildren()) {
+          
+          $mResult = $this->buildArgument($oElement->getChildren());
+          $mResult = $this->buildArgument($mResult);
+        }
+        
+      break;
+      
+      case 'field' :
+        
+        if (!$this->oCurrentObject || !($this->oCurrentObject instanceof HTML_Form)) {
+          
+          Controler::addMessage(xt('Aucun formulaire n\'a été instancié avec le:form par l\'élément %s !', new HTML_Strong($oElement->viewResume())), 'action/error');
+          
+        } else {
+          
+          $mResult = $this->oCurrentObject->buildField($oElement);
+        }
+        
+      break;
+      
+      case 'form' :
+        
+        $oForm = new HTML_Form();
+        $oForm->cloneAttribute($oElement);
+        
+        $this->oCurrentObject = $oForm;
+        
+        // foreach ($oElement->getChildren() as $oChild) $oForm->add($this->buildArgument($oChild));
+        
+        $mResult = $oForm;
+        
+        if ($oElement->hasChildren()) $this->runInterfaceList($mResult, $oElement);
+        
+      break;
+      
+      case 'php' :
+      case 'special' : 
+        
+        $sSpecialName = $oElement->getAttribute('name');
+        
+      default :
+        
+        if (!isset($sSpecialName)) $sSpecialName = $oElement->getName(true);
+        $aPhp = array('array', 'string', 'null', 'integer', 'boolean');
+        
+        if (in_array($sSpecialName, $aPhp)) $mResult = $this->parseBaseType($sSpecialName, $oElement);
+        else if ($aSpecial = Action_Controler::getSpecial($sSpecialName, $this, $this->getRedirect())) {
+          
+          if ($aSpecial['return']) $mResult = $aSpecial['variable'];
+          list($mSubResult, $bSubReturn) = $this->runInterfaceList($aSpecial['variable'], $oElement, $aSpecial['static']);
+        }
+        
+      break;
+    }
+    
+    $this->setVariableElement($oElement, $mResult);
+    
+    if (Controler::useStatut('action/report')) Controler::addMessage(array(
+      t('Construction [exe] :'),
+      Controler::formatResource($mResult),
+      $oElement->messageParse()), 'action/report');
+    
+    // Run children if allowed
+    
+    if ($bRun && $oElement->hasChildren()) list($mSubResult, $bSubReturn) = $this->runInterfaceList($mResult, $oElement);
+    
+    // return attribute will define if main result is returned
+    
+    if ($oElement->testAttribute('return') === false) $mResult = null;
+    $mResult = $bSubReturn ? $mSubResult : $mResult;
+    
+    if (Controler::useStatut('action/report') && $bSubReturn) Controler::addMessage(array(
+      t('Return sub-result :'),
+      Controler::formatResource($mSubResult),
+      $oElement->messageParse()), 'action/report');
+    
+    // Clone some attribute when element is an le:action
+    
+    if ($oElement->isElement() && $oElement->getName(true) == 'action' && $oElement->useNamespace(NS_EXECUTION) && is_object($mResult)) {
+      
+      if (($mResult instanceof XML_Document) || ($mResult instanceof XML_Element))
+        $mResult->cloneAttribute($oElement, array('class', 'style', 'id'));
+      else if ($mResult instanceof XML_NodeList && $mResult->length && $mResult->item(0)->isElement())
+        $mResult->item(0)->cloneAttribute($oElement, array('class', 'style'));
+      
+    }
+    
+    return $mResult;
+  }
+  
+  private function loadProcessor($oElement, $oProcessor) {
+    
+    $mResult = $oProcessor->loadElement($oElement);
+    
+    if ($oElement->hasElementChildren()) {
+      
+      if ($oProcessor->useInterface()) {
+        
+        list($mSubResult, $bSubReturn) = $this->runInterfaceList($mResult, $oElement);
         
       } else {
         
-        $oElementResult = clone $oElement;
-        $oElementResult->cleanChildren();
-        $oChildren = $oElement->getChildren();
-        
-        for ($i = 0; $i < $oChildren->length; $i++) {
-          
-          $oElementResult->add($this->buildArgument($oChildren->item($i)));
-        }
-        
-        $mResult = $oElementResult;
+        $mSubResult = $this->buildArgument($oElement->getChildren());
       }
-    }
-    
-    $mRealResult = $bSubReturn ? $mSubResult : $mResult;
-    
-    if ($oElement->isElement() && $oElement->getName(true) == 'action' && $oElement->useNamespace(NS_EXECUTION) && is_object($mRealResult)) {
       
-      if (($mRealResult instanceof XML_Document) || ($mRealResult instanceof XML_Element)) {
-        
-        $mRealResult->cloneAttribute($oElement, array('class', 'style', 'id'));
-        
-      } else if ($mRealResult instanceof XML_NodeList && $mRealResult->length && $mRealResult->item(0)->isElement()) {
-        
-        $mRealResult->item(0)->cloneAttribute($oElement, array('class', 'style'));
-      }
+      if ($mResult) $mResult->add($mSubResult);
+      else $mResult = $mSubResult;
     }
-    return $mRealResult;
+    
+    $oProcessor->unloadElement();
+    
+    return $mResult;
+  }
+  
+  private function buildArgument($oElement) {
+    
+    $mResult = null;
+    
+    if ($oElement instanceof XML_Element) { // XML_Element
+      
+      if ($oElement->useNamespace(NS_EXECUTION)) {
+        
+        /* Execution */
+        
+        $mResult = $this->buildArgumentExecution($oElement);
+        
+      } else if ($oElement->useNamespace(NS_INTERFACE)) {
+        
+        /* Interface */
+        
+        Controler::addMessage(xt('Aucune méthode ne peut être appellée ici !%s', new $oElement->messageParse()), 'action/error');
+        $mResult = null;
+        
+      } else if ($oProcessor = $this->getProcessor($oElement->getNamespace())) {
+        
+        /* Other Processors */
+        
+        $mResult = $this->loadProcessor($oElement, $oProcessor);
+        
+      } else {
+        
+        /* Unknown namespace -> copy element */
+        
+        $mResult = clone $oElement;
+        $mResult->cleanChildren();
+        
+        $mResult->add($this->buildArgument($oElement->getChildren()));
+      }
+      
+    } else if ($oElement instanceof XML_NodeList) {
+      
+      $oContainer = new XML_Element();
+      foreach ($oElement as $oChild) $oContainer->add($this->buildArgument($oChild));
+      
+      $mResult = $oContainer->getChildren();
+      
+    } else if ($oElement->isText()) {
+      
+      $mResult = (string) $oElement;
+    }
+    
+    if (Controler::useStatut('action/report')) Controler::addMessage(array(
+      t('Construction :'),
+      Controler::formatResource($mResult),
+      $oElement->messageParse()), 'action/report');
+    
+    return $mResult;
+  }
+  
+  private function getProcessor($sUri) {
+    
+    return array_key_exists($sUri, $this->aProcessors) ? $this->aProcessors[$sUri] : null;
   }
   
   private function parseBaseType($sName, $oElement) {
@@ -636,7 +718,7 @@ class XML_Action extends XML_Document {
       
       $iRequired = intval($oArguments->getAttribute('required-count'));
       
-      if (count($aArguments) >= $iRequired) {
+      if (!$iRequired || count($aArguments) >= $iRequired) {
         
         $aFormats = array();
         foreach($oArguments->getChildren() as $oFormat) $aFormats[] = $oFormat->read();
@@ -664,8 +746,7 @@ class XML_Action extends XML_Document {
     } else {
       
       // Normal arguments (defined number)
-      // dsp($oMethod->getName().' :: '.$oMethod->getAttribute('path').' '.Controler::formatResource($bRedirect));
-      // dsp($aArguments);
+      
       foreach($oChildren as $iArgument => $oChild) {
         
         $sName = $oChild->getAttribute('name');
@@ -759,8 +840,8 @@ class XML_Action extends XML_Document {
     }
     
     Controler::addMessage(array(
-      xt('L\'argument "%s" (%s) n\'est pas du type : "%s" dans %s',
-        Controler::formatResource($mArgument),
+      xt('L\'argument "%s" [%s] n\'est pas du type : "%s" dans %s',
+        Controler::formatResource($mArgument, true),
         new HTML_em($sActualFormat),
         new HTML_Strong(implode(', ', $aFormats)),
         $this->getPath()->parse()),
@@ -874,10 +955,119 @@ class XML_Action extends XML_Document {
     return $this->oRedirect;
   }
   
+  private function validateArgument($oChild) {
+    
+    $bRequired = ($oChild->testAttribute('required') !== false);
+    $bAssoc = false;
+    $bResult = true;
+    $iArgument = 0;
+    
+    if ($mKey = $oChild->getAttribute('name')) {
+      
+      $bAssoc = true;
+      $mArgument = $this->getPath()->getAssoc($mKey, true);
+      
+    } else {
+      
+      if ($mKey = $oChild->getAttribute('index')) $mArgument = $this->getPath()->getIndex($mKey, true);
+      else {
+        
+        $mKey = $iArgument;
+        $mArgument = $this->getPath()->getIndex($mKey, true);
+        $iArgument++;
+      }
+    }
+    
+    if ($bRequired && $mArgument === null) {
+      
+      Controler::addMessage(xt('L\'argument "%s" est manquant dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'error');
+      $bResult = false;
+      
+    } else {
+      
+      $bReplace = false;
+      
+      // Argument is here
+      
+      if ($mArgument) {
+        
+        // Argument has value
+        
+        $aFormats = array();
+        
+        if ($sFormat = $oChild->getAttribute('format')) $aFormats[] = $sFormat;
+        else if ($oFormat = $oChild->get('le:formats', 'le', NS_EXECUTION)) {
+          
+          $aFormats = $oFormat->getChildren()->toArray();
+        }
+        
+        if (!$this->validArgumentType($mArgument, $aFormats, $oChild)) {
+          
+          Controler::addMessage(xt('L\'argument "%s" est au mauvais format dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'error');
+          $bResult = false;
+          
+        } else {
+          
+          // Argument is good format
+          
+          /* Validation */
+          
+          if (($oValidate = $oChild->get('le:validate', 'le', NS_EXECUTION)) && $oValidate->hasChildren()) {
+            
+            if (!$mArgument = $this->buildArgument($oValidate->getFirst())) {
+              
+              Controler::addMessage(xt('L\'argument "%s" est invalide dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'action/error');
+              $bResult = false;
+              
+            } else {
+              
+              if ($oValidate->testAttribute('return')) $bReplace = true;
+              
+              if (Controler::useStatut('action/report')) {
+                
+                $sArgumentType = $bAssoc ? 'assoc' : 'index';
+                Controler::addMessage(xt('Argument : %s [%s]', Controler::formatResource($mArgument), new HTML_Em($sArgumentType)), 'action/report');
+              }
+            }
+          }
+        }
+      }
+      
+      /* Default value */
+      
+      if (($mArgument === null || !$bResult) && ($oDefault = $oChild->get('le:default', 'le', NS_EXECUTION)) && $oDefault->hasChildren()) {
+        
+        // Argument has no value and is required
+        
+        if ((!$mResult = $this->buildArgument($oDefault->getFirst())) && $oDefault->testAttribute('required') !== false) {
+          
+          Controler::addMessage(xt('Argument "%s" valeur par défaut invalide dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'action/error');
+          $bResult = false;
+          
+        } else $bReplace = true;
+      }
+      
+      /* Hypothetical replacement */
+      
+      if ($bReplace) {
+        
+        if ($bAssoc) $this->getPath()->setAssoc($mKey, $mResult);
+        else $this->getPath()->setIndex($mKey, $mResult);
+        
+        if (Controler::useStatut('action/report')) {
+          
+          $sArgumentType = $bAssoc ? 'assoc' : 'index';
+          Controler::addMessage(xt('Argument redéfini : %s &gt; %s', Controler::formatResource($mResult), new HTML_Em($sArgumentType)), 'action/report');
+        }
+      }
+    }
+    
+    return $bResult;
+  }
+  
   public function loadSettings($oSettings) {
     
     $bResult = true;
-    $iArgument = 0;
     
     if ($oSettings && $oSettings->hasChildren()) {
       
@@ -886,94 +1076,16 @@ class XML_Action extends XML_Document {
         switch ($oChild->getName(true)) {
           
           case 'name' : break;
-          case 'argument' :
+          case 'argument' : $bResult = $this->validateArgument($oChild); break;
+          case 'processor' :
             
-            $bRequired = ($oChild->testAttribute('required') !== false);
-            $bAssoc = false;
+            $sPath = $oChild->getAttribute('path');
+            $oActionArgument = new XML_Element('le:self', null, array('return' => 'true'), NS_EXECUTION);
+            $oAction = new XML_Element('le:action', array($oActionArgument, $oChild->getChildren()), array('path' => $sPath), NS_EXECUTION);
             
-            if ($mKey = $oChild->getAttribute('name')) {
-              
-              $bAssoc = true;
-              $mArgument = $this->getPath()->getAssoc($mKey, true);
-              
-            } else {
-              
-              if ($mKey = $oChild->getAttribute('index')) $mArgument = $this->getPath()->getIndex($mKey, true);
-              else {
-                
-                $mKey = $iArgument;
-                $mArgument = $this->getPath()->getIndex($mKey, true);
-                $iArgument++;
-              }
-            }
+            $oProcessor = $this->buildArgument($oAction);
             
-            if ($bRequired && $mArgument === null) {
-              
-              Controler::addMessage(xt('L\'argument "%s" est manquant dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'error');
-              $bResult = false;
-              
-            } else {
-              
-              // Argument is here
-              
-              if ($mArgument) {
-                
-                // Argument has value
-                
-                $aFormats = array();
-                
-                if ($sFormat = $oChild->getAttribute('format')) $aFormats[] = $sFormat;
-                else if ($oFormat = $oChild->get('le:formats', 'le', NS_EXECUTION)) {
-                  
-                  $aFormats = $oFormat->getChildren()->toArray();
-                }
-                
-                if (!$this->validArgumentType($mArgument, $aFormats, $oChild)) {
-                  
-                  Controler::addMessage(xt('L\'argument "%s" est au mauvais format dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'error');
-                  $bResult = false;
-                  
-                } else {
-                  
-                  // Argument is good format
-                  
-                  if (($oValidate = $oChild->get('le:validate', 'le', NS_EXECUTION)) && $oValidate->hasChildren() && !$this->buildArgument($oValidate->getFirst())) {
-                    
-                    Controler::addMessage(xt('L\'argument "%s" est invalide dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'action/error');
-                    $bResult = false;
-                    
-                  } else if (Controler::useStatut('action/report')) {
-                    
-                    $sArgumentType = $bAssoc ? 'assoc' : 'index';
-                    Controler::addMessage(xt('Argument : %s [%s]', Controler::formatResource($mArgument), new HTML_Em($sArgumentType)), 'action/report');
-                  }
-                }
-              }
-              
-              if (($mArgument === null || !$bResult) && ($oDefault = $oChild->get('le:default', 'le', NS_EXECUTION)) && $oDefault->hasChildren()) {
-                
-                $bResult = true;
-                
-                // Argument has no value and is required
-                
-                if ((!$mResult = $this->buildArgument($oDefault->getFirst())) && $oDefault->testAttribute('required') !== false) {
-                  
-                  Controler::addMessage(xt('Argument "%s" valeur par défaut invalide dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'action/error');
-                  $bResult = false;
-                  
-                } else if ($mResult !== null) {
-                  
-                  if (Controler::useStatut('action/report')) {
-                    
-                    $sArgumentType = $bAssoc ? 'assoc' : 'index';
-                    Controler::addMessage(xt('Argument par défaut : %s &gt; %s', Controler::formatResource($mResult), new HTML_Em($sArgumentType)), 'action/report');
-                  }
-                  
-                  if ($bAssoc) $this->getPath()->setAssoc($mKey, $mResult);
-                  else $this->getPath()->setIndex($mKey, $mResult);
-                }
-              }
-            }
+            $this->aProcessors[$oChild->getAttribute('namespace')] = $oProcessor;
             
           break;
         }

@@ -12,6 +12,49 @@ class Action_Controler {
     self::$oInterfaces = new XML_Document(PATH_INTERFACES.'/../interfaces.cml', MODE_EXECUTION);
   }
   
+  public static function setInterface(&$oInterface) {
+    
+    if ($sClass = $oInterface->read('ns:name')) {
+      
+      if (!$oResultInterface = self::loadInterface($sClass)) {
+        
+        if (self::buildInterface($oInterface, $sClass)) {
+          
+          if (Controler::useStatut('action/report')) Controler::addMessage(array(xt('Chargement de l\'interface "%s"', new HTML_Strong($sClass)), $oInterface->messageParse()), 'action/report');
+          return $oInterface;
+        }
+        
+      } else return $oResultInterface;
+    }
+    
+    return null;
+  }
+  
+  public static function buildInterface(&$oInterface, $sClass = null) {
+    
+    if (!$sClass) $sClass = $oInterface->read('ns:name');
+    
+    if ($oInterface->isEmpty()) {
+      
+      Controler::addMessage(xt('Fichier d\'interface "%s" vide', view($oInterface)), 'action/warning');
+      
+    } else if ($sClass) {
+      
+      if ($sExtends = $oInterface->read('ns:extends')) {
+        
+        // Extends another class
+        
+        if ($oSubInterface = self::loadInterface($sExtends)) $oInterface->add($oSubInterface->query('ns:method'));
+        else Controler::addMessage(xt('Extension de la classe "%s" impossible, interface de classe "%s" introuvable !', new HTML_Strong($sClass), new HTML_Strong($sExtends)), 'action/warning');
+      }
+      
+      self::$aInterfaces[$sClass] = $oInterface;
+      return true;
+    }
+    
+    return false;
+  }
+  
   public static function loadInterface($sClass) {
     
     $oInterface = null;
@@ -26,36 +69,14 @@ class Action_Controler {
       
       $oInterface = self::$aInterfaces[$sClass];
       
-    } else {
+    } else if ($oElement = self::$oInterfaces->get("interface[@class='$sClass']")) {
       
-      if ($oElement = self::$oInterfaces->get("interface[@class='$sClass']")) {
-        
-        $sPath = $oElement->read();
-        $oInterface = new XML_Document($sPath, MODE_EXECUTION);
-        
-        if ($oInterface->isEmpty()) {
-          
-          Controler::addMessage(xt('Fichier d\'interface "%s" vide', $oInterface->parseFile()), 'action/warning');
-          
-        } else {
-          
-          if ($sExtends = $oInterface->read('ns:extends')) {
-            
-            if ($oSubInterface = self::loadInterface($sExtends)) {
-              
-              $oInterface->add($oSubInterface->query('ns:method'));
-              
-            } else {
-              
-              Controler::addMessage(xt('Extension de la classe "%s" impossible, interface de classe "%s" introuvable !', new HTML_Strong($sClass), new HTML_Strong($sExtends)), 'action/warning');
-            }
-            
-          }
-          
-          self::$aInterfaces[$sClass] = $oInterface;
-          if (Controler::useStatut('report')) Controler::addMessage(xt('Chargement de l\'interface "%s"', $oInterface->parseFile()), 'action/report');
-        }
-      }
+      $sPath = $oElement->read();
+      $oInterface = new XML_Document($sPath, MODE_EXECUTION);
+      
+      if (self::buildInterface($oInterface, $sClass) && Controler::useStatut('action/report'))
+        Controler::addMessage(xt('Chargement de l\'interface "%s"', $oInterface->parseFile()), 'action/report');
+
     }
     
     return $oInterface;

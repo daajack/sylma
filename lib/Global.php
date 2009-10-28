@@ -130,9 +130,19 @@ function dspr($mVar) {
   echo new HTML_Tag('pre', Controler::formatResource($mVar));
 }
 
+function dspf($mVar, $sStatut = 'success') {
+  
+  Controler::addMessage(Controler::formatResource($mVar), $sStatut); 
+}
+
 function dspm($mVar, $sStatut = 'success') {
   
   Controler::addMessage($mVar, $sStatut);
+}
+
+function view($mVar, $bFormat = true) {
+  
+  return Controler::formatResource($mVar, $bFormat);
 }
 
 function dsp($mVar) {

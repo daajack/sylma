@@ -60,15 +60,18 @@ class Img implements Main {
         
         $sFunction = 'imagecreatefrom'.strtolower($sExtension);
         
-        $im = @$sFunction(MAIN_DIRECTORY.$sFilePath)
+        $img = @$sFunction(MAIN_DIRECTORY.$sFilePath)
         or die("Cannot Initialize new GD image stream");
         
-        // imagefilter($im, IMG_FILTER_GRAYSCALE);
+        // imagefilter($img, IMG_FILTER_GRAYSCALE);
+        // imagestring($img, 2, 5, 15, date('H:i:s'), imagecolorallocate($img, 255, 216, 147));
         
         $sFunction = 'image'.$sExtension;
         
-        $sFunction($im);
-        imagedestroy($im);
+        $sFunction($img);
+        imagedestroy($img);
+        
+        exit;
       }
       
     } else Controler::error404();

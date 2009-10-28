@@ -4,6 +4,7 @@ class Messages extends XML_Document {
   
   private $aAllowedMessages = array();
   private $aStatuts = array();
+  private $oLast = null;
   
   public function __construct($oSchema = null, $mMessages = array()) {
     
@@ -16,38 +17,23 @@ class Messages extends XML_Document {
   
   public function addMessage($oMessage) {
     
+    $oResult = null;
+    
     if (($oMessage instanceof XML_Element) && $oMessage->useNamespace(NS_MESSAGES)) {
       
-      // $sPath = $oMessage->read('path');
-      
-      // $aPath = explode('/', $sPath);
-      
-      // $oElement = $this->getRoot();
-      // while ($aPath) $oElement = $oElement->addNode(array_shift($aPath));
-      
-      // $oElement->add($oMessage);
-      
       // TODO: foreach ($oMessage->aArguments as $oArgument) $this->setArgument('fields'][ += $oMessage[]
-      // $this->aMessages[$oMessage->getStatut()][] = $oMessage;
       
       $sPath = $oMessage->read('path');
       
-      // Add the stat if not exists
-      /*
-      if (!$oAllStatut = $this->get($sStatut))
-        $oAllStatut = $this->addNode($sStatut);
+      if ($oCategory = $this->get($sPath)) {
+        
+        $oResult = $oCategory->add($oMessage);
+        $this->oLast = $oMessage;
+      }
       
-      // Add in the main doc
-      
-      $oAllStatut->add($oMessage);
-      */
-      // Add in the allowed doc
-      //$this->dsp();
-      //echo Controler::formatResource(($this->get($sPath)));
-      if ($oCategory = $this->get($sPath)) $oCategory->add($oMessage);
-      
-      return $oMessage;
     }
+    
+    return $oResult;
   }
   
   /*

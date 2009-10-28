@@ -161,6 +161,46 @@ class XML_Directory extends XML_Resource {
     }
   }
   
+  private function getChildrenRights() {
+    
+    return $this->aChildrenRights;
+  }
+  
+  private function getSettings() {
+    
+    return $this->oSettings;
+  }
+  
+  private function loadRights() {
+    
+    if (!$this->isSecured()) {
+      
+      if (Controler::getUser()) {
+        
+        $sSettings = $this->getFullPath().'/'.SECURITY_FILE;
+        
+        if (file_exists(MAIN_DIRECTORY.$sSettings)) {
+          
+          $oSettings = new XML_Document();
+          $oSettings->loadFreeFile($sSettings);
+          
+          $this->oSettings = $oSettings;
+          
+          // self mode
+          
+          if ($aRights = $this->setRights($oSettings->get('ld:self', 'ld', NS_DIRECTORY))) $this->aChildrenRights = $aRights;
+          
+          // children mode
+          
+          if (($oChildrenRights = $oSettings->get('ld:propagate', 'ld', NS_DIRECTORY)) &&
+            ($aChildrenRights = $this->extractRights($oChildrenRights))) $this->aChildrenRights = $aChildrenRights;
+          
+        } else $this->setRights();
+        
+      } else if (Controler::useStatut('file/report')) Controler::addMessage(xt('Sécurisation suspendue dans "%s"', new HTML_Strong($this->getFullPath())), 'file/report');
+    }
+  }
+  
   public function unbrowse() {
     
     $oResult = $this->parse();
@@ -367,46 +407,6 @@ class XML_Directory extends XML_Resource {
     }
     
     return $oDirectory;
-  }
-  
-  private function getChildrenRights() {
-    
-    return $this->aChildrenRights;
-  }
-  
-  private function getSettings() {
-    
-    return $this->oSettings;
-  }
-  
-  private function loadRights() {
-    
-    if (!$this->isSecured()) {
-      
-      if (Controler::getUser()) {
-        
-        $sSettings = $this->getFullPath().'/'.SECURITY_FILE;
-        
-        if (file_exists(MAIN_DIRECTORY.$sSettings)) {
-          
-          $oSettings = new XML_Document();
-          $oSettings->loadFreeFile($sSettings);
-          
-          $this->oSettings = $oSettings;
-          
-          // self mode
-          
-          if ($aRights = $this->setRights($oSettings->get('ld:self', 'ld', NS_DIRECTORY))) $this->aChildrenRights = $aRights;
-          
-          // children mode
-          
-          if (($oChildrenRights = $oSettings->get('ld:propagate', 'ld', NS_DIRECTORY)) &&
-            ($aChildrenRights = $this->extractRights($oChildrenRights))) $this->aChildrenRights = $aChildrenRights;
-          
-        } else $this->setRights();
-        
-      } else if (Controler::useStatut('file/report')) Controler::addMessage(xt('Sécurisation suspendue dans "%s"', new HTML_Strong($this->getFullPath())), 'file/report');
-    }
   }
   
   public function checkRights($iMode) {

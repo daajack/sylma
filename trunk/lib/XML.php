@@ -36,6 +36,13 @@ function strtoxml ($sValue) {
   }
 }
 
+interface XML_Composante {
+  
+  // public function getValue();
+  // public function formatOutput();
+  public function __toString();
+}
+
 class XML_Helper extends XML_Document {
   
   private $aBlocs = array();
@@ -103,7 +110,7 @@ class XML_Document extends DOMDocument {
     $this->registerNodeClass('DOMElement', 'XML_Element');
     $this->registerNodeClass('DOMText', 'XML_Text');
     $this->registerNodeClass('DOMAttr', 'XML_Attribute');
-    $this->registerNodeClass('DOMCharacterData', 'XML_CData');
+    $this->registerNodeClass('DOMCdataSection', 'XML_CData');
     $this->registerNodeClass('DOMDocumentFragment', 'XML_Fragment');
     
     $this->setMode($iMode);
@@ -263,7 +270,7 @@ class XML_Document extends DOMDocument {
     
     if ($sContent) {
       
-      parent::loadXML($sContent);
+      if (!parent::loadXML($sContent)) Controler::addMessage(xt('Document : Chargement texte impossible, contenu invalide : %s', new HTML_Tag('pre', htmlspecialchars($sContent))), 'xml/warning');
       if ($this->isEmpty()) Controler::addMessage(t('Document : Chargement texte impossible, contenu invalide'), 'xml/warning');
       
       XML_Controler::addStat('read');
@@ -388,8 +395,11 @@ class XML_Document extends DOMDocument {
           
           /* XML_Document */
           
-          if ($mValue->getRoot()) $this->setChild($mValue->getRoot());
-          else Controler::addMessage('Document->set() - Document vide', 'xml/notice');
+          if ($mValue->getRoot()) {
+            
+            $this->setChild($mValue->getRoot());
+            
+          } else Controler::addMessage('Document->set() - Document vide', 'xml/notice');
           
         } else if ($mValue instanceof XML_Element) {
           
@@ -553,6 +563,12 @@ class XML_Document extends DOMDocument {
     return (string) $mValue;
   }
   
+  public function extractNS($sNamespace, $bKeep = false) {
+    
+    if (!$this->isEmpty()) return new XML_Document($this->getRoot()->extractNS($sNamespace, $bKeep));
+    else return null;
+  }
+  
   public function parseXSL($oTemplate) {
     
     if (is_object($oTemplate)) {
@@ -572,13 +588,13 @@ class XML_Document extends DOMDocument {
     
     if ($bIndent) $oView->formatOutput();
     
-    if ($bFormat) $sResult = htmlspecialchars($oView);
-    else $sResult = (string) $oView;
+    if ($bFormat) $sResult = htmlspecialchars($oView->__toString(false, false));
+    else $sResult = $oView->__toString(false, false);
     
     if ($bContainer) {
       
       $oResult = new HTML_Tag('pre');
-      $oResult->addText($sResult);
+      $oResult->add($sResult);
       
     } else $oResult = $sResult;
     
@@ -630,21 +646,25 @@ class XML_Document extends DOMDocument {
         
         eval('$oResult = $oRoot->$sMethod('.implode(', ', $aEvalArguments).');');
         
-      } else Controler::addMessage(xt('Document : Méthode %s introuvable', new HTML_Strong($sMethod)), 'xml/error');
+      } else Controler::addMessage(array(xt('Document : Méthode %s introuvable', new HTML_Strong($sMethod)), Controler::getBacktrace()), 'xml/error');
       
     } else Controler::addMessage(xt('Document vide : Impossible d\'appliquer la méthode %s', new HTML_Strong($sMethod)), 'xml/error');
     
     return $oResult;
   }
   
-  public function __toString($bHtml = false) {
+  public function __toString($bHtml = false, $bDeclaration = true) {
     
     $sResult = '';
     
     if (!$this->isEmpty()) {
       
       if ($bHtml) $sResult = parent::saveXML(null, LIBXML_NOEMPTYTAG); //
-      else $sResult = parent::saveXML();
+      else {
+        
+        if ($bDeclaration) $sResult = parent::saveXML();
+        else $sResult = parent::saveHTML();
+      }
     }
     
     return $sResult;
@@ -654,7 +674,7 @@ class XML_Document extends DOMDocument {
 /**
  * XML_Element ..
  */
-class XML_Element extends DOMElement {
+class XML_Element extends DOMElement implements XML_Composante {
   
   /**
    * @param string $sName Full name of the element (prefix + local name)
@@ -663,7 +683,7 @@ class XML_Element extends DOMElement {
    * @param string $sUri Associated namespace uri
    * @param XML_Document $oDocument Document owner of the element
    */
-  public function __construct($sName = '', $mContent = '', $aAttributes = array(), $sUri = null, $oDocument = null) {
+  public function __construct($sName = 'default', $mContent = '', $aAttributes = array(), $sUri = null, $oDocument = null) {
     
     $sName = trim((string) $sName);
     if (!$sName) $sName = 'default';
@@ -724,6 +744,22 @@ class XML_Element extends DOMElement {
     }
     
     return $oXPath;
+  }
+  
+  public function getPath($oLastParent = null) {
+    
+    $oParents = $this->query('ancestor-or-self::*');
+    $aPath = array();
+    
+    foreach ($oParents as $oParent) {
+      
+      $aPrevSiblings = $oParent->query('preceding-sibling::*');
+      $aPath[] = '*['.($aPrevSiblings->length + 1).']';
+      
+      if ($oLastParent && $oLastParent === $oParent) break;
+    }
+    
+    return '/'.implode('/', $aPath);
   }
   
   /**
@@ -837,12 +873,16 @@ class XML_Element extends DOMElement {
    * @param string $sName The name of the attribute
    * @param string $sValue The value of the attribute
    */
-  public function setAttribute($sName, $sValue = '') {
+  public function setAttribute($sName, $sValue = '', $sUri = null) {
     
     // TODO : RIGHTS
     
-    if ($sValue !== '' && $sValue !== null) return parent::setAttribute($sName, $sValue);
-    else return $this->removeAttribute($sName);
+    if ($sValue !== '' && $sValue !== null) {
+      
+      if ($sUri) return parent::setAttribute($sName, $sValue);
+      else return parent::setAttributeNS($sUri, $sName, $sValue);
+      
+    } else return $this->removeAttribute($sName);
   }
   
   public function addClass($sClass) {
@@ -996,23 +1036,24 @@ class XML_Element extends DOMElement {
     foreach ($this->attributes as $oAttribute) $this->removeAttributeNode($oAttribute);
   }
   
+  public function cloneAttributes($oElement) {
+    
+    foreach ($oElement->getAttributes() as $oAttribute)
+      $this->setAttribute($oAttribute->getName(), $oAttribute->getValue());
+  }
+  
   public function cloneAttribute($oElement, $mAttribute = null) {
     
     if ($mAttribute) {
       
-      if (is_array($mAttribute))
-        foreach ($mAttribute as $sAttribute) {
-          if ($oElement->hasAttribute($sAttribute))
-            $this->cloneAttribute($oElement, $sAttribute);
-        }
-      else
-        $this->setAttribute($mAttribute, $oElement->getAttribute($mAttribute));
+      if (is_array($mAttribute)) {
+        
+        foreach ($mAttribute as $sAttribute)
+          if ($oElement->hasAttribute($sAttribute)) $this->cloneAttribute($oElement, $sAttribute);
+        
+      } else $this->setAttribute($mAttribute, $oElement->getAttribute($mAttribute));
       
-    } else {
-      
-      foreach ($oElement->getAttributes() as $oAttribute)
-        $this->setAttribute($oAttribute->getName(), $oAttribute->getValue());
-    }
+    } else $this->cloneAttributes($oElement);
   }
   
   public function merge($oElement, $bSelfPrior = false) {
@@ -1062,7 +1103,7 @@ class XML_Element extends DOMElement {
   public function insertBefore() {
     
     if (!$this->isRoot() && $this->getParent()) $this->getParent()->insert(func_get_args(), $this);
-    else if (Controler::useStatut('error')) Controler::addMessage(t('Element : Impossible d\'insérer un noeud ici (root)'), 'xml/error');
+    else Controler::addMessage(array(t('Element : Impossible d\'insérer un noeud avant le noeud racine'), $this->messageParse()), 'xml/error');
   }
   
   /**
@@ -1186,16 +1227,44 @@ class XML_Element extends DOMElement {
    * @param XML_Element $oChild The element wish will replace the actual one
    * @return XML_Element The element added to content
    */
-  public function replace($oChild) {
+  public function replace($mContent) {
     
-    if ($oChild != $this) {
-      
-      $this->insertBefore($oChild);
-      $this->remove();
-      
-    } //else if (Controler::useStatut('notice')) Controler::addMessage(xt('replace() : Impossible de remplacer un élément par lui-même : %s', $this->viewResume()), 'xml/notice');
+    $oResult = null;
     
-    return $oChild;
+    if ($mContent !== $this) {
+      
+      if ($this->isRoot()) {
+        
+        if ($mContent instanceof XML_NodeList) {
+          
+          if ($mContent->length > 1) Controler::addMessage(array(t('L\'élément parent ne peut être remplacé que par un unique enfant !'), $this->messageParse()), 'xml/error');
+          else $mContent = $mContent->item(0);
+        }
+        
+        if (!($mContent instanceof XML_Element)) Controler::addMessage(array(t('L\'élément parent ne peut être remplacé que par un objet XML_Element !'), $this->messageParse()), 'xml/error');
+        else {
+          
+          if ($mContent->isDefaultNamespace($mContent->getNamespace())) {
+            //$oResult = $this->getDocument()->set($mContent); return $oResult;
+            
+            $oRoot = new XML_Element($mContent->getName(), null, null, $mContent->getNamespace());
+            $oRoot->cloneAttributes($mContent);
+            
+            $oRoot->add($mContent->getChildren());
+            
+            $oResult = $this->getDocument()->set($oRoot);
+            
+          } else $this->getDocument()->set($mContent);
+        }
+        
+      } else {
+        
+        $oResult = $this->insertBefore($mContent);
+        $this->remove();
+      }
+    }
+    
+    return $oResult;
   }
   
   /**
@@ -1205,6 +1274,7 @@ class XML_Element extends DOMElement {
   public function remove() {
     
     if ($this->parentNode) return $this->parentNode->removeChild($this);
+    else return null;
     // else if ($this->getDocument()->getRoot() == $this) return $this->getDocument()->removeChild($this);
   }
   
@@ -1232,6 +1302,15 @@ class XML_Element extends DOMElement {
   public function countChildren() {
     
     return $this->childNodes->length;
+  }
+  
+  /**
+   * Test wether actual element has children or not
+   * @return boolean The children actual existenz fact (or not)
+   */
+  public function hasElementChildren() {
+    
+    return ($this->hasChildren() && ($this->countChildren() > 1 || $this->getFirst()->isElement()));
   }
   
   /**
@@ -1280,6 +1359,63 @@ class XML_Element extends DOMElement {
     return $this->insertChild($this->getDocument()->createNode($sName, $oContent, $aAttributes), $oNext);
   }
   
+  public function toArray() {
+    
+    if ($this->isTextElement()) $mValue = $this->getValue();
+    else {
+      
+      $mValue = array();
+      $bIndex = $this->testAttribute('array-index');
+      
+      foreach ($this->getChildren() as $oChild) {
+        
+        if ($oChild->isElement()) {
+          
+          list($sKey, $mSubValue) = $oChild->toArray();
+          
+          if (!$bIndex) $mValue[$sKey] = $mSubValue;
+          else $mValue[] = $mSubValue;
+          
+        } else {
+          
+          $mValue = $this->getValue();
+          break;
+        }
+      }
+    }
+    
+    return array($this->getName(true), $mValue);
+  }
+  
+  public function extractNS($sNamespace, $bKeep = false) {
+    
+    $oResult = null;
+    $oContainer = new XML_Element;
+    
+    foreach ($this->getChildren() as $oChild) {
+      
+      if ($oChild->isElement()) $oContainer->add($oChild->extractNS($sNamespace, $bKeep));
+      else if ($this->getNamespace() == $sNamespace) {
+        
+        $oContainer->add($oChild);
+        if (!$bKeep) $oChild->remove();
+      }
+    }
+    
+    if ($this->getNamespace() == $sNamespace) {
+      
+      $oResult = clone $this;
+      $oResult->cleanChildren();
+      
+      if (!$bKeep) $this->replace($this->getChildren());
+    }
+    
+    if ($oResult) $oResult->add($oContainer->getChildren());
+    else $oResult = $oContainer->getChildren();
+    
+    return $oResult;
+  }
+  
   /*** Array ***/
   
   public function addArray($aChildren, $sName = '') {
@@ -1296,7 +1432,7 @@ class XML_Element extends DOMElement {
     return $aResult;
   }
   
-  /*** Tests ***/
+  /*** Others ***/
   
   public function isFirst() {
     
@@ -1311,6 +1447,11 @@ class XML_Element extends DOMElement {
   public function isEmpty() {
     
     return !$this->hasChildren();
+  }
+  
+  public function isTextElement() {
+    
+    return !$this->hasElementChildren();
   }
   
   public function isText() {
@@ -1403,7 +1544,7 @@ class XML_Element extends DOMElement {
     }
   }
   
-  public function viewResume($iLimit = 100, $bDecode = true) {
+  public function viewResume($iLimit = 165, $bDecode = true) {
     
     $sView = stringResume(htmlspecialchars($this->view(false, false, false)), $iLimit);
     $iLastSQuote = strrpos($sView, '&');
@@ -1472,7 +1613,7 @@ class XML_Element extends DOMElement {
   }
 }
 
-class XML_Attribute extends DOMAttr {
+class XML_Attribute extends DOMAttr implements XML_Composante {
   
   public function __construct($sName, $sValue) {
     
@@ -1510,12 +1651,25 @@ class XML_Attribute extends DOMAttr {
   }
 }
 
-class XML_CData extends DOMCharacterData {
+class XML_CData extends DOMCdataSection implements XML_Composante {
   
+  public function getValue() {
+    
+    return $this->data;
+  }
   
+  public function formatOutput($iLevel = 0) {
+    
+    return null;
+  }
+  
+  public function __toString() {
+    
+    return "<![CDATA[\n".$this->data.']]>';
+  }
 }
 
-class XML_Text extends DOMText {
+class XML_Text extends DOMText implements XML_Composante {
   
   // private $aRights = array();
   
@@ -1540,7 +1694,10 @@ class XML_Text extends DOMText {
     return $this->ownerDocument;
   }
   
-  public function replace($oChild) {
+  public function replace($mChild) {
+    
+    if (is_string($mChild)) $oChild = new XML_Text($mChild);
+    else $oChild = $mChild;
     
     $this->insertBefore($oChild);
     $this->remove();
@@ -1565,6 +1722,11 @@ class XML_Text extends DOMText {
   public function isElement() {
     
     return false;
+  }
+  
+  public function messageParse() {
+    
+    return new HTML_Span((string) $this, array('class' => 'message-element'));
   }
   
   public function __toString() {
@@ -1715,7 +1877,7 @@ class XSL_Document extends XML_Document {
       //new XML_Element('output', array('method' => 'xml', 'encoding' => 'utf-8'), true, 'xsl'));
       // 'xmlns:fo'    => 'http://www.w3.org/1999/XSL/Format',
       // 'xmlns:axsl'  => 'http://www.w3.org/1999/XSL/TransformAlias',
-    }
+    }//$this->includeExternals();
   }
   
   public function removeParameter($sLocalName, $sUri = '') {
@@ -1747,22 +1909,35 @@ class XSL_Document extends XML_Document {
     return $this->oProcessor;
   }
   
-  public function includeExternals() {
+  public function includeExternals(&$aPaths = array(), $iLevel = 0) {
     
-    if ($oExternals = $this->query('/*/xsl:include | /*/xsl:import', 'xsl', NS_XSLT)) {
+    $sPath = (string) $this->getFile();
+    $iMaxLevel = 10;
+    //dspm($sPath);
+    if ($iLevel > $iMaxLevel) {
+      
+      Controler::addMessage(xt('Trop d\'imbrications ou redondances dans %s dans %s', new HTML_Strong(t('les importations')), $this->getFile()), 'warning');
+      return false;
+      
+    } else if ($sPath && in_array($sPath, $aPaths)) {
+      
+      // Template ever imported
+      return false;
+      
+    } else if ($oExternals = $this->query('/*/xsl:include | /*/xsl:import', 'xsl', NS_XSLT)) {
+      
+      $aPaths[] = $sPath;
       
       foreach ($oExternals as $oExternal) {
         
         if ($sHref = $oExternal->getAttribute('href')) {
           
-          if ($this->getFile()) $sPath = Controler::getAbsolutePath($sHref, $this->getFile()->getParent().'/');
-          else $sPath = Controler::getAbsolutePath($sHref, '/');
+          if ($this->getFile()) $sImportPath = Controler::getAbsolutePath($sHref, $this->getFile()->getParent().'/');
+          else $sImportPath = Controler::getAbsolutePath($sHref, '/');
           
-          $oTemplate = new XSL_Document($sPath);
+          $oTemplate = new XSL_Document($sImportPath);
           
-          if (!$oTemplate->isEmpty()) {
-            
-            $oTemplate->includeExternals();
+          if (!$oTemplate->isEmpty() && $oTemplate->includeExternals($aPaths, $iLevel + 1)) {
             
             switch ($oExternal->getName(true)) {
               
@@ -1775,26 +1950,31 @@ class XSL_Document extends XML_Document {
         $oExternal->remove();
       }
     }
+    
+    return true;
   }
   
-  public function parseDocument($oDocument) {
+  public function parseDocument($oDocument, $bXML = true) {
     
-    $oResult = null;
+    $mResult = null;
     
     if ($oDocument && !$oDocument->isEmpty() && !$this->isEmpty()) {
       
-      $this->includeExternals();
+      $this->includeExternals();//dspf($this->getRoot());
       $this->getProcessor()->importStylesheet($this);
       
-      $sResult = $this->getProcessor()->transformToXML($oDocument);
-      $oResult = new XML_Document($sResult);
+      $mResult = $this->getProcessor()->transformToXML($oDocument);
+      
+      if ($bXML) {
+        
+        $mResult = new XML_Document($mResult);
+        if ($mResult->isEmpty()) Controler::addMessage(t('Aucun résultat de la transformation XSL !'), 'xml/warning');
+      }
       
       XML_Controler::addStat('parse');
-      
-      if ($oResult->isEmpty()) Controler::addMessage(t('Aucun résultat de la transformation XSL !'), 'xml/warning');
     }
     
-    return $oResult;
+    return $mResult;
     
   }
 }

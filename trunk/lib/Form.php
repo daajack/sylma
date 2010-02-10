@@ -144,9 +144,11 @@ class Form_Controler {
       $sType = array_val('type', $aField);
       $mValue = false;
       
-      if (array_key_exists($sField, $_POST)) {
+      $sFormField = SYLMA_FIELD_PREFIX.$sField;
+      
+      if (array_key_exists($sFormField, $_POST)) {
         
-        $sValue = $_POST[$sField];
+        $sValue = $_POST[$sFormField];
         
         if ($sType == 'date') {
           

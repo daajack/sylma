@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<le:action xmlns:le="http://www.sylma.org/execution" xmlns:li="http://www.sylma.org/interface" xmlns="http://www.w3.org/1999/xhtml">
+  <le:settings>
+    <le:name>Mootools date configure</le:name>
+  </le:settings>
+  <le:window>
+    <li:add-js>
+      <le:get-settings>javascript/mootools</le:get-settings>
+    </li:add-js>
+    <li:add-js>/web/lib/mootools-1.2.4.2-more.js</li:add-js>
+    <li:add-js>/web/lib/calendar-eightysix/js/calendar-eightysix-v1.0.1.js</li:add-js>
+    <li:add-css>/web/lib/calendar-eightysix/css/calendar-eightysix-osx-dashboard.css</li:add-css>
+    <li:add-onload><![CDATA[MooTools.lang.set('fr-FR', 'Date', {
+    months:    ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'],
+    days:      ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
+    dateOrder: ['date', 'month', 'year', '.']
+  });
+  
+  MooTools.lang.setLanguage('fr-FR');]]></li:add-onload>
+  </le:window>
+</le:action>

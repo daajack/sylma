@@ -20,7 +20,7 @@ class db {
       
       $oDocument->getRoot()->setAttribute('path_to', $sPath);
       
-      return $oDocument->parseXSL(new XML_Document('/xml/query-table.xsl'));
+      return $oDocument->parseXSL(new XML_Document(Controler::getSettings('@path-system').'/templates/query-table.xsl'));
     }
   }
   

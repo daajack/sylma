@@ -19,33 +19,41 @@ class Controler {
   private static $oPath = null;      // Chemin complet du fichier. Ex: /utilisateur/edit/1
   private static $aPaths = array(); // Liste des précédents chemins redirigés, ajoutés dans oRedirect
   private static $sAction = '';     // Chemin de l'action. Ex: /utilisateur/edit
+  private static $aResults = array();     // Pile of results of the same action in different mime type (typically html + json)
+  private static $aQueries = array();
   
   public static function trickMe() {
     
     global $aDefaultInitMessages;
-    // file_put_contents('temp-'.uniqid().'.txt', $_SERVER['QUERY_STRING']);
+    
     self::$iStartTime = microtime(true);
     
+    // Authentification : récupération du cookie User
+    self::setUser(self::loadUser());
+    
+    // Define error_report
+    self::setReportLevel();
+    
+    // Main Messages object
     self::$oMessages = new Messages();
+    
+    // Root directory
     self::$oDirectory = new XML_Directory('', '', array('owner' => 'root', 'group' => '0', 'mode' => '700', 'user-mode' => null));
     
-    // Authentification : récupération du cookie User
-    
-    self::setUser(self::loadUser());
-    self::setLevelReport();
-    
     // Loading general parameters
-    
     self::loadSettings();
     
-    // Parse of the url
-    
+    // Parse of the request_uri
     self::loadContext();
+    
+    // Reload last alternatives mime-type results
+    self::loadResults();
     
     // Creation of the window
     
     $sWindow = ucfirst(self::getWindowType());
     self::setWindow(new $sWindow);
+    
     
     if (($sExtension = Controler::getPath()->getExtension()) &&
      (!in_array($sExtension, array('eml', 'iml')) || strtobool(self::getPath()->getAssoc('no-action'))) && 
@@ -60,22 +68,30 @@ class Controler {
       
       /* An action */
       
-      // Récupération du cookie Redirect qui indique qu'une redirection a été effectuée
+      if ($mResult = self::getResult()) {
+        
+        // Pre-recorded result
+        $oResult = self::getWindow()->loadAction($mResult);
+        
+      } else {
+        
+        // Récupération du cookie Redirect qui indique qu'une redirection a été effectuée
+        
+        $oRedirect = self::loadRedirect();
+        
+        // Load file of the interface's paths
+        
+        Action_Controler::loadInterfaces();
+        
+        // Get then send the action
+        
+        self::getPath()->parsePath();
+        $oResult = self::getWindow()->loadAction(new XML_Action(self::getPath(), $oRedirect));
+      }
       
-      $oRedirect = self::loadRedirect();
-      
-      // Load file of the interface's paths
-      
-      Action_Controler::loadInterfaces();
-      
-      // Get then send the action
-      
-      self::getPath()->parsePath();
-      $oResult = self::getWindow()->loadAction(new XML_Action(self::getPath(), $oRedirect));
+      /* Action redirected */
       
       if (is_object($oResult) && $oResult instanceof Redirect) {
-        
-        // Redirection
         
         if (self::isWindowType('html') || self::isWindowType('redirection')) self::doHTTPRedirect($oResult);
         else self::doAJAXRedirect($oResult);
@@ -85,7 +101,7 @@ class Controler {
     return self::getWindow();
   }
   
-  private static function setLevelReport() {
+  private static function setReportLevel() {
     
     if (self::isAdmin()) {
       
@@ -110,8 +126,14 @@ class Controler {
   
   public static function getSettings($sQuery = '') {
     
-    if ($sQuery) return self::$oSettings->read($sQuery);
-    return self::$oSettings;
+    if ($sQuery) {
+      
+      if (array_key_exists($sQuery, self::$aQueries)) return self::$aQueries[$sQuery];
+      else $sResult = self::$aQueries[$sQuery] = self::$oSettings->read($sQuery);
+      
+      return $sResult;
+      
+    } else return self::$oSettings;
   }
   
   private static function loadContext() {
@@ -142,6 +164,51 @@ class Controler {
     //$oWindow = self::getSettings()->get('window/html');
     
     self::$oWindowSettings = $oWindow;
+  }
+  
+  public static function loadResults() {
+    
+    if (!array_key_exists('results', $_SESSION)) $_SESSION['results'] = array();
+    self::$aResults = $_SESSION['results'];
+    
+    // return self::$aResults;
+  }
+  
+  public static function updateResults() {
+    
+    $_SESSION['results'] = self::$aResults;
+  }
+  
+  public static function addResult($mResult, $sWindow) {
+    
+    $sPath = self::getPath()->getOriginalPath();
+    
+    if (!array_key_exists($sPath, self::$aResults)) self::$aResults[$sPath] = array();
+    if (!array_key_exists($sWindow, self::$aResults[$sPath])) self::$aResults[$sPath][$sWindow] = array();
+    
+    self::$aResults[$sPath][$sWindow][] = $mResult;
+    self::updateResults();
+    
+    return $mResult;
+  }
+  
+  private static function getResult() {
+    
+    $sPath = (string) self::getPath();
+    $sWindow = self::getPath()->getExtension();
+    
+    if (isset(self::$aResults[$sPath][$sWindow])) {
+      
+      $mResult = array_pop(self::$aResults[$sPath][$sWindow]);
+      
+      if (!count(self::$aResults[$sPath][$sWindow])) unset(self::$aResults[$sPath][$sWindow]);
+      if (!count(self::$aResults[$sPath])) unset(self::$aResults[$sPath]);
+      
+      self::updateResults();
+      
+      return $mResult;
+      
+    } else return null;
   }
   
   private static function loadRedirect() {
@@ -334,7 +401,7 @@ class Controler {
     if (FORMAT_MESSAGES) {
       
       if (is_string($mArgument))
-        $aValue = array("'".stringResume(htmlspecialchars($mArgument), $iMaxLength)."'", '#999');
+        $aValue = array("'".stringResume(htmlspecialchars($mArgument), $iMaxLength, true)."'", '#999');
       else if (is_bool($mArgument))
         $aValue = $mArgument ? array('TRUE', 'green') :  array('FALSE', 'red');
       else if (is_numeric($mArgument))
@@ -344,9 +411,14 @@ class Controler {
         // Arrays
         
         if (count($mArgument)) {
+        $iCount = 1;
           
           $oContent = new HTML_Div(null, array('style' => 'display: inline;'));
-          foreach ($mArgument as $mKey => $mValue) $oContent->add(self::formatResource($mKey), ' => ', self::formatResource($mValue, false));
+          foreach ($mArgument as $mKey => $mValue) {
+            
+            $oContent->add(self::formatResource($mKey), ' => ', self::formatResource($mValue, true));
+            if ($iCount++ < count($mArgument)) $oContent->add(',');
+          }
         } else $oContent = '';
         
         $aValue = array(xt('array[%s](%s)', new HTML_Strong(count($mArgument)), $oContent), 'orange');
@@ -359,32 +431,37 @@ class Controler {
           
           /* XML_Document */
           
-          if (MESSAGES_SHOW_XML) $oContainer = $mArgument->view(true, true, $bDecode);
-          else $oContainer = new HTML_Span();
-          
-          $oContainer->addClass('hidden');
-          
-          $aValue = array(new HTML_Div(array(
-            get_class($mArgument),
-            $oContainer), array('class' => 'element')), 'purple');
+          if (MESSAGES_SHOW_XML) {
+            
+            $oContainer = $mArgument->view(true, true, $bDecode);
+            $oContainer->addClass('hidden');
+            
+            $aValue = array(new HTML_Div(array(
+              get_class($mArgument),
+              $oContainer), array('class' => 'element')), 'purple');
+            
+          } else $aValue = array(array(get_class($mArgument), ' => ', $mArgument->viewResume(160, false)), 'purple');
           
         } else if ($mArgument instanceof XML_Element) {
           
-          if (MESSAGES_SHOW_XML) $oContainer = $mArgument->view(true, true, $bDecode);
-          else $oContainer = new HTML_Span();
-          
-          $oContainer->addClass('hidden');
-          
-          $aValue = array(new HTML_Div(array(
-            strtoupper($mArgument->getName()),
-            $oContainer), array('class' => 'element')), 'blue');
+          if (MESSAGES_SHOW_XML) {
+            
+            $oContainer = $mArgument->view(true, true, $bDecode);
+            // $oContainer = new HTML_Span;
+            $oContainer->addClass('hidden');
+            
+            $aValue = array(new HTML_Div(array(
+              strtoupper($mArgument->getName()),
+              $oContainer), array('class' => 'element')), 'blue');
+            
+          } else $aValue = array(new HTML_Span($mArgument->viewResume(160, false)), 'gray');
           
         } else if ($mArgument instanceof XML_NodeList) {
           
           if ($mArgument->length) {
             
             $oContent = new HTML_Div(null, array('style' => 'display: inline;'));
-            foreach ($mArgument as $mKey => $mValue) $oContent->add(self::formatResource($mKey), ' => ', self::formatResource($mValue, false));
+            foreach ($mArgument as $mKey => $mValue) $oContent->add(self::formatResource($mKey), ' => ', self::formatResource($mValue, true));
           } else $oContent = '';
           
           $aValue = array(xt('XML_NodeList[%s](%s)', new HTML_Strong($mArgument->length), $oContent), 'green');
@@ -421,7 +498,7 @@ class Controler {
     }
   }
   
-  public static function getBacktrace($bFormat = true) {
+  public static function getBacktrace() {
     
     $aResult = array(); $aLines = array(); $i = 0;
     
@@ -596,7 +673,7 @@ class Controler {
     
     // if (in_array($sPath, array('action/error', 'file/error'))) $mMessage = array($mMessage, Controler::getBacktrace());
     
-    if (Controler::isAdmin() && MESSAGES_BACKTRACE && strstr($sPath, 'error')) $mMessage = array($mMessage, Controler::getBacktrace());
+    if (Controler::isAdmin() && MESSAGES_BACKTRACE && strstr($sPath, 'warning')) $mMessage = array($mMessage, Controler::getBacktrace());
     
     self::getMessages()->addMessage(new Message($mMessage, $sPath, $aArgs));
   }

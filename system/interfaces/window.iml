@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<class xmlns="http://www.sylma.org/interface" xmlns:ls="http://www.sylma.org/security">
+  <file>HTML.php</file>
+  <name>HTML_Document</name>
+  <extends>XML_Document</extends>
+  <method path="add-js" name="addJS">
+    <argument name="path">
+      <format>php-string</format>
+      <format>php-null</format>
+    </argument>
+    <argument name="content" format="php-string" required="false"/>
+  </method>
+  <method path="add-css" name="addCSS">
+    <argument name="path" format="php-string"/>
+  </method>
+  <method path="add-onload" name="addOnLoad">
+    <argument format="php-string" name="content"/>
+  </method>
+</class>

@@ -228,6 +228,9 @@ class HTML_Template extends HTML_Tag {
 
 class HTML_Document extends XML_Helper {
   
+  private $oHead = null;
+  private $sOnLoad = '';
+  
   public function __construct($sPath = '') {
     
     // $imp = new DomImplementation;
@@ -237,16 +240,31 @@ class HTML_Document extends XML_Helper {
     //'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
   }
   
-  public function addJS($sHref) {
+  public function addOnLoad($sContent) {
     
-    if (($oHeader = $this->get('/ns:html/ns:head')) &&
-      !$oHeader->get("ns:script[@src='$sHref']")) $oHeader->add(new HTML_Script($sHref));
+    $this->sOnLoad .= "\n".$sContent;
+  }
+  
+  public function addJS($sHref, $sContent = null) {
+    
+    if ($oHead = $this->getHead()) {
+      
+      if ($sContent) $oHead->add(new HTML_Script('', $sContent));
+      else if (!$oHead->get("ns:script[@src='$sHref']")) $oHead->add(new HTML_Script($sHref));
+    }
+  }
+  
+  public function getHead() {
+    
+    if (!$this->oHead && ($oHead = $this->get('/ns:html/ns:head'))) $this->oHead = $oHead;
+    
+    return $this->oHead;
   }
   
   public function addCSS($sHref = '') {
     
-    if (($oHeader = $this->get('/ns:html/ns:head')) &&
-      !$oHeader->get("ns:link[@href='$sHref']")) $oHeader->add(new HTML_Style($sHref));
+    if (($oHead = $this->getHead()) && !$oHead->get("ns:link[@href='$sHref']"))
+      $oHead->add(new HTML_Style($sHref));
   }
   
   public function addIECSS($sHref = '', $sVersion = '') {
@@ -272,12 +290,17 @@ class HTML_Document extends XML_Helper {
     //$this->formatOutput = true;
     // return $this->saveHTML();
     
+    if ($this->sOnLoad) $this->addJS(null, "window.addEvent('domready', function() {\n".$this->sOnLoad."\n});");
+    
+    if ($oElements = $this->query('//html:div', array('html' => NS_XHTML)))
+      foreach ($oElements as $oElement) if (!$oElement->hasChildren()) $oElement->set(' ');
+    
     $oView = new XML_Document($this);
     
     $oView->query('//@ls:owner | //@ls:mode | //@ls:group', 'ls', NS_SECURITY)->remove();
     $oView->formatOutput();
     
-    return $sDocType."\n".$oView->__toString(false);
+    return $sDocType."\n".$oView->display(false, false);
   }
 }
 

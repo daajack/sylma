@@ -7,13 +7,21 @@ function t($s) {
   return $s;
 }
 
-/*
- * Si il existe, renvoie la valeur de l'index du tableau , sinon renvoie la valeur de $sDefault
- **/
-function array_val($sKey, $aArray, $sDefault = '') {
+function array_last($aArray, $mDefault = null) {
   
-  if (is_array($aArray) && (is_string($sKey) || is_numeric($sKey)) && array_key_exists($sKey, $aArray)) return $aArray[$sKey];
-  else return $sDefault;
+  if ($aArray) return array_val(count($aArray) - 1, $aArray);
+  else return $mDefault;
+}
+
+/*
+ * Si il existe, renvoie la valeur de l'index du tableau , sinon renvoie la valeur de $mDefault
+ **/
+function array_val($sKey, $aArray, $mDefault = null) {
+  
+  //is_array($aArray) && (is_string($sKey) || is_numeric($sKey)) && 
+  
+  if (array_key_exists($sKey, $aArray)) return $aArray[$sKey];
+  else return $mDefault;
 }
 
 function array_clear($aArray, $sDefault = '') {
@@ -68,13 +76,13 @@ function nonull_val() {
  **/
 function addQuote($mValue) {
   
-  if (is_string($mValue)) return "'".addslashes($mValue)."'";
-  else if (is_array($mValue)) {
+  if (is_array($mValue)) {
     
     foreach ($mValue as &$mSubValue) $mSubValue = addQuote($mSubValue);
     return $mValue;
     
-  } else return false;
+  } else if ($sResult = (string) $mValue) return "'".addslashes($sResult)."'";
+  else return null;
 }
 
 /*
@@ -86,12 +94,21 @@ function formatPrice($fNumber) {
   else return '';
 }
 
-function stringResume($mValue, $iLength = 50) {
+function stringResume($mValue, $iLength = 50, $bXML = false) {
   
   $sValue = (string) $mValue;
   
-  if (strlen($sValue) > $iLength) return substr($sValue, 0, $iLength).'...';
-  else return $sValue;
+  if (strlen($sValue) > $iLength) $sValue = substr($sValue, 0, $iLength).'...';
+  
+  if ($bXML) {
+    
+    $iLastSQuote = strrpos($sValue, '&');
+    $iLastEQuote = strrpos($sValue, ';');
+    
+    if (($iLastSQuote) && ($iLastEQuote < $iLastSQuote)) $sValue = substr($sValue, 0, $iLastSQuote).'...';
+  }
+  
+  return $sValue;
 }
 
 /*
@@ -123,16 +140,25 @@ function xmlize($sString) {
 }
 
 /*
- * Pour le débuggage, affiche une variable dans un tag <pre> qui affiche les retours à la ligne
+ * Return a color between gray and xxx, depends on fValue
  **/
-function dspr($mVar) {
+function inter_color($fValue) {
   
-  echo new HTML_Tag('pre', Controler::formatResource($mVar));
+  $iColor = 255 - intval(255 * $fValue);
+  
+  return "rgb($iColor, $iColor, 213)";
 }
+
+function float_format($mValue, $iDec = 2, $iPoint = '.', $iThousand = '\'') {
+  
+  return (is_float($mValue) ? number_format($mValue, $iDec, $iPoint, $iThousand) : $mValue);
+}
+
+/* Display function */
 
 function dspf($mVar, $sStatut = 'success') {
   
-  Controler::addMessage(Controler::formatResource($mVar), $sStatut); 
+  dspm(view($mVar, false), $sStatut); 
 }
 
 function dspm($mVar, $sStatut = 'success') {
@@ -145,6 +171,9 @@ function view($mVar, $bFormat = true) {
   return Controler::formatResource($mVar, $bFormat);
 }
 
+/*
+ * Pour le débuggage, affiche une variable dans un tag <pre> qui affiche les retours à la ligne
+ **/
 function dsp($mVar) {
   
   echo '<pre>';

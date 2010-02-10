@@ -5,6 +5,7 @@ class Messages extends XML_Document {
   private $aAllowedMessages = array();
   private $aStatuts = array();
   private $oLast = null;
+  private $aNS = array('lm' => NS_MESSAGES);
   
   public function __construct($oSchema = null, $mMessages = array()) {
     
@@ -95,8 +96,46 @@ class Messages extends XML_Document {
   
   public function parse() {
     
-    if ($this->get('//lm:message', 'lm', NS_MESSAGES)) {
-      
+    if ($this->get('//lm:message', $this->aNS)) {
+      /*
+      if (SYLMA_MESSAGES_TIME) {
+        
+        $oMessages = $this->query('//lm:message[@time]', $this->aNS);
+        
+        $aTimes = $aElapsed = array();
+        
+        foreach ($oMessages as $oMessage) $aTimes[] = floatval($oMessage->getAttribute('time'));
+        
+        sort($aTimes);
+        $iPrev = reset($aTimes);
+        
+        foreach ($aTimes as $iKey => $fValue) {
+          
+          $aElapsed[$iKey] =  $fValue - $iPrev;
+          $iPrev = $fValue;
+        }
+        
+        sort($aElapsed);
+        
+        $iMin = reset($aElapsed);
+        $iDiff = end($aElapsed) - $iMin;
+        
+        $hMin = 0x0A;
+        $hMax = 0xC8;
+        
+        $hDiff = $hMax - $hMin;
+        
+        foreach ($aElapsed as $iKey => $fValue) {
+          
+          $sValue = sprintf('%02X', $hMax - (($hDiff / $iDiff)  * ($fValue - $iMin)));
+          $sColor = '#'.$sValue.$sValue.'FF';
+          
+          $oMessages->item($iKey)->setAttributes(array(
+            'time' => number_format($fValue, 2),
+            'time-color' => $sColor));
+        }
+      }
+      */
       return $this->parseXSL(new XML_Document(Controler::getSettings('messages/template/@path')));
       
     } else return null;

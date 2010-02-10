@@ -486,12 +486,17 @@ class XML_File extends XML_Resource {
       
       $this->doExist(true);
       
-    } else if ($bDebug) Controler::addMessage(xt('Fichier "%s" introuvable dans "%s" !', new HTML_Strong($sName), new HTML_Strong($oParent)), 'file/notice');
+    } else if ($bDebug) Controler::addMessage(xt('Fichier "%s" introuvable dans "%s" !', new HTML_Strong($sName), new HTML_Strong((string) $oParent)), 'file/notice');
   }
   
   public function getLastChange() {
     
     return $this->iChanged;
+  }
+  
+  public function getActionPath() {
+    
+    return substr($this->getFullPath(), 0, strlen($this->getExtension()) + 1);
   }
   
   public function getExtension() {

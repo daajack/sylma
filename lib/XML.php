@@ -1,11 +1,5 @@
 <?php
 
-define('VIEW_QUERY', false);
-
-define('MODE_READ', 4);
-define('MODE_WRITE', 2);
-define('MODE_EXECUTION', 1);
-
 function xt () {
   
   if (func_num_args()) {
@@ -40,6 +34,10 @@ interface XML_Composante {
   
   // public function getValue();
   // public function formatOutput();
+  public function isElement();
+  public function isText();
+  public function remove();
+  public function messageParse();
   public function __toString();
 }
 
@@ -101,7 +99,7 @@ class XML_Document extends DOMDocument {
   
   public function __construct($mChildren = '', $iMode = MODE_READ) {
     
-    parent::__construct('1.0', 'utf-8');
+    parent::__construct('1.0', 'UTF-8');
     
     $this->preserveWhiteSpace = false;
     // $this->substituteEntities = false;
@@ -240,11 +238,13 @@ class XML_Document extends DOMDocument {
           
         } else {
           
-          XML_Controler::addStat('load');
+          XML_Controler::addStat('file');
           
           $oFile->setDocument(new XML_Document($this->getRoot())); // getRoot avoid parsing of specials classes like actions
           $oFile->isFileSecured($this->appendLoadRights());
         }
+        
+        return true;
         
       } else if (!$oFile->getFreeDocument()->isEmpty()) {
         
@@ -252,9 +252,13 @@ class XML_Document extends DOMDocument {
         
         $this->set($oFile->getFreeDocument());
         if ($oFile->isFileSecured()) $this->appendLoadRights();
+        
+        return true;
       }
       
     } else Controler::addMessage(xt('Fichier %s introuvable', new HTML_Strong($sPath)), 'xml/warning');
+    
+    return false;
   }
   
   public function loadFreeFile($sPath) {
@@ -263,21 +267,30 @@ class XML_Document extends DOMDocument {
     if (Controler::useStatut('xml/report')) Controler::addMessage(xt('Chargement [libre] du fichier %s', $oFile->parse()), 'xml/report');
     
     if ($this->isEmpty()) Controler::addMessage(xt('Aucun contenu [libre] dans %s', $oFile->parse()), 'xml/warning');
-    else XML_Controler::addStat('load');
+    
+    XML_Controler::addStat('file');
   }
   
   public function loadText($sContent) {
     
     if ($sContent) {
       
-      if (!parent::loadXML($sContent)) Controler::addMessage(xt('Document : Chargement texte impossible, contenu invalide : %s', new HTML_Tag('pre', htmlspecialchars($sContent))), 'xml/warning');
-      if ($this->isEmpty()) Controler::addMessage(t('Document : Chargement texte impossible, contenu invalide'), 'xml/warning');
+      // TODO : Bug with not UTF-8, can't display the text -> recursive call
+      // if (!parent::loadXML($sContent)) Controler::addMessage(xt('Document : Chargement texte impossible, contenu invalide : %s', new HTML_Tag('pre', htmlspecialchars(wordwrap($sContent, 100)))), 'xml/warning');
+      if (!parent::loadXML($sContent)) Controler::addMessage(t('Chargement texte impossible, contenu invalide'), 'xml/warning');
+      if ($this->isEmpty()) Controler::addMessage(t('Chargement texte échoué, aucun résultat'), 'xml/warning');
       
-      XML_Controler::addStat('read');
+      XML_Controler::addStat('load');
       
     } else Controler::addMessage(t('Document : Chargement texte impossible, la chaîne est vide !'), 'xml/error');
     
     // $this->appendLoadRights(); TODO or not
+  }
+  
+  public function setFile($oFile) {
+    
+    $this->oFile = $oFile;
+    return $oFile;
   }
   
   public function getFile() {
@@ -287,61 +300,65 @@ class XML_Document extends DOMDocument {
   
   public function save($sPath) {
     
-    $sName = substr(strrchr($sPath, '/'), 1);
-    $sDirectory = substr($sPath, 0, strlen($sPath) - strlen($sName) - 1);
-    
-    if ($oDirectory = Controler::getDirectory($sDirectory)) {
+    if ($sPath) {
       
-      $bSecuredFile = ($sName == SECURITY_FILE);
-      $bAccess = ($oFile = Controler::getFile($sPath)) ? $oFile->checkRights(MODE_WRITE) : $oDirectory->checkRights(MODE_WRITE);
+      $sName = substr(strrchr($sPath, '/'), 1);
+      $sDirectory = substr($sPath, 0, strlen($sPath) - strlen($sName) - 1);
       
-      // TEMPORARY System fo avoiding erasing of protected files from not admin users
-      
-      if ((!$bSecuredFile && $bAccess) || ($bSecuredFile && Controler::isAdmin())) {
+      if ($oDirectory = Controler::getDirectory($sDirectory)) {
         
-        if ($oFile && $oFile->isFileSecured()) {
+        $bSecuredFile = ($sName == SECURITY_FILE);
+        $bAccess = ($oFile = Controler::getFile($sPath)) ? $oFile->checkRights(MODE_WRITE) : $oDirectory->checkRights(MODE_WRITE);
+        
+        // TEMPORARY System fo avoiding erasing of protected files from not admin users
+        
+        if ((!$bSecuredFile && $bAccess) || ($bSecuredFile && Controler::isAdmin())) {
           
-          // Secured File
-          
-          $oDocument = $oFile->getDocument();
-          $bSecured = false;
-          
-          $oNodes = $oDocument->query('//*[@ls:owner or @ls:mode or @ls:group]', 'ls', NS_SECURITY);
-          
-          if ($oNodes->length) {
+          if ($oFile && $oFile->isFileSecured()) {
             
-            foreach ($oNodes as $oNode) {
+            // Secured File
+            
+            $oDocument = $oFile->getDocument();
+            $bSecured = false;
+            
+            $oNodes = $oDocument->query('//*[@ls:owner or @ls:mode or @ls:group]', 'ls', NS_SECURITY);
+            
+            if ($oNodes->length) {
               
-              if ($oNode) {
+              foreach ($oNodes as $oNode) {
                 
-                $iMode = $this->extractMode($oNode);
-                
-                if (!$bSecured && $iMode) $bSecured = !(MODE_WRITE & $iMode);
+                if ($oNode) {
+                  
+                  $iMode = $this->extractMode($oNode);
+                  
+                  if (!$bSecured && $iMode) $bSecured = !(MODE_WRITE & $iMode);
+                }
               }
             }
-          }
+            
+          } else $bSecured = false; // Not secured file
           
-        } else $bSecured = false; // Not secured file
-        
-        if (!$bSecured || Controler::isAdmin()) {
-          
-          $this->formatOutput = true;
-          
-          $sPath = MAIN_DIRECTORY.$sPath;
-          
-          if ($oFile) unlink($sPath);
-          $bResult = parent::save($sPath);
-          
-          $oDirectory->updateFile($sName);
-          
-        } else Controler::addMessage(xt('Le fichier %s contient des balises protégées, le système ne permet actuellement pas de modifier ce type de fichier, veuillez contacter l\'administrateur !', new HTML_Strong($sPath)), 'error');
+          if (!$bSecured || Controler::isAdmin()) {
+            
+            $this->formatOutput = true;
+            
+            $sPath = MAIN_DIRECTORY.$sPath;
+            
+            if ($oFile) unlink($sPath);
+            $bResult = parent::save($sPath);
+            
+            $oDirectory->updateFile($sName);
+            
+          } else dspm(xt('Le fichier %s contient des balises protégées, le système ne permet actuellement pas de modifier ce type de fichier, veuillez contacter l\'administrateur !', new HTML_Strong($sPath)), 'error');
 
+          
+          return $bResult;
+          
+        } else dspm(xt('Droits insuffisants pour sauvegarder le fichier dans %s !', new HTML_Strong($sPath)), 'xml/error');
         
-        return $bResult;
-        
-      } else Controler::addMessage(xt('Droits insuffisants pour sauvegarder le fichier dans %s !', new HTML_Strong($sPath)), 'file/error');
+      } else dspm(xt('Le répertoire de destination %s n\'existe pas !', new HTML_Strong($sPath)), 'xml/error');
       
-    } else Controler::addMessage(xt('Le répertoire de destination %s n\'existe pas !', new HTML_Strong($sPath)), 'file/error');
+    } else  dspm(t('Aucun chemin pour la sauvegarde !'), 'xml/error');
     
     return false;
   }
@@ -514,6 +531,7 @@ class XML_Document extends DOMDocument {
     
     return null;
   }
+  
   public function importNode($oChild, $bDepth = true) {
     
     if ($oChild) {
@@ -532,7 +550,6 @@ class XML_Document extends DOMDocument {
   /**
    * Extract the first result of a DOMNodeList if possible
    */
-   
   public function queryArray($sQuery, $sPrefix = '', $sUri = '') {
     
     $aResult = array();
@@ -542,6 +559,9 @@ class XML_Document extends DOMDocument {
     return $aResult;
   }
   
+  /**
+   * Return the first row of a result of an xpath query
+   */
   public function queryOne($oCollection) {
     
     if ($oCollection && $oCollection->length) return $oCollection->item(0);
@@ -551,7 +571,6 @@ class XML_Document extends DOMDocument {
   /**
    * Extract a string value from a mixed variable
    */
-  
   public function queryString($mValue) {
     
     if (is_object($mValue)) {
@@ -563,21 +582,32 @@ class XML_Document extends DOMDocument {
     return (string) $mValue;
   }
   
-  public function extractNS($sNamespace, $bKeep = false) {
+  /**
+   * Return a new document, with only the elements selected by namespace
+   */
+   public function extractNS($sNamespace, $bKeep = false) {
     
     if (!$this->isEmpty()) return new XML_Document($this->getRoot()->extractNS($sNamespace, $bKeep));
     else return null;
   }
   
-  public function parseXSL($oTemplate) {
+  /** 
+   * Parse a template with this document as parameter
+   */
+  public function parseXSL($oDocument) {
     
-    if (is_object($oTemplate)) {
+    if (is_object($oDocument)) {
       
-      if (!$oTemplate instanceof XSL_Document) $oTemplate = new XSL_Document($oTemplate);
+      if (!$oDocument instanceof XSL_Document) {
+        
+        $oTemplate = new XSL_Document($oDocument);
+        $oTemplate->setFile($oDocument->getFile());
+        
+      } else $oTemplate = $oDocument;
       
       return $oTemplate->parseDocument($this);
       
-    } else Controler::addMessage(xt('Template %s invalide !', Controler::formatResource($oTemplate)), 'xml/error');
+    } else Controler::addMessage(xt('Template %s invalide !', Controler::formatResource($oDocument)), 'xml/error');
     
     return null;
   }
@@ -588,8 +618,8 @@ class XML_Document extends DOMDocument {
     
     if ($bIndent) $oView->formatOutput();
     
-    if ($bFormat) $sResult = htmlspecialchars($oView->__toString(false, false));
-    else $sResult = $oView->__toString(false, false);
+    if ($bFormat) $sResult = htmlspecialchars($oView->display(false, false));
+    else $sResult = $oView->display(false, false);
     
     if ($bContainer) {
       
@@ -624,9 +654,12 @@ class XML_Document extends DOMDocument {
    */
   public function saveXML() {
     
-    return $this->__toString();
+    return $this->display();
   }
   
+  /**
+   * Return path of the document as a string
+   */
   public function parseFile() {
     
     if ($this->getFile()) return $this->getFile()->parse();
@@ -653,7 +686,7 @@ class XML_Document extends DOMDocument {
     return $oResult;
   }
   
-  public function __toString($bHtml = false, $bDeclaration = true) {
+  public function display($bHtml = false, $bDeclaration = true) {
     
     $sResult = '';
     
@@ -668,6 +701,11 @@ class XML_Document extends DOMDocument {
     }
     
     return $sResult;
+  }
+  
+  public function __toString() {
+    
+    return $this->display();
   }
 }
 
@@ -706,26 +744,90 @@ class XML_Element extends DOMElement implements XML_Composante {
   }
   
   /**
+   * @return string The CSS name of the element relative to his brotherhood. ex: 'a:eq(2)'
+   */
+  private function getCSSPathName() {
+    
+    if (!$sPrefix = $this->getPrefix()) {
+      
+      $sPrefix = 'ns';
+      $sName = 'ns:'.$this->getName(false);
+      
+    } else $sName = $this->getName();
+    
+    $aNS = array($sPrefix => $this->getNamespace());
+    
+    // first check all children
+    
+    $aSiblings = $this->getParent()->query($sName, $aNS);
+    
+    if ($aSiblings->length - 1) {
+      
+      // if there are, get the preceding count
+      
+      // $iPrevious = $this->query("preceding-sibling::$sName", $aNS)->length + 1;
+      // $sName = $this->getName(true).':nth-child('.$iPrevious.')';
+      $iPrevious = $this->query("preceding-sibling::*", $aNS)->length + 1;
+      $sName = '*:nth-child('.$iPrevious.')';
+      
+    } else $sName = $this->getName(true);
+    
+    return $sName;
+  }
+  
+  /**
+   * @return string The CSS path of the element relative to his parent and brotherhood. ex: 'div > a:eq(2)'
+   */
+  public function getCSSPath($oLastParent = null) {
+    
+    $oNodes = $this->query("ancestor-or-self::*[namespace-uri() = '{$this->getNamespace()}']");
+    $oNodes->reverse();
+    
+    $oNode = null;
+    $aPath = array();
+    
+    foreach ($oNodes as $oNode) {
+      
+      if ($oLastParent && ($oLastParent === $oNode)) break;
+      else $aPath[] = $oNode->getCSSPathName();
+    }
+    
+    $sResult  = ($oLastParent === $oNode) ? '' : '/';
+    
+    return $sResult.implode(' > ', array_reverse($aPath));
+  }
+  
+  /**
+   * Create a DOMXPath object
+   * @return DOMXPath An XPath associated with querie's namespaces
+   */
+  private function buildXPath($mValues, $sUri) {
+    
+    $oXPath = new DOMXPath($this->getDocument());
+    
+    if (!is_array($mValues)) $this->oldBuildXPath($oXPath, $mValues, $sUri);
+    else foreach ($mValues as $sPrefix => $sNamespace) $oXPath->registerNamespace($sPrefix, $sNamespace);
+    
+    return $oXPath;
+  }
+  
+  /**
    * Create a DOMXPath object
    * @param string $sPrefix Prefix of the namespace used in the query
    * @param string $sUri Uri corresponding to the prefix precedly defined
    * @return DOMXPath An XPath associated with querie's prefix
    */
-  private function buildXPath($sPrefix, $sUri) {
+  private function oldBuildXPath(&$oXPath, $sPrefix, $sUri) {
     
-    $oXPath = new DOMXPath($this->getDocument());
     $sResultUri = '';
     
-    if ($sUri) $sResultUri = $sUri;
-    else {
+    if ($sUri && $sPrefix) $sResultUri = $sUri;
+    else if ($this->useDefaultNamespace()) {
       
-      if ($this->isDefaultNamespace($this->getNamespace())) {
-        
-        $sResultUri = $this->getNamespace();
-        
-        if ($sPrefix != '-') $sPrefix = 'ns';
-        else $sPrefix = '';
-      }
+      $sResultUri = $this->getNamespace();
+      
+      if ($sPrefix != '-') $sPrefix = 'ns';
+      else $sPrefix = '';
     }
     
     if ($sPrefix) {
@@ -742,24 +844,6 @@ class XML_Element extends DOMElement implements XML_Composante {
         return null;
       }
     }
-    
-    return $oXPath;
-  }
-  
-  public function getPath($oLastParent = null) {
-    
-    $oParents = $this->query('ancestor-or-self::*');
-    $aPath = array();
-    
-    foreach ($oParents as $oParent) {
-      
-      $aPrevSiblings = $oParent->query('preceding-sibling::*');
-      $aPath[] = '*['.($aPrevSiblings->length + 1).']';
-      
-      if ($oLastParent && $oLastParent === $oParent) break;
-    }
-    
-    return '/'.implode('/', $aPath);
   }
   
   /**
@@ -783,7 +867,7 @@ class XML_Element extends DOMElement implements XML_Composante {
         $mResult = $this->getDocument()->queryString($mResult);
         
         XML_Controler::addStat('query');
-        if (VIEW_QUERY) echo 'read : '.$sQuery.new HTML_Br;
+        if (XML_VIEW_QUERY) echo 'read : '.$sQuery.new HTML_Br;
         
         if ($mResult === null) {
           
@@ -807,18 +891,18 @@ class XML_Element extends DOMElement implements XML_Composante {
    * @param string $sUri Uri corresponding to the prefix precedly defined
    * @return XML_NodeList Result of the XPath query
    */
-  public function query($sQuery, $sPrefix = '', $sUri = '') {
+  public function query($sQuery, $mValue = '', $sUri = '') {
     
     if (is_string($sQuery) && $sQuery) {
       
-      $oXPath = $this->buildXPath($sPrefix, $sUri);
+      $oXPath = $this->buildXPath($mValue, $sUri);
       
       if ($oXPath) {
         
         $mResult = $oXPath->query($sQuery, $this);
         
         XML_Controler::addStat('query');
-        if (VIEW_QUERY) echo 'query : '.$sQuery.new HTML_Br;
+        if (XML_VIEW_QUERY) echo 'query : '.$sQuery.new HTML_Br;
         
         // if (!$mResult || !$mResult->length) Controler::addMessage(xt("Element->query(%s) : Aucun résultat", new HTML_Strong($sQuery)), 'xml/report');
         // ////// report & notice type will crash system, maybe something TODO /////// //
@@ -858,14 +942,23 @@ class XML_Element extends DOMElement implements XML_Composante {
     return parent::setAttributeNode($oAttribute);
   }
   
-  /**
-   * Evaluate if the attribute has a boolean value (true or false or TRUE or FALSE)
-   * @param string $sAttribute Query to execute
-   * @return boolean|null The value of the attribute, or null if it's not a boolean value
-   */
-  public function testAttribute($sAttribute, $bDefault = null) {
+  public function hasAttributes() {
     
-    return strtobool(strtolower($this->getAttribute($sAttribute)), $bDefault);
+    foreach (func_get_args() as $sArg) if (!$this->getAttribute($sArg)) return false;
+    
+    return true;
+  }
+  
+  /**
+   * Evaluate the attribute as a boolean value (true or false or TRUE or FALSE) or compare as a string
+   * @param string $sAttribute Attribute name to get
+   * @param boolean|null|string $mDefault Value to compare or return by default
+   * @return boolean|null The value of the attribute, or $mDefault if it's not a boolean value
+   */
+  public function testAttribute($sAttribute, $mDefault = null) {
+    
+    if (is_string($mDefault)) return ($this->getAttribute($sAttribute) == $mDefault);
+    return strtobool(strtolower($this->getAttribute($sAttribute)), $mDefault);
   }
   
   /**
@@ -928,10 +1021,11 @@ class XML_Element extends DOMElement implements XML_Composante {
    * @param array $aAttributes The associative array containing the name of the attribute in the key and the value in the array values
    * @return array The associative array passed in argument
    */
-  public function addAttributes($aAttributes) {
+  public function addAttributes($mAttributes) {
     
-    foreach ($aAttributes as $sKey => $sValue) $this->setAttribute($sKey, $sValue);
-    return $aAttributes;
+    if (is_array($mAttributes)) foreach ($mAttributes as $sKey => $sValue) $this->setAttribute($sKey, $sValue);
+    else if (is_object($mAttributes)) foreach ($mAttributes as $oAttribute) $this->setAttribute($oAttribute->getName(), $oAttribute->getValue());
+    return $mAttributes;
   }
   
   public function getAttributes() {
@@ -951,6 +1045,10 @@ class XML_Element extends DOMElement implements XML_Composante {
     else return parent::getAttribute($sName);
   }
   
+  public function getId() {
+    
+    return $this->getAttribute('id');
+  }
   /**
    * Remove the children then add the mixed values given in argument with {@link add()}
    * @param XML_Document|XML_Element|XML_Attribute|XML_Text|XML_NodeList|string Value(s) to replace actual content
@@ -962,59 +1060,14 @@ class XML_Element extends DOMElement implements XML_Composante {
       
       $this->set(func_get_arg(0));
       
-      // If this is the root, then we add the others in it
-      if ($this->isRoot()) $oParent = $this->parentNode;
-      else $oParent = $this;
-      
-      for ($i = 1; $i < func_num_args(); $i++) $oParent->add(func_get_arg($i));
+      for ($i = 1; $i < func_num_args(); $i++) $this->add(func_get_arg($i));
       
     } else if (func_num_args() == 1) {
       
       $mValue = func_get_arg(0);
       
-      if (is_object($mValue)) {
-        
-        $this->cleanChildren();
-        if (($mValue instanceof XML_Document)) {
-          
-          // XML_Document
-          
-          $this->add($mValue);
-          
-        } else if (($mValue instanceof XML_Element) || ($mValue instanceof XML_Text)) {
-          
-          // XML_Element, XML_Text
-          
-          $mValue = $this->insertChild($mValue);
-          
-        } else if ($mValue instanceof XML_Attribute) {
-          
-          // XML_Attribute
-          
-          return $this->setAttributeNode($mValue);
-          
-        } else if ($mValue instanceof XML_NodeList) {
-          
-          // XML_NodeList
-          
-          return $this->add($mValue);
-          
-        } else return $this->addText($mValue); // forced string
-        
-      } else if (is_array($mValue)) {
-        
-        $this->cleanAttributes();
-        $this->cleanChildren();
-        
-        $mValue = $this->add($mValue);
-        
-      } else if ($mValue !== null) {
-        
-        $this->cleanChildren();
-        $mValue = $this->addText($mValue);
-      }
-      
-      return $mValue;
+      $this->cleanChildren();
+      return $this->add($mValue);
     }
     
     return null;
@@ -1058,7 +1111,7 @@ class XML_Element extends DOMElement implements XML_Composante {
   
   public function merge($oElement, $bSelfPrior = false) {
     
-    $oResult = new XML_Element($this->getName(), $this->getChildren(), $this->getAttributes(), $this->getNamespace());
+    $oResult = new XML_Element($this->getName(false), $this->getChildren(), $this->getAttributes(), $this->getNamespace());
     
     foreach ($oElement->getChildren() as $oChild) {
       
@@ -1127,7 +1180,7 @@ class XML_Element extends DOMElement implements XML_Composante {
     
     if (is_object($mValue)) {
       
-      if ($mValue instanceof XML_Element || $mValue instanceof XML_Text) {
+      if ($mValue instanceof XML_Element || $mValue instanceof XML_Text || $mValue instanceof XML_CData) {
         
         /* XML_Element or XML_Text */
         
@@ -1157,6 +1210,8 @@ class XML_Element extends DOMElement implements XML_Composante {
       } else {
         
         /* Undefined object (Action, XML_Action, others) */
+        
+        // Forced parsing !!
         
         if (method_exists($mValue, 'parse')) {
           
@@ -1206,7 +1261,7 @@ class XML_Element extends DOMElement implements XML_Composante {
     
     if ($oChild === $oNext) $oNext = null;
     
-    if (is_object($oChild) && ($oChild instanceof XML_Element || $oChild instanceof XML_Text)) {
+    if (is_object($oChild) && ($oChild instanceof XML_Element || $oChild instanceof XML_Text || $oChild instanceof XML_CData)) {
       
       if ((bool) $oChild->getDocument() && ($oChild->getDocument() !== $this->getDocument())) {
         
@@ -1247,7 +1302,7 @@ class XML_Element extends DOMElement implements XML_Composante {
           if ($mContent->isDefaultNamespace($mContent->getNamespace())) {
             //$oResult = $this->getDocument()->set($mContent); return $oResult;
             
-            $oRoot = new XML_Element($mContent->getName(), null, null, $mContent->getNamespace());
+            $oRoot = new XML_Element($mContent->getName(false), null, null, $mContent->getNamespace());
             $oRoot->cloneAttributes($mContent);
             
             $oRoot->add($mContent->getChildren());
@@ -1359,34 +1414,42 @@ class XML_Element extends DOMElement implements XML_Composante {
     return $this->insertChild($this->getDocument()->createNode($sName, $oContent, $aAttributes), $oNext);
   }
   
-  public function toArray() {
-    
+  public function toArray($sAttribute = null) {
+    //dspf($this);
     if ($this->isTextElement()) $mValue = $this->getValue();
     else {
       
       $mValue = array();
-      $bIndex = $this->testAttribute('array-index');
+      
+      if (!$bIndex = $this->testAttribute('key-type', 'index')) $sChildAttribute = $this->getAttribute('attribute-key');
+      else $sChildAttribute = null;
       
       foreach ($this->getChildren() as $oChild) {
         
         if ($oChild->isElement()) {
           
-          list($sKey, $mSubValue) = $oChild->toArray();
+          list($sKey, $mSubValue) = $oChild->toArray($sChildAttribute);
           
           if (!$bIndex) $mValue[$sKey] = $mSubValue;
           else $mValue[] = $mSubValue;
           
         } else {
           
-          $mValue = $this->getValue();
-          break;
+          $mValue[] = $this->getValue();
         }
       }
     }
     
-    return array($this->getName(true), $mValue);
+    if ($sAttribute) $sName = $this->getAttribute($sAttribute);
+    else $sName = $this->getName(true);
+    
+    
+    return array($sName, $mValue);
   }
   
+  /**
+   * Return a new element tree, with only the elements selected by namespace
+   */
   public function extractNS($sNamespace, $bKeep = false) {
     
     $oResult = null;
@@ -1451,7 +1514,7 @@ class XML_Element extends DOMElement implements XML_Composante {
   
   public function isTextElement() {
     
-    return !$this->hasElementChildren();
+    return (!$this->hasElementChildren() && $this->hasChildren());
   }
   
   public function isText() {
@@ -1486,6 +1549,11 @@ class XML_Element extends DOMElement implements XML_Composante {
     return $this->namespaceURI;
   }
   
+  public function useDefaultNamespace() {
+    
+    return $this->isDefaultNamespace($this->getNamespace());
+  }
+  
   public function useNamespace($sNamespace = '') {
     
     if ($sNamespace) return ($this->getNamespace() == $sNamespace);
@@ -1497,7 +1565,7 @@ class XML_Element extends DOMElement implements XML_Composante {
     return $this->prefix;
   }
   
-  public function getName($bLocal = false) {
+  public function getName($bLocal = true) {
     
     if ($bLocal) return $this->localName;
     else return $this->nodeName;
@@ -1546,21 +1614,23 @@ class XML_Element extends DOMElement implements XML_Composante {
   
   public function viewResume($iLimit = 165, $bDecode = true) {
     
-    $sView = stringResume(htmlspecialchars($this->view(false, false, false)), $iLimit);
-    $iLastSQuote = strrpos($sView, '&');
-    $iLastEQuote = strrpos($sView, ';');
+    $sView = stringResume($this->view(false, false, true), $iLimit, true);
     
-    if ($iLastSQuote && $iLastEQuote < $iLastSQuote) $sView = substr($sView, 0, $iLastSQuote).'...';
     if ($bDecode) return htmlspecialchars_decode($sView);
     else return $sView;
   }
   
   public function view($bContainer = true, $bIndent = false, $bFormat = false) {
     
-    $oResult = clone $this;
+    $oResult = $this->cloneNode(true);
+    
+    /*foreach ($this->query('//namespace') as $oChild) {
+      
+      $this->setAttribute('xmlns:'.$oChild->getName(), $oChild->getValue(), NS_XMLNS);
+    }*/
     
     if ($bIndent) $oResult->formatOutput();
-    if ($bFormat) $oResult = htmlspecialchars($oResult);
+    if ($bFormat) $oResult = htmlspecialchars((string) $oResult);
     
     if ($bContainer) $oResult = new HTML_Tag('pre', wordwrap($oResult, 100));
     
@@ -1613,7 +1683,7 @@ class XML_Element extends DOMElement implements XML_Composante {
   }
 }
 
-class XML_Attribute extends DOMAttr implements XML_Composante {
+class XML_Attribute extends DOMAttr {
   
   public function __construct($sName, $sValue) {
     
@@ -1653,9 +1723,34 @@ class XML_Attribute extends DOMAttr implements XML_Composante {
 
 class XML_CData extends DOMCdataSection implements XML_Composante {
   
+  public function setValue($mValue) {
+    
+    $this->data = (string) $mValue;
+  }
+  
   public function getValue() {
     
     return $this->data;
+  }
+  
+  public function remove() {
+    
+    return $this->parentNode->removeChild($this);
+  }
+  
+  public function isText() {
+    
+    return true;
+  }
+  
+  public function isElement() {
+    
+    return false;
+  }
+  
+  public function messageParse() {
+    
+    return new HTML_Span((string) $this, array('class' => 'message-element'));
   }
   
   public function formatOutput($iLevel = 0) {
@@ -1665,7 +1760,8 @@ class XML_CData extends DOMCdataSection implements XML_Composante {
   
   public function __toString() {
     
-    return "<![CDATA[\n".$this->data.']]>';
+    return $this->data;
+    // return "<![CDATA[\n".$this->data.']]>';
   }
 }
 
@@ -1684,8 +1780,8 @@ class XML_Text extends DOMText implements XML_Composante {
         $mContent = '';
       }
     }
-    
     // if (!(is_string($mContent) || is_numeric($mContent))) $mContent = '';
+    // if ($mContent === 0) $mContent = '00'; //dom bug ?
     parent::__construct($mContent);
   }
   
@@ -1764,7 +1860,7 @@ class XML_NodeList implements Iterator {
     }
   }
   
-  public function toArray($sMode = '') {
+  public function toArray($sMode = null, $sAttribute = null) {
     
     $aResults = array();
     
@@ -1774,7 +1870,7 @@ class XML_NodeList implements Iterator {
         
         case 'id' : $aResults[$oNode->getAttribute('id')] = $oNode->getChildren()->toArray(); break;
         case 'name' : $aResults[] = $oNode->getName(); break;
-        
+        // case 'attribute' : $aResult[] = $oNode->getAttribute($sAttribute);
         default :
           
           // if ($oNode->isEmpty()) $aResults[] = $oNode->getName();
@@ -1784,6 +1880,11 @@ class XML_NodeList implements Iterator {
     }
     
     return $aResults;
+  }
+  
+  public function getFirst() {
+    
+    return $this->item(0);
   }
   
   public function item($iKey) {
@@ -1824,7 +1925,8 @@ class XML_NodeList implements Iterator {
   
   public function current() {
     
-    return $this->aNodes[$this->iIndex];
+    if (array_key_exists($this->iIndex, $this->aNodes)) return $this->aNodes[$this->iIndex];
+    else return null;
   }
   
   public function view() {
@@ -1838,6 +1940,12 @@ class XML_NodeList implements Iterator {
   public function valid() {
     
     return ($this->iIndex < count($this->aNodes));
+  }
+  
+  public function reverse() {
+    
+    $this->aNodes = array_reverse($this->aNodes);
+    $this->rewind();
   }
   
   public function implode($sSeparator = ' ') {
@@ -1890,9 +1998,9 @@ class XSL_Document extends XML_Document {
   
   public function setParameter($sName, $sValue, $sUri = '') {
     
-    $bResult = $this->getProcessor()->setParameter($sUri, $sName, $sValue);
+    $bResult = $this->getProcessor()->setParameter($sUri, $sName, (string) $sValue);
     
-    if (!$bResult) Controler::addMessage(xt('Création impossible du paramètre %s impossible avec la valeur %s - [%s]', new HTML_Strong($sName), new HTML_Strong($sValue), new HTML_Strong($sUri)), 'xml/warning');
+    if (!$bResult) Controler::addMessage(xt('Création du paramètre %s impossible avec la valeur %s - [%s]', new HTML_Strong($sName), new HTML_Strong($sValue), new HTML_Strong($sUri)), 'xml/warning');
     return $bResult;
   }
   
@@ -1912,8 +2020,8 @@ class XSL_Document extends XML_Document {
   public function includeExternals(&$aPaths = array(), $iLevel = 0) {
     
     $sPath = (string) $this->getFile();
-    $iMaxLevel = 10;
-    //dspm($sPath);
+    $iMaxLevel = XSL_MAX_IMPORT_DEPTH;
+    
     if ($iLevel > $iMaxLevel) {
       
       Controler::addMessage(xt('Trop d\'imbrications ou redondances dans %s dans %s', new HTML_Strong(t('les importations')), $this->getFile()), 'warning');
@@ -1924,30 +2032,36 @@ class XSL_Document extends XML_Document {
       // Template ever imported
       return false;
       
-    } else if ($oExternals = $this->query('/*/xsl:include | /*/xsl:import', 'xsl', NS_XSLT)) {
+    } else {
       
-      $aPaths[] = $sPath;
+      $oExternals = $this->query('/*/xsl:include | /*/xsl:import', 'xsl', NS_XSLT);
       
-      foreach ($oExternals as $oExternal) {
+      if ($oExternals->length) {
         
-        if ($sHref = $oExternal->getAttribute('href')) {
+        $aPaths[] = $sPath;
+        
+        foreach ($oExternals as $oExternal) {
           
-          if ($this->getFile()) $sImportPath = Controler::getAbsolutePath($sHref, $this->getFile()->getParent().'/');
-          else $sImportPath = Controler::getAbsolutePath($sHref, '/');
-          
-          $oTemplate = new XSL_Document($sImportPath);
-          
-          if (!$oTemplate->isEmpty() && $oTemplate->includeExternals($aPaths, $iLevel + 1)) {
+          if ($sHref = $oExternal->getAttribute('href')) {
+            //dspm($oExternal->view());
+            //dspm($this->getFile()->getParent().' / '.$sImportPath);
+            if ($this->getFile()) $sImportPath = Controler::getAbsolutePath($sHref, $this->getFile()->getParent().'/');
+            else $sImportPath = Controler::getAbsolutePath($sHref, '/');
             
-            switch ($oExternal->getName(true)) {
+            $oTemplate = new XSL_Document($sImportPath);
+            
+            if (!$oTemplate->isEmpty() && $oTemplate->includeExternals($aPaths, $iLevel + 1)) {
               
-              case 'include' : $oExternal->replace($oTemplate->getChildren()); break;
-              case 'import' : $this->shift($oTemplate->getChildren()); break;
+              switch ($oExternal->getName(true)) {
+                
+                case 'include' : $oExternal->replace($oTemplate->getChildren()); break;
+                case 'import' : $this->shift($oTemplate->getChildren()); break;
+              }
             }
           }
+          
+          $oExternal->remove();
         }
-        
-        $oExternal->remove();
       }
     }
     
@@ -1960,16 +2074,21 @@ class XSL_Document extends XML_Document {
     
     if ($oDocument && !$oDocument->isEmpty() && !$this->isEmpty()) {
       
-      $this->includeExternals();//dspf($this->getRoot());
+      $this->includeExternals();
       $this->getProcessor()->importStylesheet($this);
       
-      $mResult = $this->getProcessor()->transformToXML($oDocument);
+      $sResult = $this->getProcessor()->transformToXML($oDocument);
       
       if ($bXML) {
         
-        $mResult = new XML_Document($mResult);
-        if ($mResult->isEmpty()) Controler::addMessage(t('Aucun résultat de la transformation XSL !'), 'xml/warning');
-      }
+        $mResult = new XML_Document($sResult);
+        
+        if ($mResult->isEmpty()) Controler::addMessage(array(
+          t('Un problème est survenu lors de la transformation XSL !'),
+          new HTML_Hr,
+          $sResult), 'xml/warning');
+        
+      } else $mResult = substr($sResult, 21);
       
       XML_Controler::addStat('parse');
     }

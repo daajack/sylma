@@ -14,6 +14,11 @@ class XML_Controler {
     return $oResult->parseXSL(new XML_Document(Controler::getSettings('messages/statistic-template/@path')));
   }
   
+  public static function getStats() {
+    
+    return self::$aStats;
+  }
+  
   public static function addStat($sKey, $iWeight = 1) {
     
     if (!array_key_exists($sKey, self::$aStats)) self::$aStats[$sKey] = $iWeight;

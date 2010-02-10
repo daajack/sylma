@@ -300,7 +300,7 @@ class HTML_Document extends XML_Helper {
     $oView->query('//@ls:owner | //@ls:mode | //@ls:group', 'ls', NS_SECURITY)->remove();
     $oView->formatOutput();
     
-    return $sDocType."\n".$oView->display(false, false);
+    return $sDocType."\n".$oView->display(false);
   }
 }
 

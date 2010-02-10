@@ -1108,7 +1108,7 @@ class XML_Action extends XML_Document {
         switch ($oChild->getName(true)) {
           
           case 'name' : break;
-          case 'argument' : $bResult = $this->validateArgument($oChild, $iIndex - 1); break;
+          case 'argument' : $bResult = $this->validateArgument($oChild, $iIndex); break;
           case 'processor' :
             
             if ($sNamespace = $oChild->getAttribute('namespace')) {

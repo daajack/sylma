@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<class xmlns="http://www.sylma.org/interface" xmlns:ls="http://www.sylma.org/security">
+  <name>XML_Directory</name>
+  <method name="getPath" path="get-path" return-default="true"/>
+  <method name="unbrowse" path="unbrowse" return-default="true"/>
+  <method name="checkRights" path="check-rights">
+    <argument name="mode" format="php-integer"/>
+  </method>
+  <method name="browse" path="browse" return-default="true">
+    <argument required="false" format="php-array" name="allowed-ext"/>
+    <argument required="false" format="php-array" name="excluded-path"/>
+    <argument required="false" format="php-integer" name="depth"/>
+  </method>
+  <method return-default="true" name="getParent" path="get-parent"/>
+</class>

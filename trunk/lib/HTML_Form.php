@@ -72,6 +72,8 @@ class HTML_Form extends HTML_Tag {
         
       } else {
         
+        $sField = SYLMA_FIELD_PREFIX . $sField;
+        
         $bMark = array_key_exists($sField, $this->aMessages);
         
         if ($bExist) {

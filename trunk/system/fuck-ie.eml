@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<le:action xmlns:le="http://www.sylma.org/execution" xmlns:li="http://www.sylma.org/interface" xmlns="http://www.w3.org/1999/xhtml">
+  <div id="browser-warning">
+    <p>Certains composants de cette page ne fonctionnent pas sur <strong>Internet Explorer</strong>.</p>
+    <p class="center">
+      <a href="http://download.mozilla.org/?product=firefox-3.5&amp;os=win&amp;lang=fr">
+      <img alt="Mozilla Firefox" src="/web/img/firefox.png"/><span>Cliquez ici pour télécharger Mozilla Firefox</span>
+      </a>
+    </p>
+  </div>
+</le:action>

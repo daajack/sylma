@@ -59,9 +59,14 @@ class Img implements Main {
         Controler::setContentType($sExtension);
         
         $sFunction = 'imagecreatefrom'.strtolower($sExtension);
-        
         $img = @$sFunction(MAIN_DIRECTORY.$sFilePath)
         or die("Cannot Initialize new GD image stream");
+        
+        if ($sExtension == 'png') {
+          
+          imagealphablending($img, false);
+          imagesavealpha($img, true);
+        }
         
         // imagefilter($img, IMG_FILTER_GRAYSCALE);
         // imagestring($img, 2, 5, 15, date('H:i:s'), imagecolorallocate($img, 255, 216, 147));
@@ -239,7 +244,7 @@ class WindowAction extends XML_Document implements Main {
     $oView = new XML_Document($this);
     $oView->formatOutput();
     
-    return $oView->__toString();
+    return $oView->display();
   }
 }
 
@@ -276,7 +281,7 @@ class Xml extends XML_Document implements Main {
       $oView = new XML_Document($this);
       $oView->formatOutput();
       
-      return $oView->__toString(true);
+      return $oView->display(true);
     }
     
     else return parent::__toString();

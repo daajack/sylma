@@ -119,23 +119,23 @@ class HTML_Field extends XML_Document {
         
         $aOptions = array(
           
-          "'firstDay'"        => 1,
-          "'changeFirstDay'"  => 'false',
-          "'highlightWeek'"   => 'true',
+          "'startMonday'"     => 'true',
+          "'format'"          => "'%d.%m.%Y'", //'%A %D %B'
+          "'slideTransition'" => 'Fx.Transitions.Back.easeOut',
+          "'theme'"           => "'osx-dashboard'"
         );
         
         if ($sValue) $iDate = strtotime($sValue);
         else $iDate = time();
         
-        $aDateArguments = array(date('Y', $iDate), date('n', $iDate) - 1, date('j', $iDate));
-        $aOptions["'defaultDate'"] = 'new Date('.implode(', ', $aDateArguments).')';
+        // $aDateArguments = array(date('Y', $iDate), date('n', $iDate) - 1, date('j', $iDate));
+        // $aOptions["'defaultDate'"] = 'new Date('.implode(', ', $aDateArguments).')';
         
-        if ($aOptions) $sOptions = '{'.implode(', ', fusion(' : ', $aOptions)).'}';
+        if ($aOptions) $sOptions = '{'.implosion(' : ', ', ', $aOptions).'}';
         else $sOptions = '';
         
-        $oScript = new HTML_Script();
-        $oScript->add("$(document).ready(function(){ $('#$sId').datepicker($sOptions);});");
-        $oContainer->add($oScript);
+        Controler::getWindow()->addOnLoad("new CalendarEightysix('$sId', $sOptions);");
+        //$oScript->add("$(document).ready(function(){ $('#$sId').datepicker($sOptions);});");
       }
       
       // Marquage
@@ -144,11 +144,12 @@ class HTML_Field extends XML_Document {
       
       foreach ($aClasses as $sClass) $oContainer->addClass($sClass);
       
-      if (array_key_exists('class', $aNode))
-        foreach($aNode['class'] as $sVal) $oContainer->addClass($sVal);
+      if (array_key_exists('class', $aNode)) $oContainer->addClass($aNode['class']);
+        // foreach($aNode['class'] as $sVal) $oContainer->addClass($sVal);
       
-      if (array_key_exists('style', $aNode))
-        foreach($aNode['style'] as $sKey => $sVal) $oContainer->addStyle($sKey, $sVal);
+      
+      if (array_key_exists('style', $aNode)) $oContainer->setAttribute('style', $aNode['style']);
+        //foreach($aNode['style'] as $sKey => $sVal) $oContainer->addStyle($sKey, $sVal);
       
       if ($bLocked) {
         

@@ -32,9 +32,13 @@ class Form_Controler {
     
     $aMsg = array();
     
-    if (!$aSchema) $aMsg[] = new Message(t('Le contrôle des champs n\'a pu s\'effectuer correctement. Impossible de continuer !', 'error'));
+    if (!$aSchema) $aMsg[] = new Message(t('Aucun schéma défini, le contrôle des champs ne peut pas s\'effectuer !', 'form/error'));
+    
+    $sError = 'form/warning';
     
     foreach ($aSchema as $sKey => $aField) {
+      
+      $sKey = SYLMA_FIELD_PREFIX . $sKey;
       
       // Si le paramètre 'deco' est à true, la valeur n'est pas contrôlée
       
@@ -50,7 +54,7 @@ class Form_Controler {
         if (isset($aField['required']) && $aField['required']) {
           
           $oMessage = xt('Le champ "%s" est obligatoire.', $oTitle);
-          $aMsg[] = new Message($oMessage, 'form/warning', array('field' => $sKey));
+          $aMsg[] = new Message($oMessage, $sError, array('field' => $sKey));
         }
         
       } else {
@@ -71,7 +75,7 @@ class Form_Controler {
             if (!is_numeric($mValue) || $fValue != $iValue) {
               
               $oMessage = xt('Le champ "%s" doit être un nombre entier.', $oTitle);
-              $aMsg[] = new Message($oMessage, 'form/warning', array('field' => $sKey));
+              $aMsg[] = new Message($oMessage, $sError, array('field' => $sKey));
             }
             
           break;
@@ -83,7 +87,7 @@ class Form_Controler {
             if (!is_numeric($mValue)) {
               
               $oMessage = xt('Le champ "%s" doit être un nombre.', $oTitle);
-              $aMsg[] = new Message($oMessage, 'form/warning', array('field' => $sKey));
+              $aMsg[] = new Message($oMessage, $sError, array('field' => $sKey));
             }
             
           break;
@@ -108,7 +112,7 @@ class Form_Controler {
             if (!preg_match($sRegex, $mValue)) {
               
               $oMessage = xt('Le champ "%s" n\'est pas une adresse mail valide.', $oTitle);
-              $aMsg[] = new Message($oMessage, 'form/warning', array('field' => $sKey));
+              $aMsg[] = new Message($oMessage, $sError, array('field' => $sKey));
             }
             
           break;
@@ -119,7 +123,7 @@ class Form_Controler {
         if (isset($aField['min-size']) && strlen($mValue) < $aField['min-size']) {
           
           $oMessage = xt('Le champ "%s" doit faire au moins %s caractères', $oTitle, new HTML_Strong($aField['min-size']));
-          $aMsg[] = new Message($oMessage, 'warning', 'form', array('field' => $sKey));
+          $aMsg[] = new Message($oMessage, $sError, array('field' => $sKey));
         }
       }
     }

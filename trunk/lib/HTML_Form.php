@@ -8,6 +8,7 @@ class HTML_Form extends HTML_Tag {
   private $oSchema = null;
   private $oValues = null;
   private $aMessages = array();
+  private $sId = null; // id of the current object
   
   public function __construct() {
     
@@ -32,13 +33,22 @@ class HTML_Form extends HTML_Tag {
     else return null;
   }
   
+  public function getId() {
+    
+    return $this->sId;
+  }
+  
   public function setValues() {
     
     $this->oValues = new XML_Document('record');
     
     foreach (func_get_args() as $oDocument) {
       
-      if (!$oDocument->isEmpty()) $this->oValues->add($oDocument->getRoot()->getChildren());
+      if (!$oDocument->isEmpty()) {
+        
+        if ($sId = $oDocument->getAttribute('id')) $this->sId = $sId;
+        $this->oValues->add($oDocument->getRoot()->getChildren());
+      }
     }
   }
   
@@ -72,7 +82,7 @@ class HTML_Form extends HTML_Tag {
         
       } else {
         
-        $sField = SYLMA_FIELD_PREFIX . $sField;
+        $sExtField = SYLMA_FIELD_PREFIX . $sField;
         
         $bMark = array_key_exists($sField, $this->aMessages);
         
@@ -97,7 +107,7 @@ class HTML_Form extends HTML_Tag {
           
         } else $aField = $oElement->getChildren()->toArray();
         
-        $aField['id'] = $sField;
+        $aField['id'] = $sExtField;
         $aField['name'] = $sField;
         
         if (!array_key_exists('value', $aField) && ($sValue = $this->getValue($sField))) $aField['value'] = $sValue;
@@ -138,6 +148,8 @@ class HTML_Form extends HTML_Tag {
     
     $oMark = new HTML_Div(t('Les champs marqués d\'un astérisque sont obligatoires.'));
     $oMark->addClasses('clear-block', 'form-required');
+    
+    if ($this->getId()) $this->add(new HTML_Input('hidden', $this->getId(), array('name' => 'id')));
     
     $this->getLast()->insertBefore($oMark);
   }

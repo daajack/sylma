@@ -38,8 +38,6 @@ class Form_Controler {
     
     foreach ($aSchema as $sKey => $aField) {
       
-      $sKey = SYLMA_FIELD_PREFIX . $sKey;
-      
       // Si le paramètre 'deco' est à true, la valeur n'est pas contrôlée
       
       if (isset($aField['deco']) && $aField['deco']) continue;
@@ -144,11 +142,9 @@ class Form_Controler {
       $sType = array_val('type', $aField);
       $mValue = false;
       
-      $sFormField = SYLMA_FIELD_PREFIX.$sField;
-      
-      if (array_key_exists($sFormField, $_POST)) {
+      if (array_key_exists($sField, $_POST)) {
         
-        $sValue = $_POST[$sFormField];
+        $sValue = $_POST[$sField];
         
         if ($sType == 'date') {
           

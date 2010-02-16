@@ -121,6 +121,11 @@ class XML_Document extends DOMDocument {
     }
   }
   
+  public function getMode() {
+    
+    return $this->iMode;
+  }
+  
   private function setMode($iMode) {
     
     $this->iMode = in_array($iMode, array(MODE_EXECUTION, MODE_WRITE, MODE_READ)) ? $iMode : MODE_READ;
@@ -298,9 +303,9 @@ class XML_Document extends DOMDocument {
     return $this->oFile;
   }
   
-  public function save($sPath) {
+  public function save($sPath = null) {
     
-    if ($sPath) {
+    if ($sPath || ($sPath = (string) $this->getFile())) {
       
       $sName = substr(strrchr($sPath, '/'), 1);
       $sDirectory = substr($sPath, 0, strlen($sPath) - strlen($sName) - 1);
@@ -2048,7 +2053,7 @@ class XSL_Document extends XML_Document {
             if ($this->getFile()) $sImportPath = Controler::getAbsolutePath($sHref, $this->getFile()->getParent().'/');
             else $sImportPath = Controler::getAbsolutePath($sHref, '/');
             
-            $oTemplate = new XSL_Document($sImportPath);
+            $oTemplate = new XSL_Document($sImportPath, $this->getMode());
             
             if (!$oTemplate->isEmpty() && $oTemplate->includeExternals($aPaths, $iLevel + 1)) {
               

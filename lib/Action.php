@@ -726,7 +726,7 @@ class XML_Action extends XML_Document {
       
       case 'null' : $mResult = null; break;
       
-      default : dspm(array(t('Type de base inconnu !'), $oElement->messageParse()), 'action/error'); break;
+      default : dspm(array(xt('Type \'%s\' de base inconnu !', $sName), $oElement->messageParse()), 'action/error'); break;
     }
     
     return $mResult;
@@ -1011,7 +1011,8 @@ class XML_Action extends XML_Document {
     
     if ($bRequired && $mArgument === null) {
       
-      dspm(xt('L\'argument "%s" est manquant dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'error');
+      dspm(xt('L\'argument "%s" est manquant dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'error');dspf($this->getPath()->getIndex(1));
+      dspm(Controler::getBacktrace());
       $bResult = false;
       
     } else {
@@ -1048,7 +1049,11 @@ class XML_Action extends XML_Document {
             
             if (!$mArgument = $this->buildArgument($oValidate->getFirst())) {
               
-              dspm(xt('L\'argument "%s" est invalide dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'action/error');
+              if ($oValidate->testAttribute('required', true)) {
+                
+                dspm(xt('L\'argument "%s" est invalide dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'action/error');
+              }
+              
               $bResult = false;
               
             } else {
@@ -1071,7 +1076,7 @@ class XML_Action extends XML_Document {
         
         // Argument has no value and is required
         
-        if ((!$mResult = $this->buildArgument($oDefault->getFirst())) && $oDefault->testAttribute('required') !== false) {
+        if ((!$mResult = $this->buildArgument($oDefault->getFirst())) && $oDefault->testAttribute('required')) {
           
           dspm(xt('Argument "%s" valeur par défaut invalide dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'action/error');
           $bResult = false;
@@ -1082,6 +1087,8 @@ class XML_Action extends XML_Document {
       /* Hypothetical replacement */
       
       if ($bReplace) {
+        
+        $bResult = true;
         
         if ($bAssoc) $this->getPath()->setAssoc($mKey, $mResult);
         else $this->getPath()->setIndex($mKey, $mResult);
@@ -1100,15 +1107,21 @@ class XML_Action extends XML_Document {
   public function loadSettings($oSettings) {
     
     $bResult = true;
+    $iArgument = 0;
     
     if ($oSettings && $oSettings->hasChildren()) {
       
-      foreach ($oSettings->getChildren() as $iIndex => $oChild) {
+      foreach ($oSettings->getChildren() as $oChild) {
         
         switch ($oChild->getName(true)) {
           
           case 'name' : break;
-          case 'argument' : $bResult = $this->validateArgument($oChild, $iIndex); break;
+          case 'argument' :
+            
+            $bResult = $this->validateArgument($oChild, $iArgument);
+            $iArgument++;
+            
+          break;
           case 'processor' :
             
             if ($sNamespace = $oChild->getAttribute('namespace')) {
@@ -1251,7 +1264,8 @@ class XML_Action extends XML_Document {
                 $this->runInterfaceMethod($oResult, $oMethod, Action_Controler::getInterface($oResult, $this->getRedirect()));
                 
                 if (!$oResult->isEmpty()) $oResult = $oResult->getRoot()->getChildren();
-              }
+                
+              } else dspm(xt('L\'action %s n\'a pas été exécuté', $this->getPath()), 'action/error');
               
             break;
             
@@ -1575,6 +1589,11 @@ class XML_Path {
   public function getOriginalPath() {
     
     return $this->sOriginalPath;
+  }
+  
+  public function isValid() {
+    
+    return (bool) $this->getPath();
   }
   
   public function getPath() {

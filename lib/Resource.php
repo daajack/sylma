@@ -393,9 +393,9 @@ class XML_Directory extends XML_Resource {
     
     $oDirectory = null;
     
-    if ($sName && $this->checkRights(MODE_WRITE)) {
+    if (!$oDirectory = $this->getDirectory($sName)) {
       
-      if (!$oDirectory = $this->getDirectory($sName)) {
+      if ($sName && $this->checkRights(MODE_WRITE)) {
         
         mkdir(MAIN_DIRECTORY.$this.'/'.$sName, 0700);
         

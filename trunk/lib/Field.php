@@ -63,6 +63,7 @@ class HTML_Field extends XML_Document {
       case 'radio' :    $oInput = new HTML_Radio; $aClasses[] = 'field-bool'; break;
       case 'password' : $oInput = new HTML_Input('password'); $aClasses[] = 'field-text'; break;
       case 'hidden' :   $oInput = new HTML_Input('hidden'); break;
+      case 'block' :   $oInput = new HTML_FormBlock; $aClasses[] = 'field-text'; break;
       default :         $oInput = new HTML_Input; break;
     }
     
@@ -79,9 +80,9 @@ class HTML_Field extends XML_Document {
     // Liste d'options
     
     if (array_key_exists('options', $aNode)) $oInput->setOptions($aNode['options'], $sValue);
-    else $oInput->setValue($sValue);
+    else $oInput->setValue($sValue); // text value
     
-    if ($sId) $oInput->setAttribute('id', $sId);
+    if ($sId && ($sInput != 'hidden')) $oInput->setAttribute('id', $sId);
     if ($sName) $oInput->setAttribute('name', $sName);
     
     // Attribut Class
@@ -100,7 +101,7 @@ class HTML_Field extends XML_Document {
       
       $oLabel = new HTML_Tag('label');
       $oLabel->setAttribute('for', $sId);
-      if ($bMark) $oInput->setAttribute('onfocus', "$(this).parent().removeClass('field-mark');");
+      if ($bMark) $oInput->setAttribute('onfocus', "$(this).getParent().removeClass('field-mark');");
       
       foreach ($aClasses as $sClass) $oLabel->addClass($sClass);
       
@@ -115,27 +116,29 @@ class HTML_Field extends XML_Document {
       
       // Script
       
-      if ($sInput == 'date') {
+      if (($sType == 'date') && ($sInput == 'date' || $sInput == 'block')) {
         
         $aOptions = array(
           
           "'startMonday'"     => 'true',
-          "'format'"          => "'%d.%m.%Y'", //'%A %D %B'
+          "'format'"          => "'%D %B %Y'", //'%A %D %B'
           "'slideTransition'" => 'Fx.Transitions.Back.easeOut',
-          "'theme'"           => "'osx-dashboard'"
+          "'theme'"           => "'osx-dashboard'",
         );
         
-        if ($sValue) $iDate = strtotime($sValue);
-        else $iDate = time();
+        if ($sValue) $aOptions['defaultDate'] = addQuote($sValue);
         
-        // $aDateArguments = array(date('Y', $iDate), date('n', $iDate) - 1, date('j', $iDate));
-        // $aOptions["'defaultDate'"] = 'new Date('.implode(', ', $aDateArguments).')';
+        if ($sInput == 'block') {
+          
+          $aOptions["'createHiddenInput'"] = 'true';
+          $aOptions["'hiddenInputName'"] = addQuote($sName);
+          $aOptions["'hiddenInputFormat'"] = "'%d.%m.%Y'";
+        }
         
         if ($aOptions) $sOptions = '{'.implosion(' : ', ', ', $aOptions).'}';
         else $sOptions = '';
         
         Controler::getWindow()->addOnLoad("new CalendarEightysix('$sId', $sOptions);");
-        //$oScript->add("$(document).ready(function(){ $('#$sId').datepicker($sOptions);});");
       }
       
       // Marquage

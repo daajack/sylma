@@ -276,7 +276,7 @@ class Xml extends XML_Document implements Main {
   
   public function __toString() {
     
-    if ($this->sMode == 'html') {
+    if ($this->sMode == 'html' || (Controler::getPath()->getExtension() == 'rss')) {
       
       $oView = new XML_Document($this);
       $oView->formatOutput();

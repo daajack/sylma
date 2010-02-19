@@ -32,9 +32,14 @@ class XML_Action extends XML_Document {
   
   private function getDirectory() {
     
-    $sParent = $this->getPath()->getFile()->getParent();
+    $sParent = '';
     
-    $sParent = ($sParent == '/') ? $sParent : $sParent.'/';
+    if (!$this->getPath()->getFile()) dspm(array(t('Chemin introuvable pour l\'action'), $this->getPath()), 'action/error');
+    else {
+      
+      $sParent = $this->getPath()->getFile()->getParent();
+      $sParent = ($sParent == '/') ? $sParent : $sParent.'/';
+    }
     
     return $sParent;
   }
@@ -1012,7 +1017,6 @@ class XML_Action extends XML_Document {
     if ($bRequired && $mArgument === null) {
       
       dspm(xt('L\'argument "%s" est manquant dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'error');dspf($this->getPath()->getIndex(1));
-      dspm(Controler::getBacktrace());
       $bResult = false;
       
     } else {

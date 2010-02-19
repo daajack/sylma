@@ -29,8 +29,13 @@ class HTML_Form extends HTML_Tag {
   
   public function getValue($sPath) {
     
-    if ($this->oValues) return $this->oValues->read($sPath);
-    else return null;
+    if ($this->oValues) {
+      
+      $oElement = $this->oValues->get($sPath);
+      if ($oElement) return $oElement->read();
+    }
+    
+    return null;
   }
   
   public function getId() {
@@ -110,7 +115,9 @@ class HTML_Form extends HTML_Tag {
         $aField['id'] = $sExtField;
         $aField['name'] = $sField;
         
-        if (!array_key_exists('value', $aField) && ($sValue = $this->getValue($sField))) $aField['value'] = $sValue;
+        $sValue = $this->getValue($sField);
+        
+        if ($sValue !== null) $aField['value'] = $sValue;
         
         $oField = new HTML_Field($aField, $bMark);
         
@@ -152,156 +159,6 @@ class HTML_Form extends HTML_Tag {
     if ($this->getId()) $this->add(new HTML_Input('hidden', $this->getId(), array('name' => 'id')));
     
     $this->getLast()->insertBefore($oMark);
-  }
-}
-
-class HTML_Old_Form extends XML_Helper {
-  
-  private $bDisplayTop = false;
-  private $bDisplayMark = true;
-  
-  public function __construct($sAction = '', $oValue = '', $aAttributes = array()) {
-    
-    parent::__construct();
-    
-    $oForm = new HTML_Tag('form', $oValue, $aAttributes, $this);
-    
-    $this->setBloc('form', $oForm);
-    
-    $this->setBloc('form-content', new HTML_Div('', array('class' => 'form-content clear-block')));
-    
-    $oForm->setAttribute('action', $sAction);
-    $oForm->setAttribute('method', 'post');
-    
-    // Notice concernant les champs obligatoires
-    
-    $oMark = new HTML_Div(t('Les champs marqués en gras sont obligatoires.'));
-    $oMark->addClasses('clear-block', 'form-required');
-    
-    $this->setBloc('mark', $oMark);
-    
-    // Boutons d'action
-    
-    $oAction = new HTML_Div();
-    $oAction->addClasses('form-action', 'clear-block');
-    
-    $this->setBloc('action', $oAction);
-  }
-  
-  /*
-   * Construit les éléments du formulaires
-   **/
-  public function build($aSchema, $aValues, $oMessages = null, $bAutoAdd = true) {
-    
-    $aForm = array();
-    $aMessages = array();
-    
-    // Récupération des références dans les messages
-    
-    if ($oMessages) {
-      
-      foreach ($oMessages->getMessages() as $oMessage) {
-        
-        if ($oFields = $oMessage->query('arguments/field')) {
-          foreach ($oFields as $oField) $aMessages[$oField->read()] = $oMessage;
-        }
-      }
-    }
-    
-    // Tri des champs selon 'weight'
-    
-    $aWeight = array();
-    $iIndex = 1;
-    
-    foreach ($aSchema as $sField => $aField) {
-      
-      $aWeights[$sField] = isset($aField['weight']) ? $aField['weight'] : $iIndex;
-      $iIndex++;
-    }
-    
-    asort($aWeights);
-    
-    // Si il y'a eu des erreurs, récupération des données de $_POST
-    
-    foreach ($aWeights as $sField => $iWeight) {
-      
-      $aField = $aSchema[$sField];
-      
-      if (array_val('disable', $aField) && $aField['disable']) continue; // Pas de rendu
-      
-      if (array_val('type', $aField) != 'display') {
-        
-        // Récupération de le valeur dans le tableau $aValues
-        
-        $bMark = isset($aMessages[$sField]);
-        $sValue = array_val($sField, $aValues, array_val('value', $aField, ''));
-        
-        $aField['value'] = $sValue;
-        $aField['name'] = array_val('name', $aField, $sField);
-        
-        // Création de l'élément
-        
-        // case 'key' :      $oInput = new Field_Key($aField); break;
-        // case 'date' :     $oInput = new Field_Date($aField); break;
-        // case 'float' :    $oInput = new Field_Float($aField); break;
-        // case 'email' :    $oInput = new Field_Email($aField); break;
-        // case 'integer' :  $oInput = new Field_Integer($aField);  break;
-        // case 'blob' :     $oInput = new Field_Blob($aField); break;
-        // case 'bool' :     $oInput = new Field_Bool($aField); break;
-        // case 'password' : $oInput = new Field_Password($aField) break;
-        // case 'hidden' :   $oInput = new Field_Hidden($aField); break;
-        // default :         $oInput = new Field_Text($aField); break;
-        
-        $oField = new HTML_Field($aField, $bMark);
-        
-      } else {
-        
-        // Contenu simple
-        
-        $oField = $aField['content'];
-      }
-      
-      if ($bAutoAdd) $this->getBloc('fields')->add($oField);
-      $aForm[$sField] = $oField;
-    }
-    
-    return $aForm;
-  }
-  
-  public function addAction($sValue, $sType = 'submit', $aAttributes = array()) {
-    
-    $oAction = new HTML_Input($sType);
-    $oAction->setValue($sValue);
-    
-    $oAction->setAttributes($aAttributes);
-    
-    $this->getBloc('action')->add($oAction);
-  }
-  
-  public function displayTop($bValue = true) {
-    
-    $this->bDisplayTop = $bValue;
-  }
-  
-  public function displayMark($bValue = true) {
-    
-    $this->bDisplayMark = $bValue;
-  }
-  
-  public function parse() {
-    
-    $this->set();
-    $this->addBloc('form');
-    
-    if ($this->bDisplayTop) $this->addBloc('action');
-    $this->getBloc('form-content')->add($this->getBloc('fields')->query('*'));
-    $this->addBloc('form-content');
-    
-    if ($this->bDisplayMark) $this->addBloc('mark');
-    $this->getBloc('action')->addClass('form-action-bottom');
-    $this->addBloc('action');
-    
-    return parent::parse();
   }
 }
 
@@ -443,7 +300,9 @@ class HTML_Checkbox extends HTML_Tag implements HTML_FormElement {
 
   public function setValue($bValue) {
     
-    if ($bValue) $this->addAttribute('checked', 'checked');
+    if ($bValue) $this->setAttribute('checked', 'checked');
+    else $this->setAttribute('checked');
+    
     $this->addAttribute('value', 1);
   }
 }

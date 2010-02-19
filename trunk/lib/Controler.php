@@ -25,6 +25,7 @@ class Controler {
   public static function trickMe() {
     
     global $aDefaultInitMessages;
+    global $aExecutableExtensions;
     
     self::$iStartTime = microtime(true);
     
@@ -64,7 +65,7 @@ class Controler {
       
       self::getWindow()->loadAction($oFile);
       
-    } else if (in_array(self::getPath()->getExtension(), array('', 'eml', 'htm', 'html', 'xml', 'txt', 'popup', 'action'))) {
+    } else if (in_array(self::getPath()->getExtension(), $aExecutableExtensions)) {
       
       /* An action */
       
@@ -130,6 +131,8 @@ class Controler {
       
       if (array_key_exists($sQuery, self::$aQueries)) return self::$aQueries[$sQuery];
       else $sResult = self::$aQueries[$sQuery] = self::$oSettings->read($sQuery);
+      
+      if (!$sResult) dspm(xt('Aucun paramètre recupéré dans %s avec la requête "%s"', self::$oSettings->getFile()->parse(), $sQuery), 'action/error');
       
       return $sResult;
       

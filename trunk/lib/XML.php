@@ -1613,7 +1613,7 @@ class XML_Element extends DOMElement implements XML_Composante {
     foreach ($this->getChildren() as $oChild) $oChild->formatOutput($iLevel + 1);
     if ($this->hasChildren()) {
       
-      if ($this->countChildren() > 1 || strlen($this->getFirst()) > 80) $this->add("\n".str_repeat('  ', $iLevel));
+      if ($this->countChildren() > 1) $this->add("\n".str_repeat('  ', $iLevel)); // || strlen($this->getFirst()) > 80
     }
   }
   

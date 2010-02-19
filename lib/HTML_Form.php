@@ -204,6 +204,19 @@ interface HTML_FormElement {
   public function setValue($sValue) ;
 }
 
+class HTML_FormBlock extends HTML_Tag implements HTML_FormElement {
+  
+  public function __construct($mValue = null, $aAttributes = array()) {
+    
+    parent::__construct('span', $mValue, $aAttributes);
+  }
+  
+  public function setValue($mValue) {
+    
+    $this->set($mValue);
+  }
+}
+
 class HTML_Input extends HTML_Tag implements HTML_FormElement {
   
   public function __construct($sType = 'text', $oValue = '', $aAttributes = array()) {

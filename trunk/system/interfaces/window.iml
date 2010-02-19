@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <class xmlns="http://www.sylma.org/interface" xmlns:ls="http://www.sylma.org/security">
   <file>HTML.php</file>
   <name>HTML_Document</name>
@@ -16,4 +16,5 @@
   <method path="add-onload" name="addOnLoad">
     <argument format="php-string" name="content"/>
   </method>
+  <method path="get-head" name="getHead"/>
 </class>

@@ -32,7 +32,7 @@
         <xsl:with-param name="search" select="$search"/>
       </xsl:call-template>
     </xsl:variable>
-    <xsl:value-of select="substring($string, 1, string-length($string) - string-length($after-string))"/>
+    <xsl:value-of select="substring($string, 1, string-length($string) - string-length($after-string) - 1)"/>
   </xsl:template>
   <xsl:template name="lx:substring-after-last">
     <xsl:param name="string"/>

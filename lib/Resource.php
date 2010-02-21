@@ -566,8 +566,10 @@ class XML_File extends XML_Resource {
   
   public function parse() {
     
-    $sPath = $this->getFullPath();
-    return new HTML_A(PATH_EDITOR.'?path='.$sPath, $sPath);
+    return new HTML_A(PATH_EDITOR.'?path='.$this->getFullPath(), $this->getFullPath());
+    //$oLink->add($this->getParent().'/', new HTML_Span($this->getName(), array('class' => 'file-name')));
+    
+    //return $oLink;
   }
   
   public function parseXML() {

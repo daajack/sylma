@@ -170,10 +170,11 @@ class XML_Document extends DOMDocument {
           
           if (Controler::useStatut('xml/report')) {
             
-            $oPath = new XML_Path($this->sPath, false);
+            if ($this->getFile()) $sPath = $this->getFile()->parse();
+            else $sPath = 'le document';
             
-            if ($oNodes->length == 1) $oMessage = t('%s élément  sécurisé trouvé dans %s', new HTML_Strong('1'), $oPath->parse());
-            else $oMessage = xt('%s éléments  sécurisés trouvés dans %s', new HTML_Strong($oNodes->length), $oPath->parse());
+            if ($oNodes->length == 1) $oMessage = xt('%s élément  sécurisé trouvé dans %s', new HTML_Strong('1'), $sPath);
+            else $oMessage = xt('%s éléments  sécurisés trouvés dans %s', new HTML_Strong($oNodes->length), $sPath);
             
             Controler::addMessage($oMessage, 'xml/report');
           }
@@ -233,6 +234,9 @@ class XML_Document extends DOMDocument {
         
         // not yet loaded
         
+        if (SYLMA_ACTION_STATS && ($oFile->getExtension() != 'eml') && Controler::getUser()->isMember('0'))
+          Controler::infosSetFile($oFile, true);
+        
         parent::load(MAIN_DIRECTORY.$sPath);
         if (Controler::useStatut('xml/report')) Controler::addMessage(xt('Chargement du fichier %s', $oFile->parse()), 'xml/report');
         
@@ -255,6 +259,9 @@ class XML_Document extends DOMDocument {
         
         // already loaded
         
+        if (SYLMA_ACTION_STATS && ($oFile->getExtension() != 'eml') && Controler::getUser()->isMember('0'))
+          Controler::infosSetFile($oFile, false);
+        
         $this->set($oFile->getFreeDocument());
         if ($oFile->isFileSecured()) $this->appendLoadRights();
         
@@ -269,9 +276,9 @@ class XML_Document extends DOMDocument {
   public function loadFreeFile($sPath) {
     
     parent::load(MAIN_DIRECTORY.$sPath);
-    if (Controler::useStatut('xml/report')) Controler::addMessage(xt('Chargement [libre] du fichier %s', $oFile->parse()), 'xml/report');
+    if (Controler::useStatut('xml/report')) dspm(xt('Chargement [libre] du fichier %s', new HTML_Strong($sPath)), 'xml/report');
     
-    if ($this->isEmpty()) Controler::addMessage(xt('Aucun contenu [libre] dans %s', $oFile->parse()), 'xml/warning');
+    if ($this->isEmpty()) dspm(xt('Aucun contenu [libre] dans %s', new HTML_Strong($sPath)), 'xml/warning');
     
     XML_Controler::addStat('file');
   }

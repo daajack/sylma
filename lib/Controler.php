@@ -22,12 +22,15 @@ class Controler {
   private static $aResults = array();     // Pile of results of the same action in different mime type (typically html + json)
   private static $aQueries = array();
   
+  private static $aActions = null;      // Array of running actions
+  
   public static function trickMe() {
     
     global $aDefaultInitMessages;
     global $aExecutableExtensions;
     
     self::$iStartTime = microtime(true);
+    self::$aActions[] = new XML_Action();
     
     // Authentification : récupération du cookie User
     self::setUser(self::loadUser());
@@ -319,6 +322,10 @@ class Controler {
     return $oResult;
   }
   
+  /*****************/
+  /* Infos & Stats */
+  /*****************/
+  
   public static function getSystemInfos($oRedirect) {
     
     $oView = new HTML_Ul(null, array('id' => 'system'));
@@ -350,6 +357,44 @@ class Controler {
     
     return $oView;
   }
+  
+  public static function infosSetFile($oFile, $bFirstTime) {
+    
+    if ($oLast = array_last(self::$aActions)) $oLast->resumeFile($oFile, $bFirstTime);
+  }
+  
+  public static function infosOpenAction($oCaller) {
+    
+    self::$aActions[] = $oCaller;
+  }
+  
+  public static function infosCloseAction($oAction) {
+    
+    if (self::$aActions) {
+      
+      array_pop(self::$aActions);
+      if (($oLast = array_last(self::$aActions)) && ($oLast !== $oAction)) $oLast->resumeAction($oAction);
+    }
+  }
+  
+  public static function viewResume() {
+    
+    $oAction = array_pop(self::$aActions);
+    
+    $oAction->parse(array('time' => self::$iStartTime));
+    
+    $oResume = new XML_Element('controler', $oAction->viewResume());
+    
+    $oResume->getFirst()->setAttribute('path', '<controler>');
+    $oTemplate = new XSL_Document(Controler::getSettings('actions/template/@path'));
+    $oTemplate->setParameter('path-editor', PATH_EDITOR);
+    
+    return $oResume->getDocument()->parseXSL($oTemplate);
+  }
+  
+  /*************/
+  /* Redirects */
+  /*************/
   
   private static function doAJAXRedirect($oRedirect) {
     
@@ -676,7 +721,7 @@ class Controler {
     
     // if (in_array($sPath, array('action/error', 'file/error'))) $mMessage = array($mMessage, Controler::getBacktrace());
     
-    if (Controler::isAdmin() && MESSAGES_BACKTRACE && strstr($sPath, 'warning')) $mMessage = array($mMessage, Controler::getBacktrace());
+    if (Controler::isAdmin() && MESSAGES_BACKTRACE && strstr($sPath, 'error')) $mMessage = array($mMessage, Controler::getBacktrace());
     
     self::getMessages()->addMessage(new Message($mMessage, $sPath, $aArgs));
   }

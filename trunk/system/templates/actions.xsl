@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns="http://www.w3.org/1999/xhtml" version="1.0">
-  <xsl:template match="/">
+  <xsl:template match="controler">
     <div id="msg-actions" class="clear-block">
       <xsl:apply-templates select="action"/>
     </div>
@@ -23,9 +23,18 @@
             <xsl:value-of select="@path"/>
           </a>
         </div>
+        <xsl:if test="files">
+          <div class="msg-action-files">
+            <xsl:for-each select="files/file">
+              <a href="{$path-editor}?path={@full-path}">
+                <xsl:value-of select="@full-path"/>
+              </a>
+            </xsl:for-each>
+          </div>
+        </xsl:if>
       </div>
       <xsl:if test="sub-actions">
-        <div class="msg-action-sub">
+        <div class="msg-action-sub clear-block">
           <xsl:for-each select="sub-actions/action">
             <div class="msg-action-weights">
               <xsl:for-each select="stats/*">

@@ -26,9 +26,18 @@
         <xsl:if test="files">
           <div class="msg-action-files">
             <xsl:for-each select="files/file">
-              <a href="{$path-editor}?path={@full-path}">
-                <xsl:value-of select="@full-path"/>
-              </a>
+              <xsl:choose>
+                <xsl:when test="@first-time">
+                  <a href="{$path-editor}?path={@full-path}">
+                    <xsl:value-of select="@full-path"/>
+                  </a>
+                </xsl:when>
+                <xsl:otherwise>
+                  <a href="{$path-editor}?path={@full-path}" class="old-file">
+                    <xsl:value-of select="@full-path"/>
+                  </a>
+                </xsl:otherwise>
+              </xsl:choose>
             </xsl:for-each>
           </div>
         </xsl:if>

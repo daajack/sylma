@@ -2,7 +2,7 @@
 
 class XML_Action extends XML_Document {
   
-  private $sPath = '';
+  private $oPath = null;
   private $sName = '';
   private $aVariables = array();
   private $oRedirect = null;
@@ -10,24 +10,30 @@ class XML_Action extends XML_Document {
   private $aProcessors = array();
   private $aNS = array('le' => NS_EXECUTION, 'le' => NS_INTERFACE, 'xsl', NS_XSLT );
   
+  // stats & infos resume
   private $aStats = array();
-  private $aSubActions = array();
+  public $aSubActions = array();
+  private $oResume = null;
   
-  public function __construct($mPath, $oRedirect = null, $aProcessors = array()) {
+  public function __construct($mPath = null, $oRedirect = null, $aProcessors = array()) {
     
-    if ($mPath instanceof XML_Path) $this->oPath = $mPath;
-    else $this->oPath = new XML_Path($mPath, false);
-    
-    if (!$oRedirect) $oRedirect = new Redirect;
-    $this->setRedirect($oRedirect);
-    
-    if ($aProcessors) {
+    if ($mPath) { // allow anonymouse action
       
-      foreach ($aProcessors as $oProcessor) $oProcessor->startAction($this);
-      $this->aProcessors = $aProcessors;
-    }
-    
-    parent::__construct((string) $this->getPath(), MODE_EXECUTION);
+      if ($mPath instanceof XML_Path) $this->oPath = $mPath;
+      else $this->oPath = new XML_Path($mPath, false);
+      
+      if (!$oRedirect) $oRedirect = new Redirect;
+      $this->setRedirect($oRedirect);
+      
+      if ($aProcessors) {
+        
+        foreach ($aProcessors as $oProcessor) $oProcessor->startAction($this);
+        $this->aProcessors = $aProcessors;
+      }
+      
+      parent::__construct((string) $this->getPath(), MODE_EXECUTION);
+      
+    } else parent::__construct();
   }
   
   private function getDirectory() {
@@ -197,7 +203,7 @@ class XML_Action extends XML_Document {
         if (!$mObject) foreach ($oElement->getChildren() as $oChild)
           $aArguments[] = $this->buildArgument($oChild);
         
-      } else dspm(array(t('Instruction inconnue !'), $oElement->messageParse()), 'action/error');
+      } else dspm(array(xt('Instruction inconnue dans %s', $this->getPath()->parse()), $oElement->messageParse()), 'action/error');
       
       if ($oElement->testAttribute('return') !== false) {
         
@@ -340,9 +346,6 @@ class XML_Action extends XML_Document {
         
         $oAction = new XML_Action($oPath, $oRedirect, $this->aProcessors);
         $mResult = $oAction->parse();
-        
-        // Get stats node
-        $this->aSubActions[] = $oAction->viewResume();
         
         switch ($oAction->getStatut()) {
           
@@ -1169,9 +1172,31 @@ class XML_Action extends XML_Document {
     return $bResult;
   }
   
+  public function getResume() {
+    
+    if (!$this->oResume) $this->oResume = new XML_Element('action', null, array('path' => $this->getPath()));
+    
+    return $this->oResume;
+  }
+  
+  public function resumeFile($oFile, $bFirstTime) {
+    
+    if (!$oFiles = $this->getResume()->get('files')) $oFiles = $this->getResume()->addNode('files');
+    
+    $oResume = $oFile->parseXML();
+    if ($bFirstTime) $oResume->setAttribute('first-time' , 1);
+    
+    $oFiles->add($oResume);
+  }
+  
+  public function resumeAction($oAction) {
+    
+    $this->aSubActions[] = $oAction->viewResume();
+  }
+  
   public function viewResume() {
     
-    $oAction = new XML_Element('action', null, array('path' => $this->getPath()));
+    $oAction = $this->getResume();
     $oStats = $oAction->addNode('stats');
     $aStats = array();
     
@@ -1193,6 +1218,7 @@ class XML_Action extends XML_Document {
       
       // add children
       $oSubActions = $oAction->addNode('sub-actions');
+      
       foreach ($this->aSubActions as $oSubAction) $oSubActions->add($oSubAction);
       
       // evaluate stat weight with children's
@@ -1229,13 +1255,24 @@ class XML_Action extends XML_Document {
     return $oAction;
   }
   
-  public function parse() {
+  public function parse($aStats = array()) {
     
     $oResult = null;
     
     // Load stats
-    $aStats = XML_Controler::getStats();
-    $aStats['time'] = microtime(true);
+    
+    if (SYLMA_ACTION_STATS && Controler::getUser()->isMember('0')) {
+      
+      if (!$aStats) {
+        
+        $aStats = XML_Controler::getStats();
+        $aStats['time'] = microtime(true);
+      }
+      
+      Controler::infosOpenAction($this);
+    }
+    
+    // begin check & parsing
     
     if ($this && !$this->isEmpty()) {
       
@@ -1247,6 +1284,7 @@ class XML_Action extends XML_Document {
         $oSeek = new HTML_Span(t('Début'), array('style' => 'color: green;'));
         dspm(array(xt('%s de l\'exécution du fichier %s', $oSeek, $this->getPath()->parse()), new HTML_Hr), 'action/report');
       }
+      
       
       switch ($oRoot->getNamespace()) {
         
@@ -1325,8 +1363,6 @@ class XML_Action extends XML_Document {
         
       }
       
-      // report
-      
       if (Controler::useStatut('action/report')) {
         
         $oSeek = new HTML_Span(t('Fin'), array('style' => 'color: red;'));
@@ -1345,14 +1381,19 @@ class XML_Action extends XML_Document {
     
     if ($this->aProcessors) foreach ($this->aProcessors as $oProcessor) $oProcessor->stopAction();
     
-    /* Stats */
+    // save stats
     
-    $this->aStats['time'] = microtime(true) - $aStats['time'];
-    
-    foreach (XML_Controler::getStats() as $sKey => $iValue) {
+    if (SYLMA_ACTION_STATS && Controler::getUser()->isMember('0')) {
       
-      if (!array_key_exists($sKey, $aStats)) $aStats[$sKey] = 0;
-      $this->aStats[$sKey] = $iValue - $aStats[$sKey];
+      $this->aStats['time'] = microtime(true) - $aStats['time'];
+      
+      foreach (XML_Controler::getStats() as $sKey => $iValue) {
+        
+        if (!array_key_exists($sKey, $aStats)) $aStats[$sKey] = 0;
+        $this->aStats[$sKey] = $iValue - $aStats[$sKey];
+      }
+      
+      Controler::infosCloseAction($this);
     }
     
     /* Final */
@@ -1380,7 +1421,7 @@ class XML_Action extends XML_Document {
       case 'void' : // Pas de document (404)
       default :
         
-        dspm(xt('Action "%s" impossible, document inexistant ou invalide !', $this->getPath()->parse()), 'action/warning');
+        if ($this->getPath()) dspm(xt('Action "%s" impossible, document inexistant ou invalide !', $this->getPath()->parse()), 'action/warning');
         
       break;
     }

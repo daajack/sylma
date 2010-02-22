@@ -37,11 +37,16 @@
   <xsl:template name="lx:substring-after-last">
     <xsl:param name="string"/>
     <xsl:param name="search"/>
-    <xsl:if test="contains($string, $search)">
-      <xsl:call-template name="lx:substring-after-last">
-        <xsl:with-param name="string" select="substring-after($string, $search)"/>
-        <xsl:with-param name="search" select="$search"/>
-      </xsl:call-template>
-    </xsl:if>
+    <xsl:choose>
+      <xsl:when test="contains($string, $search)">
+        <xsl:call-template name="lx:substring-after-last">
+          <xsl:with-param name="string" select="substring-after($string, $search)"/>
+          <xsl:with-param name="search" select="$search"/>
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="$string"/>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 </xsl:stylesheet>

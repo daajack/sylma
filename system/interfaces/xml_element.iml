@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <class xmlns="http://www.sylma.org/interface">
   <name>XML_Element</name>
   <method-construct>
@@ -28,6 +28,9 @@
     <multiple-arguments required-count="1"/>
   </method>
   <method path="add" name="add" output="XML_Element">
+    <multiple-arguments/>
+  </method>
+  <method path="shift" output="XML_Element" name="shift">
     <multiple-arguments/>
   </method>
   <method path="insert" name="insert" output="XML_Element">

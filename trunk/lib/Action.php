@@ -1258,10 +1258,13 @@ class XML_Action extends XML_Document {
   public function parse($aStats = array()) {
     
     $oResult = null;
+    $bStats = false;
     
     // Load stats
     
     if (SYLMA_ACTION_STATS && Controler::getUser()->isMember('0')) {
+      
+      $bStats = true;
       
       if (!$aStats) {
         
@@ -1383,7 +1386,7 @@ class XML_Action extends XML_Document {
     
     // save stats
     
-    if (SYLMA_ACTION_STATS && Controler::getUser()->isMember('0')) {
+    if ($bStats) {
       
       $this->aStats['time'] = microtime(true) - $aStats['time'];
       

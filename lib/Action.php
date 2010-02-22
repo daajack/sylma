@@ -203,7 +203,7 @@ class XML_Action extends XML_Document {
         if (!$mObject) foreach ($oElement->getChildren() as $oChild)
           $aArguments[] = $this->buildArgument($oChild);
         
-      } else dspm(array(xt('Instruction inconnue dans %s', $this->getPath()->parse()), $oElement->messageParse()), 'action/error');
+      } else dspm(array(xt('Instruction inconnue dans %s sur %s', $this->getPath()->parse(), Controler::formatResource($mObject)), $oElement->messageParse()), 'action/error');
       
       if ($oElement->testAttribute('return') !== false) {
         

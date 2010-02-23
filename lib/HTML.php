@@ -292,7 +292,7 @@ class HTML_Document extends XML_Helper {
     
     if ($this->sOnLoad) $this->addJS(null, "window.addEvent('domready', function() {\n".$this->sOnLoad."\n});");
     
-    if ($oElements = $this->query('//html:div | //html:span', array('html' => NS_XHTML)))
+    if ($oElements = $this->query(SYLMA_HTML_TAGS, array('html' => NS_XHTML)))
       foreach ($oElements as $oElement) if (!$oElement->hasChildren()) $oElement->set(' ');
     
     $oView = new XML_Document($this);

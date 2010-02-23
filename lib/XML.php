@@ -99,7 +99,7 @@ class XML_Document extends DOMDocument {
   
   public function __construct($mChildren = '', $iMode = MODE_READ) {
     
-    parent::__construct('1.0', 'UTF-8');
+    parent::__construct('1.0', 'utf-8');
     
     $this->preserveWhiteSpace = false;
     // $this->substituteEntities = false;

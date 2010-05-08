@@ -17,23 +17,26 @@ class ActionBuilder extends XML_Processor  {
     
     $mResult = null;
     
+    // layer's current action
     if (in_array($oElement->getName(true), array('layout', 'layer'))) $oElement->setAttribute('path', $this->getAction()->getPath()->getOriginalPath());
     
-    if ($this->isFirst()) {
+    if ($this->isFirst()) { // root object
+      
       
       $oElement->set($this->buildChildren($oElement));
       
       $mResult = new XML_Document(new HTML_Div($oElement));
       
-      $this->buildResult($this->parseJS($mResult));
+      $this->buildResult($this->parseAll($mResult));
       $mResult = $mResult->getFirst();
       
-    } else {
+    } else { // not root objects
       
       switch ($oElement->getName(true)) {
         
         case 'replace-events' :
           
+          // replace events before parsing for better performance
           $oDocument = new XML_Document(new XML_Element('root', $this->buildChildren($oElement)));
           $this->replaceMethodsDefault($oDocument);
           
@@ -52,35 +55,36 @@ class ActionBuilder extends XML_Processor  {
     
     return $mResult;
   }
-  /*
-  public function replaceMethodsArray($oDocument) {
+
+  private function replaceMethodsDefault($oDocument) {
     
-    $aMethods = array('event', 'click', 'dblclick', 'mousedown', 'mouseup', 'mouseover', 'mouseout', 'mousemove', 'key-down');
-    foreach ($aMethods as &$sMethod) $sMethod = '//la:'.$sMethod;
-    
-    $this->replaceMethods($oDocument->query(implode(' | ', $aMethods), $this->aNS));
-  }
-  */
-  public function replaceMethodsDefault($oDocument) {
-    
-    $this->replaceMethods($oDocument->query('//la:event', $this->aNS));
+    $this->replaceMethods($oDocument->query('//la:event | //la:method', $this->aNS));
   }
   
   /*
    * Replace methods with unique id
    **/
   
-  public function replaceMethods($oMethods) {
-    
+  private function replaceMethods($oMethods) {
+    //$aMethods = array('event', 'click', 'dblclick', 'mousedown', 'mouseup', 'mouseover', 'mouseout', 'mousemove', 'key-down');
     foreach ($oMethods as $oMethod) {
       
-      if ($oMethod->getName(true) == 'event') $sEvent = $oMethod->getAttribute('name');
-      else $sEvent = $oMethod->getName(true);
-      
       $sChildId = uniqid('method-');
-      $oResult = new XML_Element($sEvent, null, array('id' => $sChildId));
+      $sName = $oMethod->getAttribute('name');
       
-      /*$aDatas = array();
+      $oResult = new XML_Element($sName, null, array('id' => $sChildId));
+      
+      $sContent = $oMethod->getValue();
+      // $sContent = "sylma.dsp('[event] $sName #' + %ref-object%.node.id);\n" . $sContent;
+      
+      $aReplaces = array(
+        '/%([\w-_]+)%/'         => '\$(this).retrieve(\'$1\')',
+        '/%([\w-_]+)\s*,\s*([^%]+)%/'  => '\$(this).store(\'$1\', $2)');
+      
+      $oResult->add(preg_replace(array_keys($aReplaces), $aReplaces, $sContent)."\n");
+      
+      /*
+      $aDatas = array();
       $sContent = '';
       
       if ($oDatas = $oMethod->query('la:data', $this->aNS)) {
@@ -92,32 +96,43 @@ class ActionBuilder extends XML_Processor  {
         }
       }
       
-      foreach ($aDatas as $sKey => $sValue) $sContent .= "%$sKey, $sValue%;\n";*/
+      foreach ($aDatas as $sKey => $sValue) $sContent .= "%$sKey, $sValue%;\n";
+      */
       
-      $sContent = $oMethod->getValue();
-      $aReplaces = array(
-        '/%([\w-_]+)%/'         => '\$(this).retrieve(\'$1\')',
-        '/%([\w-_]+)\s*,\s*([^%]+)%/'  => '\$(this).store(\'$1\', $2)');
-      
-      $oResult->add(preg_replace(array_keys($aReplaces), $aReplaces, $sContent));
       $this->oMethods->add($oResult);
       
-      $oMethod->replace(new XML_Element('la:method', null, array(
+      $oNewMethod = new XML_Element('la:method', null, array(
         'id' => $sChildId,
-        'event' => $sEvent,
-        'extract-ref' => 'parent'), NS_ACTIONBUILDER));
+        'name' => $sName,
+        'extract-ref' => 'parent'), NS_ACTIONBUILDER);
+      
+      if ($oMethod->hasAttribute('delay')) $oNewMethod->setAttribute('delay', $oMethod->getAttribute('delay'));
+      if ($oMethod->getName() == 'event') $oNewMethod->setAttribute('event', 1);
+      
+      $oMethod->replace($oNewMethod);
     }
   }
   
   /*
-   * Build cross references with specifics attributes 
-   **/
+   * Adapt objects and methods for last parsing to js object.
+   */
   
-  public function parseJS($oDocument) {
+  private function parseAll($oDocument) {
     
-    foreach ($oDocument->query("//la:layout | //la:layer | //la:object | //la:method", $this->aNS) as $oElement) {
+    $this->parseObjects($oDocument->query("//la:layout | //la:layer | //la:object", $this->aNS));
+    $this->parseMethods($oDocument->query("//la:method", $this->aNS));
+    
+    return $oDocument->extractNS(NS_ACTIONBUILDER, false); // Extract action tree
+  }
+  
+  /*
+   * clone some attributes, define class, build references and set the name
+   */
+   
+  private function parseObjects($oElements) {
+    
+    foreach ($oElements as $oElement) {
       
-      $oRefNode = null;
       $sName = uniqid('object-');
       
       // Attributes replacements
@@ -141,88 +156,108 @@ class ActionBuilder extends XML_Processor  {
         
         if ($sClassBase = $oElement->getAttribute($sAttribute)) {
           
-          $sClassResult = '';
+          if ($sClassBase[0] == '/') {
+            
+            $sClassBase = substr($sClassBase, 1);
+            $sClassResult = '/';
+            
+          } else $sClassResult = '';
           
           foreach (explode('.', $sClassBase) as $sClass) $sClassResult .= '['.addQuote($sClass).']';
           $oElement->setAttribute($sAttribute, $sClassResult);
         }
       }
       
-      // Define Reference Axis
+      // ref node : html node visible entity of the object
       
-      if ($sRefAxis = $oElement->getAttribute('extract-ref')) $oElement->removeAttribute('extract-ref');
-      
-      switch ($sRefAxis) {
+      if ($oRefNode = $this->buildReference($oElement)) {
         
-        case 'parent' :
-          
-          if (!$oElement->isRoot()) $oRefNode = $oElement->getParent();
-          else dspm(xt('ActionBuilder : Référence impossible, l\'objet %s n\'a pas de parent dans %s', view($oElement), $this->getAction()->getPath()->parse()), 'action/error');
-          
-        break;
-        
-        case 'child' :
-        default : 
-          
-          if ($oElement->hasChildren() && $oElement->getFirst()->isElement()) {
-            
-            if ($oElement->getFirst()->getNamespace() == $oElement->getNamespace()) $oRefNode = $oElement->get("*[namespace-uri() != '".NS_ACTIONBUILDER."']", $this->aNS);
-            else $oRefNode = $oElement->getFirst();
-            
-          } else dspm(xt('ActionBuilder : Référence impossible, l\'objet %s n\'a pas d\'enfant valide dans %s', view($oElement), $this->getAction()->getPath()->parse()), 'action/error');
-          
-        break;
+        if (!$sId = $oRefNode->getId()) $oRefNode->setAttribute('id', $sName);
+        else $sName = $sId;
       }
       
-      // Build references
+      $oElement->setAttribute('id-node', $sName);
       
-      if ($oRefNode) {
-        
-        if ($oElement->getName(true) == 'method') {
-          
-          // method
-          
-          if ($sRefId = $oRefNode->getId()) $oElement->setAttribute('id-node', $sRefId);
-          else {
-            
-            $oParent = $oElement->get("ancestor::*[namespace-uri() = '".NS_ACTIONBUILDER."'][position() = 1]");
-            $oParentNode = $oElement->getDocument()->get("//*[@id='{$oParent->getAttribute('id-node')}']");
-            
-            $sPath = '#'.$oParentNode->getId().' > '.$oRefNode->getCSSPath($oParentNode);
-            
-            $oElement->setAttribute('path-node', $sPath);
-          }
-          
-        } else {
-          
-          // layout, layer, object
-          
-          if (!$sId = $oRefNode->getId()) $oRefNode->setAttribute('id', $sName);
-          else $sName = $sId;
-          
-          $oElement->setAttribute('id-node', $sName);
-          
-        }
-        
-      } else Controler::addMessage(xt('ActionBuilder : Pas de référence pour l\'élément %s dans %s', view($oElement), $this->getAction()->getPath()->parse()), 'action/error');
+      // name
       
-      if ($oElement->getParent() && $oElement->getParent()->getName(true) != 'group' && (!$sElementName = $oElement->getAttribute('name'))) {
+      if (($oElement->getParent() && ($oElement->getParent()->getName(true) != 'group')) && (!$oElement->getAttribute('name'))) {
         
         $oElement->setAttribute('name', $sName);
       }
     }
-    
-    return $oDocument->extractNS(NS_ACTIONBUILDER, false); // Extract action tree
   }
+  
+  /*
+   * build references and set path to node
+   */
+  
+  private function parseMethods($oElements) {
+    
+    foreach ($oElements as $oElement) {
+      
+      if ($oElement->hasAttribute('event') && ($oRefNode = $this->buildReference($oElement))) {
+        
+        if ($sRefId = $oRefNode->getId()) $oElement->setAttribute('id-node', $sRefId);
+        else {
+          
+          $oParent = $oElement->get("ancestor::*[namespace-uri() = '".NS_ACTIONBUILDER."'][position() = 1]");
+          $oParentNode = $oElement->getDocument()->get("//*[@id='{$oParent->getAttribute('id-node')}']");
+          
+          $sPath = '#'.$oParentNode->getId().' > '.$oRefNode->getCSSPath($oParentNode);
+          
+          $oElement->setAttribute('path-node', $sPath);
+        }
+      }
+    }
+  }
+  
+  /*
+   * Build cross references
+   **/
+  
+  private function buildReference($oElement) {
+    
+    $oRefNode = null;
+    
+    if ($sRefAxis = $oElement->getAttribute('extract-ref')) $oElement->removeAttribute('extract-ref');
+    
+    switch ($sRefAxis) {
+      
+      case 'parent' :
+        
+        if (!$oElement->isRoot()) $oRefNode = $oElement->getParent();
+        else dspm(xt('ActionBuilder : Référence impossible, l\'objet %s n\'a pas de parent dans %s', view($oElement), $this->getAction()->getPath()->parse()), 'action/error');
+        
+      break;
+      
+      case 'child' :
+      default : 
+        
+        if ($oElement->hasChildren() && $oElement->getFirst()->isElement()) {
+          
+          if ($oElement->getFirst()->getNamespace() == $oElement->getNamespace()) $oRefNode = $oElement->get("*[namespace-uri() != '".NS_ACTIONBUILDER."']", $this->aNS);
+          else $oRefNode = $oElement->getFirst();
+          
+        } else dspm(xt('ActionBuilder : Référence impossible, l\'objet %s n\'a pas d\'enfant valide dans %s', view($oElement), $this->getAction()->getPath()->parse()), 'action/error');
+        
+      break;
+    }
+    
+    return $oRefNode;
+  }
+  
+  /*
+   * Transform to xml js objects
+   */
   
   public function buildResult($oScript) {
     
     // Parse as JSON xml => array() then add the result in Controler
     
     $oTemplate = new XSL_Document(PATH_ACTIONBUILDER.'/index.xsl');
-    //dspf($oScript);
+    dspf($oScript);
     if ($oResult = $oTemplate->parseDocument($oScript)) {
-      // dspf($oResult);
+      dspf($oResult);
       list(, $aResult) = $oResult->toArray();
       Controler::addResult(json_encode($aResult), 'txt');
       

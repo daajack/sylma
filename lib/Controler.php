@@ -142,6 +142,9 @@ class Controler {
     } else return self::$oSettings;
   }
   
+  /*
+   * load GET, build action path, show-index, load window settings
+   **/
   private static function loadContext() {
     
     if (isset($_GET['q']) && $_GET['q']) {
@@ -391,6 +394,37 @@ class Controler {
     
     return $oResume->getDocument()->parseXSL($oTemplate);
   }
+  
+  /* Window methods : TODO clean */
+  
+  /*
+   * Build Window from class Name
+   **/
+  public static function setWindow($oWindow) {
+    
+    self::$oWindow = $oWindow;
+  }
+  
+  public static function getWindowSettings() {
+    
+    return self::$oWindowSettings;
+  }
+  
+  public static function getWindow() {
+    
+    return self::$oWindow;
+  }
+  
+  public static function getWindowType() {
+    
+    return self::getWindowSettings()->getName(true);
+  }
+  
+  public static function isWindowType($sWindowType) {
+    
+    return (self::getWindowType() == $sWindowType);
+  }
+  
   
   /*************/
   /* Redirects */
@@ -685,31 +719,6 @@ class Controler {
     
     if ($sTarget{0} == '/') return $sTarget;
     else return $sSource.$sTarget;
-  }
-  
-  public static function setWindow($oWindow) {
-    
-    self::$oWindow = $oWindow;
-  }
-  
-  public static function getWindowSettings() {
-    
-    return self::$oWindowSettings;
-  }
-  
-  public static function getWindow() {
-    
-    return self::$oWindow;
-  }
-  
-  public static function getWindowType() {
-    
-    return self::getWindowSettings()->getName(true);
-  }
-  
-  public static function isWindowType($sWindowType) {
-    
-    return (self::getWindowType() == $sWindowType);
   }
   
   public static function getMessages() {

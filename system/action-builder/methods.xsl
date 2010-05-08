@@ -8,7 +8,7 @@
   <xsl:template match="/*/*">
     <xsl:text>  '</xsl:text>
     <xsl:value-of select="@id"/>
-    <xsl:text><![CDATA[' : function() {
+    <xsl:text><![CDATA[' : function(e) {
 ]]></xsl:text>
     <xsl:value-of select="."/>
     <xsl:text>}</xsl:text>

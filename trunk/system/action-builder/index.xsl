@@ -19,13 +19,21 @@
       <xsl:for-each select="la:method">
         <xsl:element name="{@id}">
           <name>
-            <xsl:value-of select="@event"/>
+            <xsl:value-of select="@name"/>
           </name>
-          <xsl:for-each select="@path-node | @id-node">
-            <xsl:element name="{name()}">
-              <xsl:value-of select="."/>
-            </xsl:element>
-          </xsl:for-each>
+          <xsl:if test="@delay">
+            <delay>
+              <xsl:value-of select="@delay"/>
+            </delay>
+          </xsl:if>
+          <xsl:if test="@event">
+            <event>true</event>
+            <xsl:for-each select="@path-node | @id-node">
+              <xsl:element name="{name()}">
+                <xsl:value-of select="."/>
+              </xsl:element>
+            </xsl:for-each>
+          </xsl:if>
         </xsl:element>
       </xsl:for-each>
     </methods>

@@ -98,7 +98,9 @@ class XML_Action extends XML_Document {
       
       if (($sMethod = $this->getPath()->getIndex()) && is_string($sMethod)) {
         
-        $oElement = new XML_Element('li:'.$sMethod, null, array('get-redirect' => 'true'), NS_INTERFACE);
+        // simulate action interface call, with args recup (get-redirect) and default return (return)
+        
+        $oElement = new XML_Element('li:'.$sMethod, null, array('get-redirect' => 'true', 'return' => 'true'), NS_INTERFACE);
         list($oSubResult, $bSubResult) = $this->runInterfaceMethod($oObject, $oElement, $this);
         
         if ($bSubResult) $oResult = $oSubResult;

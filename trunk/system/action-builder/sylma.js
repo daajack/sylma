@@ -1,5 +1,7 @@
 /* Document JS */
 
+var SYLMA_MODE_EXECUTION = 1, SYLMA_MODE_WRITE = 2, SYLMA_MODE_READ = 4;
+
 window.addEvent('domready', function() {
   
   var oResult = new Request.JSON({
@@ -10,7 +12,7 @@ window.addEvent('domready', function() {
       //sylma.dsp(' - DEBUT - ');
       sylma.loadTree(oResult);
       //sylma.dsp(' - FIN - ');
-    }}).get();
+  }}).get();
 });
 
 var sylma = {
@@ -134,58 +136,93 @@ var sylma = {
     var method, eNode;
     
     for (var sMethod in object.methods) {
-      //this.dsp(sMethod);
+      
       method = object.methods[sMethod];
       
-      if (method.name && (method['path-node'] || method['id-node']) && sylma.methods[sMethod]) {
+      if (sylma.methods[sMethod]) {
         
-        if (method['path-node']) {
+        if (method.event) {
           
-          eNode = $$(method['path-node']);
-          if (eNode.length) eNode = eNode[0];
+          //event
           
-        } else eNode = $(method['id-node']);
-        
-        if ($type(eNode) == 'element') {
-          
-          eNode.store('ref-object', oParent);
-          eNode.addEvent(method.name, sylma.methods[sMethod]);
+          if (method.name && (method['path-node'] || method['id-node'])) {
+            
+            // get target node
+            
+            if (method['path-node']) {
+              
+              eNode = $$(method['path-node']);
+              if (eNode.length) eNode = eNode[0];
+              
+            } else eNode = $(method['id-node']);
+            
+            if ($type(eNode) == 'element') {
+              
+              eNode.store('ref-object', oParent); // store parent object in node
+              
+              if (method.delay) {
+                
+                eNode.addEvent(method.name, function() {
+                  
+                  oParent.timer = sylma.methods[sMethod].delay(parseInt(method.delay), eNode);
+                  // sylma.dsp('[run-hide] ' + oParent.node.id);
+                });
+                
+              } else eNode.addEvent(method.name, sylma.methods[sMethod]); // add event
+              
+            } else {
+              
+              this.dsp('Erreur :: Objet DOM introuvable - path : ' + method['path-node'] + ' - id : ' + method['id-node']);
+            }
+            
+          } else {
+            
+            this.dsp("Erreur :: Méthode '" + sMethod + "' invalide !");
+            this.dsp(this.view(method));
+          }
           
         } else {
           
-          this.dsp('Erreur :: Objet DOM introuvable - path : ' + method['path-node'] + ' - id : ' + method['id-node']);
+          // method
+          
+          oParent[method.name] = sylma.methods[sMethod];
         }
         
       } else {
         
-        this.dsp("Erreur :: Méthode '" + method.name + "' invalide !");
+        this.dsp("Erreur :: Méthode '" + sMethod + "' introuvable !");
         this.dsp(this.view(method));
       }
     }
   },
   
-  dsp : function(sContent) {
+  dsps : function(mContent, sTargetId) {
     
-    var sId = 'sylma-messages';
+    if (!sTargetId) sTargetId = 'sylma-messages-default';
     
-    var eMessages = $(sId);
+    var eMessages = $(sTargetId);
     
     if (!($type(eMessages) == 'element')) {
       
-      eMessages = new Element('div', {'id' : sId});
-      $('content').grab(eMessages, 'top');
+      eMessages = new Element('div', {'id' : sTargetId, 'class' : 'sylma-messages'});
+      $('content').grab(eMessages, 'bottom');
     }
     
-    var sStyle = 'border-bottom: 1px solid gray; margin-bottom: 1em;';
-    eMessages.grab(new Element('div', {'html' : sContent, 'style' : sStyle}));
+    eMessages.grab(mContent, 'top');
+  },
+  
+  dsp : function(sContent, sTargetId) {
+    
+    var sStyle = 'border-bottom: 1px solid gray; margin-bottom: 0.5em;';
+    this.dsps(new Element('div', {'html' : sContent, 'style' : sStyle}));
   },
   
   view : function(obj, parent, recursion) {
     
-    if (!recursion) recursion = 5;
+    if (!recursion) recursion = 0;
     
     var sContent = '';
-    var iMaxRecursion = 10;
+    // var iMaxRecursion = 10;
     
     for (var i in obj) {
       
@@ -201,7 +238,7 @@ var sylma = {
           sContent += '<div style="margin-left: ' + (6 - recursion + 1) + 'em">';
           
           // if (parent) sContent += this.view(obj[i], parent + "." + i, recursion - 1);
-          sContent += this.view(obj[i], i, recursion - 1);
+          if (recursion) sContent += this.view(obj[i], i, recursion - 1);
           
           sContent += '</div>';
         }
@@ -216,60 +253,144 @@ var sylma = {
   }
 };
 
-sylma['classes'] = {
+
+sylma.classes.request = new Class({
   
-  'menu' : new Class({
+  Extends : Request,
+  
+  'parseAction' : function(oResult) {
     
-    'reveal' : function() {
+    var oMessages = $(oResult).getElement('messages');
+    
+    if (oMessages.children.length) {
       
-      this.node.setStyle('display', 'block');
+      var oContainer = $('explorer-messages');
+      
+      if (!oContainer) {
+        
+        oContainer = new Element('div', {'id' : 'explorer-messages'});
+        sylma.explorer.node.grab(oContainer, 'top');
+      }
+      
+      var oContent = oMessages.getFirst();
+      
+      oContent.setStyles({'opacity' : 0, 'height' : 0});
+      oContainer.adopt(oContent, 'top')
+      
+      var oFx = new Fx.Morph(oContent);
+      
+      oFx.start({
+        'opacity' : 1,
+        'height' : '100%'});
+      
+      (function() {
+        oFx.start({
+          'opacity' : 0,
+          'height' : 0});
+      }).delay(5000);
+      
+    }
+    //if ();
+  }
+});
+
+sylma.classes.layer = new Class({
+  
+  runUpdate : function(sPath, oArguments) {
+    
+    this.request = new sylma.classes.request({
+      
+      'url' : sPath + '.action',
+      'data' : oArguments,
+      'onSuccess' : function(sResult, oResult) {
+        
+        this.parseAction(oResult);
+      }
+    });
+    
+    this.request.send();
+  }
+}),
+  
+sylma.classes.layout = new Class({
+  
+}),
+
+sylma.classes.menu = new Class({
+  
+  Extends : sylma.classes.layer,
+  isOpen : false,
+  timer : undefined,
+  
+  'isVisible' : function() { return (this.node.getStyle('visibility') == 'visible'); },
+  
+  'clearTimer' : function() {
+    
+    if (this.timer) {
+      
+      $clear(this.timer);
+      this.timer = undefined;
+    }
+  },
+  
+  'show' : function() {
+    
+    if (!this.isOpen) {
+      
+      // sylma.dsp('[show] ' + this.node.id);
       this.node.fade('in');
-      
-      return true;
-    },
+      this.isOpen = true;
+    }
     
-    'show' : function() {
+    return true;
+  },
+  
+  'hide' : function(bQuick) {
+    if (bQuick) {
       
-      return this.reveal();
-    },
-    
-    'hide' : function() {
+      var oTween = this.node.get('tween');
+      
+      if (oTween) oTween.cancel();
+      this.node.fade('hide');
+      
+    } else if (this.isOpen) {
       
       this.node.fade('out');
-      
-      return true;
+      // sylma.dsp('[hide] ' + this.node.id);
     }
-  }),
-  
-  'layer' : new Class({
     
-    'test' : 'bonsoir',
+    this.isOpen = false;
     
-    'salut' : function() {
-      
-      alert(this.test);
-    },
+    return true;
+  },
+  
+  valueOf : function() {
     
-    'update' : function() {
-    
-    }
-  }),
-  
-  'layout' : new Class({
-  
-  })
-  
-};
+    return '[obj] ' + this.node + ' #' + this.node.id;
+  }
+});
 
-sylma['classes']['menu-common'] = new Class({
+sylma.classes['menu-common'] = new Class({
   
   Extends : sylma.classes.menu,
+  parentNode : undefined,
   
   'show' : function(eTarget) {
     
-    $(eTarget).grab(this.node); //, 'top'
+    if (this.firstShow(eTarget)) {
+      
+      this.hide(true);
+      $(eTarget).grab(this.node, 'top');
+      
+      this.parentNode = eTarget;
+    }
     
-    return this.reveal();
+    return this.parent();
+  },
+  
+  'firstShow' : function(eTarget) {
+    
+    return (this.parentNode !== eTarget);
   }
 });
 

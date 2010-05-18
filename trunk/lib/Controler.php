@@ -565,14 +565,18 @@ class Controler {
       
       if (is_string($mArgument))
         $sValue = "'".stringResume($mArgument, $iMaxLength)."'";
-      else if (is_array($mArgument))
-        $sValue = 'array('.count($mArgument).')';
-      else if (is_object($mArgument)) {
+      else if (is_array($mArgument)) {
+        $sValue = 'array(';
+        foreach ($mArgument as $sKey => $mValue) $sValue .= $sKey.'=>'.self::formatResource($mValue).', ';
+        $sValue .= ')';
+      } else if (is_object($mArgument)) {
 
         if ($mArgument instanceof XML_NodeList)
           $sValue = 'XML_NodeList('.$mArgument->length.')';
-        else 
-          $sValue = array(get_class($mArgument), 'red');
+        else if ($mArgument instanceof XML_Element)
+					$sValue = $mArgument;
+				else
+          $sValue = 'Classe : '.get_class($mArgument);
       } else if ($mArgument === null) $sValue = 'NULL';
       else $sValue = 'undefined';
       
@@ -737,7 +741,8 @@ class Controler {
   
   public static function useStatut($sStatut) {
     
-    return self::getMessages()->useStatut($sStatut);
+    if (SYLMA_DISABLE_STATUTS) return true;
+    else return self::getMessages()->useStatut($sStatut);
   }
   
   public static function buildSpecials() {
@@ -977,7 +982,7 @@ class Redirect {
   public function __sleep() {
     
     foreach ($this->aDocuments as $sKey => $oDocument) $this->aDocuments[$sKey] = (string) $oDocument;
-    return array_keys(get_object_vars(&$this));
+    return array_keys(get_object_vars($this)); // TODO Ref or not ?
   }
   
   public function __wakeup() {

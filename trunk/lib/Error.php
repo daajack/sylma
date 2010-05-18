@@ -20,7 +20,7 @@ function userErrorHandler($errno, $errstr, $errfile, $errline) {
     
     if (Controler::isReady()) Controler::addMessage($oMessage, 'error');
     else if (DEBUG) echo $oMessage;
-    // echo $oMessage;
+    
     return true;
   }
   

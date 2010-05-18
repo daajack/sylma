@@ -268,7 +268,7 @@ class XML_Action extends XML_Document {
   }
   
   private function loadElementArguments($oElement) {
-    
+		
     // Load arguments and remove 'em from oElement
     
     $aArguments = array(
@@ -303,6 +303,7 @@ class XML_Action extends XML_Document {
       }
     }
     
+    //echo 'fin : '.$oElement->getName();
     return $aArguments;
   }
   
@@ -910,6 +911,7 @@ class XML_Action extends XML_Document {
       $sObject = $bStatic ? $mObject : '$mObject';
       $sArguments = $aArguments ? $aArguments['string'] : '';
       
+      // TODO
       eval("\$oResult = $sObject$sCaller\$sMethodName($sArguments);");
       
       if (Controler::useStatut('action/report')) {
@@ -963,11 +965,14 @@ class XML_Action extends XML_Document {
     // if (!class_exists($sClassName)) Controler::errorRedirect($sError);
     if (class_exists($sClassName)) {
       
-      $sAction = $aArguments ? $aArguments['string'] : '';
-      
       // Création de la classe
       
-      eval("\$oAction = new \$sClassName($sAction);");
+      $oReflected = new ReflectionClass($sClassName);
+      
+      if ($aArguments) $oAction = $oReflected->newInstanceArgs($aArguments['arguments']);
+      else $oAction = $oReflected->newInstance();
+      
+      //$mEval = eval("\$oAction = new \$sClassName($sAction);");
       
       if (Controler::useStatut('action/report')) {
         
@@ -1278,7 +1283,7 @@ class XML_Action extends XML_Document {
     }
     
     // begin check & parsing
-    
+    //echo $this->getPath();
     if ($this && !$this->isEmpty()) {
       
       $oRoot = $this->getRoot();
@@ -1290,12 +1295,11 @@ class XML_Action extends XML_Document {
         dspm(array(xt('%s de l\'exécution du fichier %s', $oSeek, $this->getPath()->parse()), new HTML_Hr), 'action/report');
       }
       
-      
       switch ($oRoot->getNamespace()) {
         
         /* Execution */
         
-        case NS_EXECUTION : 
+        case NS_EXECUTION :
           
           switch ($oRoot->getName(true)) {
             

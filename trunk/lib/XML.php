@@ -160,7 +160,7 @@ class XML_Document extends DOMDocument {
     
     if (!$this->isEmpty()) {
       
-      if (Controler::getUser()) {
+      if (Controler::getUser() && !SYLMA_DISABLE_RIGHTS) {
         
         $oNodes = $this->query('//*[@ls:owner or @ls:mode or @ls:group]', 'ls', NS_SECURITY);
         
@@ -879,7 +879,7 @@ class XML_Element extends DOMElement implements XML_Composante {
         $mResult = $this->getDocument()->queryString($mResult);
         
         XML_Controler::addStat('query');
-        if (XML_VIEW_QUERY) echo 'read : '.$sQuery.new HTML_Br;
+        if (SYLMA_VIEW_QUERY) echo 'read : '.$sQuery.new HTML_Br;
         
         if ($mResult === null) {
           
@@ -914,7 +914,14 @@ class XML_Element extends DOMElement implements XML_Composante {
         $mResult = $oXPath->query($sQuery, $this);
         
         XML_Controler::addStat('query');
-        if (XML_VIEW_QUERY) echo 'query : '.$sQuery.new HTML_Br;
+        
+        if (SYLMA_VIEW_QUERY) {
+          
+          echo 'query : '.$sQuery.' [';
+          if (!$mResult) echo 'no-result';
+          else echo $mResult->length;
+          echo ']'.new HTML_Br;
+        }
         
         // if (!$mResult || !$mResult->length) Controler::addMessage(xt("Element->query(%s) : Aucun résultat", new HTML_Strong($sQuery)), 'xml/report');
         // ////// report & notice type will crash system, maybe something TODO /////// //
@@ -1988,7 +1995,8 @@ class XSL_Document extends XML_Document {
   
   public function __construct($mChildren = '', $iMode = MODE_READ) {
     
-    $this->oProcessor = new XSLTProcessor();
+    $this->oProcessor = new XSLTProcessor;
+    
     if ($mChildren) parent::__construct($mChildren, $iMode);
     else {
       

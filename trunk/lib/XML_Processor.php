@@ -76,6 +76,6 @@ class XML_Processor implements XML_ProcessorInterface {
   }
   
   public function onLoad() { }
-  public function onElement() { }
+  public function onElement($oElement) { }
   public function parse() { }
 }

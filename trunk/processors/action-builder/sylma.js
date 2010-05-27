@@ -19,6 +19,16 @@ var sylma = {
   
   classes : {},
   
+  inttobool : function(sValue) {
+    
+    return parseInt(sValue) === 1 ? true : false;
+  },
+  
+  import : function(oElement) {
+    
+    return document.importNode(oElement, true);
+  },
+  
   loadTree : function(oTree) {
     
     //var aKeys = this.extend(this, oTree, true);
@@ -64,14 +74,15 @@ var sylma = {
         if (bRoot || !sClassBase) {
           
           if (bRoot) sName = sName.substr(1);
+          sName = sName[0] == '[' ? sName : '.' + sName;
           
           try { eval('oResult = new window' + sName); }
-          catch(e) { this.dsp('Nom de classe introuvable : ' + sName); bResult = false; };
+          catch(e) { this.dsp('Nom de classe introuvable : window' + sName); bResult = false; };
           
         } else {
           
           try { eval('oResult = new window' + sClassBase + sName); }
-          catch(e) { this.dsp("Classe '" + sName + "' introuvable dans la classe de base '" + sClassBase + "'"); bResult = false; };
+          catch(e) { this.dsp("Classe '" + sName + "' introuvable dans la classe de base window'" + sClassBase + "'"); bResult = false; };
         }
       }
       
@@ -118,7 +129,7 @@ var sylma = {
             } else {this.dsp('Type d\'object inconnu : ' + sKey); this.dsp(this.view(object['properties'])); }// Sylma others
             
           } else if (sType == 'string') oResult[sKey] = oSub;// JS String
-          else this.dsp('Type \'' + sType + '\' inconnu !'); // JS Others
+          else this.dsp('Type \'' + sType + '\' inconnu dans ' + sKey + ' !'); // JS Others
         }
       }
       
@@ -172,7 +183,8 @@ var sylma = {
               
             } else {
               
-              this.dsp('Erreur :: Objet DOM introuvable - path : ' + method['path-node'] + ' - id : ' + method['id-node']);
+              //sylma.dsp_f(eNode);
+              this.dsp('Erreur :: Objet DOM introuvable - path : "' + method['path-node'] + '" - id : ' + method['id-node']);
             }
             
           } else {
@@ -196,7 +208,7 @@ var sylma = {
     }
   },
   
-  dsps : function(mContent, sTargetId) {
+  dsp_message : function(mContent, sTargetId) {
     
     if (!sTargetId) sTargetId = 'sylma-messages-default';
     
@@ -214,7 +226,12 @@ var sylma = {
   dsp : function(sContent, sTargetId) {
     
     var sStyle = 'border-bottom: 1px solid gray; margin-bottom: 0.5em;';
-    this.dsps(new Element('div', {'html' : sContent, 'style' : sStyle}));
+    this.dsp_message(new Element('div', {'html' : sContent, 'style' : sStyle}));
+  },
+  
+  dsp_f : function(obj) {
+    
+    this.dsp(this.view(obj));
   },
   
   view : function(obj, parent, recursion) {
@@ -261,8 +278,9 @@ sylma.classes.request = new Class({
   'parseAction' : function(oResult) {
     
     var oMessages = $(oResult).getElement('messages');
+    var oContent = $(oResult).getElement('content');
     
-    if (oMessages.children.length) {
+    if (oMessages && oMessages.getChildren().length) {
       
       var oContainer = $('explorer-messages');
       
@@ -272,48 +290,75 @@ sylma.classes.request = new Class({
         sylma.explorer.node.grab(oContainer, 'top');
       }
       
-      var oContent = oMessages.getFirst();
+      var oMessagesContent = oMessages.getFirst();
       
-      oContent.setStyles({'opacity' : 0, 'height' : 0});
-      oContainer.adopt(oContent, 'top')
+      if (oMessagesContent) {
+        
+        oMessagesContent.setStyles({'opacity' : 0, 'height' : 0});
+        
+        oMessagesContent = sylma.import(oMessagesContent);
+        oContainer.adopt(oMessagesContent, 'top');
+      }
       
-      var oFx = new Fx.Morph(oContent);
+      var oFx = new Fx.Morph(oMessagesContent, {'unit' : '%'});
       
       oFx.start({
         'opacity' : 1,
-        'height' : '100%'});
-      
+        'height' : 100});
+        
       (function() {
+        oFx.options.unit = 'px';
         oFx.start({
           'opacity' : 0,
           'height' : 0});
       }).delay(5000);
-      
     }
-    //if ();
+    
+    return oContent;
   }
 });
 
 sylma.classes.layer = new Class({
   
-  runUpdate : function(sPath, oArguments) {
+  update : function(oArguments) {
     
+    var layer = this;
+    this.node.setStyle('opacity', 0.2);
     this.request = new sylma.classes.request({
       
-      'url' : sPath + '.action',
+      'url' : layer.path + '.action',
       'data' : oArguments,
       'onSuccess' : function(sResult, oResult) {
         
-        this.parseAction(oResult);
+        var mContent = sylma.import(this.parseAction(oResult).getFirst());
+        
+        mContent.setStyle('opacity', 0.2);
+        mContent.replaces(layer.node);
+        
+        layer.node.destroy();
+        layer.node = mContent;
+        
+        var oSubResult = new Request.JSON({
+          
+          'url' : layer.path + '.txt', 
+          'onSuccess' : function(oResponse) {
+            
+            sylma.explorer.mozaic = sylma.buildObject(oResponse.mozaic);
+            sylma.explorer.mozaic.parentObject = sylma.explorer;
+            mContent.setStyle('opacity', 1);
+            
+        }}).get();
       }
-    });
+    }).get();
     
     this.request.send();
   }
+  
 }),
   
 sylma.classes.layout = new Class({
   
+  hello : 'hello',
 }),
 
 sylma.classes.menu = new Class({
@@ -346,6 +391,7 @@ sylma.classes.menu = new Class({
   },
   
   'hide' : function(bQuick) {
+    
     if (bQuick) {
       
       var oTween = this.node.get('tween');
@@ -386,6 +432,11 @@ sylma.classes['menu-common'] = new Class({
     }
     
     return this.parent();
+  },
+  
+  'resetParent' : function() {
+    
+    this.parentNode = undefined;
   },
   
   'firstShow' : function(eTarget) {

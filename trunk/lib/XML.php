@@ -224,63 +224,79 @@ class XML_Document extends DOMDocument {
     return !$this->getRoot();
   }
   
+  /**
+   * Method loadFile() alias
+   */
+  public function load($sPath) {
+    
+    $this->loadFile($sPath);
+  }
+  
   public function loadFile($sPath) {
+    
+    $bResult = false;
     
     if (($oFile = Controler::getFile($sPath, true)) && $oFile->checkRights($this->iMode)) {
       
-      $this->oFile = $oFile;
+      $this->setFile($oFile);
       
       if (!$oFile->isLoaded()) {
         
         // not yet loaded
         
         if (SYLMA_ACTION_STATS && ($oFile->getExtension() != 'eml') && Controler::getUser()->isMember('0'))
-          Controler::infosSetFile($oFile, true);
+          Controler::infosSetFile($oFile, true); // if action, add it to controler infos array
         
-        parent::load(MAIN_DIRECTORY.$sPath);
-        if (Controler::useStatut('xml/report')) Controler::addMessage(xt('Chargement du fichier %s', $oFile->parse()), 'xml/report');
+        $bResult = parent::load(MAIN_DIRECTORY.$sPath);
         
-        if ($this->isEmpty()) {
+        if ($bResult) {
           
-          Controler::addMessage(xt('Aucun contenu dans %s', $oFile->parse()), 'xml/warning');
-          $oFile->setDocument(new XML_Document);
+          if (Controler::useStatut('xml/report')) Controler::addMessage(xt('Chargement du fichier %s', new HTML_Strong($oFile)), 'xml/report');
           
-        } else {
+          if ($this->isEmpty()) Controler::addMessage(xt('Aucun contenu dans %s', $oFile->parse()), 'xml/warning');
+          else {
+            
+            XML_Controler::addStat('file');
+            $oFile->isFileSecured($this->appendLoadRights());
+          }
           
-          XML_Controler::addStat('file');
+          $oFile->setDocument($this); // PUT a copy in XML_File
           
-          $oFile->setDocument(new XML_Document($this->getRoot())); // getRoot avoid parsing of specials classes like actions
-          $oFile->isFileSecured($this->appendLoadRights());
-        }
-        
-        return true;
+        } else dspm (xt('Problème lors du chargement du fichier %s', new HTML_Strong($oFile)), 'file/error');
         
       } else if (!$oFile->getFreeDocument()->isEmpty()) {
+        
+        $bResult = true;
         
         // already loaded
         
         if (SYLMA_ACTION_STATS && ($oFile->getExtension() != 'eml') && Controler::getUser()->isMember('0'))
           Controler::infosSetFile($oFile, false);
         
+        // GET a copy from XML_File's XML_document instance
         $this->set($oFile->getFreeDocument());
         if ($oFile->isFileSecured()) $this->appendLoadRights();
-        
-        return true;
       }
       
-    } else Controler::addMessage(xt('Fichier %s introuvable', new HTML_Strong($sPath)), 'xml/warning');
+    } else dspm(xt('Fichier %s introuvable', new HTML_Strong($sPath)), 'xml/warning');
     
     return false;
   }
   
   public function loadFreeFile($sPath) {
     
-    parent::load(MAIN_DIRECTORY.$sPath);
-    if (Controler::useStatut('xml/report')) dspm(xt('Chargement [libre] du fichier %s', new HTML_Strong($sPath)), 'xml/report');
+    $bResult = parent::load(MAIN_DIRECTORY.$sPath);
     
-    if ($this->isEmpty()) dspm(xt('Aucun contenu [libre] dans %s', new HTML_Strong($sPath)), 'xml/warning');
+    if ($bResult) {
+      
+      if (Controler::useStatut('xml/report')) dspm(xt('Chargement [libre] du fichier %s', new HTML_Strong($sPath)), 'xml/report');
+      if ($this->isEmpty()) dspm(xt('Aucun contenu [libre] dans %s', new HTML_Strong($sPath)), 'xml/warning');
+      
+      XML_Controler::addStat('file');
+      
+    } else dspm(xt('Impossible de charger le fichier [libre] %s', new HTML_Strong($sPath)), 'xml/warning');
     
-    XML_Controler::addStat('file');
+    return $bResult;
   }
   
   public function loadText($sContent) {
@@ -310,6 +326,27 @@ class XML_Document extends DOMDocument {
     return $this->oFile;
   }
   
+  public function saveFree(XML_Directory $oDirectory = null, $sName = null) {
+    
+    $bResult = false;
+    
+    if ($oDirectory && $sName) {
+      
+      $this->formatOutput = true;
+      $sPath = MAIN_DIRECTORY.$oDirectory.'/'.$sName;
+      
+      if (file_exists($sPath)) unlink($sPath);
+      
+      $bResult = parent::save($sPath);
+      
+      if (!$bResult) dspm(t('Le document n\'a pu être sauvegardé'), 'file/error');
+      else $oDirectory->updateFile($sName);
+      
+    } else dspm(t('Impossible de sauvegarder le document, arguments invalide'), 'file/error');
+    
+    return $bResult;
+  }
+  
   public function save($sPath = null) {
     
     if ($sPath || ($sPath = (string) $this->getFile())) {
@@ -319,19 +356,19 @@ class XML_Document extends DOMDocument {
       
       if ($oDirectory = Controler::getDirectory($sDirectory)) {
         
-        $bSecuredFile = ($sName == SECURITY_FILE);
+        $bSecurityFile = ($sName == SYLMA_SECURITY_FILE);
         $bAccess = ($oFile = Controler::getFile($sPath)) ? $oFile->checkRights(MODE_WRITE) : $oDirectory->checkRights(MODE_WRITE);
         
-        // TEMPORARY System fo avoiding erasing of protected files from not admin users
+        // TEMPORARY System fo avoiding erasing of protected files from not admin users. TODO
         
-        if ((!$bSecuredFile && $bAccess) || ($bSecuredFile && Controler::isAdmin())) {
+        if ((!$bSecurityFile && $bAccess) || ($bSecurityFile && Controler::isAdmin())) {
           
           if ($oFile && $oFile->isFileSecured()) {
             
             // Secured File
             
             $oDocument = $oFile->getDocument();
-            $bSecured = false;
+            $bSecurityFile = false;
             
             $oNodes = $oDocument->query('//*[@ls:owner or @ls:mode or @ls:group]', 'ls', NS_SECURITY);
             
@@ -342,24 +379,18 @@ class XML_Document extends DOMDocument {
                 if ($oNode) {
                   
                   $iMode = $this->extractMode($oNode);
-                  
-                  if (!$bSecured && $iMode) $bSecured = !(MODE_WRITE & $iMode);
+                  if (!$bSecurityFile && $iMode) $bSecured = !(MODE_WRITE & $iMode);
                 }
               }
             }
             
-          } else $bSecured = false; // Not secured file
+          } else $bSecurityFile = false; // Not secured file
           
-          if (!$bSecured || Controler::isAdmin()) {
+          if (!$bSecurityFile) {
             
-            $this->formatOutput = true;
+            $bResult = $this->saveFree($oDirectory, $sName);
             
-            $sPath = MAIN_DIRECTORY.$sPath;
-            
-            if ($oFile) unlink($sPath);
-            $bResult = parent::save($sPath);
-            
-            $oDirectory->updateFile($sName);
+            //$oDirectory->updateFile($sName);
             
           } else dspm(xt('Le fichier %s contient des balises protégées, le système ne permet actuellement pas de modifier ce type de fichier, veuillez contacter l\'administrateur !', new HTML_Strong($sPath)), 'error');
 
@@ -373,14 +404,6 @@ class XML_Document extends DOMDocument {
     } else  dspm(t('Aucun chemin pour la sauvegarde !'), 'xml/error');
     
     return false;
-  }
-  
-  /**
-   * Method loadFile() alias
-   */
-  public function load($sPath) {
-    
-    $this->loadFile($sPath);
   }
   
   /**
@@ -410,6 +433,8 @@ class XML_Document extends DOMDocument {
   
   public function set() {
     
+    $mResult = null;
+    
     if (func_num_args() > 1) {
       
       $this->set(func_get_args());
@@ -426,7 +451,7 @@ class XML_Document extends DOMDocument {
           
           if ($mValue->getRoot()) {
             
-            $this->setChild($mValue->getRoot());
+            $mResult = $this->setChild($mValue->getRoot());
             
           } else Controler::addMessage('Document->set() - Document vide', 'xml/notice');
           
@@ -434,12 +459,13 @@ class XML_Document extends DOMDocument {
           
           /* XML_Element */
           
-          $this->setChild($mValue);
+          $mResult = $this->setChild($mValue);
           
         } else if ($mValue instanceof XML_NodeList) {
           
           /* XML_NodeList */
-          
+          //dspm(array('+++ Création de document', view($mValue)), 'action/report');
+          $mValue->rewind();
           $this->set($mValue->current());
           $mValue->next();
           
@@ -460,7 +486,7 @@ class XML_Document extends DOMDocument {
             if ($mResult != $mValue) return $this->set($mResult);
             else Controler::addMessage(xt('L\'objet parsé de classe "%s" ne doit pas se retourner lui-même !', new HTML_Strong(get_class($mValue))), 'xml/error');
             
-          } else if ($this->getRoot()) $this->getRoot()->set($mValue);
+          } else if ($this->getRoot()) $mResult = $this->getRoot()->set($mValue);
         }
         
       } else if (is_array($mValue) && $mValue) {
@@ -476,21 +502,19 @@ class XML_Document extends DOMDocument {
           $this->set(array_shift($mValue));
           foreach ($mValue as $oChild) $aChildren = $this->add($oChild);
           
-          $mValue = $aChildren;
+          $mResult = $aChildren;
           
           // = 1
           
-        } else $mValue = $this->set(array_pop($mValue));
+        } else $mResult = $this->set(array_pop($mValue));
         
         // If String load as XML String
         
-      } else if (is_string($mValue)) $mValue = $this->startString($mValue);
-      
-      return $mValue;
+      } else if (is_string($mValue)) $mResult = $this->startString($mValue);
       
     } else if ($this->getRoot()) $this->getRoot()->remove();
     
-    return null;
+    return $mResult;
   }
   
   public function addNode($sName, $oContent = '', $aAttributes = null, $sUri = '') {
@@ -1266,7 +1290,7 @@ class XML_Element extends DOMElement implements XML_Composante {
    */
   public function insertText($sValue, $oNext = null) {
     
-    if ($sValue || $sValue === 0) return $this->insertChild(new XML_Text($sValue), $oNext);
+    if ($sValue || (string) $sValue === '0') return $this->insertChild(new XML_Text($sValue), $oNext);
     else return $sValue;
   }
   
@@ -1434,8 +1458,8 @@ class XML_Element extends DOMElement implements XML_Composante {
   }
   
   public function toArray($sAttribute = null) {
-    //dspf($this);
-    if ($this->isTextElement()) $mValue = $this->getValue();
+    
+    if (!$this->hasChildren() || $this->isTextElement()) $mValue = $this->getValue();
     else {
       
       $mValue = array();

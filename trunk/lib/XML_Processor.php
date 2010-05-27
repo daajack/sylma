@@ -2,7 +2,7 @@
 
 interface XML_ProcessorInterface {
   
-  public function loadElement($oElement);
+  public function loadElement($oElement, XML_Action $oAction = null);
   public function startAction($oAction);
   public function stopAction();
 }
@@ -68,14 +68,14 @@ class XML_Processor implements XML_ProcessorInterface {
     return array_last($this->aElements);
   }
   
-  public function loadElement($oElement) {
+  public function loadElement($oElement, XML_Action $oAction = null) {
     
     $this->aElements[] = $oElement;
     
-    return $this->onElement($oElement);
+    return $this->onElement($oElement, $oAction);
   }
   
   public function onLoad() { }
-  public function onElement($oElement) { }
+  public function onElement($oElement, XML_Action $oAction) { }
   public function parse() { }
 }

@@ -57,6 +57,11 @@ function booltostr($bValue) {
   return $bValue ? 'true' : 'false';
 }
 
+function booltoint($bValue) {
+  
+  return $bValue ? 1 : 0;
+}
+
 /*
  * Renvoie la première valeur non nulle envoyée en argument, si aucune, renvoie la dernière valeur
  **/
@@ -92,6 +97,12 @@ function formatPrice($fNumber) {
   
   if (is_numeric($fNumber)) return 'CHF '.number_format($fNumber, 2, '.', "'");
   else return '';
+}
+
+function formatMemory($size) {
+  
+  $aUnit = array('b','Kb','Mb','Gb','Tb','Pb');
+  return round($size / pow(1024, ($iResult = floor(log($size,1024)))), 2).' '.$aUnit[$iResult];
 }
 
 function stringResume($mValue, $iLength = 50, $bXML = false) {

@@ -9,7 +9,7 @@ class Action_Controler {
   public static function loadInterfaces() {
     
     // self::buildInterfacesIndex();
-    self::$oInterfaces = new XML_Document(PATH_INTERFACES.'/../interfaces.cml', MODE_EXECUTION);
+    self::$oInterfaces = new XML_Document(SYLMA_PATH_INTERFACES_INDEX, MODE_EXECUTION);
   }
   
   public static function setInterface(&$oInterface) {
@@ -108,7 +108,7 @@ class Action_Controler {
   
   public static function getSpecial($sName, $oAction, $oRedirect) {
     
-    $oSpecials = new XML_Document(PATH_SPECIALS, MODE_EXECUTION);
+    $oSpecials = new XML_Document(SYLMA_PATH_SPECIALS, MODE_EXECUTION);
     
     if ($oSpecial = $oSpecials->get("object[@name='$sName']")) {
       if ($sCall = $oSpecial->getAttribute('call')) {
@@ -122,7 +122,7 @@ class Action_Controler {
           else Controler::addMessage(xt('L\'objet "%s" est nul !', new HTML_Strong($sCall)), 'action/warning');
         }
         
-      } else Controler::addMessage(xt('Pas de référence dans le fichier "%s",  !', new HTML_Strong(PATH_SPECIALS)), 'action/warning');
+      } else Controler::addMessage(xt('Pas de référence dans le fichier "%s",  !', new HTML_Strong(SYLMA_PATH_SPECIALS)), 'action/warning');
       
     } else Controler::addMessage(xt('La variable spéciale "%s" n\'existe pas !', new HTML_Strong($sName)), 'action/warning');
     

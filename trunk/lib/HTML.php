@@ -337,7 +337,7 @@ class HTML_Style extends HTML_Tag {
   
   public function __construct($sHref = '', $oChild = null) {
     
-    $this->forceClosure();
+    //$this->forceClosure();
     
     if ($sHref) {
       

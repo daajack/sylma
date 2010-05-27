@@ -7,6 +7,7 @@ class Controler {
   
   private static $bReady = false;
   private static $iStartTime = 0;
+  private static $iBacktraceLimit = SYLMA_BACKTRACE_LIMIT;
   
   private static $oMessages = null;
   private static $oUser = null;
@@ -118,7 +119,7 @@ class Controler {
   
   private static function loadSettings() {
     
-    self::$oSettings = new XML_Document(PATH_SETTINGS, MODE_EXECUTION);
+    self::$oSettings = new XML_Document(SYLMA_PATH_SETTINGS, MODE_EXECUTION);
     
     $oAllowed = new XML_Document(self::getSettings('messages/allowed/@path'));
     
@@ -356,7 +357,9 @@ class Controler {
     $oView->addMultiItem(new HTML_Strong(t('Fenêtre').' : '), self::getWindowType());
     $oView->addMultiItem(new HTML_Strong(t('Date & heure').' : '), date('j M Y').' - '.date('H:i'));
     $oView->addMultiItem(new HTML_Strong(t('Statistiques XML').' : '), XML_Controler::viewStats());
-    $oView->addMultiItem(new HTML_Strong(t('Temps d\'exécution').' : '), number_format(microtime(true) - self::$iStartTime, 3).' s');
+    $oView->addMultiItem(new HTML_Strong(t('Resources').' : '),
+      number_format(microtime(true) - self::$iStartTime, 3).' s', new HTML_Br,
+      formatMemory(memory_get_peak_usage()));
     
     return $oView;
   }
@@ -493,14 +496,17 @@ class Controler {
         // Arrays
         
         if (count($mArgument)) {
-        $iCount = 1;
+        $iCount = count($mArgument) - 1;
           
           $oContent = new HTML_Div(null, array('style' => 'display: inline;'));
           foreach ($mArgument as $mKey => $mValue) {
             
             $oContent->add(self::formatResource($mKey), ' => ', self::formatResource($mValue, true));
-            if ($iCount++ < count($mArgument)) $oContent->add(',');
+            if ($iCount) $oContent->add(', ');
+            
+            $iCount--;
           }
+          
         } else $oContent = '';
         
         $aValue = array(xt('array[%s](%s)', new HTML_Strong(count($mArgument)), $oContent), 'orange');
@@ -515,12 +521,19 @@ class Controler {
           
           if (MESSAGES_SHOW_XML) {
             
-            $oContainer = $mArgument->view(true, true, $bDecode);
-            $oContainer->addClass('hidden');
+            if ($mArgument->isEmpty()) {
+              
+              $mContent = get_class($mArgument).' (vide)';
+              
+            } else {
+              
+              $oContainer = $mArgument->view(true, true, $bDecode);
+              $oContainer->addClass('hidden');
+              
+              $mContent = array(get_class($mArgument), $oContainer);
+            }
             
-            $aValue = array(new HTML_Div(array(
-              get_class($mArgument),
-              $oContainer), array('class' => 'element')), 'purple');
+            $aValue = array(new HTML_Div($mContent, array('class' => 'element')), 'purple');
             
           } else $aValue = array(array(get_class($mArgument), ' => ', $mArgument->viewResume(160, false)), 'purple');
           
@@ -542,8 +555,17 @@ class Controler {
           
           if ($mArgument->length) {
             
+            $iCount = $mArgument->length - 1;
+            
             $oContent = new HTML_Div(null, array('style' => 'display: inline;'));
-            foreach ($mArgument as $mKey => $mValue) $oContent->add(self::formatResource($mKey), ' => ', self::formatResource($mValue, true));
+            foreach ($mArgument as $mKey => $mValue) {
+              
+              $oContent->add(self::formatResource($mKey), ' => ', self::formatResource($mValue, true));
+              if ($iCount) $oContent->add(', ');
+              
+              $iCount--;
+            }
+            
           } else $oContent = '';
           
           $aValue = array(xt('XML_NodeList[%s](%s)', new HTML_Strong($mArgument->length), $oContent), 'green');
@@ -734,9 +756,14 @@ class Controler {
     
     // if (in_array($sPath, array('action/error', 'file/error'))) $mMessage = array($mMessage, Controler::getBacktrace());
     
-    if (Controler::isAdmin() && MESSAGES_BACKTRACE && strstr($sPath, 'error')) $mMessage = array($mMessage, Controler::getBacktrace());
+    if (Controler::isAdmin() && MESSAGES_BACKTRACE && strstr($sPath, 'error') && self::$iBacktraceLimit !== 0) {
+      
+      if (self::$iBacktraceLimit) self::$iBacktraceLimit--;
+      $mMessage = array($mMessage, Controler::getBacktrace());
+    }
     
-    self::getMessages()->addMessage(new Message($mMessage, $sPath, $aArgs));
+    if (self::getMessages()) self::getMessages()->addMessage(new Message($mMessage, $sPath, $aArgs));
+    //else if (DEBUG) echo 'Impossible d\'ajouter le message : '.$mMessage;
   }
   
   public static function useStatut($sStatut) {

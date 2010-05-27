@@ -219,8 +219,10 @@ class WindowAction extends XML_Document implements Main {
     
     Controler::setContentType('xml');
     
-    $oRoot = $this->set('action');
-    $oContent = $oRoot->addNode('content');
+    //$oRoot = $this->set('action');
+    //$oContent = $oRoot->addNode('content');
+    $oRoot = $this->set(new XML_Element('action', null, null, NS_XHTML));
+    $oContent = $oRoot->addNode('content', null, null, NS_XHTML);//);
     
     if ($oAction instanceof XML_Action) {
       

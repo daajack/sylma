@@ -17,4 +17,3 @@ require('User.php');
 require('Resource.php');
 require('Database.php');
 require('Window.php');
-require('spyc/spyc.php');

@@ -8,6 +8,7 @@ class XML_Resource {
   protected $sName = '';
   protected $sFullPath = '';
   protected $oParent = null;
+  private $oSettingsElement = null;
   
   private $bExist = false;
   private $bSecured = false;
@@ -36,6 +37,11 @@ class XML_Resource {
   public function getName() {
     
     return $this->sName;
+  }
+  
+  public function isOwner() {
+    
+    return Controler::getUser()->isName($this->getOwner());
   }
   
   public function getFullPath() {
@@ -74,6 +80,24 @@ class XML_Resource {
     else $this->bSecured = $bSecured;
   }
   
+  /**
+   * Get the rights element from the parent's directory security file
+   * @return XML_Element|null
+   */
+  protected function getSettingsElement() {
+    
+    return $this->oSettingsElement;
+  }
+  
+  /**
+   * Set the rights element of this file in the parent's directory security file
+   * @param XML_Element Element containing rights
+   */
+  protected function setSettingsElement(XML_Element $oElement) {
+    
+    $this->oSettingsElement = $oElement;
+  }
+  
   protected function getRights() {
     
     return $this->aRights;
@@ -103,6 +127,11 @@ class XML_Resource {
     return array();
   }
   
+  /**
+   * Put all rights into object
+   * @param array|XML_Element|null $mRights Rights to use
+   * @return array Rights used
+   */
   protected function setRights($mRights = null) {
     
     if (is_array($mRights)) $aRights = $mRights;
@@ -131,6 +160,59 @@ class XML_Resource {
     return $aRights;
   }
   
+  /**
+   * Check rights arguments for update in updateRights
+   */
+  protected function checkRightsArguments($sOwner, $sGroup, $sMode) {
+    
+    if ($this->isOwner()) {
+      
+      $bOwner = $sOwner !== $this->getOwner();
+      $bGroup = $sGroup !== $this->getGroup();
+      $bMode  = $sMode !== $this->getMode();
+      
+      if ($bOwner || $bGroup || $bMode) {
+        
+        $bResult = true;
+        
+        // Check validity
+        
+        if ($bOwner) {
+          
+          $bOwner = false;
+          dspm(t('Changement d\'utilisateur impossible pour le moment'), 'file/warning');
+        }
+        
+        if ($bGroup && !Controler::getUser()->isMember($sGroup)) {
+          
+          $bResult = false;
+          dspm(t('Vous n\'avez pas les droits sur ce groupe ou il n\'existe pas !'), 'file/warning');
+        }
+        
+        $iMode = Controler::getUser()->getMode($sOwner, $sGroup, $sMode);
+        
+        if ($bMode && $iMode === null) {
+          
+          $bResult = false;
+          dspm(t('Les arguments pour la mise-à-jour ne sont pas valides'), 'file/warning');
+        }
+        
+        if ($bMode && !($iMode & MODE_READ)) {
+          
+          $bResult = false;
+          dspm(t('Vous ne pouvez pas retirer tous les droits de lecture'), 'file/warning');
+        }
+        
+        // all datas are ok, or not modified
+        
+        if ($bResult && ($bOwner || $bGroup || $bMode)) return true;
+      }
+      
+    } else dspm('Vous n\'avez pas les droits pour faire des modifications !', 'file/warning');
+    
+    return false;
+  }
+  
   public function __toString() {
     
     return $this->getFullPath();
@@ -141,6 +223,7 @@ class XML_Directory extends XML_Resource {
   
   private $aDirectories = array();
   private $aFiles = array();
+  private $aFreeFiles = array();
   private $oSettings = null;
   
   private $aChildrenRights = null;
@@ -166,7 +249,18 @@ class XML_Directory extends XML_Resource {
     return $this->aChildrenRights;
   }
   
-  private function getSettings() {
+  /**
+   * Get security XML_Document (eg: directory.sml)
+   * @param boolean $bRecursive Get last setting file from parents
+   * @return XML_Document|null
+   */
+  public function getSettings($bRecursive = false) {
+    
+    if ($bRecursive && !$this->oSettings) {
+      
+      if ($this->getParent()) return $this->getParent()->getSettings(true);
+      else dspm(t('Aucun fichier de sécurité dans le répertoire parent'), 'file/error');
+    }
     
     return $this->oSettings;
   }
@@ -177,7 +271,7 @@ class XML_Directory extends XML_Resource {
       
       if (Controler::getUser()) {
         
-        $sSettings = $this->getFullPath().'/'.SECURITY_FILE;
+        $sSettings = $this->getFullPath().'/'.SYLMA_SECURITY_FILE;
         
         if (file_exists(MAIN_DIRECTORY.$sSettings)) {
           
@@ -188,7 +282,11 @@ class XML_Directory extends XML_Resource {
           
           // self mode
           
-          if ($aRights = $this->setRights($oSettings->get('ld:self', 'ld', NS_DIRECTORY))) $this->aChildrenRights = $aRights;
+          if ($oSettingsElement = $oSettings->get('ld:self', 'ld', NS_DIRECTORY)) {
+            
+            $this->setSettingsElement($oSettingsElement);
+            if ($aRights = $this->setRights($oSettingsElement)) $this->aChildrenRights = $aRights;
+          }
           
           // children mode
           
@@ -259,7 +357,16 @@ class XML_Directory extends XML_Resource {
     else return $oElement;
   }
   
-  public function getFiles($aExtensions = array(), $sPreg = null, $iDepth = 0) {
+  /**
+   * Add a file into this directory via XML_Document->freeSave()
+   */
+  
+  public function addFreeDocument($sName, XML_Document $oDocument) {
+    
+    $oDocument->saveFree($this, $sName);
+  }
+  
+  public function getFiles(array $aExtensions = array(), $sPreg = null, $iDepth = 0) {
     
     $this->browse(array(), array(), 1);
     $aResult = array();
@@ -292,12 +399,21 @@ class XML_Directory extends XML_Resource {
     return $aResult;
   }
   
+  /**
+   * Unload then reload Document, maybe TODO to optimize by keeping the doc
+   */
   public function updateFile($sName) {
     
     if (array_key_exists($sName, $this->aFiles)) unset($this->aFiles[$sName]);
     return $this->getFile($sName);
   }
   
+  /**
+   * Build an XML_File, check existenz and right access
+   * @param $sName The name + extension of the file
+   * @param $bDebug If true, send an error message if no access is found
+   * @return XML_File the file requested
+   */
   public function getFile($sName, $bDebug = false) {
     
     $this->loadRights();
@@ -312,8 +428,10 @@ class XML_Directory extends XML_Resource {
           
           if ($oSettings = $this->getSettings()) { // named rights element
             
-            if (!$mRights = $oSettings->get("ld:file[@name=\"".xmlize($sName)."\"]", 'ld', NS_DIRECTORY))
-              $mRights = $this->getChildrenRights();
+            $mRights = $oSettings->get("ld:file[@name=\"".xmlize($sName)."\"]", 'ld', NS_DIRECTORY);
+            
+            if (!$mRights) $mRights = $this->getChildrenRights();
+            else $oFile->setSettingsElement($mRights);
             
           } else $mRights = $this->getChildrenRights(); // propagated rights array
           
@@ -418,6 +536,40 @@ class XML_Directory extends XML_Resource {
     return false;
   }
   
+  /**
+   * Change rights in corresponding SECURITY_FILE
+   */
+  public function updateRights($sOwner, $sGroup, $sMode) {
+    
+    if ($this->checkRightsArguments($sOwner, $sGroup, $sMode)) {
+      
+      $eDirectory = new XML_Element('self', 
+        new XML_Element('ls:security', array(
+            new XML_Element('ls:owner', $sOwner, null, NS_SECURITY),
+            new XML_Element('ls:group', $sGroup, null, NS_SECURITY),
+            new XML_Element('ls:mode', $sMode, null, NS_SECURITY)),
+          null, NS_SECURITY), NS_DIRECTORY);
+      
+      if ($oSettingsElement = $this->getSettingsElement()) $oSettingsElement->remove();
+      
+      if (!$oSecurityDocument = $this->getSettings()) {
+        
+        // Creation of a security file
+        
+        $oSecurityDocument = new XML_Document;
+        $oSecurityDocument->addNode('directory', null, null, NS_DIRECTORY);
+        
+        $this->addFreeDocument(SYLMA_SECURITY_FILE, $oSecurityDocument);
+      }
+      
+      $oSecurityDocument->add($eDirectory);
+      
+      return $oSecurityDocument->saveFree($this, SYLMA_SECURITY_FILE);
+    }
+    
+    return false;
+  }
+  
   public function delete() {
     
     $bResult = false;
@@ -463,10 +615,11 @@ class XML_File extends XML_Resource {
   private $sExtension = '';
   private $iSize = 0;
   private $iChanged = 0;
+  private $oSettings = null;
   
   private $bFileSecured = false;
   
-  public function __construct($sPath, $sName, $aRights = array(), $oParent = null, $bDebug = true) {
+  public function __construct($sPath, $sName, array $aRights, XML_Directory $oParent, $bDebug) {
     
     $this->sFullPath = $sName ? $sPath.'/'.$sName : $sPath;
     $sPath = MAIN_DIRECTORY.$this->getFullPath();
@@ -514,19 +667,70 @@ class XML_File extends XML_Resource {
     return (bool) $this->oDocument;
   }
   
+  /**
+   * Change rights in corresponding SECURITY_FILE
+   */
+  public function updateRights($sOwner, $sGroup, $sMode) {
+    
+    if ($this->checkRightsArguments($sOwner, $sGroup, $sMode)) {
+      
+      $eFile = new XML_Element('file', 
+        new XML_Element('ls:security', array(
+            new XML_Element('ls:owner', $sOwner, null, NS_SECURITY),
+            new XML_Element('ls:group', $sGroup, null, NS_SECURITY),
+            new XML_Element('ls:mode', $sMode, null, NS_SECURITY)),
+          null, NS_SECURITY),
+        array('name' => $this->getName()), NS_DIRECTORY);
+      
+      if ($oSettingsElement = $this->getSettingsElement()) $oSettingsElement->remove();
+      
+      if (!$oSecurityDocument = $this->getParent()->getSettings()) {
+        
+        // Creation of a security file
+        
+        $oSecurityDocument = new XML_Document;
+        $oSecurityDocument->addNode('directory', null, null, NS_DIRECTORY);
+        
+        $this->getParent()->addFreeDocument(SYLMA_SECURITY_FILE, $oSecurityDocument);
+      }
+      
+      $oSecurityDocument->add($eFile);
+      
+      return $oSecurityDocument->saveFree($this->getParent(), SYLMA_SECURITY_FILE);
+    }
+    
+    return false;
+  }
+  
+  /**
+   * Get the real corresponding XML_Document without appending rights control
+   */
   public function getFreeDocument() {
     
-    if (!$this->oDocument) $this->getDocument();
+    if (!$this->oDocument) $this->getDocument(); // will load XML_Document in the XML_Document->loadFile() with setDocument(), maybe TODO
     
     return $this->oDocument;
   }
   
+  /**
+   * Get the copy of the corresponding document
+   * Call XML_Document->loadFile() via new instance, that will put a copy here of the document with setDocument()
+   */
   public function getDocument() {
     
-    return new XML_Document((string) $this); // load himself via XML_Document->loadFile()
+    return new XML_Document((string) $this);
   }
   
-  public function setDocument($oDocument) {
+  /**
+   * Each XML_Document loads will register in the corresponding XML_File
+   * @param XML_Document $oDocument The XML_Document caller
+   */
+  public function setDocument(XML_Document $oDocument) {
+    
+    if ($oDocument->isEmpty()) $oDocument = new XML_Document;
+    else $oDocument = new XML_Document($oDocument->getRoot()); // getRoot avoid parsing of specials classes like actions
+    
+    $oDocument->setFile($this);
     
     $this->oDocument = $oDocument;
   }
@@ -538,30 +742,32 @@ class XML_File extends XML_Resource {
     return false;
   }
   
-  public function isFileSecured($bSecured = null) {
+  public function isFileSecured($mSecured = null) {
     
-    if ($bSecured === null) return $this->bFileSecured;
-    else $this->bFileSecured = $bSecured;
+    if ($mSecured === null) return $this->bFileSecured;
+    else $this->bFileSecured = $mSecured;
   }
   
-  public function delete() {
+  public function delete($bMessage = true, $bUpdateDirectory = true) {
     
-    if ($this->checkRights(MODE_WRITE)) {
-      
-      unlink(MAIN_DIRECTORY.$this);
-      $this->getParent()->updateFile($this->getName());
-      Controler::addMessage(xt('Suppression du fichier %s', $this->parse()), 'file/notice');
-    }
+    if ($this->checkRights(MODE_WRITE)) $this->deleteFree($bMessage, $bUpdateDirectory);
   }
   
-  public function save($sContent) {
+  public function deleteFree($bMessage = false, $bUpdateDirectory = false) {
     
-    if ($this->checkRights(MODE_WRITE)) {
-      
-      $sPath = MAIN_DIRECTORY.$this;
-      unlink($sPath);
-      file_put_contents($sPath, $sContent);
-    }
+    unlink(MAIN_DIRECTORY.$this);
+    if ($bUpdateDirectory) $this->update();
+    
+    Controler::addMessage(xt('Suppression du fichier %s', $this->parse()), 'file/notice');
+  }
+  
+  /*
+   * Call parent directory to reload (re-create) an XML_File reference, this one will be destroy
+   */
+  
+  public function update() {
+    
+    $this->getParent()->updateFile($this->getName());
   }
   
   public function parse() {

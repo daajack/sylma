@@ -1,27 +1,42 @@
 <?php
 
-define('PATH_ACTIONBUILDER', '/system/action-builder');
-define('NS_ACTIONBUILDER', PATH_ACTIONBUILDER.'/schema');
+define('SYLMA_PATH_ACTIONBUILDER', '/sylma/processors/action-builder');
+define('NS_ACTIONBUILDER', SYLMA_PATH_ACTIONBUILDER.'/schema');
 
 class ActionBuilder extends XML_Processor  {
   
   private $oMethods;
   private $aNS = array('la' => NS_ACTIONBUILDER);
+  private $bFirstPass = true;
+  
+  private $sExtend = 'extend-class';
   
   public function __construct() {
     
-    $this->oMethods = new XML_Document(new XML_Element('la:root', null, null, NS_ACTIONBUILDER));
+    if (get_class(Controler::getWindow()) == 'Html') {
+      
+      $this->oMethods = new XML_Document(new XML_Element('la:root', null, null, NS_ACTIONBUILDER));
+      
+    } else $this->bFirstPass = false;
   }
   
-  public function onElement($oElement) {
+  public function isFirstPass() {
+    
+    return $this->bFirstPass;
+  }
+  
+  public function onElement($oElement, XML_Action $oAction) {
     
     $mResult = null;
     
     // layer's current action
-    if (in_array($oElement->getName(true), array('layout', 'layer'))) $oElement->setAttribute('path', $this->getAction()->getPath()->getOriginalPath());
+    if (in_array($oElement->getName(true), array('layout', 'layer'))) {
+      
+      //$oElement->setAttribute('path', $this->getAction()->getPath()->getOriginalPath());
+      $oElement->addNode('property', $this->getAction()->getPath()->getOriginalPath(), array('name' => 'path'), NS_ACTIONBUILDER);
+    }
     
     if ($this->isFirst()) { // root object
-      
       
       $oElement->set($this->buildChildren($oElement));
       
@@ -34,11 +49,10 @@ class ActionBuilder extends XML_Processor  {
       
       switch ($oElement->getName(true)) {
         
-        case 'replace-events' :
+        case 'replace-events' : // replace events before parsing for better performance
           
-          // replace events before parsing for better performance
           $oDocument = new XML_Document(new XML_Element('root', $this->buildChildren($oElement)));
-          $this->replaceMethodsDefault($oDocument);
+          $this->replaceMethodsDefault($oDocument, $oAction);
           
           $mResult = $oDocument->getChildren();
           
@@ -52,54 +66,65 @@ class ActionBuilder extends XML_Processor  {
         break;
       }
     }
-    
+    /*
+    if (Controler::useStatut('action/report')) dspm(array(
+      t('Action-builder [onElement] :'),
+      Controler::formatResource($mResult),
+      $oElement->messageParse()), 'action/report');
+    */
     return $mResult;
   }
 
-  private function replaceMethodsDefault($oDocument) {
+  private function replaceMethodsDefault($oDocument, $oAction) {
     
-    $this->replaceMethods($oDocument->query('//la:event | //la:method', $this->aNS));
+    $this->replaceMethods($oDocument->query('//la:event | //la:method', $this->aNS), $oAction);
   }
   
   /*
    * Replace methods with unique id
    **/
   
-  private function replaceMethods($oMethods) {
+  private function replaceMethods($oMethods, $oAction) {
     //$aMethods = array('event', 'click', 'dblclick', 'mousedown', 'mouseup', 'mouseover', 'mouseout', 'mousemove', 'key-down');
-    foreach ($oMethods as $oMethod) {
+    
+    foreach ($oMethods as $iCount => $oMethod) {
       
-      $sChildId = uniqid('method-');
+      // TODO really ugly
+      //$sChildId = uniqid('method-');
       $sName = $oMethod->getAttribute('name');
-      
+      $sChildId = 'method-'.bin2hex(substr(md5($oAction->getPath().$sName.$iCount), 0, 7));
+      //dspm($sChildId);
       $oResult = new XML_Element($sName, null, array('id' => $sChildId));
       
-      $sContent = $oMethod->getValue();
-      // $sContent = "sylma.dsp('[event] $sName #' + %ref-object%.node.id);\n" . $sContent;
-      
-      $aReplaces = array(
-        '/%([\w-_]+)%/'         => '\$(this).retrieve(\'$1\')',
-        '/%([\w-_]+)\s*,\s*([^%]+)%/'  => '\$(this).store(\'$1\', $2)');
-      
-      $oResult->add(preg_replace(array_keys($aReplaces), $aReplaces, $sContent)."\n");
-      
-      /*
-      $aDatas = array();
-      $sContent = '';
-      
-      if ($oDatas = $oMethod->query('la:data', $this->aNS)) {
+      if ($this->isFirstPass()) {
         
-        foreach ($oDatas as $oData) {
+        $sContent = $oMethod->getValue();
+        // $sContent = "sylma.dsp('[event] $sName #' + %ref-object%.node.id);\n" . $sContent;
+        
+        $aReplaces = array(
+          '/%([\w-_]+)%/'         => '\$(this).retrieve(\'$1\')',
+          '/%([\w-_]+)\s*,\s*([^%]+)%/'  => '\$(this).store(\'$1\', $2)');
+        
+        $oResult->add(preg_replace(array_keys($aReplaces), $aReplaces, $sContent)."\n");
+        
+        /*
+        $aDatas = array();
+        $sContent = '';
+        
+        if ($oDatas = $oMethod->query('la:data', $this->aNS)) {
           
-          $aDatas[$oData->getAttribute('name')] = ($oData->getAttribute('format') == 'object') ? $oData->getValue() : addQuote($oData->getValue());
-          $oData->remove();
+          foreach ($oDatas as $oData) {
+            
+            $aDatas[$oData->getAttribute('name')] = ($oData->getAttribute('format') == 'object') ? $oData->getValue() : addQuote($oData->getValue());
+            $oData->remove();
+          }
         }
+        
+        foreach ($aDatas as $sKey => $sValue) $sContent .= "%$sKey, $sValue%;\n";
+        */
+        
+        $this->oMethods->add($oResult);
       }
-      
-      foreach ($aDatas as $sKey => $sValue) $sContent .= "%$sKey, $sValue%;\n";
-      */
-      
-      $this->oMethods->add($oResult);
       
       $oNewMethod = new XML_Element('la:method', null, array(
         'id' => $sChildId,
@@ -137,7 +162,7 @@ class ActionBuilder extends XML_Processor  {
       
       // Attributes replacements
       
-      $aReplacements = array('class' => 'extend-class');
+      $aReplacements = array('class' => $this->sExtend);
       
       foreach ($aReplacements as $sAttribute => $sNewAttribute) {
         
@@ -207,7 +232,8 @@ class ActionBuilder extends XML_Processor  {
           
           $oElement->setAttribute('path-node', $sPath);
         }
-      }
+        
+      } else dspm(array(t('Impossible de créer l\'évènement'), $oElement->viewResume()), 'action/error');
     }
   }
   
@@ -246,7 +272,7 @@ class ActionBuilder extends XML_Processor  {
     return $oRefNode;
   }
   
-  /*
+  /**
    * Transform to xml js objects
    */
   
@@ -254,19 +280,23 @@ class ActionBuilder extends XML_Processor  {
     
     // Parse as JSON xml => array() then add the result in Controler
     
-    $oTemplate = new XSL_Document(PATH_ACTIONBUILDER.'/index.xsl');
-    dspf($oScript);
+    $oTemplate = new XSL_Document(SYLMA_PATH_ACTIONBUILDER.'/index.xsl');
+    //dspf($oScript);
     if ($oResult = $oTemplate->parseDocument($oScript)) {
-      dspf($oResult);
+      //dspf($oResult);
+      //dspm(get_class(Controler::getWindow()));
       list(, $aResult) = $oResult->toArray();
       Controler::addResult(json_encode($aResult), 'txt');
       
       // Add methods in JS element
       
-      $oTemplate = new XSL_Document(PATH_ACTIONBUILDER.'/methods.xsl');
-      // $oTemplate->setParameter('node-id', $sRoot);
-      
-      Controler::getWindow()->addJS('', $oTemplate->parseDocument($this->oMethods, false));
+      if ($this->isFirstPass()) {
+        
+        $oTemplate = new XSL_Document(SYLMA_PATH_ACTIONBUILDER.'/methods.xsl');
+        // $oTemplate->setParameter('node-id', $sRoot);
+        
+        Controler::getWindow()->addJS('', $oTemplate->parseDocument($this->oMethods, false));
+      }
       
     } else dspm('Action-Builder : Aucune balises récupérées !', 'action/warning');
   }

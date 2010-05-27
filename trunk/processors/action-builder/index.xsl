@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:la="/system/action-builder/schema" xmlns="http://www.w3.org/1999/xhtml" version="1.0">
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:la="/sylma/processors/action-builder/schema" xmlns="http://www.w3.org/1999/xhtml" version="1.0">
   <xsl:import href="object.xsl"/>
   <xsl:template match="/">
     <root>
@@ -8,10 +8,10 @@
   </xsl:template>
   <xsl:template name="containers">
     <xsl:if test="not(@extend-class)">
-      <object-extend>
+      <extend-class>
         <xsl:text>/sylma.classes.</xsl:text>
         <xsl:value-of select="local-name()"/>
-      </object-extend>
+      </extend-class>
     </xsl:if>
   </xsl:template>
   <xsl:template name="methods">

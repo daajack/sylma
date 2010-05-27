@@ -1,6 +1,8 @@
 <?php
 
-class Utilisateur extends Form_Controler {
+class Users extends Form_Controler {
+  
+  private $sPathModule = '/sylma/modules/users';
   
   public function loadUser($sName) {
     
@@ -31,7 +33,7 @@ class Utilisateur extends Form_Controler {
   
   public function login_do() {
     
-    $oSchema = new XML_Document('/utilisateur/user.bml', MODE_EXECUTION);
+    $oSchema = new XML_Document($this->sPathModule.'/user.bml', MODE_EXECUTION);
     $aSchema = $oSchema->getChildren()->toArray('id');
     
     $oRedirect = new Redirect("/login", $this->checkRequest($aSchema));
@@ -41,7 +43,7 @@ class Utilisateur extends Form_Controler {
       $aFields = $this->importPost($aSchema, true);
       $aFields['v_password'] = addQuote(sha1($_POST['v_password']));
       
-      $oUsers = new XML_Document('/utilisateur/users.xml', MODE_EXECUTION);
+      $oUsers = new XML_Document($this->sPathModule.'/users.xml', MODE_EXECUTION);
       
       if (!$oUser = $oUsers->get("//user[@name = {$aFields['v_name']} and @password = {$aFields['v_password']}]")) {
         
@@ -57,7 +59,7 @@ class Utilisateur extends Form_Controler {
         
         $aGroups = array(AUTHENTICATED);
         
-        $oAllGroups = new XML_Document('/utilisateur/groups.xml', MODE_EXECUTION);
+        $oAllGroups = new XML_Document($this->sPathModule.'/groups.xml', MODE_EXECUTION);
         
         $oGroups = $oAllGroups->query("group[@owner = {$aFields['v_name']}]/@name | group[member = {$aFields['v_name']}]/@name");
         foreach ($oGroups as $oAttribute) $aGroups[] = $oAttribute->getValue();

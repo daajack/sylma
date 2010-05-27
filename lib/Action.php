@@ -159,7 +159,7 @@ class XML_Action extends XML_Document {
           
         } else if ($oProcessor = $this->getProcessor($oChild->getNamespace())) {
           
-          $mResult = $this->loadProcessor($oChild, $oProcessor);
+          $mResult = $this->runProcessor($oChild, $oProcessor);
           //$oChild->remove();
           
           if (Controler::useStatut('action/report')) dspm(array(
@@ -558,7 +558,7 @@ class XML_Action extends XML_Document {
     $this->setVariableElement($oElement, $mResult);
     
     if (Controler::useStatut('action/report')) dspm(array(
-      t('Construction [exe] :'),
+      xt('Exécution [%s] :', new HTML_Strong($oElement->getName(true))),
       Controler::formatResource($mResult),
       $oElement->messageParse()), 'action/report');
     
@@ -593,7 +593,7 @@ class XML_Action extends XML_Document {
   public function buildArgument($oElement) {
     
     $mResult = null;
-    $sAction = 'Construction';
+    $sAction = 'défaut';
     
     if ($oElement instanceof XML_Element) { // XML_Element
       
@@ -615,7 +615,7 @@ class XML_Action extends XML_Document {
         /* Other Processors */
         
         $sAction = 'Processus';
-        $mResult = $this->loadProcessor($oElement, $oProcessor);
+        $mResult = $this->runProcessor($oElement, $oProcessor);
         
       } else {
         
@@ -625,6 +625,31 @@ class XML_Action extends XML_Document {
         
         $mResult = clone $oElement;
         $mResult->cleanChildren();
+        
+        // Check attributes special values [$call]
+        
+        foreach ($mResult->getAttributes() as $oAttribute) {
+          
+          $sValue = $oAttribute->getValue();
+          preg_match_all('/\[\$([\w-]+)\]/', $sValue, $aResults, PREG_OFFSET_CAPTURE);
+          
+          if ($aResults && $aResults[0]) {
+            
+            $iSeek = 0;
+            
+            foreach ($aResults[1] as $aResult) {
+              
+              $iVarLength = strlen($aResult[0]) + 3;
+              $sVarValue = (string) $this->getVariable($aResult[0]);
+              
+              $sValue = substr($sValue, 0, $aResult[1] + $iSeek - 2) . $sVarValue . substr($sValue, $aResult[1] + $iSeek - 2 + $iVarLength);
+              
+              $iSeek = strlen($sVarValue) - $iVarLength;
+            }
+            
+            $oAttribute->set($sValue);
+          }
+        }
         
         $mResult->add($this->buildArgument($oElement->getChildren()));
       }
@@ -653,9 +678,9 @@ class XML_Action extends XML_Document {
     return $mResult;
   }
   
-  private function loadProcessor($oElement, $oProcessor) {
+  private function runProcessor($oElement, $oProcessor) {
     
-    $mResult = $oProcessor->loadElement($oElement);
+    $mResult = $oProcessor->loadElement($oElement, $this);
     
     /*if ($oElement->hasElementChildren()) {
       
@@ -1041,8 +1066,11 @@ class XML_Action extends XML_Document {
         
         $aFormats = array();
         
-        if ($sFormat = $oChild->getAttribute('format')) $aFormats[] = $sFormat; // TODO NS BUGS
-        else if ((!$aFormats = $oChild->query('tr:format', array('tr' => NS_XHTML))->toArray()) &&
+        if ($sFormat = $oChild->getAttribute('format')) {
+          
+          $aFormats[] = $sFormat; // TODO NS BUGS
+          
+        } else if ((!$aFormats = $oChild->query('tr:format', array('tr' => NS_XHTML))->toArray()) &&
           ($oFormat = $oChild->get('le:formats', 'le', NS_EXECUTION))) {
           
           $aFormats = $oFormat->getChildren()->toArray();
@@ -1060,8 +1088,8 @@ class XML_Action extends XML_Document {
           /* Validation */
           
           if (($oValidate = $oChild->get('le:validate', 'le', NS_EXECUTION)) && $oValidate->hasChildren()) {
-            
-            if (!$mArgument = $this->buildArgument($oValidate->getFirst())) {
+
+            if (!$mResult = $this->buildArgument($oValidate->getFirst())) {
               
               if ($oValidate->testAttribute('required', true)) {
                 
@@ -1170,6 +1198,12 @@ class XML_Action extends XML_Document {
             } else dspm(xt('Processor : attribut %s manquant %s', new HTML_Strong(t('namespace')), $oChild->messageParse()), 'action/error');
             
           break;
+          
+          default :
+            
+            // Just run the element, used for set-variable
+            
+            $this->buildArgument($oChild);
         }
       }
       
@@ -1179,12 +1213,20 @@ class XML_Action extends XML_Document {
     return $bResult;
   }
   
+  /**
+   * Build action's first element for the infos box
+   */
+  
   public function getResume() {
     
     if (!$this->oResume) $this->oResume = new XML_Element('action', null, array('path' => $this->getPath()));
     
     return $this->oResume;
   }
+  
+  /**
+   * Add a file to this action for infos box
+   */
   
   public function resumeFile($oFile, $bFirstTime) {
     
@@ -1196,10 +1238,18 @@ class XML_Action extends XML_Document {
     $oFiles->add($oResume);
   }
   
+  /**
+   * Add a sub-action to this action in infos box
+   */
+  
   public function resumeAction($oAction) {
     
     $this->aSubActions[] = $oAction->viewResume();
   }
+  
+  /**
+   * Get the stats resume for infos box
+   */
   
   public function viewResume() {
     
@@ -1216,8 +1266,6 @@ class XML_Action extends XML_Document {
         'name' => $sName,
         'value' => $fValue,
         'sub-value' => $fValue));
-      
-      $aStats[$sName]->addAttributes(array());
     }
     
     // build sub-actions

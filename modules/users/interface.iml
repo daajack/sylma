@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <class xmlns="http://www.sylma.org/interface">
-  <file>Utilisateur.php</file>
-  <name>Utilisateur</name>
+  <file>Users.php</file>
+  <name>Users</name>
   <method return-default="true" name="loadUser" path="load-user">
     <argument name="user" format="php-string"/>
   </method>

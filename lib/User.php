@@ -97,25 +97,43 @@ class User {
   
   public function getMode($sOwner, $sGroup, $sMode, $oNode = null) {
     
+    $sMode = (string) $sMode;
     if ($oNode === null) $oNode = new XML_Element('null');
     
-    if (!$sOwner) { Controler::addMessage(xt('Sécurité : "user" inexistant ! %s', $oNode->messageParse()), 'xml/warning'); echo Controler::getBacktrace(); }
-    else if (strlen($sMode) < 3 || !is_numeric($sMode)) { echo (!is_numeric($sMode)).' '.$sMode;Controler::addMessage(xt('Sécurité : "mode" invalide ! - %s', new HTML_Tag('em', $oNode->viewResume())), 'xml/warning');}
-    else if (!strlen($sGroup)) Controler::addMessage(xt('Sécurité : "group" inexistant ! %s', $oNode->messageParse()), 'xml/warning');
-    else {
+    // Validity control of the arguments
+    
+    if (!$sOwner) {
+      
+      Controler::addMessage(xt('Sécurité : "user" inexistant ! %s', $oNode->messageParse()), 'xml/warning');
+      
+    } else if (strlen($sMode) < 3 || !is_numeric($sMode)) {
+      
+      Controler::addMessage(xt('Sécurité : "mode" invalide ! - %s', new HTML_Tag('em', $oNode->viewResume())), 'xml/warning');
+      
+    } else if (!strlen($sGroup)) {
+      
+      Controler::addMessage(xt('Sécurité : "group" inexistant ! %s', $oNode->messageParse()), 'xml/warning');
+      
+    } else {
+      
+      // everything is ok
       
       $iOwner = intval($sMode{0});
       $iGroup = intval($sMode{1});
       $iPublic = intval($sMode{2});
       
-      if ($iOwner > 7 || $iGroup > 7 || $iPublic > 7) Controler::addMessage(xt('Sécurité : Attribut "mode" invalide !', $oNode->messageParse()), 'xml/warning');
-      else {
+      if ($iOwner > 7 || $iGroup > 7 || $iPublic > 7) {
         
+        // check validity of mode
+        Controler::addMessage(xt('Sécurité : Attribut "mode" invalide !', $oNode->messageParse()), 'xml/warning');
+        
+      } else {
+        
+        // now everything is ok
         $iMode = $iPublic;
         
         if ($sOwner == $this->isName($sOwner)) $iMode |= $iOwner;
         if ($this->isMember($sGroup)) $iMode |= $iGroup;
-        
         return $iMode;
       }
     }

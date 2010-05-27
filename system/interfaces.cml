@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <interfaces>
-  <interface class="Action_Array">/system/interfaces/array.iml</interface>
-  <interface class="Controler">/system/interfaces/controler.iml</interface>
-  <interface class="HTML_Form">/system/interfaces/form.iml</interface>
-  <interface class="Redirect">/system/interfaces/redirect.iml</interface>
-  <interface class="User">/system/interfaces/user.iml</interface>
-  <interface class="HTML_Document">/system/interfaces/window.iml</interface>
-  <interface class="XML_Action">/system/interfaces/xml_action.iml</interface>
-  <interface class="ActionScript">/system/interfaces/xml_action_script.iml</interface>
-  <interface class="XML_Directory">/system/interfaces/xml_directory.iml</interface>
-  <interface class="XML_Document">/system/interfaces/xml_document.iml</interface>
-  <interface class="XML_Element">/system/interfaces/xml_element.iml</interface>
-  <interface class="XML_File">/system/interfaces/xml_file.iml</interface>
-  <interface class="XML_NodeList">/system/interfaces/xml_nodelist.iml</interface>
-  <interface class="XML_Path">/system/interfaces/xml_path.iml</interface>
-  <interface class="XSL_Document">/system/interfaces/xsl_document.iml</interface>
+  <interface class="Action_Array">/sylma/interfaces/array.iml</interface>
+  <interface class="Controler">/sylma/interfaces/controler.iml</interface>
+  <interface class="HTML_Form">/sylma/interfaces/form.iml</interface>
+  <interface class="Redirect">/sylma/interfaces/redirect.iml</interface>
+  <interface class="User">/sylma/interfaces/user.iml</interface>
+  <interface class="HTML_Document">/sylma/interfaces/window.iml</interface>
+  <interface class="XML_Action">/sylma/interfaces/xml_action.iml</interface>
+  <interface class="ActionScript">/sylma/interfaces/xml_action_script.iml</interface>
+  <interface class="XML_Directory">/sylma/interfaces/xml_directory.iml</interface>
+  <interface class="XML_Document">/sylma/interfaces/xml_document.iml</interface>
+  <interface class="XML_Element">/sylma/interfaces/xml_element.iml</interface>
+  <interface class="XML_File">/sylma/interfaces/xml_file.iml</interface>
+  <interface class="XML_NodeList">/sylma/interfaces/xml_nodelist.iml</interface>
+  <interface class="XML_Path">/sylma/interfaces/xml_path.iml</interface>
+  <interface class="XSL_Document">/sylma/interfaces/xsl_document.iml</interface>
 </interfaces>

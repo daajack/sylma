@@ -16,11 +16,11 @@ class Messages extends XML_Document {
     $this->addMessages($mMessages);
   }
   
-  public function addMessage($oMessage) {
+  public function addMessage(XML_Element $oMessage) {
     
     $oResult = null;
     
-    if (($oMessage instanceof XML_Element) && $oMessage->useNamespace(NS_MESSAGES)) {
+    if ($oMessage->useNamespace(NS_MESSAGES)) {
       
       // TODO: foreach ($oMessage->aArguments as $oArgument) $this->setArgument('fields'][ += $oMessage[]
       
@@ -57,8 +57,7 @@ class Messages extends XML_Document {
   /*
    * Ajoute une liste de messages dans la pile
    * 
-   * @param $aMessages
-   *   Un tableau contenant les messages à ajouter
+   * @param XML_Nodelist|array $aMessages Un tableau contenant les messages à ajouter
    **/
   public function addMessages($aMessages) {
     
@@ -144,7 +143,7 @@ class Messages extends XML_Document {
 
 class Message extends XML_Element {
   
-  public function __construct($mMessage, $sPath = '', $aArgs = array()) {
+  public function __construct($mMessage, $sPath = '', array $aArgs = array()) {
     
     parent::__construct('lm:message', null, null, NS_MESSAGES);
     

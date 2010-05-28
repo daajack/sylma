@@ -1132,24 +1132,24 @@ class XML_Element extends DOMElement implements XML_Composante {
     foreach ($this->attributes as $oAttribute) $this->removeAttributeNode($oAttribute);
   }
   
-  public function cloneAttributes($oElement) {
+  public function cloneAllAttributes($oElement) {
     
     foreach ($oElement->getAttributes() as $oAttribute)
       $this->setAttribute($oAttribute->getName(), $oAttribute->getValue());
   }
   
-  public function cloneAttribute($oElement, $mAttribute = null) {
+  public function cloneAttributes($oElement, $mAttribute = null) {
     
     if ($mAttribute) {
       
       if (is_array($mAttribute)) {
         
         foreach ($mAttribute as $sAttribute)
-          if ($oElement->hasAttribute($sAttribute)) $this->cloneAttribute($oElement, $sAttribute);
+          if ($oElement->hasAttribute($sAttribute)) $this->cloneAttributes($oElement, $sAttribute);
         
       } else $this->setAttribute($mAttribute, $oElement->getAttribute($mAttribute));
       
-    } else $this->cloneAttributes($oElement);
+    } else $this->cloneAllAttributes($oElement);
   }
   
   public function merge($oElement, $bSelfPrior = false) {
@@ -1165,7 +1165,7 @@ class XML_Element extends DOMElement implements XML_Composante {
       } else $oResult->add($oChild);
     }
     
-    $oResult->cloneAttribute($oElement);
+    $oResult->cloneAllAttributes($oElement);
     
     return $oResult;
   }
@@ -1346,7 +1346,7 @@ class XML_Element extends DOMElement implements XML_Composante {
             //$oResult = $this->getDocument()->set($mContent); return $oResult;
             
             $oRoot = new XML_Element($mContent->getName(false), null, null, $mContent->getNamespace());
-            $oRoot->cloneAttributes($mContent);
+            $oRoot->cloneAllAttributes($mContent);
             
             $oRoot->add($mContent->getChildren());
             

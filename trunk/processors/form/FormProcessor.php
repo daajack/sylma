@@ -11,7 +11,7 @@ class FormProcessor extends XML_Processor  {
       case 'form' :
         
         $oForm = $this->oForm = new HTML_Form();
-        $oForm->cloneAttribute($oElement);
+        $oForm->cloneAllAttributes($oElement);
         
         if ($oElement->hasChildren()) $this->runChildren($oForm, $oElement);
         

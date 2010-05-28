@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<le:action xmlns:le="http://www.sylma.org/execution" xmlns:li="http://www.sylma.org/interface" xmlns="http://www.w3.org/1999/xhtml" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:la="/sylma/processors/action-builder/schema">
+  <le:settings>
+    <le:name>Outils des ressources</le:name>
+  </le:settings>
+  <la:replace-events>
+    <la:object extend-base="sylma.classes" name="tools" class="/sylma.explorer-classes.tools">
+      <la:property name="pathRights">/update-rights</la:property>
+      <la:property name="pathName">/update-name</la:property>
+      <div id="resource-tools" class="tools clear-block">
+        <div class="button">
+          <span>R</span>
+          <la:event name="click"><![CDATA[if (this === e.target || this.getFirst() === e.target) {
+  
+  var oParent = %ref-object%;
+  
+  oParent.loadRights();
+  oParent.clearTimer();
+  
+  return oParent.rights.show();
+}
+
+return true;]]></la:event>
+          <la:event name="mouseenter"><![CDATA[%ref-object%.clearTimer('rights');]]></la:event>
+          <la:event name="mouseleave" delay="300" timer="rights"><![CDATA[%ref-object%.updateRights();
+return %ref-object%.rights.hide();]]></la:event>
+          <le:action path="resource-rights"/>
+        </div>
+        <div class="button">
+          <span>N</span>
+          <la:event name="click"><![CDATA[if (this === e.target || this.getFirst() === e.target) {
+  
+  var oParent = %ref-object%;
+  
+  oParent.loadName();
+  oParent.clearTimer();
+  
+  return oParent.editName.show();
+}
+
+return true;]]></la:event>
+          <la:event name="mouseenter"><![CDATA[%ref-object%.clearTimer('name');]]></la:event>
+          <la:event name="mouseleave" delay="300" timer="name"><![CDATA[return %ref-object%.editName.hide();]]></la:event>
+          <la:object class="menu" name="editName">
+            <form class="tools" id="resource-tools-name">
+              <la:event name="submit"><![CDATA[return %ref-object%.parentObject.updateName();]]></la:event>
+              <input type="text" name="resource-name"/>
+              <input type="submit" value="Modifier"/>
+            </form>
+          </la:object>
+        </div>
+        <div class="button">Z</div>
+      </div>
+    </la:object>
+  </la:replace-events>
+</le:action>

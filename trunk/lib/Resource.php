@@ -570,6 +570,11 @@ class XML_Directory extends XML_Resource {
     return false;
   }
   
+  public function getRealPath() {
+    
+    return $this->getParent() ? MAIN_DIRECTORY.$this : MAIN_DIRECTORY;
+  }
+  
   public function delete() {
     
     $bResult = false;
@@ -662,44 +667,14 @@ class XML_File extends XML_Resource {
     return $this->iSize;
   }
   
+  public function getRealPath() {
+    
+    return $this->getParent()->getRealPath().'/'.$this->getName();
+  }
+  
   public function isLoaded() {
     
     return (bool) $this->oDocument;
-  }
-  
-  /**
-   * Change rights in corresponding SECURITY_FILE
-   */
-  public function updateRights($sOwner, $sGroup, $sMode) {
-    
-    if ($this->checkRightsArguments($sOwner, $sGroup, $sMode)) {
-      
-      $eFile = new XML_Element('file', 
-        new XML_Element('ls:security', array(
-            new XML_Element('ls:owner', $sOwner, null, NS_SECURITY),
-            new XML_Element('ls:group', $sGroup, null, NS_SECURITY),
-            new XML_Element('ls:mode', $sMode, null, NS_SECURITY)),
-          null, NS_SECURITY),
-        array('name' => $this->getName()), NS_DIRECTORY);
-      
-      if ($oSettingsElement = $this->getSettingsElement()) $oSettingsElement->remove();
-      
-      if (!$oSecurityDocument = $this->getParent()->getSettings()) {
-        
-        // Creation of a security file
-        
-        $oSecurityDocument = new XML_Document;
-        $oSecurityDocument->addNode('directory', null, null, NS_DIRECTORY);
-        
-        $this->getParent()->addFreeDocument(SYLMA_SECURITY_FILE, $oSecurityDocument);
-      }
-      
-      $oSecurityDocument->add($eFile);
-      
-      return $oSecurityDocument->saveFree($this->getParent(), SYLMA_SECURITY_FILE);
-    }
-    
-    return false;
   }
   
   /**
@@ -746,6 +721,52 @@ class XML_File extends XML_Resource {
     
     if ($mSecured === null) return $this->bFileSecured;
     else $this->bFileSecured = $mSecured;
+  }
+  
+  /**
+   * Change rights in corresponding SECURITY_FILE
+   */
+  public function updateRights($sOwner, $sGroup, $sMode) {
+    
+    if ($this->checkRightsArguments($sOwner, $sGroup, $sMode)) {
+      
+      $eFile = new XML_Element('file', 
+        new XML_Element('ls:security', array(
+            new XML_Element('ls:owner', $sOwner, null, NS_SECURITY),
+            new XML_Element('ls:group', $sGroup, null, NS_SECURITY),
+            new XML_Element('ls:mode', $sMode, null, NS_SECURITY)),
+          null, NS_SECURITY),
+        array('name' => $this->getName()), NS_DIRECTORY);
+      
+      if ($oSettingsElement = $this->getSettingsElement()) $oSettingsElement->remove();
+      
+      if (!$oSecurityDocument = $this->getParent()->getSettings()) {
+        
+        // Creation of a security file
+        
+        $oSecurityDocument = new XML_Document;
+        $oSecurityDocument->addNode('directory', null, null, NS_DIRECTORY);
+        
+        $this->getParent()->addFreeDocument(SYLMA_SECURITY_FILE, $oSecurityDocument);
+      }
+      
+      $oSecurityDocument->add($eFile);
+      
+      return $oSecurityDocument->saveFree($this->getParent(), SYLMA_SECURITY_FILE);
+    }
+    
+    return false;
+  }
+  
+  public function updateName($sNewName) {
+    
+    if ($this->checkRights(MODE_WRITE)) {
+      
+      $bResult = rename($this->getRealPath(), $this->getParent()->getRealPath().'/'.$sNewName);
+      
+      if ($bResult) Controler::addMessage(t('Fichier renommé !'), 'success');
+      else Controler::addMessage(t('Impossible de renommer le fichier !'), 'warning');
+    }
   }
   
   public function delete($bMessage = true, $bUpdateDirectory = true) {

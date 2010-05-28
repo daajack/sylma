@@ -2,18 +2,6 @@
 
 var SYLMA_MODE_EXECUTION = 1, SYLMA_MODE_WRITE = 2, SYLMA_MODE_READ = 4;
 
-window.addEvent('domready', function() {
-  
-  var oResult = new Request.JSON({
-    
-    'url' : '/users/root/explorer.txt', 
-    'onSuccess' : function(oResult) {
-      
-      //sylma.dsp(' - DEBUT - ');
-      sylma.loadTree(oResult);
-      //sylma.dsp(' - FIN - ');
-  }}).get();
-});
 
 var sylma = {
   
@@ -29,10 +17,17 @@ var sylma = {
     return document.importNode(oElement, true);
   },
   
-  loadTree : function(oTree) {
+  loadTree : function(sName, sPath) {
     
-    //var aKeys = this.extend(this, oTree, true);
-    this.explorer = this.buildObject(oTree.explorer);
+    var oResult = new Request.JSON({
+      
+      'url' : sPath, 
+      'onSuccess' : function(oResult) {
+        
+        //sylma.dsp(' - DEBUT - ');
+        sylma[sName] = sylma.buildObject(oResult[sName]);
+        //sylma.dsp(' - FIN - ');
+    }}).get();
   },
   
   buildArray: function(object, sClassBase, parentLayer, iDepth) {
@@ -173,11 +168,12 @@ var sylma = {
               
               if (method.delay) {
                 
-                eNode.addEvent(method.name, function() {
+                eNode.addEvent(method.name, this.delayFunc.create({
                   
-                  oParent.timer = sylma.methods[sMethod].delay(parseInt(method.delay), eNode);
-                  // sylma.dsp('[run-hide] ' + oParent.node.id);
-                });
+                  arguments : [sMethod, method.timer, parseInt(method.delay), oParent],
+                  event : true,
+                  bind : eNode
+                }));
                 
               } else eNode.addEvent(method.name, sylma.methods[sMethod]); // add event
               
@@ -206,6 +202,13 @@ var sylma = {
         this.dsp(this.view(method));
       }
     }
+  },
+  
+  delayFunc : function(e, sMethod, sTimer, iDelay, oParent) {
+    
+    if (!oParent.timer) oParent.timer = [];
+    
+    oParent.timer[sTimer] = sylma.methods[sMethod].delay(iDelay, this, e);
   },
   
   dsp_message : function(mContent, sTargetId) {
@@ -307,6 +310,18 @@ sylma.classes.request = new Class({
         'height' : 100});
         
       (function() {
+        /*
+        oMessagesContent.addEvent('mousemove', function() {
+          
+          this.get('tween').cancel();
+          //this.fade('out').delay(5000);
+        });
+        
+        oMessagesContent.addEvent('mouseleave', function() {
+          
+          this.fade('out').delay(5000);
+        });
+        */
         oFx.options.unit = 'px';
         oFx.start({
           'opacity' : 0,
@@ -335,7 +350,8 @@ sylma.classes.layer = new Class({
         mContent.setStyle('opacity', 0.2);
         mContent.replaces(layer.node);
         
-        layer.node.destroy();
+        // TODO kill old layer
+        //layer.node.destroy(); 
         layer.node = mContent;
         
         var oSubResult = new Request.JSON({
@@ -358,7 +374,7 @@ sylma.classes.layer = new Class({
   
 sylma.classes.layout = new Class({
   
-  hello : 'hello',
+  
 }),
 
 sylma.classes.menu = new Class({
@@ -369,12 +385,12 @@ sylma.classes.menu = new Class({
   
   'isVisible' : function() { return (this.node.getStyle('visibility') == 'visible'); },
   
-  'clearTimer' : function() {
+  'clearTimer' : function(sName) {
     
     if (this.timer) {
       
-      $clear(this.timer);
-      this.timer = undefined;
+      $clear(this.timer[sName]);
+      this.timer[sName] = undefined;
     }
   },
   
@@ -394,9 +410,7 @@ sylma.classes.menu = new Class({
     
     if (bQuick) {
       
-      var oTween = this.node.get('tween');
-      
-      if (oTween) oTween.cancel();
+      this.node.get('tween').cancel();
       this.node.fade('hide');
       
     } else if (this.isOpen) {
@@ -420,12 +434,16 @@ sylma.classes['menu-common'] = new Class({
   
   Extends : sylma.classes.menu,
   parentNode : undefined,
+  originNode : undefined,
   
   'show' : function(eTarget) {
     
     if (this.firstShow(eTarget)) {
       
+      if (!this.originNode) this.originNode = this.node.getParent();
+      
       this.hide(true);
+      
       $(eTarget).grab(this.node, 'top');
       
       this.parentNode = eTarget;
@@ -442,6 +460,15 @@ sylma.classes['menu-common'] = new Class({
   'firstShow' : function(eTarget) {
     
     return (this.parentNode !== eTarget);
+  },
+  
+  'reset' : function() {
+    
+    this.hide(true);
+    
+    this.resetParent();
+    if (this.originNode) this.originNode.grab(this.node);
+    //if (!this.node.getChildren().length) sylma.dsp('tools perdus [a] !');
   }
 });
 

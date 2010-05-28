@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<class xmlns="http://www.sylma.org/interface">
+  <file>Explorer.php</file>
+  <name>Explorer</name>
+  <method path="update-rights" name="updateRights"/>
+  <method path="update-name" name="updateName"/>
+</class>

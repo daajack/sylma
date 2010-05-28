@@ -21,11 +21,9 @@
           <name>
             <xsl:value-of select="@name"/>
           </name>
-          <xsl:if test="@delay">
-            <delay>
-              <xsl:value-of select="@delay"/>
-            </delay>
-          </xsl:if>
+          <xsl:call-template name="attributes-to-nodes">
+            <xsl:with-param name="attributes" select="@delay | @timer"/>
+          </xsl:call-template>
           <xsl:if test="@event">
             <event>true</event>
             <xsl:for-each select="@path-node | @id-node">

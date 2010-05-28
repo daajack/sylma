@@ -159,7 +159,7 @@ class HTML_Field extends XML_Document {
         // $oInput->setAttribute('disabled', 'disabled');
         /*
         $oDisplay = new HTML_Span($oInput->getAttribute('value'));
-        $oDisplay->cloneAttribute($oInput, 'class');
+        $oDisplay->cloneAttributes($oInput, 'class');
         
         $oInput = $oDisplay;
         */

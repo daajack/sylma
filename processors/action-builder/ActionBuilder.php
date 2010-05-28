@@ -131,7 +131,7 @@ class ActionBuilder extends XML_Processor  {
         'name' => $sName,
         'extract-ref' => 'parent'), NS_ACTIONBUILDER);
       
-      if ($oMethod->hasAttribute('delay')) $oNewMethod->setAttribute('delay', $oMethod->getAttribute('delay'));
+      $oNewMethod->cloneAttributes($oMethod, array('delay', 'timer'));
       if ($oMethod->getName() == 'event') $oNewMethod->setAttribute('event', 1);
       
       $oMethod->replace($oNewMethod);

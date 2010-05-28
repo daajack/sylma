@@ -581,9 +581,9 @@ class XML_Action extends XML_Document {
     if ($oElement->isElement() && $oElement->getName(true) == 'action' && $oElement->useNamespace(NS_EXECUTION) && is_object($mResult)) {
       
       if (($mResult instanceof XML_Document) || ($mResult instanceof XML_Element))
-        $mResult->cloneAttribute($oElement, array('class', 'style', 'id'));
+        $mResult->cloneAttributes($oElement, array('class', 'style', 'id'));
       else if ($mResult instanceof XML_NodeList && $mResult->length && $mResult->item(0)->isElement())
-        $mResult->item(0)->cloneAttribute($oElement, array('class', 'style'));
+        $mResult->item(0)->cloneAttributes($oElement, array('class', 'style'));
       
     }
     
@@ -1202,8 +1202,7 @@ class XML_Action extends XML_Document {
           default :
             
             // Just run the element, used for set-variable
-            
-            $this->buildArgument($oChild);
+            if ($oChild->testAttribute('run')) $this->buildArgument($oChild);
         }
       }
       

@@ -196,11 +196,46 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
       return false;
     },
     
+    updateFile : function() {
+      
+      var oArguments = {'resource' : this.resource.path}
+      
+      var oCaller = this;
+      var oResource = this.resource;
+      var sPath = sylma.explorer.pathInterface + '/update';
+      
+      this.request = new sylma.classes.request({
+        
+        'url' : sPath + '.action',
+        'data' : oArguments,
+        'onSuccess' : function(sResult, oResult) {
+          
+          var mContent = sylma.importNode(this.parseAction(oResult).getFirst());
+          
+          mContent.setStyle('opacity', 0.2);
+          mContent.replaces(oResource.node);
+          
+          var oSubResult = new Request.JSON({
+            
+            'url' : sPath + '.txt', 
+            'onSuccess' : function(oResponse) {
+              
+              sylma.explorer.mozaic.resources[oResource.path] = sylma.buildRoot(oResponse, sylma.explorer.mozaic);
+              mContent.setStyle('opacity', 1);
+              
+          }}).get();
+        }
+      }).post();
+    },
+    
     onUpdateName : function(mResult) {
       
-      var bResult = sylma.inttobool(mResult.get('text'));
+      //var bResult = sylma.inttobool(mResult.get('text'));
       
-      if (bResult) alert('Nom mis-à-jour');
+      if (bResult) {
+        
+        alert('Nom mis-à-jour');
+      }
     }
   })
 };

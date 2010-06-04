@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<class xmlns="http://www.sylma.org/interface" xmlns:ls="http://www.sylma.org/security">
-  <file>HTML.php</file>
-  <name>HTML_Document</name>
-  <extends>XML_Document</extends>
+<?xml version="1.0" encoding="utf-8"?>
+<class xmlns="http://www.sylma.org/interface">
+  <name>HTML_Action</name>
+  <extends>XML_Action</extends>
   <method path="add-js" name="addJS">
     <argument name="path">
       <format>php-string</format>
@@ -16,5 +15,4 @@
   <method path="add-onload" name="addOnLoad">
     <argument format="php-string" name="content"/>
   </method>
-  <method path="get-head" name="getHead"/>
 </class>

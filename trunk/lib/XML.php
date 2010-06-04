@@ -15,7 +15,7 @@ function xt () {
 }
 
 function strtoxml ($sValue) {
-  
+  // xmlns:le="'.NS_EXECUTION.'" xmlns:li="'.NS_INTERFACE.'"
   $oDocument = new XML_Document('<div xmlns="'.NS_XHTML.'">'.$sValue.'</div>');
   
   if ($oDocument->getRoot() && !$oDocument->getRoot()->isEmpty()) {
@@ -37,8 +37,10 @@ interface XML_Composante {
   public function isElement();
   public function isText();
   public function remove();
+  public function getDocument();
+  public function getParent();
   public function messageParse();
-  public function __toString();
+  //public function __toString();
 }
 
 class XML_Helper extends XML_Document {
@@ -110,6 +112,7 @@ class XML_Document extends DOMDocument {
     $this->registerNodeClass('DOMAttr', 'XML_Attribute');
     $this->registerNodeClass('DOMCdataSection', 'XML_CData');
     $this->registerNodeClass('DOMDocumentFragment', 'XML_Fragment');
+    $this->registerNodeClass('DOMComment', 'XML_Comment');
     
     $this->setMode($iMode);
     
@@ -278,7 +281,7 @@ class XML_Document extends DOMDocument {
         if ($oFile->isFileSecured()) $this->appendLoadRights();
       }
       
-    } else dspm(xt('Fichier %s introuvable', new HTML_Strong($sPath)), 'xml/warning');
+    } else dspm(xt('Fichier %s introuvable', new HTML_Strong($sPath)), 'xml/error');
     
     return false;
   }
@@ -306,7 +309,7 @@ class XML_Document extends DOMDocument {
       // TODO : Bug with not UTF-8, can't display the text -> recursive call
       // if (!parent::loadXML($sContent)) Controler::addMessage(xt('Document : Chargement texte impossible, contenu invalide : %s', new HTML_Tag('pre', htmlspecialchars(wordwrap($sContent, 100)))), 'xml/warning');
       if (!parent::loadXML($sContent)) Controler::addMessage(t('Chargement texte impossible, contenu invalide'), 'xml/warning');
-      if ($this->isEmpty()) Controler::addMessage(t('Chargement texte échoué, aucun résultat'), 'xml/warning');
+      else if ($this->isEmpty()) Controler::addMessage(t('Chargement texte échoué, aucun résultat'), 'xml/warning');
       
       XML_Controler::addStat('load');
       
@@ -1040,8 +1043,12 @@ class XML_Element extends DOMElement implements XML_Composante {
    */
   public function addAttribute($oAttribute) {
     
-    if ($oAttribute->getDocument() && $oAttribute->getDocument() != $this->getDocument())
+    //$oAttribute = clone $oAttribute;
+    
+    if ($oAttribute->getDocument() && $oAttribute->getDocument() != $this->getDocument()) {
+      
       $oAttribute = $this->getDocument()->importNode($oAttribute, false);
+    }
     
     $this->setAttributeNode($oAttribute);
     
@@ -1223,9 +1230,9 @@ class XML_Element extends DOMElement implements XML_Composante {
     
     if (is_object($mValue)) {
       
-      if ($mValue instanceof XML_Element || $mValue instanceof XML_Text || $mValue instanceof XML_CData) {
+      if ($mValue instanceof XML_Element || $mValue instanceof XML_Text || $mValue instanceof XML_CData || $mValue instanceof XML_Comment) {
         
-        /* XML_Element or XML_Text */
+        /* XML Base nodes */
         
         $mValue = $this->insertChild($mValue, $oNext);
         
@@ -1304,7 +1311,7 @@ class XML_Element extends DOMElement implements XML_Composante {
     
     if ($oChild === $oNext) $oNext = null;
     
-    if (is_object($oChild) && ($oChild instanceof XML_Element || $oChild instanceof XML_Text || $oChild instanceof XML_CData)) {
+    if (is_object($oChild) && ($oChild instanceof XML_Element || $oChild instanceof XML_Text || $oChild instanceof XML_CData || $oChild instanceof XML_Comment)) {
       
       if ((bool) $oChild->getDocument() && ($oChild->getDocument() !== $this->getDocument())) {
         
@@ -1587,6 +1594,16 @@ class XML_Element extends DOMElement implements XML_Composante {
     return $this->firstChild;
   }
   
+  public function getNext() {
+    
+    return $this->nextSibling;
+  }
+  
+  public function getPrevious() {
+    
+    return $this->previousSibling;
+  }
+  
   public function getNamespace() {
     
     return $this->namespaceURI;
@@ -1626,6 +1643,15 @@ class XML_Element extends DOMElement implements XML_Composante {
     return $this->insertText($sValue);
   }
   
+  /*** Render ***/
+  
+  public function parseXSL($oTemplate) {
+    
+    $oDocument = new XML_Document($this);
+    
+    return $oDocument->parseXSL($oTemplate);
+  }
+  
   public function implode($sSep, $cChildren) {
     
     $sContent = '';
@@ -1639,16 +1665,22 @@ class XML_Element extends DOMElement implements XML_Composante {
     return $sContent;
   }
   
-  /*** Render ***/
-  
   public function formatOutput($iLevel = 0) {
     
-    if (!$this->isRoot()) {
+    if (!$this->isRoot()) $this->insertBefore("\n".str_repeat('  ', $iLevel));
+    
+    foreach ($this->getChildren() as $oChild) {
       
-      $this->insertBefore("\n".str_repeat('  ', $iLevel));
+      if ($oChild instanceof XML_Element) {
+        
+        $oChild->formatOutput($iLevel + 1);
+        
+      } else if ($oChild instanceof XML_CData || $oChild instanceof XML_Comment) {
+        
+        $oChild->getParent()->insert("\n".str_repeat('  ', $iLevel + 1), $oChild);
+      }
     }
     
-    foreach ($this->getChildren() as $oChild) $oChild->formatOutput($iLevel + 1);
     if ($this->hasChildren()) {
       
       if ($this->countChildren() > 1) $this->add("\n".str_repeat('  ', $iLevel)); // || strlen($this->getFirst()) > 80
@@ -1698,8 +1730,6 @@ class XML_Element extends DOMElement implements XML_Composante {
     // try {
       
       if (isset($this->nodeName) && $this->nodeName) {
-        
-        // if (!$this->isReady()) return '';
         
         if ($this->childNodes && $this->childNodes->length) $sChildren = $this->implode('', $this->childNodes);
         else $sChildren = '';
@@ -1783,7 +1813,17 @@ class XML_CData extends DOMCdataSection implements XML_Composante {
   
   public function isText() {
     
-    return true;
+    return false;
+  }
+  
+  public function getDocument() {
+    
+    return $this->ownerDocument;
+  }
+  
+  public function getParent() {
+    
+    return $this->parentNode;
   }
   
   public function isElement() {
@@ -1795,16 +1835,15 @@ class XML_CData extends DOMCdataSection implements XML_Composante {
     
     return new HTML_Span((string) $this, array('class' => 'message-element'));
   }
-  
+  /*
   public function formatOutput($iLevel = 0) {
     
     return null;
   }
-  
+  */
   public function __toString() {
     
-    return $this->data;
-    // return "<![CDATA[\n".$this->data.']]>';
+    return "<![CDATA[\n".$this->data."]]>\n";
   }
 }
 
@@ -1833,6 +1872,11 @@ class XML_Text extends DOMText implements XML_Composante {
     return $this->ownerDocument;
   }
   
+  public function getParent() {
+    
+    return $this->parentNode;
+  }
+  
   public function replace($mChild) {
     
     if (is_string($mChild)) $oChild = new XML_Text($mChild);
@@ -1847,11 +1891,11 @@ class XML_Text extends DOMText implements XML_Composante {
     
     return $this->parentNode->removeChild($this);
   }
-  
+  /*
   public function formatOutput($iLevel = 0) {
     
     return null;
-  }
+  }*/
   
   public function isText() {
     
@@ -1876,7 +1920,7 @@ class XML_Text extends DOMText implements XML_Composante {
       
 		} catch ( Exception $e ) {
       
-			Controler::addMessage('Text : '.$e->getMessage(), 'xml/error');
+			dspm('Text : '.$e->getMessage(), 'xml/error');
 		}
   }
 }
@@ -1886,6 +1930,7 @@ class XML_NodeList implements Iterator {
   private $aNodes = array();
   public $length;
   protected $iIndex = 0;
+  private $aStore = array();
   
   public function __construct($oNodeList = null) {
     
@@ -1917,7 +1962,7 @@ class XML_NodeList implements Iterator {
         default :
           
           // if ($oNode->isEmpty()) $aResults[] = $oNode->getName();
-          if ($oNode->isText()) $aResults[] = $oNode->getValue();
+          if ($oNode->isText()) $aResults[] = (string) $oNode;
           else $aResults[$oNode->getName()] = $oNode->getValue();
       }
     }
@@ -1985,6 +2030,16 @@ class XML_NodeList implements Iterator {
     return ($this->iIndex < count($this->aNodes));
   }
   
+  public function store() {
+    
+    $this->aStore[] = $this->iIndex;
+  }
+  
+  public function restore() {
+    
+    $this->iIndex = array_pop($this->aStore);
+  }
+  
   public function reverse() {
     
     $this->aNodes = array_reverse($this->aNodes);
@@ -2008,6 +2063,51 @@ class XML_NodeList implements Iterator {
   public function __toString() {
     
     return implode('', $this->implode());
+  }
+}
+
+class XML_Comment extends DOMComment implements XML_Composante {
+  
+  // private $aRights = array();
+  
+  public function getDocument() {
+    
+    return $this->ownerDocument;
+  }
+  
+  public function getParent() {
+    
+    return $this->parentNode;
+  }
+  
+  public function remove() {
+    
+    return $this->parentNode->removeChild($this);
+  }
+  /*
+  public function formatOutput($iLevel = 0) {
+    
+    return null;
+  }*/
+  
+  public function isText() {
+    
+    return false;
+  }
+  
+  public function isElement() {
+    
+    return false;
+  }
+  
+  public function messageParse() {
+    
+    return new HTML_Span((string) $this, array('class' => 'message-comment'));
+  }
+  
+  public function __toString() {
+    
+    return "<!--{$this->data}-->";
   }
 }
 
@@ -2083,18 +2183,24 @@ class XSL_Document extends XML_Document {
       if ($oExternals->length) {
         
         $aPaths[] = $sPath;
+        $aMarks = $this->query('sxsl:mark', array('sxsl' => SYLMA_NS_SXSLT));
         
         foreach ($oExternals as $oExternal) {
           
           if ($sHref = $oExternal->getAttribute('href')) {
-            //dspm($oExternal->view());
-            //dspm($this->getFile()->getParent().' / '.$sImportPath);
-            if ($this->getFile()) $sImportPath = Controler::getAbsolutePath($sHref, $this->getFile()->getParent().'/');
+            
+            if ($this->getFile()) $sImportPath = Controler::getAbsolutePath($sHref, $this->getFile()->getParent());
             else $sImportPath = Controler::getAbsolutePath($sHref, '/');
             
             $oTemplate = new XSL_Document($sImportPath, $this->getMode());
             
             if (!$oTemplate->isEmpty() && $oTemplate->includeExternals($aPaths, $iLevel + 1)) {
+              
+              foreach ($aMarks as $eMark) {
+                
+                foreach ($oTemplate->query('//la:*', array('la' => $eMark->read())) as $eElement)
+                  $eElement->setAttribute('file-source', (string) $oTemplate->getFile());
+              }
               
               switch ($oExternal->getName(true)) {
                 

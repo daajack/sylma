@@ -4,7 +4,7 @@ class FormProcessor extends XML_Processor  {
   
   private $oForm;
   
-  public function onElement($oElement) {
+  public function onElement($oElement, XML_Action $oAction) {
     
     switch ($oElement->getName()) {
       

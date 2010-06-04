@@ -7,15 +7,24 @@ function t($s) {
   return $s;
 }
 
+function extractDirectory($sPath) {
+  
+  $sPath = substr($sPath, strlen(getcwd().MAIN_DIRECTORY) + 1);
+  
+  return substr($sPath, 0, strlen($sPath) - strlen(strrchr($sPath, '/')));;
+}
+
+/*** Array ***/
+
 function array_last($aArray, $mDefault = null) {
   
   if ($aArray) return array_val(count($aArray) - 1, $aArray);
   else return $mDefault;
 }
 
-/*
+/**
  * Si il existe, renvoie la valeur de l'index du tableau , sinon renvoie la valeur de $mDefault
- **/
+ */
 function array_val($sKey, $aArray, $mDefault = null) {
   
   //is_array($aArray) && (is_string($sKey) || is_numeric($sKey)) && 
@@ -54,7 +63,7 @@ function strtobool($sValue, $bDefault = null) {
 
 function booltostr($bValue) {
   
-  return $bValue ? 'true' : 'false';
+  return ($bValue) ? 'true' : 'false';
 }
 
 function booltoint($bValue) {
@@ -62,9 +71,9 @@ function booltoint($bValue) {
   return $bValue ? 1 : 0;
 }
 
-/*
+/**
  * Renvoie la première valeur non nulle envoyée en argument, si aucune, renvoie la dernière valeur
- **/
+ */
 function nonull_val() {
   
   foreach (func_get_args() as $mArg) {
@@ -76,9 +85,9 @@ function nonull_val() {
   return $mResult;
 }
 
-/*
+/**
  * 'Quote' une chaîne, ou plusieurs dans un tableau
- **/
+ */
 function addQuote($mValue) {
   
   if (is_array($mValue)) {
@@ -90,9 +99,9 @@ function addQuote($mValue) {
   else return null;
 }
 
-/*
+/**
  * Formate le nombre donnée en argument au format prix (p.ex : 1'999.95)
- **/
+ */
 function formatPrice($fNumber) {
   
   if (is_numeric($fNumber)) return 'CHF '.number_format($fNumber, 2, '.', "'");
@@ -122,9 +131,9 @@ function stringResume($mValue, $iLength = 50, $bXML = false) {
   return $sValue;
 }
 
-/*
+/**
  * Fusionne les clés et les valeurs en insérant une chaîne de séparation
- **/
+ */
 function fusion($sSep, $aArray) {
   
   $aResult = array();
@@ -134,25 +143,25 @@ function fusion($sSep, $aArray) {
   return $aResult;
 }
 
-/*
+/**
  * Implosion = fusion + implode
- **/
+ */
 function implosion($sSepFusion, $sepImplode, $aArray) {
   
   return implode($sepImplode, fusion($sSepFusion, $aArray));
 }
 
-/*
+/**
  * Conversion in UTF-8 of the characters : & " < >
- **/
+ */
 function xmlize($sString) {
   
   return htmlspecialchars($sString, ENT_COMPAT, 'UTF-8');
 }
 
-/*
+/**
  * Return a color between gray and xxx, depends on fValue
- **/
+ */
 function inter_color($fValue) {
   
   $iColor = 255 - intval(255 * $fValue);

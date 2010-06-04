@@ -256,7 +256,7 @@ class HTML_Document extends XML_Helper {
   
   public function getHead() {
     
-    if (!$this->oHead && ($oHead = $this->get('/ns:html/ns:head'))) $this->oHead = $oHead;
+    if (!$this->oHead && ($oHead = $this->get('/xhtml:html/xhtml:head', array('xhtml' => NS_XHTML)))) $this->oHead = $oHead;
     
     return $this->oHead;
   }

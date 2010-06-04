@@ -35,6 +35,10 @@
       <la:replace-events>
         <div>
           <a href="#">
+            <la:event name="click"><![CDATA[$('explorer-messages').getChildren().fade('in').setStyle('height', 'auto');]]></la:event>
+            <span>SM</span>
+          </a>
+          <a href="#">
             <la:event name="click"><![CDATA[var layer = %ref-object%;
 
 sylma.explorer.tools.reset();

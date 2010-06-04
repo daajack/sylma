@@ -4,4 +4,5 @@
   <name>Explorer</name>
   <method path="update-rights" name="updateRights"/>
   <method path="update-name" name="updateName"/>
+  <method path="update" name="update"/>
 </class>

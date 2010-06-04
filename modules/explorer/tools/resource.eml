@@ -50,6 +50,16 @@ return true;]]></la:event>
           </la:object>
         </div>
         <div class="button">Z</div>
+        <div class="button">
+          <span>F</span>
+          <la:event name="click"><![CDATA[if (this === e.target || this.getFirst() === e.target) {
+  
+  var oParent = %ref-object%;
+  return oParent.updateFile();
+}
+
+return true;]]></la:event>
+        </div>
       </div>
     </la:object>
   </la:replace-events>

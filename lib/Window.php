@@ -250,6 +250,96 @@ class WindowAction extends XML_Document implements Main {
   }
 }
 
+class HTML_Action extends XML_Action {
+  
+  private $oHead = null;
+  private $sOnLoad = '';
+  
+  public function addOnLoad($sContent) {
+    
+    $this->sOnLoad .= "\n".$sContent;
+  }
+  
+  public function addJS($sHref, $sContent = null) {
+    
+    if ($oHead = $this->getHead()) {
+      
+      if ($sContent) $oHead->add(new HTML_Script('', $sContent));
+      else if (!$oHead->get("ns:script[@src='$sHref']")) $oHead->add(new HTML_Script($sHref));
+      
+    } else dspm(xt('Impossible d\'ajouter le fichier script %s', new HTML_Strong($sHref)), 'warning');
+  }
+  
+  public function addCSS($sHref = '') {
+    
+    if (($oHead = $this->getHead()) && !$oHead->get("ns:link[@href='$sHref']")) {
+      
+      $oHead->add(new HTML_Style($sHref));
+      
+    } else dspm(xt('Impossible d\'ajouter la feuille de style %s', new HTML_Strong($sHref)), 'warning');
+  }
+  
+  public function getHead() {
+    
+    if (!$this->oHead) $this->oHead = new XML_Element('head', null, null, NS_XHTML);
+    
+    return $this->oHead;
+  }
+  
+  public function __toString() {
+    
+    $sDocType = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
+    
+    // Add js onload
+    
+    if ($this->sOnLoad) $this->addJS(null, "window.addEvent('domready', function() {\n".$this->sOnLoad."\n});");
+    
+    // Action parsing
+    
+    $oView = new XML_Document($this);
+    $oView->get('//ns:head')->add($this->getHead()->getChildren());
+    
+    // Put messages and infos
+    
+    $sBody = '//ns:body';
+    
+    // messages
+    
+    if (!$sMessage = Controler::getWindowSettings()->read('messages')) $sMessage = $sBody;
+    
+    if ($oContainer = $oView->get($sMessage)) $oContainer->shift(Controler::getMessages());
+    else {
+      
+      dspm(xt('Containeur %s introuvable', new HTML_Strong($sMessage)), 'warning');
+      $oView->add(Controler::getMessages());
+    }
+    
+    // infos
+    
+    if (Controler::getUser()->isMember(SYLMA_AUTHENTICATED)) {
+      
+      if ($oContainer = $oView->get($sBody)) $oContainer->shift(Controler::getInfos());
+      else $oView->add(Controler::getInfos());
+    }
+    
+    Controler::useMessages(false);
+    
+    // Fill empty html tags
+    
+    if ($oElements = $oView->query(SYLMA_HTML_TAGS, 'html', NS_XHTML))
+      foreach ($oElements as $oElement) if (!$oElement->hasChildren()) $oElement->set(' ');
+    
+    // Remove security elements
+    
+    $oView->query('//@ls:owner | //@ls:mode | //@ls:group', 'ls', NS_SECURITY)->remove();
+    
+    $oView->formatOutput();
+    
+    return $sDocType."\n".$oView->display(false);
+  }
+}
+
+
 class Xml extends XML_Document implements Main {
   
   private $sMode = '';

@@ -13,7 +13,7 @@ class ActionBuilder extends XML_Processor  {
   
   public function __construct() {
     
-    if (get_class(Controler::getWindow()) == 'Html') {
+    if (Controler::isWindowType('html')) {
       
       $this->oMethods = new XML_Document(new XML_Element('la:root', null, null, NS_ACTIONBUILDER));
       
@@ -39,6 +39,14 @@ class ActionBuilder extends XML_Processor  {
     if ($this->isFirst()) { // root object
       
       $oElement->set($this->buildChildren($oElement));
+      
+      if ($oElement->getName() == 'replace-events') {
+        
+        $oDocument = new XML_Document($oElement);
+        $this->replaceMethodsDefault($oDocument, $oAction);
+        
+        $oElement = $oDocument->getFirst();
+      }
       
       $mResult = new XML_Document(new HTML_Div($oElement));
       
@@ -80,9 +88,9 @@ class ActionBuilder extends XML_Processor  {
     $this->replaceMethods($oDocument->query('//la:event | //la:method', $this->aNS), $oAction);
   }
   
-  /*
+  /**
    * Replace methods with unique id
-   **/
+   */
   
   private function replaceMethods($oMethods, $oAction) {
     //$aMethods = array('event', 'click', 'dblclick', 'mousedown', 'mouseup', 'mouseover', 'mouseout', 'mousemove', 'key-down');
@@ -92,7 +100,16 @@ class ActionBuilder extends XML_Processor  {
       // TODO really ugly
       //$sChildId = uniqid('method-');
       $sName = $oMethod->getAttribute('name');
-      $sChildId = 'method-'.bin2hex(substr(md5($oAction->getPath().$sName.$iCount), 0, 7));
+      //$sChildId = 'method-'.bin2hex(substr(md5($oAction->getPath().$sName.$iCount), 0, 7));
+      
+      if (!$sSource = $oMethod->getAttribute('file-source')) {
+        
+        $sSource = $oAction->getPath();
+        //dspm(array(xt('Attribut %s manquant dans l\'élément', new HTML_Strong('file-source')), $oMethod->messageParse()), 'action/error');
+      }
+      
+      $sChildId = 'method-'.bin2hex(substr(md5($sSource.$sName.$iCount), 0, 7));
+      
       //dspm($sChildId);
       $oResult = new XML_Element($sName, null, array('id' => $sChildId));
       
@@ -138,7 +155,7 @@ class ActionBuilder extends XML_Processor  {
     }
   }
   
-  /*
+  /**
    * Adapt objects and methods for last parsing to js object.
    */
   
@@ -150,7 +167,7 @@ class ActionBuilder extends XML_Processor  {
     return $oDocument->extractNS(NS_ACTIONBUILDER, false); // Extract action tree
   }
   
-  /*
+  /**
    * clone some attributes, define class, build references and set the name
    */
    
@@ -212,7 +229,7 @@ class ActionBuilder extends XML_Processor  {
     }
   }
   
-  /*
+  /**
    * build references and set path to node
    */
   
@@ -237,9 +254,9 @@ class ActionBuilder extends XML_Processor  {
     }
   }
   
-  /*
+  /**
    * Build cross references
-   **/
+   */
   
   private function buildReference($oElement) {
     

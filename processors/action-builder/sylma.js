@@ -12,7 +12,7 @@ var sylma = {
     return parseInt(sValue) === 1 ? true : false;
   },
   
-  import : function(oElement) {
+  importNode : function(oElement) {
     
     return document.importNode(oElement, true);
   },
@@ -25,7 +25,7 @@ var sylma = {
       'onSuccess' : function(oResult) {
         
         //sylma.dsp(' - DEBUT - ');
-        sylma[sName] = sylma.buildObject(oResult[sName]);
+        sylma[sName] = sylma.buildRoot(oResult);
         //sylma.dsp(' - FIN - ');
     }}).get();
   },
@@ -35,7 +35,14 @@ var sylma = {
     
   },
   
-  buildObject: function(object, sClassBase, parentLayer, iDepth) {
+  buildRoot: function(object, oParent) {
+    
+    for (var i in object) { var bluh; }
+    
+    return sylma.buildObject(object[i], oParent);
+  },
+  
+  buildObject: function(object, parentLayer, iDepth) {
     
     var sKey, sName, oSub, bRoot, eNode;
     var oResult = {};
@@ -45,7 +52,9 @@ var sylma = {
       
       var sClass = null;
       
-      if (!sClassBase) sClassBase = '';
+      if (parentLayer) sClassBase = parentLayer._classBase;
+      else sClassBase = '';
+      
       if (!parentLayer) parentLayer = oResult;
       
       if (!iDepth) iDepth = 0;
@@ -81,6 +90,8 @@ var sylma = {
         }
       }
       
+      oResult._classBase = sClassBase;
+      
       if (bResult) {
         
         // Add default properties
@@ -115,11 +126,11 @@ var sylma = {
           
           if (sType == 'object') { // JS Object
             
-            if (oSub['is-sylma-object']) oResult[sKey] = this.buildObject(oSub, sClassBase, oResult, iDepth + 1); // Sylma object
+            if (oSub['is-sylma-object']) oResult[sKey] = this.buildObject(oSub, oResult, iDepth + 1); // Sylma object
             else if (oSub['is-sylma-array']) { // Sylma array
               
               oResult[sKey] = new Array();
-              for (var sSubKey in oSub) oResult[sKey][sSubKey] = this.buildObject(oSub[sSubKey], sClassBase, oResult, iDepth + 1);
+              for (var sSubKey in oSub) oResult[sKey][sSubKey] = this.buildObject(oSub[sSubKey], oResult, iDepth + 1);
               
             } else {this.dsp('Type d\'object inconnu : ' + sKey); this.dsp(this.view(object['properties'])); }// Sylma others
             
@@ -299,7 +310,7 @@ sylma.classes.request = new Class({
         
         oMessagesContent.setStyles({'opacity' : 0, 'height' : 0});
         
-        oMessagesContent = sylma.import(oMessagesContent);
+        oMessagesContent = sylma.importNode(oMessagesContent);
         oContainer.adopt(oMessagesContent, 'top');
       }
       
@@ -345,29 +356,26 @@ sylma.classes.layer = new Class({
       'data' : oArguments,
       'onSuccess' : function(sResult, oResult) {
         
-        var mContent = sylma.import(this.parseAction(oResult).getFirst());
+        var mContent = sylma.importNode(this.parseAction(oResult).getFirst());
         
         mContent.setStyle('opacity', 0.2);
         mContent.replaces(layer.node);
         
         // TODO kill old layer
         //layer.node.destroy(); 
-        layer.node = mContent;
         
         var oSubResult = new Request.JSON({
           
           'url' : layer.path + '.txt', 
           'onSuccess' : function(oResponse) {
             
-            sylma.explorer.mozaic = sylma.buildObject(oResponse.mozaic);
-            sylma.explorer.mozaic.parentObject = sylma.explorer;
+            sylma.explorer.mozaic = sylma.buildRoot(oResponse, sylma.explorer);
+            //sylma.explorer.mozaic.parentObject = sylma.explorer;
             mContent.setStyle('opacity', 1);
             
         }}).get();
       }
     }).get();
-    
-    this.request.send();
   }
   
 }),
@@ -468,7 +476,7 @@ sylma.classes['menu-common'] = new Class({
     
     this.resetParent();
     if (this.originNode) this.originNode.grab(this.node);
-    //if (!this.node.getChildren().length) sylma.dsp('tools perdus [a] !');
+    if (!this.node.getChildren().length) sylma.dsp('tools perdus [a] !');
   }
 });
 

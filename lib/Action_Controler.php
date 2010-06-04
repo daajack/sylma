@@ -9,7 +9,7 @@ class Action_Controler {
   public static function loadInterfaces() {
     
     // self::buildInterfacesIndex();
-    self::$oInterfaces = new XML_Document(SYLMA_PATH_INTERFACES_INDEX, MODE_EXECUTION);
+    if (!self::$oInterfaces) self::$oInterfaces = new XML_Document(SYLMA_PATH_INTERFACES_INDEX, MODE_EXECUTION);
   }
   
   public static function setInterface(&$oInterface) {
@@ -18,7 +18,7 @@ class Action_Controler {
       
       if (!$oResultInterface = self::loadInterface($sClass)) {
         
-        if (self::buildInterface($oInterface, $sClass)) {
+        if ($oInterface = self::buildInterface($oInterface, $sClass)) {
           
           if (Controler::useStatut('action/report')) Controler::addMessage(array(xt('Chargement de l\'interface "%s"', new HTML_Strong($sClass)), $oInterface->messageParse()), 'action/report');
           return $oInterface;
@@ -32,27 +32,30 @@ class Action_Controler {
   
   public static function buildInterface(&$oInterface, $sClass = null) {
     
-    if (!$sClass) $sClass = $oInterface->read('ns:name');
-    
     if ($oInterface->isEmpty()) {
       
       Controler::addMessage(xt('Fichier d\'interface "%s" vide', view($oInterface)), 'action/warning');
       
-    } else if ($sClass) {
+    } else if ($sClass || ($sClass = $oInterface->read('ns:name'))) {
       
       if ($sExtends = $oInterface->read('ns:extends')) {
         
         // Extends another class
         
-        if ($oSubInterface = self::loadInterface($sExtends)) $oInterface->add($oSubInterface->query('ns:method'));
-        else Controler::addMessage(xt('Extension de la classe "%s" impossible, interface de classe "%s" introuvable !', new HTML_Strong($sClass), new HTML_Strong($sExtends)), 'action/warning');
+        if (!$oSubInterface = self::loadInterface($sExtends)) {
+          
+          dspm(xt('Extension de la classe "%s" impossible, interface de classe "%s" introuvable !',
+            new HTML_Strong($sClass),
+            new HTML_Strong($sExtends)), 'action/warning');
+          
+        } else $oInterface->add($oSubInterface->query('ns:method'));
       }
       
       self::$aInterfaces[$sClass] = $oInterface;
-      return true;
+      return $oInterface;
     }
     
-    return false;
+    return null;
   }
   
   public static function loadInterface($sClass) {

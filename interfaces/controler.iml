@@ -18,4 +18,6 @@
     <argument required="false" format="php-string" name="original-path"/>
   </method>
   <method path="build-specials" name="buildSpecials" ls:owner="root" ls:group="0" ls:mode="700"/>
+  <method return-default="true" path="get-messages" name="getMessages"/>
+  <method path="view-infos" return-default="true" name="viewInfos" ls:owner="root" ls:group="0" ls:mode="700"/>
 </class>

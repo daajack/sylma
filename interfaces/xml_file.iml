@@ -3,4 +3,5 @@
   <name>XML_File</name>
   <method path="get-directory" return-default="true" name="getParent"/>
   <method name="getPath" path="get-path" return-default="true"/>
+  <method return-default="true" path="parse" name="parseXML"/>
 </class>

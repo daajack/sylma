@@ -32,6 +32,16 @@ class Explorer {
     return booltoint($bResult);
   }
   
+  public function update() {
+    
+    $sPath = array_val('resource', $_POST);
+    
+    $oAction = new XML_Action(extractDirectory(__file__).'/file.eml');
+    $oAction->getPath()->pushIndex(Controler::getFile($sPath));
+    
+    return $oAction;
+  }
+  
   public function updateName() {
     
     $bResult = false;
@@ -53,8 +63,7 @@ class Explorer {
         if (!$oFile = Controler::getFile($sPath)) dspm(t('Fichier introuvable'), 'error');
         else if ($bResult = $oFile->updateName($sName)) dspm(t('Changement de nom effectué'), 'success');
       }
-    } 
-    
-    return booltoint($bResult);
+    }
+    //return booltoint($bResult);
   }
 }

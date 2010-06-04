@@ -282,11 +282,8 @@ class XML_Directory extends XML_Resource {
           
           // self mode
           
-          if ($oSettingsElement = $oSettings->get('ld:self', 'ld', NS_DIRECTORY)) {
-            
-            $this->setSettingsElement($oSettingsElement);
-            if ($aRights = $this->setRights($oSettingsElement)) $this->aChildrenRights = $aRights;
-          }
+          if ($oSettingsElement = $oSettings->get('ld:self', 'ld', NS_DIRECTORY)) $this->setSettingsElement($oSettingsElement);
+          if ($aRights = $this->setRights($oSettingsElement)) $this->aChildrenRights = $aRights;
           
           // children mode
           
@@ -353,8 +350,9 @@ class XML_Directory extends XML_Resource {
       }
     }
     
-    if ($oElement->isEmpty() && $this->getUserMode() != 0) return null;
-    else return $oElement;
+    //if ($oElement->isEmpty() && $this->getUserMode() != 0) return null;
+    //else 
+    return $oElement;
   }
   
   /**
@@ -515,12 +513,17 @@ class XML_Directory extends XML_Resource {
       
       if ($sName && $this->checkRights(MODE_WRITE)) {
         
-        mkdir(MAIN_DIRECTORY.$this.'/'.$sName, 0700);
+        $sPath = MAIN_DIRECTORY.$this.'/'.$sName;
         
-        unset($this->aDirectories[$sName]);
+        mkdir($sPath, SYLMA_DEFAULT_MODE);
+        
         $oDirectory = $this->getDirectory($sName);
         
-        Controler::addMessage(xt('Création du répertoire %s', new HTML_Strong($oDirectory)), 'file/notice');
+        unset($this->aDirectories[$sName]);
+        
+        dspm(xt('Création du répertoire %s', new HTML_Strong($oDirectory)), 'file/notice');
+        
+        //} else dspm(xt('Création du répertoire %s impossible', new HTML_Stong($this.$sName)), 'file/error');
       }
     }
     
@@ -654,7 +657,7 @@ class XML_File extends XML_Resource {
   
   public function getActionPath() {
     
-    return substr($this->getFullPath(), 0, strlen($this->getExtension()) + 1);
+    return substr($this->getFullPath(), 0, strlen($this->getFullPath()) - strlen($this->getExtension()) - 1);
   }
   
   public function getExtension() {

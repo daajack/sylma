@@ -47,4 +47,10 @@
     <argument format="XML_Element" name="target"/>
   </method>
   <method path="get-document" name="getDocument" return-default="true"/>
+  <method path="parse" name="parseXSL" return-default="true">
+    <argument name="template">
+      <format>XML_Document</format>
+      <format>XSL_Document</format>
+    </argument>
+  </method>
 </class>

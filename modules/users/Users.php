@@ -57,7 +57,7 @@ class Users extends Form_Controler {
         
         // Ajout des rôles
         
-        $aGroups = array(AUTHENTICATED);
+        $aGroups = array(SYLMA_AUTHENTICATED);
         
         $oAllGroups = new XML_Document($this->sPathModule.'/groups.xml', MODE_EXECUTION);
         

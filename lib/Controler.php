@@ -579,7 +579,7 @@ class Controler {
           
         } else if ($mArgument instanceof XML_Comment) {
           
-          $oContainer = new HTML_Tag('pre', htmlentities($mArgument));
+          $oContainer = new HTML_Tag('pre', xmlize($mArgument));
           //$oContainer = new HTML_Tag('pre', 'Comment');
           $oContainer->addClass('hidden');
           

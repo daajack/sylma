@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns="http://www.w3.org/1999/xhtml" xmlns:la="/sylma/processors/action-builder/schema" xmlns:sxsl="http://www.sylma.org/schemas/sylma-xsl" version="1.0">
   <sxsl:mark>/sylma/processors/action-builder/schema</sxsl:mark>
-  <xsl:import href="../templates/directory.xsl"/>
-  <xsl:import href="../templates/file.xsl"/>
+  <xsl:import href="directory.xsl"/>
+  <xsl:import href="file.xsl"/>
   <xsl:template match="/*">
     <la:group name="resources" key-type="assoc">
       <xsl:apply-templates select="/*//*">

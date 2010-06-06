@@ -650,9 +650,9 @@ class XML_Action extends XML_Document {
         
         /* Other Processors */
         
-        $this->replaceAttributesVariables($oArgument);
-        
         $sAction = 'Processus';
+        
+        $this->replaceAttributesVariables($oArgument);
         $mResult = $this->runProcessor($oArgument, $oProcessor);
         
       } else {
@@ -1210,8 +1210,7 @@ class XML_Action extends XML_Document {
                   $oAction = new XML_Element(
                     'le:action',
                     new XML_Element('le:self', null, array('return' => 'true'), NS_EXECUTION),
-                    array('path' => $sPath),
-                    NS_EXECUTION);
+                    array('path' => $sPath), NS_EXECUTION);
                   
                   if (!$oResult = $this->buildArgument($oAction)) dspm(xt('Processeur %s introuvable dans %s', $sNamespace, $this->getPath()->parse()), 'action/error');
                   else {
@@ -1367,7 +1366,7 @@ class XML_Action extends XML_Document {
       
       if (Controler::useStatut('action/report')) {
         
-        $oSeek = new HTML_Span(t('Début'), array('style' => 'color: green;'));
+        $oSeek = new HTML_Span(t('&gt;&gt;&gt; Début'), array('style' => 'color: green;'));
         dspm(array(xt('%s de l\'exécution du fichier %s', $oSeek, $this->getPath()->parse()), new HTML_Hr), 'action/report');
       }
       
@@ -1451,7 +1450,7 @@ class XML_Action extends XML_Document {
       
       if (Controler::useStatut('action/report')) {
         
-        $oSeek = new HTML_Span(t('Fin'), array('style' => 'color: red;'));
+        $oSeek = new HTML_Span(t('&lt;&lt;&lt; Fin'), array('style' => 'color: red;'));
         dspm(array(xt('%s de l\'exécution du fichier %s', $oSeek,$this->getPath()->parse()), new HTML_Hr), 'action/report');
       }
       

@@ -785,6 +785,10 @@ class XML_File extends XML_Resource {
     Controler::addMessage(xt('Suppression du fichier %s', $this->parse()), 'file/notice');
   }
   
+  public function saveText($sContent) {
+    
+    return file_put_contents($this->getRealPath(), $sContent);
+  }
   /*
    * Call parent directory to reload (re-create) an XML_File reference, this one will be destroy
    */
@@ -796,7 +800,7 @@ class XML_File extends XML_Resource {
   
   public function parse() {
     
-    return new HTML_A(PATH_EDITOR.'?path='.$this->getFullPath(), $this->getFullPath());
+    return new HTML_A(SYLMA_PATH_EDITOR.'?path='.$this->getFullPath(), $this->getFullPath());
     //$oLink->add($this->getParent().'/', new HTML_Span($this->getName(), array('class' => 'file-name')));
     
     //return $oLink;

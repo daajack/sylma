@@ -92,14 +92,17 @@ class Controler {
         
         $oAction = new XML_Action(self::getPath(), $oRedirect);
         
-        if (self::getWindowSettings()->hasAttribute('action')) $oResult = self::getWindow()->getPath()->setAssoc('window-action', $oAction);
-        else $oResult = self::getWindow()->loadAction($oAction); // TODO : make XML_Action
+        if (self::getWindowSettings()->hasAttribute('action')) {
+          
+          $oResult = self::getWindow()->getPath()->setAssoc('window-action', $oAction);
+          
+        } else $oResult = self::getWindow()->loadAction($oAction); // TODO or not todo : make XML_Action
       }
       
       /* Action redirected */
       
       if (is_object($oResult) && $oResult instanceof Redirect) {
-        dspm(self::getWindowType());
+        
         self::doHTTPRedirect($oResult);
         //if (self::isWindowType('html') || self::isWindowType('redirection')) self::doHTTPRedirect($oResult);
         //else self::doAJAXRedirect($oResult);
@@ -394,7 +397,7 @@ class Controler {
     
     $oResume->getFirst()->setAttribute('path', '<controler>');
     $oTemplate = new XSL_Document(Controler::getSettings('actions/template/@path'));
-    $oTemplate->setParameter('path-editor', PATH_EDITOR);
+    $oTemplate->setParameter('path-editor', SYLMA_PATH_EDITOR);
     
     return $oResume->getDocument()->parseXSL($oTemplate);
   }

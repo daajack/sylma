@@ -381,11 +381,11 @@ class HTML_IEComment extends HTML_Comment {
 
 class HTML_A extends HTML_Tag {
   
-  public function __construct($sHref = '', $oChild = '', $aAttributes = array()) {
+  public function __construct($sHref = '', $mChild = '', $aAttributes = array()) {
     
-    parent::__construct('a', $oChild, $aAttributes);
+    parent::__construct('a', $mChild, $aAttributes);
     $this->setAttribute('href', $sHref);
-    $this->forceClosure();
+    //$this->forceClosure();
   }
 }
 

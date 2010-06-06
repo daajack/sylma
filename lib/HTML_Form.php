@@ -14,7 +14,7 @@ class HTML_Form extends HTML_Tag {
     
     parent::__construct('form');
     
-    Controler::getWindow()->addCSS('/web/form.css');
+    Controler::getWindow()->addCSS(Controler::getSettings('stylesheet/@path').'/form.css');
     $this->setAttribute('method', 'post');
     
     $this->addNode('div', '', array('class' => 'form-content clear-block'), NS_XHTML);

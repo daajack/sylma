@@ -214,7 +214,7 @@ class XML_Action extends XML_Document {
         if (!$mObject) foreach ($oElement->getChildren() as $oChild)
           $aArguments[] = $this->buildArgument($oChild);
         
-      } else dspm(array(xt('Pas d\'interface et instruction %s inconnue dans %s (Objet : %s) ', view($oElement), $this->getPath()->parse(), view($mObject))), 'action/error');
+      } else dspm(array(xt('Pas d\'interface et instruction %s inconnue dans %s (Objet : %s) ', view($oElement, true), $this->getPath()->parse(), view($mObject))), 'action/warning');
       
       if ($oElement->testAttribute('return') !== false) {
         
@@ -650,6 +650,8 @@ class XML_Action extends XML_Document {
         
         /* Other Processors */
         
+        $this->replaceAttributesVariables($oArgument);
+        
         $sAction = 'Processus';
         $mResult = $this->runProcessor($oArgument, $oProcessor);
         
@@ -662,30 +664,7 @@ class XML_Action extends XML_Document {
         $mResult = clone $oArgument;
         $mResult->cleanChildren();
         
-        // Check attributes variables calls. Format : [$myvar]
-        
-        foreach ($mResult->getAttributes() as $oAttribute) {
-          
-          $sValue = $oAttribute->getValue();
-          preg_match_all('/\[\$([\w-]+)\]/', $sValue, $aResults, PREG_OFFSET_CAPTURE);
-          
-          if ($aResults && $aResults[0]) {
-            
-            $iSeek = 0;
-            
-            foreach ($aResults[1] as $aResult) {
-              
-              $iVarLength = strlen($aResult[0]) + 3;
-              $sVarValue = (string) $this->getVariable($aResult[0]);
-              
-              $sValue = substr($sValue, 0, $aResult[1] + $iSeek - 2) . $sVarValue . substr($sValue, $aResult[1] + $iSeek - 2 + $iVarLength);
-              
-              $iSeek = strlen($sVarValue) - $iVarLength;
-            }
-            
-            $oAttribute->set($sValue);
-          }
-        }
+        $this->replaceAttributesVariables($mResult);
         
         if ($oArgument->hasChildren()) {
           
@@ -722,6 +701,34 @@ class XML_Action extends XML_Document {
       $oArgument->messageParse()), 'action/report');
     
     return $mResult;
+  }
+  
+  private function replaceAttributesVariables($oElement) {
+    
+    // Check attributes variables calls. Format : [$myvar]
+    
+    foreach ($oElement->getAttributes() as $oAttribute) {
+      
+      $sValue = $oAttribute->getValue();
+      preg_match_all('/\[\$([\w-]+)\]/', $sValue, $aResults, PREG_OFFSET_CAPTURE);
+      
+      if ($aResults && $aResults[0]) {
+        
+        $iSeek = 0;
+        
+        foreach ($aResults[1] as $aResult) {
+          
+          $iVarLength = strlen($aResult[0]) + 3;
+          $sVarValue = (string) $this->getVariable($aResult[0]);
+          
+          $sValue = substr($sValue, 0, $aResult[1] + $iSeek - 2) . $sVarValue . substr($sValue, $aResult[1] + $iSeek - 2 + $iVarLength);
+          
+          $iSeek = strlen($sVarValue) - $iVarLength;
+        }
+        
+        $oAttribute->set($sValue);
+      }
+    }
   }
   
   private function runProcessor($oElement, $oProcessor) {
@@ -1223,7 +1230,7 @@ class XML_Action extends XML_Document {
           default :
             
             // Just run the element, used for set-variable
-            if ($oChild->testAttribute('run')) $this->buildArgument($oChild);
+            if ($oChild->testAttribute('run', true)) $this->buildArgument($oChild);
         }
       }
       
@@ -1842,7 +1849,7 @@ class XML_Path {
   public function parse() {
     
     $sPath = (string) $this;
-    return new HTML_A(PATH_EDITOR.'?path='.$sPath, $sPath);
+    return new HTML_A(SYLMA_PATH_EDITOR.'?path='.$sPath, $sPath);
   }
   
   public function __toString() {

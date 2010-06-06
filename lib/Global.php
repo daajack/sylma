@@ -10,8 +10,9 @@ function t($s) {
 function extractDirectory($sPath) {
   
   $sPath = substr($sPath, strlen(getcwd().MAIN_DIRECTORY) + 1);
+  if (strpos($_ENV[ "OS" ], "Win") !== false ) $sPath = str_replace('\\', '/', $sPath);
   
-  return substr($sPath, 0, strlen($sPath) - strlen(strrchr($sPath, '/')));;
+  return substr($sPath, 0, strlen($sPath) - strlen(strrchr($sPath, '/')));
 }
 
 /*** Array ***/

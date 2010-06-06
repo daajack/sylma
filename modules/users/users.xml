@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<users>
-  <user name="root" path="/users/root/profil.xml" password="7110eda4d09e062aa5e4a390b0a572ac0d2c0220"/>
-  <user name="fatima" path="/users/fatima" password="c9bf0711c40facbaafddb1b619308282f1bbbcc7"/>
-  <user name="peter" path="/users/peter/profil.xml" password="1d16c4dc69f0a2f90af2b91d5fe7e5c48fcad5b7"/>
-</users>

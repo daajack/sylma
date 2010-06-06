@@ -87,7 +87,21 @@ class Redirection implements Main {
   
   public function loadAction($oAction) {
     
-    return Controler::errorRedirect('Redirection incorrecte !');
+    $mResult = $oAction->parse();
+    
+    if (!is_object($mResult) || !$mResult instanceof Redirect) {
+      
+      $mResult = new Redirect('/');
+      dspm(xt('Aucune redirection dans l\'action (%s), redirection par défaut effectuée', view($mResult)), 'action/warning');
+    }
+    
+    return $mResult;
+  }
+  
+  public function __toString() {
+    
+    return t('Erreur : Problème dans la redirection');
+    //return xt('Erreur : Problème dans la redirection %s', new HTML_A('/hello', 'Cliquez ici pour revenir à la page d\'accueil'));
   }
 }
 
@@ -286,7 +300,7 @@ class HTML_Action extends XML_Action {
     return $this->oHead;
   }
   
-  public function __toString() {
+  private function printXML() {
     
     $sDocType = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
     
@@ -336,6 +350,21 @@ class HTML_Action extends XML_Action {
     $oView->formatOutput();
     
     return $sDocType."\n".$oView->display(false);
+  }
+  
+  public function __toString() {
+    
+    try {
+      
+      $sResult = $this->printXML();
+      
+    } catch(Exception $e) {
+      
+      dspf($e->getMessage());
+      $sResult = '';
+    }
+    
+    return $sResult;
   }
 }
 

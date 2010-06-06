@@ -2,8 +2,6 @@
 
 class Users extends Form_Controler {
   
-  private $sPathModule = '/sylma/modules/users';
-  
   public function loadUser($sName) {
     
     if (Controler::getUser()->getName() != $sName && !Controler::getUser()->isMember('0'))
@@ -33,7 +31,7 @@ class Users extends Form_Controler {
   
   public function login_do() {
     
-    $oSchema = new XML_Document($this->sPathModule.'/user.bml', MODE_EXECUTION);
+    $oSchema = new XML_Document(extractDirectory(__file__).'/user.bml', MODE_EXECUTION);
     $aSchema = $oSchema->getChildren()->toArray('id');
     
     $oRedirect = new Redirect("/login", $this->checkRequest($aSchema));
@@ -43,7 +41,7 @@ class Users extends Form_Controler {
       $aFields = $this->importPost($aSchema, true);
       $aFields['v_password'] = addQuote(sha1($_POST['v_password']));
       
-      $oUsers = new XML_Document($this->sPathModule.'/users.xml', MODE_EXECUTION);
+      $oUsers = new XML_Document(Controler::getSettings('@path-config').'/users.xml', MODE_EXECUTION);
       
       if (!$oUser = $oUsers->get("//user[@name = {$aFields['v_name']} and @password = {$aFields['v_password']}]")) {
         
@@ -59,7 +57,7 @@ class Users extends Form_Controler {
         
         $aGroups = array(SYLMA_AUTHENTICATED);
         
-        $oAllGroups = new XML_Document($this->sPathModule.'/groups.xml', MODE_EXECUTION);
+        $oAllGroups = new XML_Document(Controler::getSettings('@path-config').'/groups.xml', MODE_EXECUTION);
         
         $oGroups = $oAllGroups->query("group[@owner = {$aFields['v_name']}]/@name | group[member = {$aFields['v_name']}]/@name");
         foreach ($oGroups as $oAttribute) $aGroups[] = $oAttribute->getValue();
@@ -107,7 +105,7 @@ class Users extends Form_Controler {
     
     Controler::getUser()->logout();
     
-    $oRedirect = new Redirect('/login');
+    $oRedirect = new Redirect('/');
     $oRedirect->addMessage('Déconnexion effectuée.');
     
     return $oRedirect;

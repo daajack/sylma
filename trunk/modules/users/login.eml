@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<le:action xmlns:le="http://www.sylma.org/execution" xmlns:li="http://www.sylma.org/interface" xmlns="http://www.w3.org/1999/xhtml" xmlns:lf="/sylma/processors/form/schema">
+  <le:settings>
+    <le:name>Connexion</le:name>
+    <le:processor path="/sylma/processors/form" namespace="/sylma/processors/form/schema"/>
+    <le:get-settings set-variable="path-sylma">@path-sylma</le:get-settings>
+  </le:settings>
+  <lf:form class="float-block center-block col1-5 customize-block" action="[$path-sylma]/modules/users/interface/login_do.redirect">
+    <li:set-schemas>
+      <le:file path="/sylma/modules/users/user.bml"/>
+    </li:set-schemas>
+    <li:set-content>
+      <lf:field id="v_name"/>
+      <lf:field id="v_password">
+        <input>password</input>
+        <value/>
+      </lf:field>
+      <le:interface class="XML_Element">
+        <le:argument>input</le:argument>
+        <le:null/>
+        <le:array>
+          <le:argument key="type">hidden</le:argument>
+          <le:argument key="name">redirect</le:argument>
+          <le:argument key="value">
+            <le:redirect>
+              <li:get-source/>
+            </le:redirect>
+          </le:argument>
+        </le:array>
+      </le:interface>
+    </li:set-content>
+    <li:add-action>Connexion</li:add-action>
+    <li:get>
+      <le:argument>*[1]</le:argument>
+      <li:set-attribute>
+        <le:argument>style</le:argument>
+        <le:argument>margin-top: 5em; margin-bottom: 5em;</le:argument>
+      </li:set-attribute>
+    </li:get>
+  </lf:form>
+</le:action>

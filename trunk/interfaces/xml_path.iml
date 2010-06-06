@@ -3,8 +3,8 @@
   <name>XML_Path</name>
   <method-construct>
     <argument name="path" format="php-string"/>
-    <argument format="php-boolean" required="false" name="parse"/>
     <argument required="false" name="arguments" format="php-array"/>
+    <argument format="php-boolean" required="false" name="parse"/>
   </method-construct>
   <method return-default="true" name="getIndex" path="get-index">
     <argument name="key" format="php-integer" required="false"/>

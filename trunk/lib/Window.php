@@ -311,7 +311,9 @@ class HTML_Action extends XML_Action {
     // Action parsing
     
     $oView = new XML_Document($this);
-    $oView->get('//ns:head')->add($this->getHead()->getChildren());
+    
+    if ($oHead = $oView->get('//ns:head')) $oHead->add($this->getHead()->getChildren());
+    else dspm(xt('Impossible de trouver l\'en tête de la fenêtre dans %s', view($oView)), 'action/error');
     
     // Put messages and infos
     
@@ -324,7 +326,7 @@ class HTML_Action extends XML_Action {
     if ($oContainer = $oView->get($sMessage)) $oContainer->shift(Controler::getMessages());
     else {
       
-      dspm(xt('Containeur %s introuvable', new HTML_Strong($sMessage)), 'warning');
+      dspm(xt('Containeur %s introuvable', new HTML_Strong($sMessage)), 'action/warning');
       $oView->add(Controler::getMessages());
     }
     
@@ -345,11 +347,17 @@ class HTML_Action extends XML_Action {
     
     // Remove security elements
     
-    $oView->query('//@ls:owner | //@ls:mode | //@ls:group', 'ls', NS_SECURITY)->remove();
+    if ($oElements = $oView->query('//@ls:owner | //@ls:mode | //@ls:group', 'ls', NS_SECURITY)) $oElements->remove();
     
-    $oView->formatOutput();
-    
-    return $sDocType."\n".$oView->display(false);
+    if ($oView->isEmpty()) {
+      
+      return (string) xt('Problème lors du chargement du site. Nous nous excusons pour ce désagrément. %s pour revenir à la page d\'accueil', new HTML_Br.new HTML_A('/', t('Cliquez-ici')));
+      
+    } else {
+      
+      $oView->formatOutput();
+      return $sDocType."\n".$oView->display(false);
+    }
   }
   
   public function __toString() {

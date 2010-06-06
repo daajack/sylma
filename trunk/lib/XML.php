@@ -633,7 +633,7 @@ class XML_Document extends DOMDocument {
   /** 
    * Parse a template with this document as parameter
    */
-  public function parseXSL($oDocument) {
+  public function parseXSL($oDocument, $bXML = true) {
     
     if (is_object($oDocument)) {
       
@@ -644,7 +644,7 @@ class XML_Document extends DOMDocument {
         
       } else $oTemplate = $oDocument;
       
-      return $oTemplate->parseDocument($this);
+      return $oTemplate->parseDocument($this, $bXML);
       
     } else Controler::addMessage(xt('Template %s invalide !', Controler::formatResource($oDocument)), 'xml/error');
     

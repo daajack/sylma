@@ -517,9 +517,8 @@ class XML_Directory extends XML_Resource {
         
         mkdir($sPath, SYLMA_DEFAULT_MODE);
         
-        $oDirectory = $this->getDirectory($sName);
-        
         unset($this->aDirectories[$sName]);
+        $oDirectory = $this->getDirectory($sName);
         
         dspm(xt('Création du répertoire %s', new HTML_Strong($oDirectory)), 'file/notice');
         

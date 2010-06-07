@@ -31,7 +31,7 @@ class HTML_Form extends HTML_Tag {
     
     if ($this->oValues) {
       
-      $oElement = $this->oValues->get($sPath);
+      $oElement = $this->oValues->get("value[@id='$sPath']");
       if ($oElement) return $oElement->read();
     }
     
@@ -72,7 +72,19 @@ class HTML_Form extends HTML_Tag {
     $this->getChildren()->item(0)->add(func_get_args());
   }
   
-  public function buildField($oElement) {
+  public function buildAllFields() {
+    
+    $oResult = new XML_Document('root');
+    
+    foreach ($this->oSchema->getChildren() as $oElement) {
+      
+      $oResult->add($this->buildField($oElement));
+    }
+    
+    return $oResult;
+  }
+  
+  public function buildField($oElement, $bOptionsKey = false) {
     
     if ($this->oSchema) {
       
@@ -95,8 +107,8 @@ class HTML_Form extends HTML_Tag {
           
           $oResult = $oElement->merge($oField, true);
           $aField = array();
-          //$oResult->dsp();
-          if ($oArguments = $oResult->get('arguments')) {
+          
+          if (($oArguments = $oResult->get('arguments')) || ($oArguments = $oResult->get('ns:arguments', 'ns', NS_XHTML))) {
             
             $aField['arguments'] = $oArguments->getChildren()->toArray();
             $oArguments->remove();
@@ -105,6 +117,8 @@ class HTML_Form extends HTML_Tag {
           if ($oOptions = $oResult->get('options')) {
             
             $aField['options'] = explode(',', $oOptions->read());
+            if ($bOptionsKey) $aField['options'] = array_combine($aField['options'], $aField['options']);
+            
             $oOptions->remove();
           }
           

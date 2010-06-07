@@ -229,6 +229,8 @@ class Txt implements Main {
 
 class WindowAction extends XML_Document implements Main {
   
+  private $sOnLoad = '';
+  
   public function loadAction($oAction) {
     
     Controler::setContentType('xml');
@@ -304,13 +306,13 @@ class HTML_Action extends XML_Action {
     
     $sDocType = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
     
-    // Add js onload
-    
-    if ($this->sOnLoad) $this->addJS(null, "window.addEvent('domready', function() {\n".$this->sOnLoad."\n});");
-    
     // Action parsing
     
     $oView = new XML_Document($this);
+    
+    // Add js onload
+    
+    if ($this->sOnLoad) $this->addJS(null, "window.addEvent('domready', function() {\n".$this->sOnLoad."\n});");
     
     if ($oHead = $oView->get('//ns:head')) $oHead->add($this->getHead()->getChildren());
     else dspm(xt('Impossible de trouver l\'en tête de la fenêtre dans %s', view($oView)), 'action/error');
@@ -368,8 +370,19 @@ class HTML_Action extends XML_Action {
       
     } catch(Exception $e) {
       
-      dspf($e->getMessage());
-      $sResult = '';
+      if (DEBUG && Controler::isAdmin()) {
+        
+        dsp($e->getMessage());
+        dsp($e->getFile());
+        dsp($e->getLine());
+        foreach ($e->getTrace() as $mVal) echo $mVal['file'].' ['.$mVal['line'].'] '.$mVal['function'].'<br/>';
+        /*
+        foreach (debug_backtrace() as $aLine1)
+          foreach ($aLine1 as $aLine2) echo($aLine2);*/
+      }
+      
+      $sResult = (string) xt('Problème lors du chargement du site. Nous nous excusons pour ce désagrément. %s pour revenir à la page d\'accueil', new HTML_Br.new HTML_A('/', t('Cliquez-ici')));
+
     }
     
     return $sResult;

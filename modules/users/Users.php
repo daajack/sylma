@@ -32,18 +32,17 @@ class Users extends Form_Controler {
   public function login_do() {
     
     $oSchema = new XML_Document(extractDirectory(__file__).'/user.bml', MODE_EXECUTION);
-    $aSchema = $oSchema->getChildren()->toArray('id');
     
-    $oRedirect = new Redirect("/login", $this->checkRequest($aSchema));
+    $oRedirect = new Redirect(Controler::getSettings('actions/login'), $this->checkRequest($oSchema));
     
     if (!$oRedirect->getMessages('warning')) {
       
-      $aFields = $this->importPost($aSchema, true);
-      $aFields['v_password'] = addQuote(sha1($_POST['v_password']));
+      $sUser = addQuote($_POST['v_name']);
+      $sPassword = addQuote(sha1($_POST['v_password']));
       
       $oUsers = new XML_Document(Controler::getSettings('@path-config').'/users.xml', MODE_EXECUTION);
       
-      if (!$oUser = $oUsers->get("//user[@name = {$aFields['v_name']} and @password = {$aFields['v_password']}]")) {
+      if (!$oUser = $oUsers->get("//user[@name = $sUser and @password = $sPassword]")) {
         
         $oRedirect->addMessage('Nom d\'utilisateur ou mot de passe incorrect !', 'warning');
         
@@ -59,7 +58,7 @@ class Users extends Form_Controler {
         
         $oAllGroups = new XML_Document(Controler::getSettings('@path-config').'/groups.xml', MODE_EXECUTION);
         
-        $oGroups = $oAllGroups->query("group[@owner = {$aFields['v_name']}]/@name | group[member = {$aFields['v_name']}]/@name");
+        $oGroups = $oAllGroups->query("group[@owner = $sUser]/@name | group[member = $sUser]/@name");
         foreach ($oGroups as $oAttribute) $aGroups[] = $oAttribute->getValue();
         
         // Création de l'utilisateur

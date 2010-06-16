@@ -321,6 +321,14 @@ class HTML_Action extends XML_Action {
     
     $sBody = '//ns:body';
     
+    // infos
+    
+    if (Controler::getUser()->isMember(SYLMA_AUTHENTICATED)) {
+      
+      if ($oContainer = $oView->get($sBody)) $oContainer->shift(Controler::getInfos());
+      else $oView->add(Controler::getInfos());
+    }
+    
     // messages
     
     if (!$sMessage = Controler::getWindowSettings()->read('messages')) $sMessage = $sBody;
@@ -330,14 +338,6 @@ class HTML_Action extends XML_Action {
       
       dspm(xt('Containeur %s introuvable', new HTML_Strong($sMessage)), 'action/warning');
       $oView->add(Controler::getMessages());
-    }
-    
-    // infos
-    
-    if (Controler::getUser()->isMember(SYLMA_AUTHENTICATED)) {
-      
-      if ($oContainer = $oView->get($sBody)) $oContainer->shift(Controler::getInfos());
-      else $oView->add(Controler::getInfos());
     }
     
     Controler::useMessages(false);

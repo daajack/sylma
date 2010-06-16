@@ -15,13 +15,17 @@
     <warning/>
     <notice/>
   </file>
+  <db ls:owner="root" ls:group="0" ls:mode="770">
+    <error/>
+    <warning/>
+    <notice/>
+  </db>
   <form>
     <error/>
     <warning/>
     <notice/>
     <report/>
   </form>
-  <query ls:owner="root" ls:group="0" ls:mode="770"/>
   <error ls:owner="root" ls:mode="770" ls:group="users"/>
   <report/>
   <warning/>

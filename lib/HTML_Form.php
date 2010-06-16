@@ -10,6 +10,8 @@ class HTML_Form extends HTML_Tag {
   private $aMessages = array();
   private $sId = null; // id of the current object
   
+  private $aNS = array('fs' => SYLMA_NS_FORM_SCHEMA);
+  
   public function __construct() {
     
     parent::__construct('form');
@@ -17,8 +19,8 @@ class HTML_Form extends HTML_Tag {
     Controler::getWindow()->addCSS(Controler::getSettings('stylesheet/@path').'/form.css');
     $this->setAttribute('method', 'post');
     
-    $this->addNode('div', '', array('class' => 'form-content clear-block'), NS_XHTML);
-    $this->addNode('div', '', array('class' => 'form-action clear-block form-action-bottom'), NS_XHTML);
+    $this->addNode('div', null, array('class' => 'form-content clear-block'), NS_XHTML);
+    $this->addNode('div', null, array('class' => 'form-action clear-block form-action-bottom'), NS_XHTML);
     
     
     if ($aMessages = Controler::getMessages()->getMessages('form/warning')) {
@@ -31,7 +33,7 @@ class HTML_Form extends HTML_Tag {
     
     if ($this->oValues) {
       
-      $oElement = $this->oValues->get("value[@id='$sPath']");
+      $oElement = $this->oValues->get($sPath);
       if ($oElement) return $oElement->read();
     }
     
@@ -78,7 +80,8 @@ class HTML_Form extends HTML_Tag {
     
     foreach ($this->oSchema->getChildren() as $oElement) {
       
-      $oResult->add($this->buildField($oElement));
+      
+      $oResult->add($this->buildField(new XML_Element('field', null, array('id' => $oElement->getId()))));
     }
     
     return $oResult;
@@ -93,7 +96,7 @@ class HTML_Form extends HTML_Tag {
       $bExist = ($oElement->testAttribute('real', true));
       $oElement->setAttribute('real');
       
-      if ($bExist && (!$oField = $this->oSchema->get("field[@id='$sField']"))) {
+      if ($bExist && (!$oField = $this->oSchema->get("fs:field[@id='$sField']", $this->aNS))) {
         
         Controler::addMessage(xt('Le champs "%s" n\'existe pas dans le schéma associé !', new HTML_Strong($sField)), 'action/warning');
         
@@ -106,24 +109,26 @@ class HTML_Form extends HTML_Tag {
         if ($bExist) {
           
           $oResult = $oElement->merge($oField, true);
-          $aField = array();
           
-          if (($oArguments = $oResult->get('arguments')) || ($oArguments = $oResult->get('ns:arguments', 'ns', NS_XHTML))) {
+          $aField = array();
+          if ($oArguments = $oResult->get('fs:arguments', $this->aNS)) {
             
             $aField['arguments'] = $oArguments->getChildren()->toArray();
             $oArguments->remove();
           }
           
-          if ($oOptions = $oResult->get('options')) {
+          if ($oOptions = $oResult->get('fs:options', $this->aNS)) {
             
-            $aField['options'] = explode(',', $oOptions->read());
+            if ($oOptions->isTextElement()) $aField['options'] = explode(',', $oOptions->read());
+            else if ($oOptions->hasElementChildren()) $aField['options'] = $oOptions->getChildren()->toArray('value');
+            
             if ($bOptionsKey) $aField['options'] = array_combine($aField['options'], $aField['options']);
             
             $oOptions->remove();
           }
           
           $aField = array_merge($aField, $oResult->getChildren()->toArray());
-          
+          //dspf($aField);
         } else $aField = $oElement->getChildren()->toArray();
         
         $aField['id'] = $sExtField;
@@ -172,7 +177,8 @@ class HTML_Form extends HTML_Tag {
     
     if ($this->getId()) $this->add(new HTML_Input('hidden', $this->getId(), array('name' => 'id')));
     
-    $this->getLast()->insertBefore($oMark);
+    if ($oContent = $this->get('*[contains(@class,"form-content")]')) $oContent->insertAfter($oMark);
+    else $oMark->insertBefore($this->getLast());
   }
 }
 
@@ -237,8 +243,8 @@ class HTML_Input extends HTML_Tag implements HTML_FormElement {
     
     parent::__construct('input', '', $aAttributes);
     
-    $this->addAttribute('type', $sType);
-    $this->addAttribute('value', $oValue);
+    if (!array_key_exists('type', $aAttributes)) $this->addAttribute('type', $sType);
+    if (!array_key_exists('value', $aAttributes)) $this->addAttribute('value', $oValue);
   }
   
   public function setValue($sValue) {

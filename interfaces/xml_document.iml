@@ -20,6 +20,7 @@
     <argument name="path" format="php-string"/>
   </method>
   <method path="get-root" name="getRoot" return-default="true"/>
+  <method path="is-empty" name="isEmpty" return-default="true"/>
   <method path="set" name="set">
     <multiple-arguments required-count="1"/>
   </method>

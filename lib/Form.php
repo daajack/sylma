@@ -3,6 +3,7 @@
 class Form_Controler {
   
   private $aSchemas = array();
+  private $aNS = array('fs' => SYLMA_NS_FORM_SCHEMA);
   
   public function getSchema($sSchema = '') {
     
@@ -28,31 +29,31 @@ class Form_Controler {
     $this->aSchemas += $aSchemas;
   }
   
-  protected function checkRequest($aSchema = array()) {
+  protected function checkRequest(XML_Document $oSchema) {
     
     $aMsg = array();
     
-    if (!$aSchema) $aMsg[] = new Message(t('Aucun schéma défini, le contrôle des champs ne peut pas s\'effectuer !', 'form/error'));
+    if (!$oSchema) $aMsg[] = new Message(t('Aucun schéma défini, le contrôle des champs ne peut pas s\'effectuer !', 'form/error'));
     
     $sError = 'form/warning';
     
-    foreach ($aSchema as $sKey => $aField) {
+    foreach ($oSchema->getChildren() as $nField) {
       
       // Si le paramètre 'deco' est à true, la valeur n'est pas contrôlée
       
-      if (isset($aField['deco']) && $aField['deco']) continue;
+      if ($nField->read('fs:deco', $this->aNS)) continue;
       
-      $oTitle = new HTML_Tag('strong');
-      $oTitle->add($aField['title']);
+      $oTitle = new HTML_Tag('strong', $nField->read('fs:title', $this->aNS));
+      $sKey = $nField->getId();
+      $aField = array('field' => $sKey);
       
       if (!array_key_exists($sKey, $_POST) || !$_POST[$sKey]) {
         
         // Si le champs est requis
         
-        if (isset($aField['required']) && $aField['required']) {
+        if (strtobool($nField->read('fs:required', $this->aNS))) {
           
-          $oMessage = xt('Le champ "%s" est obligatoire.', $oTitle);
-          $aMsg[] = new Message($oMessage, $sError, array('field' => $sKey));
+          $aMsg[] = new Message(xt('Le champ "%s" est obligatoire.', $oTitle), $sError, $aField);
         }
         
       } else {
@@ -61,19 +62,43 @@ class Form_Controler {
         
         $mValue = $_POST[$sKey];
         
-        switch ($aField['type']) {
+        switch ($nField->read('fs:type', $this->aNS)) {
           
           // Integer
           
           case 'key' :
+            
+            if ($oOptions = $nField->get('fs:options', $this->aNS)) {
+              
+              if ($oOptions->isTextElement()) { // text options
+                
+                $iCount = count(explode(',', $oOptions->read()));
+                
+                if (!is_numeric($mValue) || !$mValue || $mValue > $iCount - 1) {
+                  
+                  $aMsg[] = new Message(xt('L\'option choisie du champ "%s" n\'est pas valide', $oTitle), $sError, $aField);
+                }
+                
+              } else if ($oOptions->hasElementChildren()) { // elements options
+                
+                $mValue = addQuote($mValue);
+                
+                if (!$oOptions->get("*[@value=$mValue]")) {
+                  
+                  $aMsg[] = new Message(xt('L\'option choisie du champ "%s" n\'est pas valide', $oTitle), $sError, $aField);
+                }
+              }
+            }
+            
+          break;
+          
           case 'integer' :
             
             $fValue = floatval($mValue); $iValue = intval($mValue);
             
             if (!is_numeric($mValue) || $fValue != $iValue) {
               
-              $oMessage = xt('Le champ "%s" doit être un nombre entier.', $oTitle);
-              $aMsg[] = new Message($oMessage, $sError, array('field' => $sKey));
+              $aMsg[] = new Message(xt('Le champ "%s" doit être un nombre entier.', $oTitle), $sError, $aField);
             }
             
           break;
@@ -84,8 +109,7 @@ class Form_Controler {
             
             if (!is_numeric($mValue)) {
               
-              $oMessage = xt('Le champ "%s" doit être un nombre.', $oTitle);
-              $aMsg[] = new Message($oMessage, $sError, array('field' => $sKey));
+              $aMsg[] = new Message(xt('Le champ "%s" doit être un nombre.', $oTitle), $sError, $aField);
             }
             
           break;
@@ -109,8 +133,7 @@ class Form_Controler {
             
             if (!preg_match($sRegex, $mValue)) {
               
-              $oMessage = xt('Le champ "%s" n\'est pas une adresse mail valide.', $oTitle);
-              $aMsg[] = new Message($oMessage, $sError, array('field' => $sKey));
+              $aMsg[] = new Message(xt('Le champ "%s" n\'est pas une adresse mail valide.', $oTitle), $sError, $aField);
             }
             
           break;
@@ -118,17 +141,17 @@ class Form_Controler {
         
         // Si une taille minimum est requise
         
-        if (isset($aField['min-size']) && strlen($mValue) < $aField['min-size']) {
+        if (($iMinSize = $nField->read('fs:min-size', $this->aNS)) && strlen($mValue) < $iMinSize) {
           
-          $oMessage = xt('Le champ "%s" doit faire au moins %s caractères', $oTitle, new HTML_Strong($aField['min-size']));
-          $aMsg[] = new Message($oMessage, $sError, array('field' => $sKey));
+          $oMessage = xt('Le champ "%s" doit faire au moins %s caractères', $oTitle, new HTML_Strong($iMinSize));
+          $aMsg[] = new Message($oMessage, $sError, $aField);
         }
       }
     }
     
     return $aMsg;
   }
-  
+  /*
   public function importPost($aSchema, $bXML = false) {
     
     $aFields = array();
@@ -174,6 +197,6 @@ class Form_Controler {
     }
     
     return $aFields;
-  }
+  }*/
 }
 

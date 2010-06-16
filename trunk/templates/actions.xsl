@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns="http://www.w3.org/1999/xhtml" version="1.0">
   <xsl:template match="controler">
     <div id="msg-actions" class="clear-block">
@@ -23,8 +23,50 @@
             <xsl:value-of select="@path"/>
           </a>
         </div>
+        <xsl:if test="variables and variables/*">
+          <div class="msg-action-hidden msg-action-variables">
+            <span class="msg-actions-hidden-count">
+              <xsl:value-of select="count(variables/*)"/>
+            </span>
+            <xsl:for-each select="variables/*">
+              <div>
+                <span>
+                  <xsl:value-of select="concat(@name, ' : ')"/>
+                </span>
+                <xsl:copy-of select="."/>
+              </div>
+            </xsl:for-each>
+          </div>
+        </xsl:if>
+        <xsl:if test="path and path/*">
+          <div class="msg-action-hidden msg-action-arguments">
+            <span class="msg-actions-hidden-count">
+              <xsl:value-of select="count(path/*)"/>
+            </span>
+            <xsl:for-each select="path/*">
+              <div>
+                <xsl:choose>
+                  <xsl:when test="@name">
+                    <span class="msg-action-argument-assoc">
+                      <xsl:value-of select="concat(@name, ' : ')"/>
+                    </span>
+                  </xsl:when>
+                  <xsl:otherwise>
+                    <span class="msg-action-argument-index">
+                      <xsl:value-of select="concat(@index, ' : ')"/>
+                    </span>
+                  </xsl:otherwise>
+                </xsl:choose>
+                <xsl:copy-of select="."/>
+              </div>
+            </xsl:for-each>
+          </div>
+        </xsl:if>
         <xsl:if test="files">
-          <div class="msg-action-files">
+          <div class="msg-action-hidden msg-action-files">
+            <span class="msg-actions-hidden-count">
+              <xsl:value-of select="count(files/*)"/>
+            </span>
             <xsl:for-each select="files/file">
               <xsl:choose>
                 <xsl:when test="@first-time">

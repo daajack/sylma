@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<schema>
+<schema xmlns="http://schemas.sylma.org/form-schema">
   <field id="v_prenom">
     <title>Prénom</title>
     <type>varchar</type>

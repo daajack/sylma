@@ -7,9 +7,18 @@
     <li:add-js>
       <le:get-settings>javascript/mootools</le:get-settings>
     </li:add-js>
-    <li:add-js>/web/lib/mootools-1.2.4.2-more.js</li:add-js>
-    <li:add-js>/web/lib/calendar-eightysix/js/calendar-eightysix-v1.0.1.js</li:add-js>
-    <li:add-css>/web/lib/calendar-eightysix/css/calendar-eightysix-osx-dashboard.css</li:add-css>
+    <li:add-js le:format="string">
+      <le:get-settings>@path-sylma</le:get-settings>
+      <le:argument>/js/mootools-more.js</le:argument>
+    </li:add-js>
+    <li:add-js le:format="string">
+      <le:get-settings>@path-sylma</le:get-settings>
+      <le:argument>/js/calendar-eightysix/js/calendar-eightysix-v1.1.js</le:argument>
+    </li:add-js>
+    <li:add-css le:format="string">
+      <le:get-settings>@path-sylma</le:get-settings>
+      <le:argument>/js/calendar-eightysix/css/calendar-eightysix-v1.1-osx-dashboard.css</le:argument>
+    </li:add-css>
     <li:add-onload><![CDATA[MooTools.lang.set('fr-FR', 'Date', {
     months:    ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'],
     days:      ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],

@@ -64,6 +64,7 @@ class HTML_Field extends XML_Document {
       case 'password' : $oInput = new HTML_Input('password'); $aClasses[] = 'field-text'; break;
       case 'hidden' :   $oInput = new HTML_Input('hidden'); break;
       case 'block' :   $oInput = new HTML_FormBlock; $aClasses[] = 'field-text'; break;
+      case 'file' :   $oInput = new HTML_Input('file'); $aClasses[] = 'field-file'; break;
       default :         $oInput = new HTML_Input; break;
     }
     
@@ -101,8 +102,8 @@ class HTML_Field extends XML_Document {
       
       $oLabel = new HTML_Tag('label');
       $oLabel->setAttribute('for', $sId);
-      //if ($bMark) $oInput->setAttribute('onfocus', "$(this).getParent().removeClass('field-mark');");
-      if ($bMark) $oInput->setAttribute('onfocus', "$(this).parent().removeClass('field-mark');");
+      if ($bMark) $oInput->setAttribute('onfocus', "$(this).getParent().removeClass('field-mark');");
+      //if ($bMark) $oInput->setAttribute('onfocus', "$(this).parent().removeClass('field-mark');");
       
       foreach ($aClasses as $sClass) $oLabel->addClass($sClass);
       
@@ -133,7 +134,7 @@ class HTML_Field extends XML_Document {
           
           $aOptions["'createHiddenInput'"] = 'true';
           $aOptions["'hiddenInputName'"] = addQuote($sName);
-          $aOptions["'hiddenInputFormat'"] = "'%d.%m.%Y'";
+          $aOptions["'hiddenInputFormat'"] = "'%Y-%m-%d'";
         }
         
         if ($aOptions) $sOptions = '{'.implosion(' : ', ', ', $aOptions).'}';
@@ -141,6 +142,10 @@ class HTML_Field extends XML_Document {
         
         Controler::getWindow()->addOnLoad("new CalendarEightysix('$sId', $sOptions);");
       }
+      
+      // File upload
+      
+      if ($sInput == 'file') $oContainer->add(new HTML_Input('hidden', SYLMA_UPLOAD_MAX_SIZE, array('name' => 'MAX_FILE_SIZE')));
       
       // Marquage
       

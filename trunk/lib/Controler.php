@@ -16,6 +16,7 @@ class Controler {
   private static $oWindowSettings;
   private static $oSettings;
   private static $oRedirect;
+  private static $oDatabase;
   
   private static $oPath = null;      // Chemin complet du fichier. Ex: /utilisateur/edit/1
   private static $aPaths = array(); // Liste des précédents chemins redirigés, ajoutés dans oRedirect
@@ -30,6 +31,7 @@ class Controler {
     
     global $aDefaultInitMessages;
     global $aExecutableExtensions;
+    global $aDB;
     
     self::$iStartTime = microtime(true);
     self::$aActions[] = new XML_Action();
@@ -51,6 +53,8 @@ class Controler {
     
     // Set Controler ready
     self::useMessages(true);
+    
+    if (SYLMA_USE_DB) self::setDatabase(new XML_Database($aDB));
     
     // Récupération du cookie Redirect qui indique qu'une redirection a été effectuée
     $oRedirect = self::loadRedirect();
@@ -83,6 +87,13 @@ class Controler {
         $oResult = self::getWindow()->loadAction($mResult); // TODO : make XML_Action
         
       } else {
+        
+        /*
+        if (!isset($_SESSION['temp-paths'])) $_SESSION['temp-paths'] = array();
+        //$_SESSION['temp-paths'] = array();
+        $_SESSION['temp-paths'][] = (string) self::getPath();
+        dspf($_SESSION['temp-paths']);
+        */
         
         // Load file of the interface's paths
         
@@ -275,7 +286,7 @@ class Controler {
         // $oMessages->loadText($oRedirect->getArgument('messages'));
         $aMessages = $oMessages->query('//lm:message', 'lm', NS_MESSAGES);
         
-        $oRedirect->resetMessages($aMessages);
+        $oRedirect->setMessages($aMessages);
         
         if ($aMessages->length) self::getMessages()->addMessages($aMessages);
         
@@ -283,6 +294,22 @@ class Controler {
         
         $oRedirect = new Redirect();
         self::addMessage(t('Session Redirect perdu !'), 'warning');
+      }
+      
+    } else {
+      
+      if ($_POST) {
+        
+        $oValues = new XML_Document('post');
+        
+        foreach ($_POST as $sKey => $mValue) {
+          
+          if (is_string($mValue)) $oTest = $oValues->addNode($sKey, $mValue);
+          
+          //else if (is_array($mValue))
+        }
+        
+        $oRedirect->setDocument('post', $oValues);
       }
     }
     
@@ -355,8 +382,12 @@ class Controler {
     
     $oMessage = new HTML_Strong(t('Redirection').' : ');
     
-    if (self::getRedirect() && self::getRedirect()->isReal()) $oView->addMultiItem($oMessage, self::getRedirect()->getSource()->getOriginalPath());
-    else $oView->addMultiItem($oMessage, new HTML_Tag('em', t('- aucune -')));
+    if (self::getRedirect() && self::getRedirect()->isReal()) {
+      
+      $nItem = $oView->addMultiItem($oMessage, new HTML_Div(self::getRedirect()->getSource()->getOriginalPath()));
+      foreach (self::getRedirect()->getDocuments() as $sKey => $oDocument) $nItem->add($sKey, ': ', view($oDocument, false));
+      
+    } else $oView->addMultiItem($oMessage, new HTML_Tag('em', t('- aucune -')));
     
     $oView->addMultiItem(new HTML_Strong(t('Fenêtre').' : '), self::getWindowType());
     $oView->addMultiItem(new HTML_Strong(t('Date & heure').' : '), date('j M Y').' - '.date('H:i'));
@@ -391,7 +422,7 @@ class Controler {
     
     $oAction = array_pop(self::$aActions);
     
-    $oAction->parse(array('time' => self::$iStartTime));
+    $oAction->parse(array('time' => self::$iStartTime), false);
     
     $oResume = new XML_Element('controler', $oAction->viewResume());
     
@@ -487,9 +518,13 @@ class Controler {
     
     if (FORMAT_MESSAGES) {
       
-      if (is_string($mArgument))
-        $aValue = array("'".stringResume(htmlspecialchars($mArgument), $iMaxLength, true)."'", '#999');
-      else if (is_bool($mArgument))
+      if (is_string($mArgument)) {
+        
+        //if (!mb_check_encoding($mArgument, 'UTF-8')) $mArgument = 'ERREUR D\'ENCODAGE';
+        
+        $aValue = array("'".stringResume($mArgument, $iMaxLength, false)."'", '#999');
+        
+      } else if (is_bool($mArgument))
         $aValue = $mArgument ? array('TRUE', 'green') :  array('FALSE', 'red');
       else if (is_numeric($mArgument))
         $aValue = array($mArgument, 'green');
@@ -740,6 +775,16 @@ class Controler {
     return null;
   }
   
+  public static function setDatabase($oDatabase) {
+    
+    self::$oDatabase = $oDatabase;
+  }
+  
+  public static function getDatabase() {
+    
+    return self::$oDatabase;
+  }
+  
   public static function accessRedirect($mMessages = '', $sPath = PATH_LOGIN, $sStatut = 'warning') {
     
     if (!$mMessages) $mMessages = sprintf(t('Vous n\'avez pas les droits pour accéder à cette page "%s" !'), self::getPath());
@@ -801,7 +846,7 @@ class Controler {
   
   public static function getAbsolutePath($sTarget, $mSource) {
     
-    if ($sTarget{0} == '/') return $sTarget;
+    if ($sTarget{0} == '/' || $sTarget{0} == '*') return $sTarget;
     else {
       
       if ($mSource == '/') $mSource = '';
@@ -823,9 +868,7 @@ class Controler {
   
   public static function addMessage($mMessage = '- message vide -', $sPath = 'notice', $aArgs = array()) {
     
-    // if (in_array($sPath, array('action/error', 'file/error'))) $mMessage = array($mMessage, Controler::getBacktrace());
-    
-    if (DEBUG && (SYLMA_PRINT_MESSAGES)) {
+    if (DEBUG && (SYLMA_PRINT_MESSAGES)) { // || !self::useMessages()
       
       if (is_array($mMessage)) foreach ($mMessage as $mContent) echo $mContent.new HTML_Br;
       else echo $mMessage.new HTML_Br;
@@ -967,12 +1010,12 @@ class Redirect {
   
   public function __construct($sPath = '', $mMessages = array(), $aArguments = array()) {
     
-    $this->resetMessages($mMessages);
+    $this->setMessages($mMessages);
     
     if ($sPath) $this->setPath($sPath);
     
     $this->aArguments = $aArguments;
-    $this->setArgument('post', $_POST);
+    //$this->setArgument('post', $_POST);
     //$this->setWindowType(Controler::getWindowType());
   }
   
@@ -1006,6 +1049,11 @@ class Redirect {
     return $this->aArguments;
   }
   
+  public function getDocuments() {
+    
+    return $this->aDocuments;
+  }
+  
   public function getDocument($sKey) {
     
     return (array_key_exists($sKey, $this->aDocuments)) ? $this->aDocuments[$sKey] : null;
@@ -1016,7 +1064,7 @@ class Redirect {
     $this->aDocuments[$sKey] = $oDocument;
   }
   
-  public function resetMessages($mMessages = array()) {
+  public function setMessages($mMessages = array()) {
     
     $this->oMessages = new Messages(new XML_Document(Controler::getSettings('messages/allowed/@path')), $mMessages);
   }

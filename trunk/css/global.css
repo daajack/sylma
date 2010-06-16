@@ -28,7 +28,7 @@
   padding: 5px 5px 5px 20px;
   font-size: 1em;
   color: #888;
-  width: 550px;
+  width: 600px;
   /*background-color: #222;*/
   /*border: 1px solid gray;
   border-color: #999;
@@ -38,7 +38,7 @@
 
 #system li { 
   float: left;
-  width: 130px;
+  width: 140px;
   margin: 3px 0 3px 0;
   min-height: 5em;
   list-style-image: url(/web/img/puce_A_gray.png);
@@ -55,7 +55,7 @@
 
 #msg-actions > * { float: left; }
 
-#msg-actions .msg-action-files {
+#msg-actions .msg-action-hidden {
   
   float: left;
   height: 14px;
@@ -67,9 +67,17 @@
   background-color: #dfdfdf;
 }
 
-#msg-actions .msg-action-files > * { display: none; }
-#msg-actions .msg-action-files:hover { width: auto; height: auto; padding: 5px; position: relative; }
-#msg-actions .msg-action-files:hover > * { display: block; }
+#msg-actions .msg-action-variables { background-color: #B4D3AF; }
+#msg-actions .msg-action-arguments { background-color: #A1A1D5; }
+#msg-actions .msg-action-hidden > span { color: white; padding-left: 4px; }
+#msg-actions .msg-action-files > span { color: gray; }
+
+#msg-actions .msg-action-hidden > * { display: none; }
+#msg-actions .msg-action-hidden > span { display: inline; }
+
+#msg-actions .msg-action-hidden:hover { width: auto; height: auto; padding: 5px; position: relative; background-color: #dfdfdf; }
+#msg-actions .msg-action-hidden:hover > * { display: block; }
+#msg-actions .msg-action-hidden:hover > span { display: none; }
 
 #msg-actions .msg-action-weights, #msg-actions .msg-action-sub-weights {
   float: left;
@@ -110,3 +118,22 @@
   padding: 2px;
   padding-right: 0;
 }
+
+/* Hidden Elements */
+
+#admin-infos pre.hidden {
+  color: gray;
+  margin: 0 !important;
+  background-color: #FFF6CF !important;
+  padding: 2px;
+  display: none;
+  position: relative;
+  z-index: 8;
+  width: 500px;
+  overflow: auto;
+}
+
+#admin-infos div.element { display: inline; }
+#admin-infos div.element pre { font-size: 1em; }
+#admin-infos div.element:hover { background-color: orange !important; cursor: default; }
+#admin-infos div.element:hover .hidden { display: block; }

@@ -4,6 +4,7 @@ class FormProcessor extends XML_Processor  {
   
   private $oForm;
   private $bOptionsKey = false;
+  private $aNS = array('lf' => SYLMA_NS_PROCESSOR_FORM);
   
   public function onElement($oElement, XML_Action $oAction) {
     
@@ -18,9 +19,11 @@ class FormProcessor extends XML_Processor  {
         }
         
         $oForm = $this->oForm = new HTML_Form();
-        $oForm->cloneAllAttributes($oElement);
+        $oForm->cloneAttributes($oElement);
         
         if ($oElement->hasChildren()) $this->runChildren($oForm, $oElement);
+        
+        Controler::getWindow()->addJS(Controler::getSettings('javascript/mootools'));
         
         return $oForm;
         
@@ -44,7 +47,7 @@ class FormProcessor extends XML_Processor  {
             
             foreach ($aField as &$sField) {
               
-              $oResult->add($oForm->buildField(new XML_Element('field', null, array('id' => trim($sField))), $this->bOptionsKey));
+              $oResult->add($oForm->buildField(new XML_Element('lf:field', null, array('id' => trim($sField)), SYLMA_NS_PROCESSOR_FORM), $this->bOptionsKey));
             }
           }
         }

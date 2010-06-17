@@ -126,8 +126,9 @@ class XML_Action extends XML_Document {
   
   private function setVariable($sKey, $mValue) {
     
-    if ($mValue) $this->aVariables[$sKey] = $mValue;
-    else if (array_key_exists($sKey, $this->aVariables)) unset($this->aVariables[$sKey]);
+    $this->aVariables[$sKey] = $mValue;
+    /*if ($mValue) 
+    else if (array_key_exists($sKey, $this->aVariables)) unset($this->aVariables[$sKey]);*/
   }
   
   private function setVariableElement($oElement, $mVariable) {
@@ -207,21 +208,15 @@ class XML_Action extends XML_Document {
       
       if ($sActionMethod == 'if') {
         
-        if ($mObject) foreach ($oElement->getChildren() as $oChild)
-          $aArguments[] = $this->buildArgument($oChild);
+        if ($mObject) $oResult = $this->buildArgument($oElement->getChildren());
         
       } else if ($sActionMethod == 'if-not') {
         
-        if (!$mObject) foreach ($oElement->getChildren() as $oChild)
-          $aArguments[] = $this->buildArgument($oChild);
+        if (!$mObject) $oResult = $this->buildArgument($oElement->getChildren());
         
       } else dspm(array(xt('Pas d\'interface et instruction %s inconnue dans %s (Objet : %s) ', view($oElement, true), $this->getPath()->parse(), view($mObject))), 'action/warning');
       
-      if ($oElement->testAttribute('return') !== false) {
-        
-        foreach ($aArguments as $mArgument) if ($mArgument) $oResult = $mArgument;
-        if ($oResult) $bReturn = true;
-      }
+      if ($oElement->testAttribute('return', true)) $bReturn = true;
       
     } else {
       
@@ -459,6 +454,29 @@ class XML_Action extends XML_Document {
           $mResult = $this->getVariable($sVariable);
           
           $bRun = true;
+        }
+        
+      break;
+      
+      case 'function' :
+        
+        if (!$sName = $oElement->getAttribute('name')) {
+          
+          dspm(xt('Nom introuvable pour la fonction %s dans %s', view($oElement), $this->getPath()->parse()), 'action/error');
+          
+        } else {
+          
+          $mResult = $this->buildArgument($oElement->getChildren());
+          
+          switch ($sName) {
+            
+            case 'add-quote' : $mResult = addQuote($mResult); break;
+            case 'escape-path' : $mResult = '"'.xmlize($mResult).'"'; break;
+            
+            default:
+              
+              dspm(xt('Function %s inconnue, %s dans %s', new HTML_Strong($sName), view($oElement), $this->getPath()->parse()), 'action/error');
+          }
         }
         
       break;

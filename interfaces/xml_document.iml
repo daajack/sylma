@@ -37,4 +37,5 @@
   <method path="view" name="view" return-default="true">
     <argument name="inline" format="php-boolean" required="false"/>
   </method>
+  <method name="dspm" path="dsp"/>
 </class>

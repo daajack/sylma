@@ -30,6 +30,9 @@
   <method path="add" name="add" output="XML_Element">
     <multiple-arguments/>
   </method>
+  <method output="XML_Element" path="shift" name="shift">
+    <multiple-arguments/>
+  </method>
   <method path="insert" name="insert" output="XML_Element">
     <argument name="path" format="XML_Element"/>
     <argument name="next-sibling" format="XML_Element" required="false"/>

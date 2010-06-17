@@ -645,43 +645,6 @@ class XML_Document extends DOMDocument {
     return null;
   }
   
-  public function view($bContainer = true, $bIndent = true, $bFormat = false) {
-    
-    $oView = new XML_Document($this);
-    
-    if ($bIndent) $oView->formatOutput();
-    
-    if ($bFormat) $sResult = htmlspecialchars($oView->display(true, false));
-    else $sResult = $oView->display(true, false);
-    
-    if ($bContainer) {
-      
-      $oResult = new HTML_Tag('pre');
-      $oResult->add($sResult);
-      
-    } else $oResult = $sResult;
-    
-    return $oResult;
-  }
-  
-  public function formatOutput() {
-    
-    if ($this->getRoot()) $this->getRoot()->formatOutput();
-  }
-  
-  public function dsp($bHtml = false) {
-    
-    echo $this->view(true, true, $bHtml);
-    /*
-    $oView = new XML_Document($this);
-    $oView->formatOutput();
-    
-    $oPre = new XML_Element('pre');
-    $oPre->addText($oView);
-    
-    echo $oPre;*/
-  }
-  
   /**
    * Method __toString() alias
    */
@@ -717,6 +680,48 @@ class XML_Document extends DOMDocument {
     } else Controler::addMessage(xt('Document vide : Impossible d\'appliquer la méthode %s', new HTML_Strong($sMethod)), 'xml/error');
     
     return $oResult;
+  }
+  
+  public function formatOutput() {
+    
+    if ($this->getRoot()) $this->getRoot()->formatOutput();
+  }
+  
+  public function view($bContainer = true, $bIndent = true, $bFormat = false) {
+    
+    $oView = new XML_Document($this);
+    
+    if ($bIndent) $oView->formatOutput();
+    
+    if ($bFormat) $sResult = htmlspecialchars($oView->display(true, false));
+    else $sResult = $oView->display(true, false);
+    
+    if ($bContainer) {
+      
+      $oResult = new HTML_Tag('pre');
+      $oResult->add($sResult);
+      
+    } else $oResult = $sResult;
+    
+    return $oResult;
+  }
+  
+  public function dspm() {
+    
+    dspf($this);
+  }
+  
+  public function dsp($bHtml = false) {
+    
+    echo $this->view(true, true, $bHtml);
+    /*
+    $oView = new XML_Document($this);
+    $oView->formatOutput();
+    
+    $oPre = new XML_Element('pre');
+    $oPre->addText($oView);
+    
+    echo $oPre;*/
   }
   
   public function display($bHtml = false, $bDeclaration = true) {
@@ -811,10 +816,7 @@ class XSL_Document extends XML_Document {
         
         $mResult = new XML_Document($sResult);
         
-        if ($mResult->isEmpty()) Controler::addMessage(array(
-          t('Un problème est survenu lors de la transformation XSL !'),
-          new HTML_Hr,
-          $sResult), 'xml/warning');
+        //if ($mResult->isEmpty()) Controler::addMessage(array(t('Un problème est survenu lors de la transformation XSL !'),new HTML_Hr,$sResult), 'xml/warning');
         
       } else $mResult = $sResult;
       //} else $mResult = substr($sResult, 21);

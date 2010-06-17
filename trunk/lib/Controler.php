@@ -382,12 +382,14 @@ class Controler {
     
     $oMessage = new HTML_Strong(t('Redirection').' : ');
     
-    if (self::getRedirect() && self::getRedirect()->isReal()) {
+    if (self::getRedirect()) {// && ) {
       
-      $nItem = $oView->addMultiItem($oMessage, new HTML_Div(self::getRedirect()->getSource()->getOriginalPath()));
+      if (self::getRedirect()->isReal()) $oPath = new HTML_Div(self::getRedirect()->getSource()->getOriginalPath());
+      else $oPath = new HTML_Div(new HTML_Tag('em', t('- aucune -')));
+      
+      $nItem = $oView->addMultiItem($oMessage, $oPath);
       foreach (self::getRedirect()->getDocuments() as $sKey => $oDocument) $nItem->add($sKey, ': ', view($oDocument, false));
-      
-    } else $oView->addMultiItem($oMessage, new HTML_Tag('em', t('- aucune -')));
+    }
     
     $oView->addMultiItem(new HTML_Strong(t('Fenêtre').' : '), self::getWindowType());
     $oView->addMultiItem(new HTML_Strong(t('Date & heure').' : '), date('j M Y').' - '.date('H:i'));

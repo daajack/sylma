@@ -27,7 +27,11 @@
   padding: 2px;
   display: none;
   position: relative;
-   z-index: 8;
+  z-index: 8;
+}
+
+.messages pre {
+  overflow: auto;
 }
 
 .message-element {

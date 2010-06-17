@@ -499,18 +499,16 @@ class XML_XQuery {
     return $sResult;
   }
   
-  public function read() {
+  public function read($bXML = false) {
     
     $oDB = Controler::getDatabase();
     
     $sQuery = $this->getQuery();
     
-    dspm(xt('xquery : %s', new HTML_Tag('pre', $sQuery)), 'db/notice');
-    
     if ($sResult = $oDB->query($sQuery)) {
       
-      $oDocument = new XML_Document('<root>'.$sResult.'</root>');
-      return $oDocument->getRoot();
+      if ($bXML) return new XML_Document($sResult);
+      else return $sResult;
     }
     
     return null;

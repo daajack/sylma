@@ -47,6 +47,7 @@ class XML_Database {
   
   public function query($sQuery) {
     
+    //dspm(xt('xquery : %s', new HTML_Tag('pre', xmlize($sQuery))), 'db/notice');
     return $this->run('xquery '.$sQuery);
   }
   

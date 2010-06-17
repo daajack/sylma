@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
   <xsl:template match="/*">
-    <xsl:if test="@total != 1">
+    <xsl:if test="@total &gt; 1">
       <div id="pager">
         <xsl:choose>
-          <xsl:when test="@page != 1">
+          <xsl:when test="@page &gt; 1">
             <span id="pager-previous">
               <a href="{@directory}/{@page - 1}">&lt;&lt;&lt;</a>
             </span>

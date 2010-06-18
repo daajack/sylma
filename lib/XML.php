@@ -261,11 +261,16 @@ class XML_Text extends DOMText implements XML_Composante {
     return new HTML_Span((string) $this, array('class' => 'message-element'));
   }
   
+  public function getValue() {
+    
+    return $this->nodeValue;
+  }
+  
   public function __toString() {
     
     try {
       
-      return $this->nodeValue;
+      return xmlize($this->nodeValue);
       
 		} catch ( Exception $e ) {
       

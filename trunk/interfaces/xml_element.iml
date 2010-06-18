@@ -15,6 +15,7 @@
   </method-construct>
   <method path="view" name="view" return-default="true"/>
   <method path="get-children" name="getChildren" return-default="true"/>
+  <method return-default="true" path="has-children" name="hasChildren"/>
   <method path="get" name="get" output="XML_Element">
     <argument name="path" format="php-string"/>
   </method>

@@ -727,12 +727,13 @@ class XML_Action extends XML_Document {
     } else if ($oArgument->isText()) {
       
       $sAction = 'Text';
-      $mResult = (string) $oArgument;
+      //$mResult = (string) $oArgument;
+      $mResult = $oArgument->getValue();
       
     } else if ($oArgument instanceof XML_Comment || $oArgument instanceof XML_CData) {
       
       $sAction = 'Comment';
-      $mResult = clone $oArgument;
+      $mResult = clone $oArgument; // TODO : generate DOMComment
     }
     
     // msg

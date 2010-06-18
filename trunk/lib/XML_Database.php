@@ -47,7 +47,7 @@ class XML_Database {
   
   public function query($sQuery) {
     
-    //dspm(xt('xquery : %s', new HTML_Tag('pre', xmlize($sQuery))), 'db/notice');
+    if (SYLMA_DB_SHOW_QUERIES) dspm(xt('xquery : %s', new HTML_Tag('pre', $sQuery)), 'db/notice');
     return $this->run('xquery '.$sQuery);
   }
   

@@ -526,7 +526,9 @@ class HTML_Ul extends HTML_Tag {
   
   function addMultiItem() {
     
-    return $this->addNode('li', func_get_args(), null, NS_XHTML);
+    $aArguments = func_get_args();
+    
+    return $this->addNode('li', $aArguments, null, NS_XHTML);
   }
   
   function addItem($sContent, $aAttributes = array()) {

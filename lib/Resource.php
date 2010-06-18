@@ -700,6 +700,7 @@ class XML_File extends XML_Resource {
   
   /**
    * Each XML_Document loads will register in the corresponding XML_File
+   * This function will clone the document to avoid secured elements deleting
    * @param XML_Document $oDocument The XML_Document caller
    */
   public function setDocument(XML_Document $oDocument) {

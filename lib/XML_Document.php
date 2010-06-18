@@ -232,6 +232,8 @@ class XML_Document extends DOMDocument {
           
           if (Controler::useStatut('xml/report')) Controler::addMessage(xt('Chargement du fichier %s', new HTML_Strong($oFile)), 'xml/report');
           
+          $oFile->setDocument($this); // PUT a copy in XML_File
+          
           if ($this->isEmpty()) Controler::addMessage(xt('Aucun contenu dans %s', $oFile->parse()), 'xml/warning');
           else {
             
@@ -240,8 +242,6 @@ class XML_Document extends DOMDocument {
             
             if ($this->useInclude()) $this->includeExternals('//xi:include', array('xi' => 'http://www.w3.org/2001/XInclude')); // include
           }
-          
-          $oFile->setDocument($this); // PUT a copy in XML_File
           
         } else dspm (xt('Problème lors du chargement du fichier %s', new HTML_Strong($oFile)), 'file/error');
         
@@ -360,12 +360,12 @@ class XML_Document extends DOMDocument {
         
         if ((!$bSecurityFile && $bAccess) || ($bSecurityFile && Controler::isAdmin())) {
           
+          $oDocument = $oFile->getFreeDocument();
+          
           if ($oFile && $oFile->isFileSecured()) {
             
             // Secured File
-            
-            $oDocument = $oFile->getDocument();
-            $bSecurityFile = false;
+            $bSecured = false;
             
             $oNodes = $oDocument->query('//*[@ls:owner or @ls:mode or @ls:group]', 'ls', NS_SECURITY);
             
@@ -376,14 +376,14 @@ class XML_Document extends DOMDocument {
                 if ($oNode) {
                   
                   $iMode = $this->extractMode($oNode);
-                  if (!$bSecurityFile && $iMode) $bSecured = !(MODE_WRITE & $iMode);
+                  if (!$bSecured && $iMode) $bSecured = !(MODE_WRITE & $iMode);
                 }
               }
             }
             
-          } else $bSecurityFile = false; // Not secured file
+          } else $bSecured = false; // Not secured file
           
-          if (!$bSecurityFile) {
+          if (!$bSecured) {
             
             $bResult = $this->saveFree($oDirectory, $sName);
             
@@ -394,11 +394,11 @@ class XML_Document extends DOMDocument {
           
           return $bResult;
           
-        } else dspm(xt('Droits insuffisants pour sauvegarder le fichier dans %s !', new HTML_Strong($sPath)), 'xml/error');
+        } else dspm(xt('Droits insuffisants pour sauvegarder le fichier dans %s !', new HTML_Strong($sPath)), 'error');
         
-      } else dspm(xt('Le répertoire de destination %s n\'existe pas !', new HTML_Strong($sPath)), 'xml/error');
+      } else dspm(xt('Le répertoire de destination %s n\'existe pas !', new HTML_Strong($sPath)), 'error');
       
-    } else  dspm(t('Aucun chemin pour la sauvegarde !'), 'xml/error');
+    } else  dspm(t('Aucun chemin pour la sauvegarde !'), 'error');
     
     return false;
   }

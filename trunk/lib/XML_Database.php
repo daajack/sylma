@@ -29,7 +29,7 @@ class XML_Database {
   private function run($sCommand) {
     
     $oSession = $this->oSession;
-    //$sCommand = 'xquery //new[@path="ma-premiere-news"]';
+    
     $sResult = '';
     $sMessage = '';
     $bError = false;

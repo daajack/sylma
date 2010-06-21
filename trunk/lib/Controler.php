@@ -207,8 +207,8 @@ class Controler {
           
         } else {
           
-          if ($sInterface = $oInterface->read('ns:file')) $sInterface = self::getAbsolutePath($sInterface, $oInterface->getFile()->getParent());
-          $oWindow = self::buildClass($oInterface->read('ns:name'), $sInterface, array($sAction, self::getRedirect()));
+          if ($sInterface = $oInterface->readByName('file')) $sInterface = self::getAbsolutePath($sInterface, $oInterface->getFile()->getParent());
+          $oWindow = self::buildClass($oInterface->readByName('name'), $sInterface, array($sAction, self::getRedirect()));
         }
       }
       
@@ -300,10 +300,12 @@ class Controler {
       
       if ($_POST) {
         
+        //$oValues = new XML_Document(new XML_Element('post', null, null, NS_XHTML));
         $oValues = new XML_Document('post');
         
         foreach ($_POST as $sKey => $mValue) {
           
+          //if (is_string($mValue)) $oTest = $oValues->addNode($sKey, $mValue, null, NS_XHTML);
           if (is_string($mValue)) $oTest = $oValues->addNode($sKey, $mValue);
           
           //else if (is_array($mValue))
@@ -404,6 +406,11 @@ class Controler {
   public static function infosSetFile($oFile, $bFirstTime) {
     
     if ($oLast = array_last(self::$aActions)) $oLast->resumeFile($oFile, $bFirstTime);
+  }
+  
+  public static function infosSetQuery($sQuery) {
+    
+    if ($oLast = array_last(self::$aActions)) $oLast->resumeQuery($sQuery);
   }
   
   public static function infosOpenAction($oCaller) {
@@ -602,7 +609,7 @@ class Controler {
             $oContent = new HTML_Div(null, array('style' => 'display: inline;'));
             foreach ($mArgument as $mKey => $mValue) {
               
-              $oContent->add(self::formatResource($mKey), ' => ', self::formatResource($mValue, true));
+              $oContent->add(self::formatResource($mKey), ' => ', self::formatResource($mValue, false));
               if ($iCount) $oContent->add(', ');
               
               $iCount--;
@@ -921,7 +928,7 @@ class Controler {
             
           } else {
             
-            if (!$sName = $oInterface->read('ns:name')) {
+            if (!$sName = $oInterface->readByName('name')) {
               
               self::addMessage(xt('Fichier d\'interface "%s" invalide, aucune classe n\'est indiquée !', new HTML_Strong($sPath)), 'action/warning');
               

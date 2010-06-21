@@ -3,7 +3,7 @@
 include('XML_Document.php');
 include('XML_Element.php');
 
-function xt () {
+function xt() {
   
   if (func_num_args()) {
     
@@ -17,12 +17,23 @@ function xt () {
   return '';
 }
 
-function strtoxml ($sValue) {
+function strtoxml($sValue, $aNS = array()) {
   // xmlns:le="'.NS_EXECUTION.'" xmlns:li="'.NS_INTERFACE.'"
   
   $oDocument = new XML_Document;
+  $sAttributes = '';
   
-  if ($oDocument->loadText('<div xmlns="'.NS_XHTML.'">'.$sValue.'</div>') && $oDocument->getRoot() && !$oDocument->getRoot()->isEmpty()) {
+  if (!array_key_exists(0, $aNS)) $aNS[0] = NS_XHTML;
+  
+  foreach ($aNS as $sPrefix => $sUri) {
+    
+    if ($sPrefix) $sPrefix = 'xmlns:'.$sPrefix;
+    else $sPrefix = 'xmlns';
+    
+    $sAttributes .= " $sPrefix=\"$sUri\"";
+  }
+  
+  if ($oDocument->loadText('<div'.$sAttributes.'>'.$sValue.'</div>') && $oDocument->getRoot() && !$oDocument->getRoot()->isEmpty()) {
     
     return $oDocument->getRoot()->getChildren();
     

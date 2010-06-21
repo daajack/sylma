@@ -95,24 +95,24 @@ class User {
     return $this->aArguments;
   }
   
-  public function getMode($sOwner, $sGroup, $sMode, $oNode = null) {
+  public function getMode($sOwner, $sGroup, $sMode, $oOrigin = null) {
     
     $sMode = (string) $sMode;
-    if ($oNode === null) $oNode = new XML_Element('null');
+    if ($oOrigin === null) $oOrigin = new XML_Element('null');
     
     // Validity control of the arguments
     
     if (!$sOwner) {
       
-      Controler::addMessage(xt('Sécurité : "user" inexistant ! %s', $oNode->messageParse()), 'xml/warning');
+      Controler::addMessage(xt('Sécurité : "owner" inexistant ! %s', $oOrigin), 'xml/warning');
       
     } else if (strlen($sMode) < 3 || !is_numeric($sMode)) {
       
-      Controler::addMessage(xt('Sécurité : "mode" invalide ! - %s', new HTML_Tag('em', $oNode->viewResume())), 'xml/warning');
+      Controler::addMessage(xt('Sécurité : "mode" invalide ! - %s', $oOrigin), 'xml/warning');
       
     } else if (!strlen($sGroup)) {
       
-      Controler::addMessage(xt('Sécurité : "group" inexistant ! %s', $oNode->messageParse()), 'xml/warning');
+      Controler::addMessage(xt('Sécurité : "group" inexistant ! %s', $oOrigin), 'xml/warning');
       
     } else {
       
@@ -125,7 +125,7 @@ class User {
       if ($iOwner > 7 || $iGroup > 7 || $iPublic > 7) {
         
         // check validity of mode
-        Controler::addMessage(xt('Sécurité : Attribut "mode" invalide !', $oNode->messageParse()), 'xml/warning');
+        Controler::addMessage(xt('Sécurité : Attribut "mode" invalide !', $oOrigin), 'xml/warning');
         
       } else {
         

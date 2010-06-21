@@ -7,7 +7,10 @@
       <format>php-string</format>
       <format>php-null</format>
     </argument>
-    <argument name="content" format="php-string" required="false"/>
+    <argument name="content" required="false">
+      <format>php-string</format>
+      <format>XML_CData</format>
+    </argument>
   </method>
   <method path="add-css" name="addCSS">
     <argument name="path" format="php-string"/>

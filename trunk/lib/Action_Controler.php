@@ -38,7 +38,7 @@ class Action_Controler {
       
     } else if ($sClass || ($sClass = $oInterface->read('ns:name'))) {
       
-      if ($sExtends = $oInterface->read('ns:extends')) {
+      if ($sExtends = $oInterface->readByName('extends')) {
         
         // Extends another class
         

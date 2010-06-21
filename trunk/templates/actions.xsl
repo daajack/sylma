@@ -83,6 +83,23 @@
             </xsl:for-each>
           </div>
         </xsl:if>
+        <xsl:if test="queries">
+          <div class="msg-action-hidden msg-action-queries">
+            <span class="msg-actions-hidden-count">
+              <xsl:value-of select="count(queries/*)"/>
+            </span>
+            <div>
+              <xsl:for-each select="queries/query">
+                <xsl:sort select="@count" data-type="number" order="descending"/>
+                <span>
+                  <xsl:value-of select="concat(@count, ' : ')"/>
+                </span>
+                <xsl:value-of select="."/>
+                <br/>
+              </xsl:for-each>
+            </div>
+          </div>
+        </xsl:if>
       </div>
       <xsl:if test="sub-actions">
         <div class="msg-action-sub clear-block">

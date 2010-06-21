@@ -111,15 +111,15 @@ class XML_Resource {
   
   protected function extractRights($oElement = null) {
     
-    if ($oElement && ($oSecurity = $oElement->get('ls:security', 'ls', NS_SECURITY))) {
+    if ($oElement && ($oSecurity = $oElement->getByName('security', NS_SECURITY))) {
       
       if (Controler::useStatut('file/report')) Controler::addMessage(xt('Ressource "%s" sécurisée ', new HTML_Strong($this->getFullPath())), 'file/report');
       
-      $sOwner = $oSecurity->read('ls:owner', 'ls', NS_SECURITY);
-      $sGroup = $oSecurity->read('ls:group', 'ls', NS_SECURITY);
-      $sMode = $oSecurity->read('ls:mode', 'ls', NS_SECURITY);
+      $sOwner = $oSecurity->readByName('owner', NS_SECURITY);
+      $sGroup = $oSecurity->readByName('group', NS_SECURITY);
+      $sMode = $oSecurity->readByName('mode', NS_SECURITY);
       
-      $iMode = Controler::getUser()->getMode($sOwner, $sGroup, $sMode, $oSecurity);
+      $iMode = Controler::getUser()->getMode($sOwner, $sGroup, $sMode, new HTML_Strong((string) $this));
       
       if ($iMode !== null) return array('owner' => $sOwner, 'group' => $sGroup, 'mode' => $sMode, 'user-mode' => $iMode);
     }
@@ -282,12 +282,12 @@ class XML_Directory extends XML_Resource {
           
           // self mode
           
-          if ($oSettingsElement = $oSettings->get('ld:self', 'ld', NS_DIRECTORY)) $this->setSettingsElement($oSettingsElement);
+          if ($oSettingsElement = $oSettings->getByName('self', NS_DIRECTORY)) $this->setSettingsElement($oSettingsElement);
           if ($aRights = $this->setRights($oSettingsElement)) $this->aChildrenRights = $aRights;
           
           // children mode
           
-          if (($oChildrenRights = $oSettings->get('ld:propagate', 'ld', NS_DIRECTORY)) &&
+          if (($oChildrenRights = $oSettings->getByName('propagate', NS_DIRECTORY)) &&
             ($aChildrenRights = $this->extractRights($oChildrenRights))) $this->aChildrenRights = $aChildrenRights;
           
         } else $this->setRights();

@@ -164,6 +164,14 @@ function remove_xml($sString) {
 }
 
 /**
+ * Un-Conversion in UTF-8 of the characters : & " < >
+ */
+function unxmlize($sString) {
+  
+  return htmlspecialchars_decode($sString);
+}
+
+/**
  * Conversion in UTF-8 of the characters : & " < >
  */
 function xmlize($sString) {

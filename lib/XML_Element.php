@@ -158,7 +158,7 @@ class XML_Element extends DOMElement implements XML_Composante {
         $mResult = $this->getDocument()->queryString($mResult);
         
         XML_Controler::addStat('query');
-        if (SYLMA_VIEW_QUERY) echo 'read : '.$sQuery.new HTML_Br;
+        if (SYLMA_ACTION_STATS && Controler::getUser()->isMember('0')) Controler::infosSetQuery($sQuery);
         
         if ($mResult === null) {
           
@@ -170,8 +170,8 @@ class XML_Element extends DOMElement implements XML_Composante {
       
       return $mResult;
       
-    } else if ($this->getValue()) return $this->getValue();
-    else return '';
+    } else return $this->getValue();
+    
     // else return $this->getName();
   }
   
@@ -193,14 +193,7 @@ class XML_Element extends DOMElement implements XML_Composante {
         $mResult = $oXPath->query($sQuery, $this);
         
         XML_Controler::addStat('query');
-        
-        if (SYLMA_VIEW_QUERY) {
-          
-          echo 'query : '.$sQuery.' [';
-          if (!$mResult) echo 'no-result';
-          else echo $mResult->length;
-          echo ']'.new HTML_Br;
-        }
+        if (SYLMA_ACTION_STATS && Controler::getUser()->isMember('0')) Controler::infosSetQuery($sQuery);
         
         // if (!$mResult || !$mResult->length) Controler::addMessage(xt("Element->query(%s) : Aucun résultat", new HTML_Strong($sQuery)), 'xml/report');
         // ////// report & notice type will crash system, maybe something TODO /////// //
@@ -227,6 +220,21 @@ class XML_Element extends DOMElement implements XML_Composante {
   public function get($sQuery, $sPrefix = '', $sUri = '') {
     
     return $this->getDocument()->queryOne($this->query($sQuery, $sPrefix, $sUri));
+  }
+  
+  public function readByName($sName, $sUri = null) {
+    
+    if ($oResult = $this->getByName($sName, $sUri)) return $oResult->read();
+    else return '';
+  }
+  
+  public function getByName($sName, $sUri = null) {
+    
+    if ($sUri) $aResults = $this->getElementsByTagNameNS($sUri, $sName);
+    else $aResults = $this->getElementsByTagName($sName);
+    
+    if ($aResults->length) return $aResults->item(0);
+    else return null;
   }
   
   /**
@@ -422,13 +430,13 @@ class XML_Element extends DOMElement implements XML_Composante {
     
     foreach ($oElement->getChildren() as $oChild) {
       
-      if ($oSame = $oResult->get($oChild->getName(), $oChild->getPrefix(), $oChild->getNamespace())) {
+      if ($oSame = $oResult->getByName($oChild->getName())) {
         
         if (!$bSelfPrior) $oSame->replace($oChild);
         
       } else $oResult->add($oChild);
     }
-    //if ($oTemp = $oResult->getFirst()) echo $oTemp->getNamespace().'-'.new HTML_Br;
+    
     //$oResult->cloneAttributes($oElement);
     
     return $oResult->getRoot();

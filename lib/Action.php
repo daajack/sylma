@@ -11,6 +11,8 @@ class XML_Action extends XML_Document {
   private $aProcessors = array();
   private $aNS = array('le' => NS_EXECUTION, 'le' => NS_INTERFACE, 'xsl', NS_XSLT );
   
+  private $aQueries = array();
+  
   // stats & infos resume
   private $aStats = array();
   public $aSubActions = array();
@@ -79,10 +81,10 @@ class XML_Action extends XML_Document {
     
     if ($oInterface = Action_Controler::setInterface($oInterface)) {
       
-      $sClassName = $oInterface->read('ns:name');
-      if ($sFile = $oInterface->read('ns:file')) $sFile = $this->getAbsolutePath($sFile);
+      $sClassName = $oInterface->readByName('name');
+      if ($sFile = $oInterface->readByName('file')) $sFile = $this->getAbsolutePath($sFile);
       
-      if ($oConstruct = $oInterface->get('ns:method-construct')) {
+      if ($oConstruct = $oInterface->getByName('method-construct')) {
         
         if ($oConstruct->hasChildren()) {
           
@@ -978,46 +980,6 @@ class XML_Action extends XML_Document {
     return false;
   }
   
-  private function validArgumentType(&$mArgument, $aFormats, $oElement) {
-    
-    if (!$aFormats) return true;
-    
-    if (is_object($mArgument)) {
-      
-      $sActualFormat = get_class($mArgument);
-      foreach ($aFormats as $sFormat) if ($mArgument instanceof $sFormat) return true;
-      
-    } else {
-      
-      if (is_numeric($mArgument)) {
-        
-        if (is_integer($mArgument) || ctype_digit($mArgument)) {
-          
-          $sActualFormat = 'php-integer';
-          $mArgument = intval($mArgument);
-          
-        } else {
-          
-          $sActualFormat = 'php-float';
-          $mArgument = floatval($mArgument);
-        }
-        
-      } else $sActualFormat = 'php-'.strtolower(gettype($mArgument));
-      
-      if (in_array($sActualFormat, $aFormats)) return true;
-    }
-    
-    dspm(array(
-      xt('L\'argument %s [%s] n\'est pas du type : %s dans %s',
-        Controler::formatResource($mArgument),
-        new HTML_em($sActualFormat),
-        new HTML_Strong(implode(', ', $aFormats)),
-        $this->getPath()->parse()),
-      $oElement->messageParse()), 'action/warning');
-    
-    return false;
-  }
-  
   private function runMethod($mObject, $sMethodName, $aArguments = array(), $bStatic = false) {
     
     // Contrôle de l'existence de la méthode
@@ -1159,7 +1121,7 @@ class XML_Action extends XML_Document {
           
           /* Validation */
           
-          if (($oValidate = $oChild->get('le:validate', 'le', NS_EXECUTION)) && $oValidate->hasChildren()) {
+          if (($oValidate = $oChild->getByName('validate', NS_EXECUTION)) && $oValidate->hasChildren()) {
             
             // pre-set argument result for variable
             
@@ -1221,6 +1183,46 @@ class XML_Action extends XML_Document {
     }
     
     return array($bResult, $mArgument);
+  }
+  
+  private function validArgumentType(&$mArgument, $aFormats, $oElement) {
+    
+    if (!$aFormats) return true;
+    
+    if (is_object($mArgument)) {
+      
+      $sActualFormat = get_class($mArgument);
+      foreach ($aFormats as $sFormat) if ($mArgument instanceof $sFormat) return true;
+      
+    } else {
+      
+      if (is_numeric($mArgument)) {
+        
+        if (is_integer($mArgument) || ctype_digit($mArgument)) {
+          
+          $sActualFormat = 'php-integer';
+          $mArgument = intval($mArgument);
+          
+        } else {
+          
+          $sActualFormat = 'php-float';
+          $mArgument = floatval($mArgument);
+        }
+        
+      } else $sActualFormat = 'php-'.strtolower(gettype($mArgument));
+      
+      if (in_array($sActualFormat, $aFormats)) return true;
+    }
+    
+    dspm(array(
+      xt('L\'argument %s [%s] n\'est pas du type : %s dans %s',
+        Controler::formatResource($mArgument),
+        new HTML_em($sActualFormat),
+        new HTML_Strong(implode(', ', $aFormats)),
+        $this->getPath()->parse()),
+      $oElement->messageParse()), 'action/warning');
+    
+    return false;
   }
   
   public function loadSettings($oSettings) {
@@ -1304,13 +1306,19 @@ class XML_Action extends XML_Document {
     return $this->oResume;
   }
   
+  public function resumeQuery($sQuery) {
+    
+    if (array_key_exists($sQuery, $this->aQueries)) $this->aQueries[$sQuery]++;
+    else $this->aQueries[$sQuery] = 1;
+  }
+  
   /**
    * Add a file to this action for infos box
    */
   
   public function resumeFile($oFile, $bFirstTime) {
     
-    if (!$oFiles = $this->getResume()->get('files')) $oFiles = $this->getResume()->addNode('files');
+    if (!$oFiles = $this->getResume()->getByName('files')) $oFiles = $this->getResume()->addNode('files');
     
     $oResume = $oFile->parseXML();
     if ($bFirstTime) $oResume->setAttribute('first-time' , 1);
@@ -1337,6 +1345,7 @@ class XML_Action extends XML_Document {
     $oStats = $oAction->addNode('stats');
     $oArguments = $oAction->addNode('arguments');
     $oVariables = $oAction->addNode('variables');
+    $oQueries = $oAction->addNode('queries');
     
     // build stats
     
@@ -1352,6 +1361,8 @@ class XML_Action extends XML_Document {
         'sub-value' => $fValue));
     }
     
+    // build variables
+    
     foreach ($this->aVariables as $sKey => $mVar) {
       
       $oVariables->addNode('variable', view($mVar, false), array('name' => $sKey));
@@ -1360,6 +1371,10 @@ class XML_Action extends XML_Document {
     // build arguments
     
     if ($this->oPathResume) $oAction->add($this->oPathResume);
+    
+    // build queries
+    
+    foreach ($this->aQueries as $sQuery => $iQueries) $oQueries->addNode('query', $sQuery, array('count' => $iQueries));
     
     // build sub-actions
     
@@ -1457,7 +1472,7 @@ class XML_Action extends XML_Document {
             
             case 'action' :
               
-              if ($this->loadSettings($oDocument->get('le:settings', 'le', NS_EXECUTION))) {
+              if ($this->loadSettings($oDocument->getByName('settings', NS_EXECUTION))) {
                 
                 $oResult = new XML_Document('temp');
                 
@@ -1477,13 +1492,13 @@ class XML_Action extends XML_Document {
             
             case 'interface' :
               
-              if (!$oSettings = $this->get('le:settings', 'le', NS_EXECUTION)) {
+              if (!$oSettings = $this->getByName('settings', NS_EXECUTION)) {
                 
                 dspm(xt('Action %s invalide, aucuns paramètres !', new HTML_Strong($this->getPath())), 'action/warning');
                 
               } else {
                 
-                $sClass = $oSettings->read('le:class', 'le', NS_EXECUTION);
+                $sClass = $oSettings->readByName('class', NS_EXECUTION);
                 $oSettings->remove();
                 
                 if ($oRoot->hasChildren()) {

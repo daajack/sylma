@@ -57,6 +57,7 @@ class HTML_Field extends XML_Document {
       case 'email' :
       case 'integer' :  $oInput = new HTML_Input; $aClasses[] = 'field-text';  break;
       case 'wiki' :     $sInput = 'wiki';
+      case 'html' :
       case 'blob' :     $oInput = new HTML_Textarea; $aClasses[] = 'field-textarea'; break;
       case 'bool' :     $sInput = 'checkbox';
       case 'checkbox' : $oInput = new HTML_Checkbox; $aClasses[] = 'field-bool'; break;
@@ -146,6 +147,10 @@ class HTML_Field extends XML_Document {
       // File upload
       
       if ($sInput == 'file') $oContainer->add(new HTML_Input('hidden', SYLMA_UPLOAD_MAX_SIZE, array('name' => 'MAX_FILE_SIZE')));
+      
+      // Tiny MCE
+      
+      if ($sInput == 'html') $oInput->addClass('mceEditor');
       
       // Marquage
       

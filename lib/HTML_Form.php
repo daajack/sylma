@@ -29,15 +29,20 @@ class HTML_Form extends HTML_Tag {
     }
   }
   
-  public function getValue($sPath) {
+  public function getValue($sPath, $bHTML = false) {
+    
+    $mValue = null;
     
     if ($this->oValues) {
       
-      $oElement = $this->oValues->get($sPath);
-      if ($oElement) return $oElement->read();
+      if ($oElement = $this->oValues->getByName($sPath)) {
+        
+        if ($bHTML) $mValue = (string) $oElement->getChildren();
+        else $mValue = $oElement->read();
+      }
     }
     
-    return null;
+    return $mValue;
   }
   
   public function getId() {
@@ -111,13 +116,14 @@ class HTML_Form extends HTML_Tag {
           $oResult = $oElement->merge($oField, true);
           
           $aField = array();
-          if ($oArguments = $oResult->get('fs:arguments', $this->aNS)) {
+          //if ($oArguments = $oResult->get('fs:arguments', $this->aNS)) {
+          if ($oArguments = $oResult->getByName('arguments')) {
             
             $aField['arguments'] = $oArguments->getChildren()->toArray();
             $oArguments->remove();
           }
           
-          if ($oOptions = $oResult->get('fs:options', $this->aNS)) {
+          if ($oOptions = $oResult->getByName('options')) {
             
             if ($oOptions->isTextElement()) $aField['options'] = explode(',', $oOptions->read());
             else if ($oOptions->hasElementChildren()) $aField['options'] = $oOptions->getChildren()->toArray('value');
@@ -134,9 +140,9 @@ class HTML_Form extends HTML_Tag {
         $aField['id'] = $sExtField;
         $aField['name'] = $sField;
         
-        $sValue = $this->getValue($sField);
+        $mValue = $this->getValue($sField, ($oResult->readByName('type') == 'html'));
         
-        if ($sValue !== null) $aField['value'] = $sValue;
+        if ($mValue !== null) $aField['value'] = $mValue;
         
         $oField = new HTML_Field($aField, $bMark);
         

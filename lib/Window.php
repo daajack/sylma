@@ -276,11 +276,11 @@ class HTML_Action extends XML_Action {
     $this->sOnLoad .= "\n".$sContent;
   }
   
-  public function addJS($sHref, $sContent = null) {
+  public function addJS($sHref, $mContent = null) {
     
     if ($oHead = $this->getHead()) {
       
-      if ($sContent) $oHead->add(new HTML_Script('', $sContent));
+      if ($mContent) $oHead->add(new HTML_Script('', (string) $mContent));
       else if (!$oHead->get("ns:script[@src='$sHref']")) $oHead->add(new HTML_Script($sHref));
       
     } else dspm(xt('Impossible d\'ajouter le fichier script %s', new HTML_Strong($sHref)), 'warning');

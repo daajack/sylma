@@ -266,7 +266,7 @@ class XML_Document extends DOMDocument {
   
   public function loadFreeFile($sPath) {
     
-    $bResult = parent::load(MAIN_DIRECTORY.$sPath);
+    $bResult = parent::load(MAIN_DIRECTORY.$sPath, LIBXML_COMPACT);
     
     if ($bResult) {
       
@@ -360,7 +360,7 @@ class XML_Document extends DOMDocument {
         
         if ((!$bSecurityFile && $bAccess) || ($bSecurityFile && Controler::isAdmin())) {
           
-          $oDocument = $oFile->getFreeDocument();
+          if ($oFile) $oDocument = $oFile->getFreeDocument();
           
           if ($oFile && $oFile->isFileSecured()) {
             

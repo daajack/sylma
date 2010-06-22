@@ -18,12 +18,12 @@ function xt() {
 }
 
 function strtoxml($sValue, $aNS = array()) {
-  // xmlns:le="'.NS_EXECUTION.'" xmlns:li="'.NS_INTERFACE.'"
+  // xmlns:le="'.SYLMA_NS_EXECUTION.'" xmlns:li="'.SYLMA_NS_INTERFACE.'"
   
   $oDocument = new XML_Document;
   $sAttributes = '';
   
-  if (!array_key_exists(0, $aNS)) $aNS[0] = NS_XHTML;
+  if (!array_key_exists(0, $aNS)) $aNS[0] = SYLMA_NS_XHTML;
   
   foreach ($aNS as $sPrefix => $sUri) {
     

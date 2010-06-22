@@ -144,7 +144,7 @@ class User {
   public function parse() {
     
     $oNode = new HTML_Div(array(
-      new HTML_A(PATH_USER_EDIT.$this->getName(), $this->getArgument('full-name')),
+      new HTML_A(SYLMA_PATH_USER_EDIT.$this->getName(), $this->getArgument('full-name')),
       ' ('.implode(', ', $this->getGroups()).')'), array('id' => 'user-info'));
     
     return $oNode;

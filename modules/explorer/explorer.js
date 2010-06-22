@@ -16,6 +16,16 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
       
       this.path = sPath
     },
+    
+    replace : function(sPath) {
+      
+      this.parent(this.getPath(), {'resource' : sPath});
+    },
+    
+    update : function() {
+      
+      this.parent({'resource' : this.path});
+    }
   }),
   
   'tools' : new Class({
@@ -173,13 +183,15 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
     updateName : function() {
       
       var sName = this.editName.node.getElement('input[name=resource-name]').get('value');
-      //alert('ok + ' + sName);
+      var oResource = this.resource;
+      
       if (sName) {
         
         var oArguments = {
           'resource' : this.resource.path,
           'directory' : this.resource.isDirectory(),
-          'name' : sName}
+          'name' : sName
+        }
         
         var oCaller = this;
         var oRequest = new sylma.classes.request({
@@ -188,7 +200,7 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
           'data' : oArguments,
           'onSuccess' : function(sResult, oResult) {
             
-            oCaller.onUpdateName(this.parseAction(oResult), oCaller.resource, oArguments);
+            oCaller.onUpdateName(this.parseAction(oResult), oResource, oArguments);
           }
         }).send();
       }
@@ -204,7 +216,7 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
       var oResource = this.resource;
       var sPath = sylma.explorer.pathInterface + '/update';
       
-      this.request = new sylma.classes.request({
+      var oRequest = new sylma.classes.request({
         
         'url' : sPath + '.action',
         'data' : oArguments,
@@ -214,7 +226,7 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
           
           mContent.setStyle('opacity', 0.2);
           mContent.replaces(oResource.node);
-          
+          //alert(sPath);
           var oSubResult = new Request.JSON({
             
             'url' : sPath + '.txt', 
@@ -228,14 +240,11 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
       }).post();
     },
     
-    onUpdateName : function(mResult) {
+    onUpdateName : function(mResult, oResource, oArguments) {
       
-      //var bResult = sylma.inttobool(mResult.get('text'));
+      var sPath = mResult.get('text');
       
-      if (bResult) {
-        
-        alert('Nom mis-à-jour');
-      }
+      if (sPath) oResource.replace(sPath);
     }
   })
 };
@@ -255,11 +264,9 @@ $extend(oExplorerClasses, {
     
     open : function() {
       
-      var layer = this.parentObject;
-      
       sylma.explorer.tools.reset();
       
-      return layer.update({'path' : this.path});
+      return this.parentObject.update({'path' : this.path});
     }
   })
   

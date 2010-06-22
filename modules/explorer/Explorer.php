@@ -56,14 +56,15 @@ class Explorer {
       if ($bDirectory) { // directory
         
         if (!$oDirectory = Controler::getDirectory($sPath)) dspm(t('Répertoire introuvable'), 'error');
-        else if ($bResult = $oDirectory->updateName($sName)) dspm(t('Changement de nom effectué'), 'success');
+        else $bResult = $oDirectory->updateName($sName);
         
       } else { // file
         
         if (!$oFile = Controler::getFile($sPath)) dspm(t('Fichier introuvable'), 'error');
-        else if ($bResult = $oFile->updateName($sName)) dspm(t('Changement de nom effectué'), 'success');
+        else $oResult = $oFile->updateName($sName); // update
       }
     }
-    //return booltoint($bResult);
+    
+    return (string) $oResult;
   }
 }

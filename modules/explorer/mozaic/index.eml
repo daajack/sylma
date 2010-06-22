@@ -24,6 +24,7 @@
     </le:path>
   </le:settings>
   <la:layer name="mozaic" extend-base="sylma.explorer-classes">
+    <la:property name="sylma-send-method">get</la:property>
     <la:property name="parentDirectory">
       <le:string>
         <le:get-argument name="path">

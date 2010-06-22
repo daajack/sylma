@@ -18,7 +18,7 @@ class Controler {
   private static $oRedirect;
   private static $oDatabase;
   
-  private static $oPath = null;      // Chemin complet du fichier. Ex: /utilisateur/edit/1
+  private static $oPath = null;      // Chemin complet du fichier. Ex: /utilisateur/edit/1.html
   private static $aPaths = array(); // Liste des précédents chemins redirigés, ajoutés dans oRedirect
   private static $sAction = '';     // Chemin de l'action. Ex: /utilisateur/edit
   private static $aResults = array();     // Pile of results of the same action in different mime type (typically html + json)
@@ -103,11 +103,15 @@ class Controler {
         
         $oAction = new XML_Action(self::getPath(), $oRedirect);
         
-        if (self::getWindowSettings()->hasAttribute('action')) {
+        if ($oAction->isEmpty()) self::errorRedirect(); // no rights / empty main action
+        else {
           
-          $oResult = self::getWindow()->getPath()->setAssoc('window-action', $oAction);
-          
-        } else $oResult = self::getWindow()->loadAction($oAction); // TODO or not todo : make XML_Action
+          if (self::getWindowSettings()->hasAttribute('action')) {
+            
+            $oResult = self::getWindow()->getPath()->setAssoc('window-action', $oAction);
+            
+          } else $oResult = self::getWindow()->loadAction($oAction); // TODO or not todo : make XML_Action
+        }
       }
       
       /* Action redirected */
@@ -284,7 +288,7 @@ class Controler {
         $oMessages = $oRedirect->getDocument('messages');
         // $oMessages = new XML_Document;
         // $oMessages->loadText($oRedirect->getArgument('messages'));
-        $aMessages = $oMessages->query('//lm:message', 'lm', NS_MESSAGES);
+        $aMessages = $oMessages->query('//lm:message', 'lm', SYLMA_NS_MESSAGES);
         
         $oRedirect->setMessages($aMessages);
         
@@ -300,12 +304,12 @@ class Controler {
       
       if ($_POST) {
         
-        //$oValues = new XML_Document(new XML_Element('post', null, null, NS_XHTML));
+        //$oValues = new XML_Document(new XML_Element('post', null, null, SYLMA_NS_XHTML));
         $oValues = new XML_Document('post');
         
         foreach ($_POST as $sKey => $mValue) {
           
-          //if (is_string($mValue)) $oTest = $oValues->addNode($sKey, $mValue, null, NS_XHTML);
+          //if (is_string($mValue)) $oTest = $oValues->addNode($sKey, $mValue, null, SYLMA_NS_XHTML);
           if (is_string($mValue)) $oTest = $oValues->addNode($sKey, $mValue);
           
           //else if (is_array($mValue))
@@ -475,17 +479,13 @@ class Controler {
   /* Redirects */
   /*************/
   
-  private static function doAJAXRedirect($oRedirect) {
+  public static function errorRedirect($mMessages = null, $sStatut = 'error') {
     
-    self::doRedirect($oRedirect);
-    self::getWindow()->setRedirect($oRedirect);
-  }
-  
-  public static function error404() {
+    if ($mMessages) Controler::addMessage($mMessages, $sStatut);
     
-    header('HTTP/1.0 404 Not Found');
-    // echo 'Erreur 404 :\'(';
-    exit;
+    $sPath = SYLMA_PATH_ERROR.'.'.self::getPath()->getExtension();
+    
+    self::doHTTPRedirect(new Redirect($sPath));
   }
   
   private static function doHTTPRedirect($oRedirect) {
@@ -502,7 +502,6 @@ class Controler {
       exit;
       
     } else self::errorRedirect('Redirection incorrect !');
-    
   }
   
   private static function doRedirect($oRedirect) {
@@ -522,6 +521,15 @@ class Controler {
     
     $_SESSION['redirect'] = serialize($oRedirect);
   }
+  
+  public static function error404() {
+    
+    header('HTTP/1.0 404 Not Found');
+    // echo 'Erreur 404 :\'(';
+    exit;
+  }
+  
+  /* Backtrace / Messages */
   
   public static function formatResource($mArgument, $bDecode = false, $iMaxLength = 120) {
     
@@ -792,28 +800,6 @@ class Controler {
   public static function getDatabase() {
     
     return self::$oDatabase;
-  }
-  
-  public static function accessRedirect($mMessages = '', $sPath = PATH_LOGIN, $sStatut = 'warning') {
-    
-    if (!$mMessages) $mMessages = sprintf(t('Vous n\'avez pas les droits pour accéder à cette page "%s" !'), self::getPath());
-    
-    if (Controler::getUser()->isReal()) $sPath = PATH_ACCESS;
-    
-    if (is_string($mMessages)) $mMessages = new Message($mMessages, $sStatut);
-    
-    self::doHTTPRedirect(new Redirect($sPath, $mMessages));
-  }
-  
-  public static function errorRedirect($mMessages = null, $sStatut = 'error') {
-    
-    if ($mMessages) Controler::addMessage($mMessages, $sStatut);
-    //$oRedirect = new Redirect(PATH_ERROR, new Message($aMessages, $sStatut));
-    //echo Controler::getBacktrace();
-    self::doHTTPRedirect(new Redirect(PATH_ERROR));
-    // else echo 'Aucun message'.new HTML_Br;
-    
-    // self::doHTTPRedirect(new Redirect(PATH_ERROR, new Message($aMessages, $sStatut)));
   }
   
   public static function setUser($oUser = null) {

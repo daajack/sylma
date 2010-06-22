@@ -82,7 +82,7 @@ class Users extends Form_Controler {
         
         // Si il y'a redirection
         
-        if (isset($_POST['redirect']) && $_POST['redirect'] && !in_array($_POST['redirect'], array(PATH_LOGIN, PATH_LOGOUT))) {
+        if (isset($_POST['redirect']) && $_POST['redirect'] && !in_array($_POST['redirect'], array(SYLMA_PATH_LOGIN, SYLMA_PATH_LOGOUT))) {
           
           $sPath = $_POST['redirect'];
           Controler::addMessage(xt('Redirection vers "%s"', new HTML_Strong($sPath)));

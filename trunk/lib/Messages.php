@@ -5,7 +5,7 @@ class Messages extends XML_Document {
   private $aAllowedMessages = array();
   private $aStatuts = array();
   private $oLast = null;
-  private $aNS = array('lm' => NS_MESSAGES);
+  private $aNS = array('lm' => SYLMA_NS_MESSAGES);
   
   public function __construct($oSchema = null, $mMessages = array()) {
     
@@ -20,7 +20,7 @@ class Messages extends XML_Document {
     
     $oResult = null;
     
-    if ($oMessage->useNamespace(NS_MESSAGES)) {
+    if ($oMessage->useNamespace(SYLMA_NS_MESSAGES)) {
       
       // TODO: foreach ($oMessage->aArguments as $oArgument) $this->setArgument('fields'][ += $oMessage[]
       
@@ -75,7 +75,7 @@ class Messages extends XML_Document {
    **/
   public function getMessages($sPath = '') {
     
-    $oResult = $this->query("$sPath//lm:message", 'lm', NS_MESSAGES);
+    $oResult = $this->query("$sPath//lm:message", 'lm', SYLMA_NS_MESSAGES);
     if (!$oResult->length) $oResult = array();
     
     return $oResult;
@@ -145,7 +145,7 @@ class Message extends XML_Element {
   
   public function __construct($mMessage, $sPath = '', array $aArgs = array()) {
     
-    parent::__construct('lm:message', null, null, NS_MESSAGES);
+    parent::__construct('lm:message', null, null, SYLMA_NS_MESSAGES);
     
     if (!$sPath) $sPath = '/';
     

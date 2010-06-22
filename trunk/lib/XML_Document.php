@@ -57,17 +57,17 @@ class XML_Document extends DOMDocument {
     
     $iMode = 7;
     
-    if (!($oNode->hasAttributeNS(NS_SECURITY, 'owner') &&
-      $oNode->hasAttributeNS(NS_SECURITY, 'mode') &&
-      $oNode->hasAttributeNS(NS_SECURITY, 'group'))) {
+    if (!($oNode->hasAttributeNS(SYLMA_NS_SECURITY, 'owner') &&
+      $oNode->hasAttributeNS(SYLMA_NS_SECURITY, 'mode') &&
+      $oNode->hasAttributeNS(SYLMA_NS_SECURITY, 'group'))) {
       
       Controler::addMessage(xt('Sécurité : Élément sécurisé incomplet : %s', new HTML_Tag('em', $oNode->viewResume())), 'xml/warning');
       
     } else {
       
-      $sOwner = $oNode->getAttribute('owner', NS_SECURITY);
-      $sMode = $oNode->getAttribute('mode', NS_SECURITY);
-      $sGroup = $oNode->getAttribute('group', NS_SECURITY);
+      $sOwner = $oNode->getAttribute('owner', SYLMA_NS_SECURITY);
+      $sMode = $oNode->getAttribute('mode', SYLMA_NS_SECURITY);
+      $sGroup = $oNode->getAttribute('group', SYLMA_NS_SECURITY);
       
       $iResult = Controler::getUser()->getMode($sOwner, $sGroup, $sMode, $oNode);
       if ($iResult !== null) $iMode = $iResult;
@@ -84,7 +84,7 @@ class XML_Document extends DOMDocument {
       
       if (Controler::getUser() && !SYLMA_DISABLE_RIGHTS) {
         
-        $oNodes = $this->query('//*[@ls:owner or @ls:mode or @ls:group]', 'ls', NS_SECURITY);
+        $oNodes = $this->query('//*[@ls:owner or @ls:mode or @ls:group]', 'ls', SYLMA_NS_SECURITY);
         
         if ($oNodes->length) {
           
@@ -150,7 +150,7 @@ class XML_Document extends DOMDocument {
   protected function includeExternals($sQuery, $aNS, &$aPaths = array(), $iLevel = 0) {
     
     $sPath = (string) $this->getFile();
-    $iMaxLevel = XSL_MAX_IMPORT_DEPTH;
+    $iMaxLevel = SYLMA_MAX_INCLUDE_DEPTH;
     
     if ($iLevel > $iMaxLevel) {
       
@@ -198,6 +198,7 @@ class XML_Document extends DOMDocument {
           
           $oExternal->remove();
         }
+        
       }// else return false;
     }
     
@@ -367,7 +368,7 @@ class XML_Document extends DOMDocument {
             // Secured File
             $bSecured = false;
             
-            $oNodes = $oDocument->query('//*[@ls:owner or @ls:mode or @ls:group]', 'ls', NS_SECURITY);
+            $oNodes = $oDocument->query('//*[@ls:owner or @ls:mode or @ls:group]', 'ls', SYLMA_NS_SECURITY);
             
             if ($oNodes->length) {
               
@@ -758,7 +759,7 @@ class XSL_Document extends XML_Document {
     if ($mChildren) parent::__construct($mChildren, $iMode);
     else {
       
-      parent::__construct(new XML_Element('xsl:stylesheet', null, array('xmlns' => NS_XHTML, 'version' => '1.0'), NS_XSLT), $iMode);
+      parent::__construct(new XML_Element('xsl:stylesheet', null, array('xmlns' => SYLMA_NS_XHTML, 'version' => '1.0'), SYLMA_NS_XSLT), $iMode);
       
       //new XML_Element('output', array('method' => 'xml', 'encoding' => 'utf-8'), true, 'xsl'));
       // 'xmlns:fo'    => 'http://www.w3.org/1999/XSL/Format',
@@ -795,7 +796,7 @@ class XSL_Document extends XML_Document {
     return $this->oProcessor;
   }
   
-  public function includeExternals($sQuery = '/*/xsl:include | /*/xsl:import', $aNS = array('xsl' => NS_XSLT), &$aPaths = array(), $iLevel = 0) {
+  public function includeExternals($sQuery = '/*/xsl:include | /*/xsl:import', $aNS = array('xsl' => SYLMA_NS_XSLT), &$aPaths = array(), $iLevel = 0) {
     
     return parent::includeExternals($sQuery, $aNS, $aPaths, $iLevel);
     //dspf($this);

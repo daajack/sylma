@@ -14,7 +14,7 @@ class HTML_Tag extends XML_Element {
   
   public function __construct($sName = '', $oContent = '', $aAttributes = array()) {
     
-    parent::__construct($sName, $oContent, $aAttributes, NS_XHTML);
+    parent::__construct($sName, $oContent, $aAttributes, SYLMA_NS_XHTML);
   }
   
   public function addClasses() {
@@ -256,7 +256,7 @@ class HTML_Document extends XML_Helper {
   
   public function getHead() {
     
-    if (!$this->oHead && ($oHead = $this->get('/xhtml:html/xhtml:head', array('xhtml' => NS_XHTML)))) $this->oHead = $oHead;
+    if (!$this->oHead && ($oHead = $this->get('/xhtml:html/xhtml:head', array('xhtml' => SYLMA_NS_XHTML)))) $this->oHead = $oHead;
     
     return $this->oHead;
   }
@@ -292,12 +292,12 @@ class HTML_Document extends XML_Helper {
     
     if ($this->sOnLoad) $this->addJS(null, "window.addEvent('domready', function() {\n".$this->sOnLoad."\n});");
     
-    if ($oElements = $this->query(SYLMA_HTML_TAGS, array('html' => NS_XHTML)))
+    if ($oElements = $this->query(SYLMA_HTML_TAGS, array('html' => SYLMA_NS_XHTML)))
       foreach ($oElements as $oElement) if (!$oElement->hasChildren()) $oElement->set(' ');
     
     $oView = new XML_Document($this);
     
-    $oView->query('//@ls:owner | //@ls:mode | //@ls:group', 'ls', NS_SECURITY)->remove();
+    $oView->query('//@ls:owner | //@ls:mode | //@ls:group', 'ls', SYLMA_NS_SECURITY)->remove();
     $oView->formatOutput();
     
     return $sDocType."\n".$oView->display(false);
@@ -528,12 +528,12 @@ class HTML_Ul extends HTML_Tag {
     
     $aArguments = func_get_args();
     
-    return $this->addNode('li', $aArguments, null, NS_XHTML);
+    return $this->addNode('li', $aArguments, null, SYLMA_NS_XHTML);
   }
   
   function addItem($sContent, $aAttributes = array()) {
     
-    return $this->addNode('li', $sContent, $aAttributes, NS_XHTML);
+    return $this->addNode('li', $sContent, $aAttributes, SYLMA_NS_XHTML);
   }
 }
 

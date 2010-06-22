@@ -1,12 +1,12 @@
 <?php
 
 define('SYLMA_PATH_ACTIONBUILDER', '/sylma/processors/action-builder');
-define('NS_ACTIONBUILDER', SYLMA_PATH_ACTIONBUILDER.'/schema');
+define('SYLMA_NS_ACTIONBUILDER', SYLMA_PATH_ACTIONBUILDER.'/schema');
 
 class ActionBuilder extends XML_Processor  {
   
   private $oMethods;
-  private $aNS = array('la' => NS_ACTIONBUILDER);
+  private $aNS = array('la' => SYLMA_NS_ACTIONBUILDER);
   private $bFirstPass = true;
   
   private $sExtend = 'extend-class';
@@ -15,7 +15,7 @@ class ActionBuilder extends XML_Processor  {
     
     if (Controler::isWindowType('sylma')) {
       
-      $this->oMethods = new XML_Document(new XML_Element('la:root', null, null, NS_ACTIONBUILDER));
+      $this->oMethods = new XML_Document(new XML_Element('la:root', null, null, SYLMA_NS_ACTIONBUILDER));
       
     } else $this->bFirstPass = false;
   }
@@ -29,11 +29,12 @@ class ActionBuilder extends XML_Processor  {
     
     $mResult = null;
     
-    // layer's current action
+    // ONLY layer's current action
+    
     if (in_array($oElement->getName(true), array('layout', 'layer'))) {
       
       //$oElement->setAttribute('path', $this->getAction()->getPath()->getOriginalPath());
-      $oElement->addNode('property', $this->getAction()->getPath()->getOriginalPath(), array('name' => 'path'), NS_ACTIONBUILDER);
+      $oElement->addNode('property', $this->getAction()->getPath()->getOriginalPath(), array('name' => 'sylma-update-path'), SYLMA_NS_ACTIONBUILDER);
     }
     
     if ($this->isFirst()) { // root object
@@ -107,8 +108,9 @@ class ActionBuilder extends XML_Processor  {
         $sSource = $oAction->getPath();
         //dspm(array(xt('Attribut %s manquant dans l\'élément', new HTML_Strong('file-source')), $oMethod->messageParse()), 'action/error');
       }
-      
-      $sChildId = 'method-'.bin2hex(substr(md5($sSource.$sName.$iCount), 0, 7));
+      //dspm(array($sSource, ' / ', $sName, ' / ', $iCount, ' / ', bin2hex(substr(md5($sSource.$sName.$iCount), 0, 7))));
+      //$sChildId = 'method-'.bin2hex(substr(md5($sSource.$sName.$iCount), 0, 7));
+      $sChildId = 'method-'.sprintf('%u', crc32($sSource.$sName.$iCount));
       
       //dspm($sChildId);
       $oResult = new XML_Element($sName, null, array('id' => $sChildId));
@@ -146,7 +148,7 @@ class ActionBuilder extends XML_Processor  {
       $oNewMethod = new XML_Element('la:method', null, array(
         'id' => $sChildId,
         'name' => $sName,
-        'extract-ref' => 'parent'), NS_ACTIONBUILDER);
+        'extract-ref' => 'parent'), SYLMA_NS_ACTIONBUILDER);
       
       $oNewMethod->cloneAttributes($oMethod, array('delay', 'timer'));
       if ($oMethod->getName() == 'event') $oNewMethod->setAttribute('event', 1);
@@ -164,7 +166,7 @@ class ActionBuilder extends XML_Processor  {
     $this->parseObjects($oDocument->query("//la:layout | //la:layer | //la:object", $this->aNS));
     $this->parseMethods($oDocument->query("//la:method", $this->aNS));
     
-    return $oDocument->extractNS(NS_ACTIONBUILDER, false); // Extract action tree
+    return $oDocument->extractNS(SYLMA_NS_ACTIONBUILDER, false); // Extract action tree
   }
   
   /**
@@ -242,7 +244,7 @@ class ActionBuilder extends XML_Processor  {
         if ($sRefId = $oRefNode->getId()) $oElement->setAttribute('id-node', $sRefId);
         else {
           
-          $oParent = $oElement->get("ancestor::*[namespace-uri() = '".NS_ACTIONBUILDER."'][position() = 1]");
+          $oParent = $oElement->get("ancestor::*[namespace-uri() = '".SYLMA_NS_ACTIONBUILDER."'][position() = 1]");
           $oParentNode = $oElement->getDocument()->get("//*[@id='{$oParent->getAttribute('id-node')}']");
           
           $sPath = '#'.$oParentNode->getId().' > '.$oRefNode->getCSSPath($oParentNode);
@@ -278,7 +280,7 @@ class ActionBuilder extends XML_Processor  {
         
         if ($oElement->hasChildren() && $oElement->getFirst()->isElement()) {
           
-          if ($oElement->getFirst()->getNamespace() == $oElement->getNamespace()) $oRefNode = $oElement->get("*[namespace-uri() != '".NS_ACTIONBUILDER."']", $this->aNS);
+          if ($oElement->getFirst()->getNamespace() == $oElement->getNamespace()) $oRefNode = $oElement->get("*[namespace-uri() != '".SYLMA_NS_ACTIONBUILDER."']", $this->aNS);
           else $oRefNode = $oElement->getFirst();
           
         } else dspm(xt('ActionBuilder : Référence impossible, l\'objet %s n\'a pas d\'enfant valide dans %s', view($oElement), $this->getAction()->getPath()->parse()), 'action/error');
@@ -298,9 +300,9 @@ class ActionBuilder extends XML_Processor  {
     // Parse as JSON xml => array() then add the result in Controler
     
     $oTemplate = new XSL_Document(SYLMA_PATH_ACTIONBUILDER.'/index.xsl');
-    // dspf($oScript);
+    //dspf($oScript);
     if ($oResult = $oTemplate->parseDocument($oScript)) {
-      // dspf($oResult);
+      //dspf($oResult);
       //dspm(get_class(Controler::getWindow()));
       list(, $aResult) = $oResult->toArray();
       Controler::addResult(json_encode($aResult), 'txt');

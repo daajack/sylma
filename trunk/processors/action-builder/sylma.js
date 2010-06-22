@@ -39,10 +39,10 @@ var sylma = {
     
     for (var i in object) { var bluh; }
     
-    return sylma.buildObject(object[i], oParent);
+    return sylma.buildObject(object[i], i, oParent, oParent);
   },
   
-  buildObject: function(object, parentLayer, iDepth) {
+  buildObject: function(object, sName, parentLayer, rootObject, iDepth) {
     
     var sKey, sName, oSub, bRoot, eNode;
     var oResult = {};
@@ -52,7 +52,7 @@ var sylma = {
       
       var sClass = null;
       
-      if (parentLayer) sClassBase = parentLayer._classBase;
+      if (parentLayer) sClassBase = parentLayer['sylma-classbase'];
       else sClassBase = '';
       
       if (!parentLayer) parentLayer = oResult;
@@ -90,7 +90,7 @@ var sylma = {
         }
       }
       
-      oResult._classBase = sClassBase;
+      oResult['sylma-classbase'] = sClassBase;
       
       if (bResult) {
         
@@ -109,6 +109,10 @@ var sylma = {
         }
         
         oResult.parentObject = parentLayer; // Attach parent object
+        oResult['sylma-name'] = parentLayer; // Attach parent object ref
+        oResult.rootObject = rootObject; // Attach root object (layout)
+        
+        if (!rootObject) rootObject = oResult;
         
       } else this.dsp('Erreur :: Impossible de créer l\'objet');
     }
@@ -126,11 +130,11 @@ var sylma = {
           
           if (sType == 'object') { // JS Object
             
-            if (oSub['is-sylma-object']) oResult[sKey] = this.buildObject(oSub, oResult, iDepth + 1); // Sylma object
+            if (oSub['is-sylma-object']) oResult[sKey] = this.buildObject(oSub, sKey, oResult, rootObject, iDepth + 1); // Sylma object
             else if (oSub['is-sylma-array']) { // Sylma array
               
               oResult[sKey] = new Array();
-              for (var sSubKey in oSub) oResult[sKey][sSubKey] = this.buildObject(oSub[sSubKey], oResult, iDepth + 1);
+              for (var sSubKey in oSub) oResult[sKey][sSubKey] = this.buildObject(oSub[sSubKey], sKey, oResult, rootObject, iDepth + 1);
               
             } else {this.dsp('Type d\'object inconnu : ' + sKey); this.dsp(this.view(object['properties'])); }// Sylma others
             
@@ -284,7 +288,6 @@ var sylma = {
   }
 };
 
-
 sylma.classes.request = new Class({
   
   Extends : Request,
@@ -346,36 +349,63 @@ sylma.classes.request = new Class({
 
 sylma.classes.layer = new Class({
   
-  update : function(oArguments) {
+  getPath : function() {
     
-    var layer = this;
+    var sPath = this['sylma-update-path'];
+    
+    if (this['sylma-update-origin']) {
+      
+      switch (this['sylma-update-origin']) {
+        
+        case 'interface' : sPath = this.rootObject.pathInterface + sPath; break;
+        case 'action' : sPath = this.rootObject.path + sPath; break;
+      }
+    }
+    
+    return sPath;
+  },
+  
+  replace : function(sPath, oArguments, sMethod) {
+    
+    var oCaller = this;
+    
     this.node.setStyle('opacity', 0.2);
+    if (!sMethod) sMethod = 'post';
+    
     this.request = new sylma.classes.request({
       
-      'url' : layer.path + '.action',
+      'url' : sPath + '.action',
       'data' : oArguments,
+      'method' : sMethod,
       'onSuccess' : function(sResult, oResult) {
         
         var mContent = sylma.importNode(this.parseAction(oResult).getFirst());
         
         mContent.setStyle('opacity', 0.2);
-        mContent.replaces(layer.node);
+        mContent.replaces(oCaller.node);
         
         // TODO kill old layer
         //layer.node.destroy(); 
         
         var oSubResult = new Request.JSON({
           
-          'url' : layer.path + '.txt', 
+          'url' : sPath + '.txt', 
           'onSuccess' : function(oResponse) {
             
-            sylma.explorer.mozaic = sylma.buildRoot(oResponse, sylma.explorer);
+            oCaller.parentObject[oCaller['sylma-name']] = sylma.buildRoot(oResponse, sylma.explorer);
             //sylma.explorer.mozaic.parentObject = sylma.explorer;
             mContent.setStyle('opacity', 1);
             
         }}).get();
       }
-    }).get();
+    }).send();
+  },
+  
+  update : function(oArguments) {
+    
+    if (this['sylma-send-method']) var sMethod = this['sylma-send-method'];
+    
+    this.replace(this.getPath(), oArguments, sMethod);
   }
   
 }),

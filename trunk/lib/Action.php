@@ -9,7 +9,7 @@ class XML_Action extends XML_Document {
   private $oRedirect = null;
   private $sStatut = null;
   private $aProcessors = array();
-  private $aNS = array('le' => NS_EXECUTION, 'le' => NS_INTERFACE, 'xsl', NS_XSLT );
+  private $aNS = array('le' => SYLMA_NS_EXECUTION, 'le' => SYLMA_NS_INTERFACE, 'xsl', SYLMA_NS_XSLT );
   
   private $aQueries = array();
   
@@ -104,7 +104,7 @@ class XML_Action extends XML_Document {
         
         // simulate action interface call, with args recup (get-redirect) and default return (return)
         
-        $oElement = new XML_Element('li:'.$sMethod, null, array('get-redirect' => 'true', 'return' => 'true'), NS_INTERFACE);
+        $oElement = new XML_Element('li:'.$sMethod, null, array('get-redirect' => 'true', 'return' => 'true'), SYLMA_NS_INTERFACE);
         list($oSubResult, $bSubResult) = $this->runInterfaceMethod($oObject, $oElement, $this);
         
         if ($bSubResult) $oResult = $oSubResult;
@@ -156,7 +156,7 @@ class XML_Action extends XML_Document {
       
       if ($oChild->isElement()) {
         
-        if ($oChild->getNamespace() == NS_INTERFACE) {
+        if ($oChild->getNamespace() == SYLMA_NS_INTERFACE) {
           
           list($mResult, $bReturn) = $this->runInterfaceMethod($mObject, $oChild, $oInterface, $bStatic);
           
@@ -234,7 +234,7 @@ class XML_Action extends XML_Document {
         
         // @le:format (string) : force children in one var with type indicated
         
-        if ($sFormat = $oElement->getAttribute('format', NS_EXECUTION)) {
+        if ($sFormat = $oElement->getAttribute('format', SYLMA_NS_EXECUTION)) {
           
           $aArguments = array('index' => array($this->parseBaseType($sFormat, $oElement)));
           $oElement->cleanChildren();
@@ -287,11 +287,11 @@ class XML_Action extends XML_Document {
       
       if ($oChild->isElement()) {
         
-        if (!$oChild->useNamespace(NS_INTERFACE)) {
+        if (!$oChild->useNamespace(SYLMA_NS_INTERFACE)) {
           
-          if (!$sName = $oChild->getAttribute('name', NS_EXECUTION)) {
+          if (!$sName = $oChild->getAttribute('name', SYLMA_NS_EXECUTION)) {
             
-            if ($oChild->getName(true) == 'argument' && $oChild->useNamespace(NS_EXECUTION)) $sName = $oChild->getAttribute('name');
+            if ($oChild->getName(true) == 'argument' && $oChild->useNamespace(SYLMA_NS_EXECUTION)) $sName = $oChild->getAttribute('name');
             else $sName = '';
           }
           
@@ -399,7 +399,7 @@ class XML_Action extends XML_Document {
         
         if ($oElement->hasChildren()) {
           
-          if ($sFormat = $oElement->getAttribute('format', NS_EXECUTION)) $mResult = $this->parseBaseType($sFormat, $oElement);
+          if ($sFormat = $oElement->getAttribute('format', SYLMA_NS_EXECUTION)) $mResult = $this->parseBaseType($sFormat, $oElement);
           else if ($oElement->countChildren() <= 1) $mResult = $this->buildArgument($oElement->getFirst());
           else dspm(xt('Argument d\'action %s invalide. Nombre d\'enfants incorrect', view($oElement)), 'action/warning');
           
@@ -410,7 +410,7 @@ class XML_Action extends XML_Document {
       case 'test-argument' :
         
         $oArgument = new XML_Element('le:get-argument', null, array(
-          'keep' => 'true'), NS_EXECUTION);
+          'keep' => 'true'), SYLMA_NS_EXECUTION);
         
         if ($sName = $oElement->getAttribute('name')) $oArgument->setAttribute('name', $sName);
         
@@ -588,11 +588,11 @@ class XML_Action extends XML_Document {
       case 'namespace' :
         
         $aNamespaces = array(
-          'action' => NS_EXECUTION,
-          'directory' => NS_DIRECTORY,
-          'security' => NS_SECURITY,
-          'interface' => NS_INTERFACE,
-          'message' => NS_MESSAGES);
+          'action' => SYLMA_NS_EXECUTION,
+          'directory' => SYLMA_NS_DIRECTORY,
+          'security' => SYLMA_NS_SECURITY,
+          'interface' => SYLMA_NS_INTERFACE,
+          'message' => SYLMA_NS_MESSAGES);
         
         if (!$sNamespace = $oElement->getAttribute('name')) {
           
@@ -654,7 +654,7 @@ class XML_Action extends XML_Document {
     }
     // Clone some attribute when element is an le:action
     /*
-    if ($oElement->isElement() && $oElement->getName(true) == 'action' && $oElement->useNamespace(NS_EXECUTION) && is_object($mResult)) {
+    if ($oElement->isElement() && $oElement->getName(true) == 'action' && $oElement->useNamespace(SYLMA_NS_EXECUTION) && is_object($mResult)) {
       
       if (($mResult instanceof XML_Document) || ($mResult instanceof XML_Element))
         $mResult->cloneAttributes($oElement, array('class', 'style', 'id'));
@@ -673,14 +673,14 @@ class XML_Action extends XML_Document {
     
     if ($oArgument instanceof XML_Element) { // XML_Element
       
-      if ($oArgument->useNamespace(NS_EXECUTION)) {
+      if ($oArgument->useNamespace(SYLMA_NS_EXECUTION)) {
         
         /* Execution */
         
         $sAction = 'Executable';
         $mResult = $this->buildArgumentExecution($oArgument);
         
-      } else if ($oArgument->useNamespace(NS_INTERFACE)) {
+      } else if ($oArgument->useNamespace(SYLMA_NS_INTERFACE)) {
         
         /* Interface */
         
@@ -1104,8 +1104,8 @@ class XML_Action extends XML_Document {
           
           $aFormats[] = $sFormat; // TODO NS BUGS
           
-        } else if ((!$aFormats = $oChild->query('xhtml:format', array('xhtml' => NS_XHTML))->toArray()) &&
-          ($oFormat = $oChild->get('le:formats', 'le', NS_EXECUTION))) {
+        } else if ((!$aFormats = $oChild->query('xhtml:format', array('xhtml' => SYLMA_NS_XHTML))->toArray()) &&
+          ($oFormat = $oChild->get('le:formats', 'le', SYLMA_NS_EXECUTION))) {
           
           $aFormats = $oFormat->getChildren()->toArray();
         }
@@ -1121,7 +1121,7 @@ class XML_Action extends XML_Document {
           
           /* Validation */
           
-          if (($oValidate = $oChild->getByName('validate', NS_EXECUTION)) && $oValidate->hasChildren()) {
+          if (($oValidate = $oChild->getByName('validate', SYLMA_NS_EXECUTION)) && $oValidate->hasChildren()) {
             
             // pre-set argument result for variable
             
@@ -1152,7 +1152,7 @@ class XML_Action extends XML_Document {
       
       /* Default value */
       
-      if (($mArgument === null || !$bResult) && ($oDefault = $oChild->get('le:default', 'le', NS_EXECUTION)) && $oDefault->hasChildren()) {
+      if (($mArgument === null || !$bResult) && ($oDefault = $oChild->get('le:default', 'le', SYLMA_NS_EXECUTION)) && $oDefault->hasChildren()) {
         
         // Argument has no value and is required
         
@@ -1263,8 +1263,8 @@ class XML_Action extends XML_Document {
                   
                   $oAction = new XML_Element(
                     'le:action',
-                    new XML_Element('le:self', null, array('return' => 'true'), NS_EXECUTION),
-                    array('path' => $sPath), NS_EXECUTION);
+                    new XML_Element('le:self', null, array('return' => 'true'), SYLMA_NS_EXECUTION),
+                    array('path' => $sPath), SYLMA_NS_EXECUTION);
                   
                   if (!$oResult = $this->buildArgument($oAction)) dspm(xt('Processeur %s introuvable dans %s', $sNamespace, $this->getPath()->parse()), 'action/error');
                   else {
@@ -1464,7 +1464,7 @@ class XML_Action extends XML_Document {
         
         /* Execution */
         
-        case NS_EXECUTION :
+        case SYLMA_NS_EXECUTION :
           
           switch ($oRoot->getName(true)) {
             
@@ -1472,11 +1472,11 @@ class XML_Action extends XML_Document {
             
             case 'action' :
               
-              if ($this->loadSettings($oDocument->getByName('settings', NS_EXECUTION))) {
+              if ($this->loadSettings($oDocument->getByName('settings', SYLMA_NS_EXECUTION))) {
                 
                 $oResult = new XML_Document('temp');
                 
-                $oMethod = new XML_Element('li:add', $oDocument->getRoot()->getChildren(), null, NS_INTERFACE);
+                $oMethod = new XML_Element('li:add', $oDocument->getRoot()->getChildren(), null, SYLMA_NS_INTERFACE);
                 $this->runInterfaceMethod($oResult, $oMethod, Action_Controler::getInterface($oResult, $this->getRedirect()));
                 
                 if (!$oResult->isEmpty()) $oResult = $oResult->getRoot()->getChildren();
@@ -1492,13 +1492,13 @@ class XML_Action extends XML_Document {
             
             case 'interface' :
               
-              if (!$oSettings = $this->getByName('settings', NS_EXECUTION)) {
+              if (!$oSettings = $this->getByName('settings', SYLMA_NS_EXECUTION)) {
                 
                 dspm(xt('Action %s invalide, aucuns paramètres !', new HTML_Strong($this->getPath())), 'action/warning');
                 
               } else {
                 
-                $sClass = $oSettings->readByName('class', NS_EXECUTION);
+                $sClass = $oSettings->readByName('class', SYLMA_NS_EXECUTION);
                 $oSettings->remove();
                 
                 if ($oRoot->hasChildren()) {
@@ -1528,7 +1528,7 @@ class XML_Action extends XML_Document {
         
         /* Interface */
         
-        case NS_INTERFACE :
+        case SYLMA_NS_INTERFACE :
           
           $oResult = $this->loadInterface($oRoot);
           

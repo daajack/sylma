@@ -19,8 +19,8 @@ class HTML_Form extends HTML_Tag {
     Controler::getWindow()->addCSS(Controler::getSettings('stylesheet/@path').'/form.css');
     $this->setAttribute('method', 'post');
     
-    $this->addNode('div', null, array('class' => 'form-content clear-block'), NS_XHTML);
-    $this->addNode('div', null, array('class' => 'form-action clear-block form-action-bottom'), NS_XHTML);
+    $this->addNode('div', null, array('class' => 'form-content clear-block'), SYLMA_NS_XHTML);
+    $this->addNode('div', null, array('class' => 'form-action clear-block form-action-bottom'), SYLMA_NS_XHTML);
     
     
     if ($aMessages = Controler::getMessages()->getMessages('form/warning')) {

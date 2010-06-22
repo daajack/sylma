@@ -974,11 +974,6 @@ class XML_Element extends DOMElement implements XML_Composante {
     
     $oResult = $this->cloneNode(true);
     
-    /*foreach ($this->query('//namespace') as $oChild) {
-      
-      $this->setAttribute('xmlns:'.$oChild->getName(), $oChild->getValue(), NS_XMLNS);
-    }*/
-    
     if ($bIndent) $oResult->formatOutput();
     if ($bFormat) $oResult = htmlspecialchars((string) $oResult);
     

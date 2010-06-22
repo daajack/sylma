@@ -237,8 +237,8 @@ class WindowAction extends XML_Document implements Main {
     
     //$oRoot = $this->set('action');
     //$oContent = $oRoot->addNode('content');
-    $oRoot = $this->set(new XML_Element('action', null, null, NS_XHTML));
-    $oContent = $oRoot->addNode('content', null, null, NS_XHTML);//);
+    $oRoot = $this->set(new XML_Element('action', null, null, SYLMA_NS_XHTML));
+    $oContent = $oRoot->addNode('content', null, null, SYLMA_NS_XHTML);//);
     
     if ($oAction instanceof XML_Action) {
       
@@ -297,7 +297,7 @@ class HTML_Action extends XML_Action {
   
   public function getHead() {
     
-    if (!$this->oHead) $this->oHead = new XML_Element('head', null, null, NS_XHTML);
+    if (!$this->oHead) $this->oHead = new XML_Element('head', null, null, SYLMA_NS_XHTML);
     
     return $this->oHead;
   }
@@ -344,12 +344,12 @@ class HTML_Action extends XML_Action {
     
     // Fill empty html tags
     
-    if ($oElements = $oView->query(SYLMA_HTML_TAGS, 'html', NS_XHTML))
+    if ($oElements = $oView->query(SYLMA_HTML_TAGS, 'html', SYLMA_NS_XHTML))
       foreach ($oElements as $oElement) if (!$oElement->hasChildren()) $oElement->set(' ');
     
     // Remove security elements
     
-    if ($oElements = $oView->query('//@ls:owner | //@ls:mode | //@ls:group', 'ls', NS_SECURITY)) $oElements->remove();
+    if ($oElements = $oView->query('//@ls:owner | //@ls:mode | //@ls:group', 'ls', SYLMA_NS_SECURITY)) $oElements->remove();
     
     if ($oView->isEmpty()) {
       

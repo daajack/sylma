@@ -16,13 +16,13 @@
   </xsl:template>
   <xsl:template name="methods">
     <methods>
-      <xsl:for-each select="la:method">
+      <xsl:for-each select="la:method | la:property/la:method">
         <xsl:element name="{@id}">
           <name>
             <xsl:value-of select="@name"/>
           </name>
           <xsl:call-template name="attributes-to-nodes">
-            <xsl:with-param name="attributes" select="@delay | @timer"/>
+            <xsl:with-param name="attributes" select="@delay | @timer | @limit"/>
           </xsl:call-template>
           <xsl:if test="@event">
             <event>true</event>

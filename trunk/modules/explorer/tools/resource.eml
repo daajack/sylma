@@ -7,60 +7,68 @@
     <la:object extend-base="sylma.classes" name="tools" class="/sylma.explorer-classes.tools">
       <la:property name="pathRights">/update-rights</la:property>
       <la:property name="pathName">/update-name</la:property>
-      <div id="resource-tools" class="tools clear-block">
-        <div class="button">
-          <span>R</span>
-          <la:event name="click"><![CDATA[if (this === e.target || this.getFirst() === e.target) {
-  
-  var oParent = %ref-object%;
-  
-  oParent.loadRights();
-  oParent.clearTimer();
-  
-  return oParent.rights.show();
-}
+      <la:property name="pathDelete">/delete</la:property>
+      <la:property name="sub">
+        <div id="resource-tools" class="tools clear-block">
+          <div class="button">
+            <span>R</span>
+            <la:event name="click" limit="self, first"><![CDATA[var oParent = %ref-object%;
 
-return true;]]></la:event>
-          <la:event name="mouseenter"><![CDATA[%ref-object%.clearTimer('rights');]]></la:event>
-          <la:event name="mouseleave" delay="300" timer="rights"><![CDATA[%ref-object%.updateRights();
-return %ref-object%.rights.hide();]]></la:event>
-          <le:action path="resource-rights"/>
-        </div>
-        <div class="button">
-          <span>N</span>
-          <la:event name="click"><![CDATA[if (this === e.target || this.getFirst() === e.target) {
+oParent.loadRights();
+oParent.clearTimer('rights');
+
+return oParent.sub.rights.show();]]></la:event>
+            <la:event name="mouseenter"><![CDATA[%ref-object%.clearTimer('rights');]]></la:event>
+            <la:event name="mouseleave" delay="300" timer="rights"><![CDATA[%ref-object%.updateRights();
+return %ref-object%.sub.rights.hide();]]></la:event>
+            <le:action path="resource-rights"/>
+          </div>
+          <div class="button">
+            <span>N</span>
+            <la:event name="click"><![CDATA[if (this === e.target || this.getFirst() === e.target) {
   
   var oParent = %ref-object%;
   
   oParent.loadName();
-  oParent.clearTimer();
   
-  return oParent.editName.show();
+  return oParent.sub.editName.show();
 }
 
 return true;]]></la:event>
-          <la:event name="mouseenter"><![CDATA[%ref-object%.clearTimer('name');]]></la:event>
-          <la:event name="mouseleave" delay="300" timer="name"><![CDATA[return %ref-object%.editName.hide();]]></la:event>
-          <la:object class="menu" name="editName">
-            <form class="tools" id="resource-tools-name">
-              <la:event name="submit"><![CDATA[return %ref-object%.parentObject.updateName();]]></la:event>
-              <input type="text" name="resource-name"/>
-              <input type="submit" value="Modifier"/>
-            </form>
-          </la:object>
-        </div>
-        <div class="button">Z</div>
-        <div class="button">
-          <span>F</span>
-          <la:event name="click"><![CDATA[if (this === e.target || this.getFirst() === e.target) {
+            <la:event name="mouseenter"><![CDATA[%ref-object%.clearTimer('name');]]></la:event>
+            <la:object class="menu" name="editName">
+              <form class="tools" id="resource-tools-name">
+                <la:event name="submit"><![CDATA[return %ref-object%.parentObject.updateName();]]></la:event>
+                <input type="text" name="resource-name"/>
+                <input type="submit" value="Modifier"/>
+              </form>
+            </la:object>
+          </div>
+          <div class="button">
+            <span>S</span>
+            <la:event name="click"><![CDATA[if (this === e.target || this.getFirst() === e.target) {
   
   var oParent = %ref-object%;
-  return oParent.updateFile();
+  
+  oParent.clearTimer();  
+  return oParent.sub.deleteBox.show();
 }
 
 return true;]]></la:event>
+            <la:object class="menu" name="deleteBox">
+              <form class="tools">
+                <la:event name="submit"><![CDATA[return %ref-object%.parentObject.deleteResource();]]></la:event>
+                <div>Voulez-vous supprimer cette resource ?</div>
+                <div class="center">
+                  <input type="button" value="Annuler"/>
+                  <la:event name="click"><![CDATA[return %ref-object%.hide();]]></la:event>
+                  <input type="submit" value="Supprimer"/>
+                </div>
+              </form>
+            </la:object>
+          </div>
         </div>
-      </div>
+      </la:property>
     </la:object>
   </la:replace-events>
 </le:action>

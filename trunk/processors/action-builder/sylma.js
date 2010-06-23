@@ -35,14 +35,17 @@ var sylma = {
     
   },
   
-  buildRoot: function(object, oParent) {
+  buildRoot: function(object, sPath, oParent, oRoot) {
     
     for (var i in object) { var bluh; }
     
-    return sylma.buildObject(object[i], i, oParent, oParent);
+    if (!oRoot) oRoot = oParent;
+    if (!sPath) sPath = i;
+    
+    return sylma.buildObject(object[i], sPath, oParent, oRoot);
   },
   
-  buildObject: function(object, sName, parentLayer, rootObject, iDepth) {
+  buildObject: function(object, sPath, parentLayer, rootObject, iDepth) {
     
     var sKey, sName, oSub, bRoot, eNode;
     var oResult = {};
@@ -66,27 +69,27 @@ var sylma = {
       
       if (object['init']['extend-base']) {
         
-        sClassBase = object['init']['extend-base'];
+        var sClassBase = object['init']['extend-base'];
         if (!sClassBase) this.dsp('Classe de base vide !');
       }
       
       if (object['init']['extend-class']) {
         
-        sName = object['init']['extend-class'];
-        bRoot = sName[0] == '/';
+        var sClassName = object['init']['extend-class'];
+        bRoot = sClassName[0] == '/';
         
         if (bRoot || !sClassBase) {
           
-          if (bRoot) sName = sName.substr(1);
-          sName = sName[0] == '[' ? sName : '.' + sName;
+          if (bRoot) sClassName = sClassName.substr(1);
+          sClassName = sClassName[0] == '[' ? sClassName : '.' + sClassName;
           
-          try { eval('oResult = new window' + sName); }
-          catch(e) { this.dsp('Nom de classe introuvable : window' + sName); bResult = false; };
+          try { eval('oResult = new window' + sClassName); }
+          catch(e) { this.dsp('Nom de classe introuvable : window' + sClassName); bResult = false; };
           
         } else {
           
-          try { eval('oResult = new window' + sClassBase + sName); }
-          catch(e) { this.dsp("Classe '" + sName + "' introuvable dans la classe de base window'" + sClassBase + "'"); bResult = false; };
+          try { eval('oResult = new window' + sClassBase + sClassName); }
+          catch(e) { this.dsp("Classe '" + sClassName + "' introuvable dans la classe de base window'" + sClassBase + "'"); bResult = false; };
         }
       }
       
@@ -109,7 +112,7 @@ var sylma = {
         }
         
         oResult.parentObject = parentLayer; // Attach parent object
-        oResult['sylma-name'] = parentLayer; // Attach parent object ref
+        oResult['sylma-path'] = sPath; // Attach parent object ref
         oResult.rootObject = rootObject; // Attach root object (layout)
         
         if (!rootObject) rootObject = oResult;
@@ -133,10 +136,31 @@ var sylma = {
             if (oSub['is-sylma-object']) oResult[sKey] = this.buildObject(oSub, sKey, oResult, rootObject, iDepth + 1); // Sylma object
             else if (oSub['is-sylma-array']) { // Sylma array
               
+              delete(oSub['is-sylma-array']);
               oResult[sKey] = new Array();
-              for (var sSubKey in oSub) oResult[sKey][sSubKey] = this.buildObject(oSub[sSubKey], sKey, oResult, rootObject, iDepth + 1);
               
-            } else {this.dsp('Type d\'object inconnu : ' + sKey); this.dsp(this.view(object['properties'])); }// Sylma others
+              for (var sSubKey in oSub) {
+                
+                sPath = sKey + '[\'' + sSubKey + '\']';
+                oResult[sKey][sSubKey] = this.buildObject(oSub[sSubKey], sPath, oResult, rootObject, iDepth + 1);
+              }
+              
+            } else if (oSub['is-sylma-property']) { // Sylma others
+              
+              delete(oSub['is-sylma-property']);
+              oResult[sKey] = new Object;
+              
+              for (var sSubKey in oSub) {
+                
+                sPath = sKey + '.' + sSubKey;
+                oResult[sKey][sSubKey] = this.buildObject(oSub[sSubKey], sPath, oResult, rootObject, iDepth + 1);
+              }
+              
+            } else { // Sylma others
+              
+              this.dsp('Type d\'object inconnu : ' + sKey);
+              this.dsp(this.view(object['properties']));
+            }
             
           } else if (sType == 'string') oResult[sKey] = oSub;// JS String
           else this.dsp('Type \'' + sType + '\' inconnu dans ' + sKey + ' !'); // JS Others
@@ -181,7 +205,16 @@ var sylma = {
               
               eNode.store('ref-object', oParent); // store parent object in node
               
-              if (method.delay) {
+              if (method.limit) {
+                
+                eNode.addEvent(method.name, this.limitFunc.create({
+                  
+                  arguments : [sMethod, method.limit],
+                  event : true,
+                  bind : eNode
+                }));
+                
+              } else if (method.delay) {
                 
                 eNode.addEvent(method.name, this.delayFunc.create({
                   
@@ -224,6 +257,36 @@ var sylma = {
     if (!oParent.timer) oParent.timer = [];
     
     oParent.timer[sTimer] = sylma.methods[sMethod].delay(iDelay, this, e);
+  },
+  
+  limitFunc : function(e, sMethod, sTargets) {
+    
+    var oTarget;
+    var bResult = false;
+    var aTargets = sTargets.split(',');
+    
+    for (var i = 0; i < aTargets.length; i++) {
+      //alert(sTarget);
+      switch (aTargets[i].replace(/^\s+/g,'').replace(/\s+$/g,'')) {
+        
+        case 'self' : oTarget = this; break;
+        case 'first' : oTarget = this.getFirst(); break;
+      }
+      
+      if (e.target === oTarget) {
+        
+        bResult = true;
+        break;
+      }
+    }
+    
+    if (bResult) {
+      
+      var oBounded = sylma.methods[sMethod].bind(this, e);
+      oBounded();
+    }
+    
+    return true;
   },
   
   dsp_message : function(mContent, sTargetId) {
@@ -304,7 +367,7 @@ sylma.classes.request = new Class({
       if (!oContainer) {
         
         oContainer = new Element('div', {'id' : 'explorer-messages'});
-        sylma.explorer.node.grab(oContainer, 'top');
+        sylma.explorer.node.grab(oContainer, 'bottom');
       }
       
       var oMessagesContent = oMessages.getFirst();
@@ -365,7 +428,7 @@ sylma.classes.layer = new Class({
     return sPath;
   },
   
-  replace : function(sPath, oArguments, sMethod) {
+  replace : function(sActionPath, sObjectPath, oArguments, sMethod) {
     
     var oCaller = this;
     
@@ -374,7 +437,7 @@ sylma.classes.layer = new Class({
     
     this.request = new sylma.classes.request({
       
-      'url' : sPath + '.action',
+      'url' : sActionPath + '.action',
       'data' : oArguments,
       'method' : sMethod,
       'onSuccess' : function(sResult, oResult) {
@@ -389,11 +452,14 @@ sylma.classes.layer = new Class({
         
         var oSubResult = new Request.JSON({
           
-          'url' : sPath + '.txt', 
+          'url' : sActionPath + '.txt', 
           'onSuccess' : function(oResponse) {
             
-            oCaller.parentObject[oCaller['sylma-name']] = sylma.buildRoot(oResponse, sylma.explorer);
-            //sylma.explorer.mozaic.parentObject = sylma.explorer;
+            var oNewObject = sylma.buildRoot(oResponse, sObjectPath, oCaller.parentObject, oCaller.rootObject);
+            
+            eval('delete(oCaller.parentObject.' + oCaller['sylma-path'] + ')'); // delete old object
+            eval('oCaller.parentObject.' + sObjectPath + ' = oNewObject'); // insert new object
+            
             mContent.setStyle('opacity', 1);
             
         }}).get();
@@ -405,7 +471,7 @@ sylma.classes.layer = new Class({
     
     if (this['sylma-send-method']) var sMethod = this['sylma-send-method'];
     
-    this.replace(this.getPath(), oArguments, sMethod);
+    this.replace(this.getPath(), this['sylma-path'], oArguments, sMethod);
   }
   
 }),

@@ -12,4 +12,5 @@
     <argument required="false" format="php-integer" name="depth"/>
   </method>
   <method return-default="true" name="getParent" path="get-parent"/>
+  <method return-default="true" path="parse" name="parseXML"/>
 </class>

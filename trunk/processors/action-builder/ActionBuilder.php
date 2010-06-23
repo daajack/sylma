@@ -13,7 +13,7 @@ class ActionBuilder extends XML_Processor  {
   
   public function __construct() {
     
-    if (Controler::isWindowType('sylma')) {
+    if (Controler::getWindowSettings()->hasAttribute('interface')) {  // TODO : temp
       
       $this->oMethods = new XML_Document(new XML_Element('la:root', null, null, SYLMA_NS_ACTIONBUILDER));
       
@@ -103,14 +103,11 @@ class ActionBuilder extends XML_Processor  {
       $sName = $oMethod->getAttribute('name');
       //$sChildId = 'method-'.bin2hex(substr(md5($oAction->getPath().$sName.$iCount), 0, 7));
       
-      if (!$sSource = $oMethod->getAttribute('file-source')) {
-        
-        $sSource = $oAction->getPath();
-        //dspm(array(xt('Attribut %s manquant dans l\'élément', new HTML_Strong('file-source')), $oMethod->messageParse()), 'action/error');
-      }
-      //dspm(array($sSource, ' / ', $sName, ' / ', $iCount, ' / ', bin2hex(substr(md5($sSource.$sName.$iCount), 0, 7))));
+      if (!$sSource = $oMethod->getAttribute('file-source')) $sSource = $oAction->getPath();
+      
+      //dspm(array($sSource, ' / ', $sName, ' / ', $iCount, ' / ', sprintf('%u', crc32($sSource.$sName.$iCount))));
       //$sChildId = 'method-'.bin2hex(substr(md5($sSource.$sName.$iCount), 0, 7));
-      $sChildId = 'method-'.sprintf('%u', crc32($sSource.$sName.$iCount));
+      $sChildId = 'method-'.sprintf('%u', crc32($sSource.$sName.$oMethod->read()));
       
       //dspm($sChildId);
       $oResult = new XML_Element($sName, null, array('id' => $sChildId));
@@ -150,7 +147,7 @@ class ActionBuilder extends XML_Processor  {
         'name' => $sName,
         'extract-ref' => 'parent'), SYLMA_NS_ACTIONBUILDER);
       
-      $oNewMethod->cloneAttributes($oMethod, array('delay', 'timer'));
+      $oNewMethod->cloneAttributes($oMethod, array('delay', 'timer', 'limit'));
       if ($oMethod->getName() == 'event') $oNewMethod->setAttribute('event', 1);
       
       $oMethod->replace($oNewMethod);
@@ -218,9 +215,12 @@ class ActionBuilder extends XML_Processor  {
         
         if (!$sId = $oRefNode->getId()) $oRefNode->setAttribute('id', $sName);
         else $sName = $sId;
-      }
-      
+        
+      } else dspm(xt('Noeud HTML de référence non trouvé pour %s', view($oElement, false)), 'action/error');
+      //dspf($sName);
       $oElement->setAttribute('id-node', $sName);
+      //dspf($oElement);
+      //dspf($oRefNode);
       
       // name
       
@@ -237,22 +237,35 @@ class ActionBuilder extends XML_Processor  {
   
   private function parseMethods($oElements) {
     
+    $oPreviousParent = null;
+    
     foreach ($oElements as $oElement) {
-      
-      if ($oElement->hasAttribute('event') && ($oRefNode = $this->buildReference($oElement))) {
         
-        if ($sRefId = $oRefNode->getId()) $oElement->setAttribute('id-node', $sRefId);
-        else {
+        if ($oElement->hasAttribute('event') && ($oRefNode = $this->buildReference($oElement))) {
           
-          $oParent = $oElement->get("ancestor::*[namespace-uri() = '".SYLMA_NS_ACTIONBUILDER."'][position() = 1]");
-          $oParentNode = $oElement->getDocument()->get("//*[@id='{$oParent->getAttribute('id-node')}']");
+          if ($sRefId = $oRefNode->getId()) { // refNode has ID, just hook
+            
+            $oElement->setAttribute('id-node', $sRefId);
+            
+          } else { // refNode has no ID, get parent first ID'ed
+            
+            if ($oElement->getParent() !== $oPreviousParent) {
+              
+              $oParent = $oElement->get("ancestor::*[namespace-uri() = '".SYLMA_NS_ACTIONBUILDER."' and @id-node][position() = 1]");
+              $oParentNode = $oElement->getDocument()->get("//*[@id='{$oParent->getAttribute('id-node')}']");
+              
+              $sPath = '#'.$oParentNode->getId().' > '.$oRefNode->getCSSPath($oParentNode);
+              $oElement->setAttribute('path-node', $sPath);
+              
+              // to avoid too much pass, save path
+              
+              $oPreviousParent = $oElement->getParent();
+              $sPreviousPath = $sPath;
+              
+            } else $oElement->setAttribute('path-node', $sPreviousPath);
+          }
           
-          $sPath = '#'.$oParentNode->getId().' > '.$oRefNode->getCSSPath($oParentNode);
-          
-          $oElement->setAttribute('path-node', $sPath);
-        }
-        
-      } else dspm(array(t('Impossible de créer l\'évènement'), $oElement->viewResume()), 'action/error');
+        } else dspm(array(t('Impossible de créer l\'évènement'), $oElement->viewResume()), 'action/error');
     }
   }
   
@@ -280,8 +293,13 @@ class ActionBuilder extends XML_Processor  {
         
         if ($oElement->hasChildren() && $oElement->getFirst()->isElement()) {
           
-          if ($oElement->getFirst()->getNamespace() == $oElement->getNamespace()) $oRefNode = $oElement->get("*[namespace-uri() != '".SYLMA_NS_ACTIONBUILDER."']", $this->aNS);
-          else $oRefNode = $oElement->getFirst();
+          if ($oElement->getFirst()->getNamespace() == $oElement->getNamespace()) {
+            
+            // first child is action-builder go far
+            
+            $oRefNode = $oElement->get(".//*[namespace-uri() != '".SYLMA_NS_ACTIONBUILDER."']", $this->aNS);
+            
+          } else $oRefNode = $oElement->getFirst(); // get first child
           
         } else dspm(xt('ActionBuilder : Référence impossible, l\'objet %s n\'a pas d\'enfant valide dans %s', view($oElement), $this->getAction()->getPath()->parse()), 'action/error');
         
@@ -300,9 +318,9 @@ class ActionBuilder extends XML_Processor  {
     // Parse as JSON xml => array() then add the result in Controler
     
     $oTemplate = new XSL_Document(SYLMA_PATH_ACTIONBUILDER.'/index.xsl');
-    //dspf($oScript);
+    dspf($oScript);
     if ($oResult = $oTemplate->parseDocument($oScript)) {
-      //dspf($oResult);
+      dspf($oResult);
       //dspm(get_class(Controler::getWindow()));
       list(, $aResult) = $oResult->toArray();
       Controler::addResult(json_encode($aResult), 'txt');

@@ -483,7 +483,9 @@ class Controler {
     
     if ($mMessages) Controler::addMessage($mMessages, $sStatut);
     
-    $sPath = SYLMA_PATH_ERROR.'.'.self::getPath()->getExtension();
+    if ($sExtension = self::getPath()->getExtension()) $sExtension = '.'.$sExtension;
+    
+    $sPath = SYLMA_PATH_ERROR.$sExtension;
     
     self::doHTTPRedirect(new Redirect($sPath));
   }

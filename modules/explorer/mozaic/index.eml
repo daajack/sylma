@@ -32,7 +32,7 @@
         </le:get-argument>
       </le:string>
     </la:property>
-    <div class="clear-block">
+    <div class="clear-block" style="overflow: auto;">
       <la:replace-events>
         <div>
           <a href="#">

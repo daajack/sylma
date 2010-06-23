@@ -21,16 +21,26 @@
         <xsl:apply-templates select="la:layout | la:layer | la:object"/>
         <xsl:apply-templates select="la:group"/>
       </properties>
-      <xsl:if test="la:method">
+      <xsl:if test="la:method | la:property/la:method">
         <xsl:call-template name="methods"/>
       </xsl:if>
       <is-sylma-object>true</is-sylma-object>
     </xsl:element>
   </xsl:template>
   <xsl:template match="la:property">
-    <xsl:element name="{@name}">
-      <xsl:value-of select="."/>
-    </xsl:element>
+    <xsl:choose>
+      <xsl:when test="*">
+        <xsl:element name="{@name}">
+          <xsl:apply-templates/>
+          <is-sylma-property>true</is-sylma-property>
+        </xsl:element>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:element name="{@name}">
+          <xsl:value-of select="."/>
+        </xsl:element>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
   <xsl:template match="la:group">
     <xsl:element name="{@name}">

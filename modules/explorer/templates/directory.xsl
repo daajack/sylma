@@ -17,6 +17,8 @@
       <la:property name="mode">
         <xsl:value-of select="@mode"/>
       </la:property>
+      <la:property name="sylma-update-origin">interface</la:property>
+      <la:property name="sylma-update-path">/update-directory</la:property>
       <div class="resource {name()}">
         <la:event name="mouseenter"><![CDATA[return sylma.explorer.tools.show(this);]]></la:event>
         <la:event name="mouseleave"><![CDATA[return sylma.explorer.tools.hide();]]></la:event>

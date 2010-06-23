@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<le:action xmlns:le="http://www.sylma.org/execution" xmlns:li="http://www.sylma.org/interface" xmlns="http://www.w3.org/1999/xhtml" xmlns:la="/sylma/processors/action-builder/schema">
+  <le:settings>
+    <le:name>Fichier</le:name>
+    <le:argument required="true" format="XML_Resource"/>
+    <le:processor path="/sylma/processors/action-builder" namespace="/sylma/processors/action-builder/schema"/>
+  </le:settings>
+  <la:replace-events>
+    <le:get-argument>
+      <li:parse>
+        <li:get-document>
+          <li:parse>
+            <le:template path="templates/standalone.xsl"/>
+          </li:parse>
+        </li:get-document>
+      </li:parse>
+    </le:get-argument>
+  </la:replace-events>
+</le:action>

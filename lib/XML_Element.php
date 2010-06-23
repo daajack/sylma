@@ -58,7 +58,7 @@ class XML_Element extends DOMElement implements XML_Composante {
       
       // $iPrevious = $this->query("preceding-sibling::$sName", $aNS)->length + 1;
       // $sName = $this->getName(true).':nth-child('.$iPrevious.')';
-      $iPrevious = $this->query("preceding-sibling::*", $aNS)->length + 1;
+      $iPrevious = $this->query("preceding-sibling::*[namespace-uri() = '{$this->getNamespace()}']")->length + 1;
       $sName = '*:nth-child('.$iPrevious.')';
       
     } else $sName = $this->getName(true);
@@ -71,9 +71,10 @@ class XML_Element extends DOMElement implements XML_Composante {
    */
   public function getCSSPath($oLastParent = null) {
     
+    //dspf($this);
     $oNodes = $this->query("ancestor-or-self::*[namespace-uri() = '{$this->getNamespace()}']");
     $oNodes->reverse();
-    
+    //dspf($oNodes);
     $oNode = null;
     $aPath = array();
     

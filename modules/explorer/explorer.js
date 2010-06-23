@@ -19,13 +19,14 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
     
     replace : function(sPath) {
       
-      this.parent(this.getPath(), {'resource' : sPath});
+      this.parent(this.getPath(), 'resources[\'' + sPath + '\']', {'resource' : sPath});
     },
     
     update : function() {
       
       this.parent({'resource' : this.path});
     }
+    
   }),
   
   'tools' : new Class({
@@ -38,7 +39,7 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
       if (this.firstShow(eTarget)) {
         
         this.resource = eTarget.retrieve('ref-object');
-        this.rights.hide(true);
+        this.sub.rights.hide(true);
         
       }
       
@@ -49,8 +50,7 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
       
       this.updateRights();
       
-      this.rights.hide(bQuick);
-      this.editName.hide(bQuick);
+      for (var i in this.sub) this.sub[i].hide(bQuick);
       
       return this.parent(bQuick);
     },
@@ -72,7 +72,7 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
       $each(aMode, function(sModeValue, sModeKey) {
         $each(aRights, function(sRightValue, sRightKey) {
           
-          var eInput = this.rights.node.getElement('input[name=resource-' + sModeKey + '-' + sRightKey + ']');
+          var eInput = this.sub.rights.node.getElement('input[name=resource-' + sModeKey + '-' + sRightKey + ']');
           
           if (sModeValue & sRightValue) eInput.set('checked', 'checked');
           else eInput.removeProperty('checked');
@@ -82,20 +82,20 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
       
       // owner, group
       
-      this.rights.node.getElement('input[name=resource-owner]').set('value', this.resource.owner);
-      this.rights.node.getElement('input[name=resource-group]').set('value', this.resource.group);
+      this.sub.rights.node.getElement('input[name=resource-owner]').set('value', this.resource.owner);
+      this.sub.rights.node.getElement('input[name=resource-group]').set('value', this.resource.group);
     },
     
     updateRights : function() {
       
-      if (this.rights.isOpen) {
+      if (this.sub.rights.isOpen) {
         
         var oResource = this.resource;
         
-        var sOwner = this.rights.node.getElement('input[name=resource-owner]').get('value');
-        var sGroup = this.rights.node.getElement('input[name=resource-group]').get('value');
+        var sOwner = this.sub.rights.node.getElement('input[name=resource-owner]').get('value');
+        var sGroup = this.sub.rights.node.getElement('input[name=resource-group]').get('value');
         
-        var aNodes = this.rights.node.getElements('input[type=checkbox]');
+        var aNodes = this.sub.rights.node.getElements('input[type=checkbox]');
         
         var iMode = 0, iTarget = 0, aMode = [0, 0, 0], aModes = [SYLMA_MODE_READ, SYLMA_MODE_WRITE, SYLMA_MODE_EXECUTION];
         
@@ -160,7 +160,7 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
       if (sName) sName = '[' + sName + ']';
       else sName = '';
       
-      var bChecked, aNodes = this.rights.node.getElements('input' + sName + '[type=checkbox]');
+      var bChecked, aNodes = this.sub.rights.node.getElements('input' + sName + '[type=checkbox]');
       
       $each(aNodes, function(eInput) { if (eInput.get('checked')) bChecked = true; });
       $each(aNodes, function(eInput) {
@@ -174,7 +174,7 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
     
     loadName : function() {
       
-      var oInput = this.editName.node.getElement('input[name=resource-name]');
+      var oInput = this.sub.editName.node.getElement('input[name=resource-name]');
       
       oInput.set('value', this.resource.name);
       oInput.focus();
@@ -182,7 +182,7 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
     
     updateName : function() {
       
-      var sName = this.editName.node.getElement('input[name=resource-name]').get('value');
+      var sName = this.sub.editName.node.getElement('input[name=resource-name]').get('value');
       var oResource = this.resource;
       
       if (sName) {
@@ -202,42 +202,11 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
             
             oCaller.onUpdateName(this.parseAction(oResult), oResource, oArguments);
           }
+          
         }).send();
       }
       
       return false;
-    },
-    
-    updateFile : function() {
-      
-      var oArguments = {'resource' : this.resource.path}
-      
-      var oCaller = this;
-      var oResource = this.resource;
-      var sPath = sylma.explorer.pathInterface + '/update';
-      
-      var oRequest = new sylma.classes.request({
-        
-        'url' : sPath + '.action',
-        'data' : oArguments,
-        'onSuccess' : function(sResult, oResult) {
-          
-          var mContent = sylma.importNode(this.parseAction(oResult).getFirst());
-          
-          mContent.setStyle('opacity', 0.2);
-          mContent.replaces(oResource.node);
-          //alert(sPath);
-          var oSubResult = new Request.JSON({
-            
-            'url' : sPath + '.txt', 
-            'onSuccess' : function(oResponse) {
-              
-              sylma.explorer.mozaic.resources[oResource.path] = sylma.buildRoot(oResponse, sylma.explorer.mozaic);
-              mContent.setStyle('opacity', 1);
-              
-          }}).get();
-        }
-      }).post();
     },
     
     onUpdateName : function(mResult, oResource, oArguments) {
@@ -245,7 +214,35 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
       var sPath = mResult.get('text');
       
       if (sPath) oResource.replace(sPath);
+    },
+    
+    deleteResource : function() {
+      
+      var oArguments = {
+        'resource' : this.resource.path,
+        'directory' : this.resource.isDirectory()
+      }
+      
+      var oCaller = this;
+      var oRequest = new sylma.classes.request({
+        
+        'url' : sylma.explorer.pathInterface + oCaller.pathDelete + '.action',
+        'data' : oArguments,
+        'onSuccess' : function(sResult, oResult) {
+          
+          oCaller.onDeleteResource(this.parseAction(oResult), oResource);
+        }
+        
+      }).send();
+      
+      return false;
+    },
+    
+    onDeleteResource : function(mResult, oResource) {
+      
+      if (strtobool(mResult.get('text'))) oResource.remove();
     }
+    
   })
 };
 

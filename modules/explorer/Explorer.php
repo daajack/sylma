@@ -2,6 +2,45 @@
   
 class Explorer {
   
+  public function updateFile() {
+    
+    $sPath = array_val('resource', $_POST);
+    
+    $oAction = new XML_Action(extractDirectory(__file__).'/resource.eml');
+    $oAction->getPath()->pushIndex(Controler::getFile($sPath));
+    
+    return $oAction;
+  }
+  
+  public function updateDirectory() {
+    
+    $sPath = array_val('resource', $_POST);
+    
+    $oAction = new XML_Action(extractDirectory(__file__).'/resource.eml');
+    $oAction->getPath()->pushIndex(Controler::getDirectory($sPath));
+    
+    return $oAction;
+  }
+  
+  public function delete() {
+    
+    $bResult = false;
+    
+    $bDirectory = array_val('directory', $_POST) ? true : false;
+    $sPath      = array_val('resource', $_POST);
+    
+    if ($bDirectory) { // directory
+      
+      if (!$oDirectory = Controler::getDirectory($sPath)) dspm(t('Répertoire introuvable'), 'error');
+      else $oResult = $oDirectory->delete();
+      
+    } else { // file
+      
+      if (!$oFile = Controler::getFile($sPath)) dspm(t('Fichier introuvable'), 'error');
+      else $oResult = $oFile->delete(); // update
+    }
+  }
+  
   public function updateRights() {
     
     $bResult = false;
@@ -32,16 +71,6 @@ class Explorer {
     return booltoint($bResult);
   }
   
-  public function update() {
-    
-    $sPath = array_val('resource', $_POST);
-    
-    $oAction = new XML_Action(extractDirectory(__file__).'/file.eml');
-    $oAction->getPath()->pushIndex(Controler::getFile($sPath));
-    
-    return $oAction;
-  }
-  
   public function updateName() {
     
     $bResult = false;
@@ -56,7 +85,7 @@ class Explorer {
       if ($bDirectory) { // directory
         
         if (!$oDirectory = Controler::getDirectory($sPath)) dspm(t('Répertoire introuvable'), 'error');
-        else $bResult = $oDirectory->updateName($sName);
+        else $oResult = $oDirectory->updateName($sName);
         
       } else { // file
         

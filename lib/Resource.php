@@ -8,7 +8,6 @@ class XML_Resource {
   protected $sName = '';
   protected $sFullPath = '';
   protected $oParent = null;
-  private $oSettingsElement = null;
   
   private $bExist = false;
   private $bSecured = false;
@@ -78,24 +77,6 @@ class XML_Resource {
     
     if ($bSecured === null) return $this->bSecured;
     else $this->bSecured = $bSecured;
-  }
-  
-  /**
-   * Get the rights element from the parent's directory security file
-   * @return XML_Element|null
-   */
-  protected function getSettingsElement() {
-    
-    return $this->oSettingsElement;
-  }
-  
-  /**
-   * Set the rights element of this file in the parent's directory security file
-   * @param XML_Element Element containing rights
-   */
-  protected function setSettingsElement(XML_Element $oElement) {
-    
-    $this->oSettingsElement = $oElement;
   }
   
   protected function getRights() {
@@ -252,7 +233,7 @@ class XML_Directory extends XML_Resource {
   /**
    * Get security XML_Document (eg: directory.sml)
    * @param boolean $bRecursive Get last setting file from parents
-   * @return XML_Document|null
+   * @return XML_SFile|null
    */
   public function getSettings($bRecursive = false) {
     
@@ -271,23 +252,17 @@ class XML_Directory extends XML_Resource {
       
       if (Controler::getUser()) {
         
-        $sSettings = $this->getFullPath().'/'.SYLMA_SECURITY_FILE;
+        $this->oSettings = new XML_SFile($this);
         
-        if (file_exists(MAIN_DIRECTORY.$sSettings)) {
+        if ($this->getSettings()->getDocument()) { // read security file
           
-          $oSettings = new XML_Document();
-          $oSettings->loadFreeFile($sSettings);
+          // self rights
           
-          $this->oSettings = $oSettings;
+          if ($aRights = $this->setRights($this->getSettings()->getDirectory())) $this->aChildrenRights = $aRights;
           
-          // self mode
+          // children rights
           
-          if ($oSettingsElement = $oSettings->getByName('self', SYLMA_NS_DIRECTORY)) $this->setSettingsElement($oSettingsElement);
-          if ($aRights = $this->setRights($oSettingsElement)) $this->aChildrenRights = $aRights;
-          
-          // children mode
-          
-          if (($oChildrenRights = $oSettings->getByName('propagate', SYLMA_NS_DIRECTORY)) &&
+          if (($oChildrenRights = $this->getSettings()->getPropagation()) &&
             ($aChildrenRights = $this->extractRights($oChildrenRights))) $this->aChildrenRights = $aChildrenRights;
           
         } else $this->setRights();
@@ -298,12 +273,12 @@ class XML_Directory extends XML_Resource {
   
   public function unbrowse() {
     
-    $oResult = $this->parse();
+    $oResult = $this->parseXML();
     $oParent = $this;
     
     while ($oParent = $oParent->getParent()) {
       
-      $oResult->shift($oParent);
+      $oResult->shift($oParent->parseXML());
     }
     
     return $oResult;
@@ -312,7 +287,7 @@ class XML_Directory extends XML_Resource {
   public function browse($aExtensions, $aPaths = array(), $iDepth = null) {
     
     $aFiles = scandir(MAIN_DIRECTORY.$this->getFullPath(), 0);
-    $oElement = $this->parse();
+    $oElement = $this->parseXML();
     
     if ($iDepth === null || $iDepth > 0) {
       
@@ -343,7 +318,7 @@ class XML_Directory extends XML_Resource {
             if ($bValid) {
               
               if ($iDepth === null || $iDepth) $oElement->add($oDirectory->browse($aExtensions, $aPaths, $iDepth));
-              else $oElement->add($oDirectory);
+              else $oElement->add($oDirectory->parseXML());
             }
           }
         }
@@ -398,12 +373,21 @@ class XML_Directory extends XML_Resource {
   }
   
   /**
-   * Unload then reload Document, maybe TODO to optimize by keeping the doc
+   * Unload then reload file/document, maybe TODO to optimize by keeping the doc
    */
   public function updateFile($sName) {
     
     if (array_key_exists($sName, $this->aFiles)) unset($this->aFiles[$sName]);
     return $this->getFile($sName);
+  }
+  
+  /**
+   * Unload then reload directory
+   */
+  public function updateDirectory($sName) {
+    
+    if (array_key_exists($sName, $this->aDirectories)) unset($this->aDirectories[$sName]);
+    return $this->getDirectory($sName);
   }
   
   /**
@@ -424,15 +408,9 @@ class XML_Directory extends XML_Resource {
         
         if ($oFile->doExist()) {
           
-          if ($oSettings = $this->getSettings()) { // named rights element
-            
-            $mRights = $oSettings->get("ld:file[@name=\"".xmlize($sName)."\"]", 'ld', SYLMA_NS_DIRECTORY);
-            
-            if (!$mRights) $mRights = $this->getChildrenRights();
-            else $oFile->setSettingsElement($mRights);
-            
-          } else $mRights = $this->getChildrenRights(); // propagated rights array
+          if (!$mRights = $this->getSettings()->getFile($sName)) $mRights = $this->getChildrenRights();
           
+          //if (((string) $sName) == 'root.xml') print_r($mRights);
           $oFile->setRights($mRights);
           
           if (Controler::getUser()) $this->aFiles[$sName] = $oFile;
@@ -545,31 +523,27 @@ class XML_Directory extends XML_Resource {
     
     if ($this->checkRightsArguments($sOwner, $sGroup, $sMode)) {
       
-      $eDirectory = new XML_Element('self', 
-        new XML_Element('ls:security', array(
-            new XML_Element('ls:owner', $sOwner, null, SYLMA_NS_SECURITY),
-            new XML_Element('ls:group', $sGroup, null, SYLMA_NS_SECURITY),
-            new XML_Element('ls:mode', $sMode, null, SYLMA_NS_SECURITY)),
-          null, SYLMA_NS_SECURITY), SYLMA_NS_DIRECTORY);
-      
-      if ($oSettingsElement = $this->getSettingsElement()) $oSettingsElement->remove();
-      
-      if (!$oSecurityDocument = $this->getSettings()) {
-        
-        // Creation of a security file
-        
-        $oSecurityDocument = new XML_Document;
-        $oSecurityDocument->addNode('directory', null, null, SYLMA_NS_DIRECTORY);
-        
-        $this->addFreeDocument(SYLMA_SECURITY_FILE, $oSecurityDocument);
-      }
-      
-      $oSecurityDocument->add($eDirectory);
-      
-      return $oSecurityDocument->saveFree($this, SYLMA_SECURITY_FILE);
+      return $this->getSettings()->updateDirectory($sOwner, $sGroup, $sMode);
     }
     
     return false;
+  }
+  
+  public function updateName($sNewName) {
+    
+    $oResult = null;
+    
+    if ($this->checkRights(MODE_WRITE)) {
+      
+      if (rename($this->getRealPath(), $this->getParent()->getRealPath().'/'.$sNewName)) {
+        
+        $oResult = $this->getParent()->updateDirectory($sNewName);
+        Controler::addMessage(t('Répertoire renommé !'), 'success');
+        
+      } else Controler::addMessage(t('Impossible de renommer le répertoire !'), 'warning');
+    }
+    
+    return $oResult;
   }
   
   public function getRealPath() {
@@ -584,12 +558,13 @@ class XML_Directory extends XML_Resource {
     if ($this->checkRights(MODE_WRITE)) {
       
       if ($bResult = rmdir(MAIN_DIRECTORY.$this)) Controler::addMessage(xt('Suppression du répertoire %s', $this), 'file/notice');
+      $this->getParent()->updateDirectory($this->getName());
     }
     
     return $bResult;
   }
   
-  public function parse() {
+  public function parseXML() {
     
     if (!$sName = xmlize($this->getName())) {
       
@@ -727,35 +702,23 @@ class XML_File extends XML_Resource {
   }
   
   /**
+   * Get security XML_SFile
+   * @param boolean $bRecursive Get last setting file from parents
+   * @return XML_Document|null
+   */
+  public function getSettings($bRecursive = false) {
+    
+    return $this->getParent()->getSettings($bRecursive);
+  }
+  
+  /**
    * Change rights in corresponding SECURITY_FILE
    */
   public function updateRights($sOwner, $sGroup, $sMode) {
     
     if ($this->checkRightsArguments($sOwner, $sGroup, $sMode)) {
       
-      $eFile = new XML_Element('file', 
-        new XML_Element('ls:security', array(
-            new XML_Element('ls:owner', $sOwner, null, SYLMA_NS_SECURITY),
-            new XML_Element('ls:group', $sGroup, null, SYLMA_NS_SECURITY),
-            new XML_Element('ls:mode', $sMode, null, SYLMA_NS_SECURITY)),
-          null, SYLMA_NS_SECURITY),
-        array('name' => $this->getName()), SYLMA_NS_DIRECTORY);
-      
-      if ($oSettingsElement = $this->getSettingsElement()) $oSettingsElement->remove();
-      
-      if (!$oSecurityDocument = $this->getParent()->getSettings()) {
-        
-        // Creation of a security file
-        
-        $oSecurityDocument = new XML_Document;
-        $oSecurityDocument->addNode('directory', null, null, SYLMA_NS_DIRECTORY);
-        
-        $this->getParent()->addFreeDocument(SYLMA_SECURITY_FILE, $oSecurityDocument);
-      }
-      
-      $oSecurityDocument->add($eFile);
-      
-      return $oSecurityDocument->saveFree($this->getParent(), SYLMA_SECURITY_FILE);
+      return $this->getSettings()->updateFile($this->getName(), $sOwner, $sGroup, $sMode);
     }
     
     return false;
@@ -769,8 +732,13 @@ class XML_File extends XML_Resource {
       
       if (rename($this->getRealPath(), $this->getParent()->getRealPath().'/'.$sNewName)) {
         
+        $this->update();
         $oResult = $this->getParent()->updateFile($sNewName);
+        
         Controler::addMessage(t('Fichier renommé !'), 'success');
+        
+        // update directory settings
+        $this->getSettings()->updateFileName($this->getName(), $sNewName);
         
       } else Controler::addMessage(t('Impossible de renommer le fichier !'), 'warning');
     }
@@ -780,15 +748,22 @@ class XML_File extends XML_Resource {
   
   public function delete($bMessage = true, $bUpdateDirectory = true) {
     
-    if ($this->checkRights(MODE_WRITE)) $this->deleteFree($bMessage, $bUpdateDirectory);
-  }
-  
-  public function deleteFree($bMessage = false, $bUpdateDirectory = false) {
+    $bResult = null;
     
-    unlink(MAIN_DIRECTORY.$this);
-    if ($bUpdateDirectory) $this->update();
+    if ($this->checkRights(MODE_WRITE)) {
+      
+      if (1) { //$bResult = unlink($this->getRealPath())
+        
+        if ($bUpdateDirectory) $this->update();
+        
+        // update directory settings
+        $this->getSettings()->deleteFile($this->getName());
+      
+        dspm(xt('Suppression du fichier %s', $this->parse()), 'file/notice');
+      }
+    }
     
-    Controler::addMessage(xt('Suppression du fichier %s', $this->parse()), 'file/notice');
+    return $bResult;
   }
   
   public function saveText($sContent) {
@@ -832,3 +807,133 @@ class XML_File extends XML_Resource {
   }
 }
 
+class XML_SFile {
+  
+  private $oDocument;
+  private $oDirectory;
+  
+  public function __construct($oDirectory) {
+    
+    $this->oDirectory = $oDirectory;
+    $sPath = $oDirectory->getFullPath().'/'.SYLMA_SECURITY_FILE;
+    
+    if (file_exists(MAIN_DIRECTORY.$sPath)) {
+      
+      $this->oDocument = new XML_Document();
+      $this->getDocument()->loadFreeFile($sPath);
+    }
+  }
+  
+  public function getDocument() {
+    
+    return $this->oDocument;
+  }
+  
+  public function getParent() {
+    
+    return $this->oDirectory;
+  }
+  
+  public function build() {
+    
+    if ($this->getDocument()) dspm(xt('Le fichier de sécurité dans %s existe déjà', $this->getParent()), 'file/error');
+    else {
+      
+      $oDocument = new XML_Document;
+      $oDocument->addNode('directory', null, null, SYLMA_NS_DIRECTORY);
+      
+      $this->getParent()->addFreeDocument(SYLMA_SECURITY_FILE, $oDocument);
+      
+      $this->oDocument = $oDocument;
+    }
+  }
+  
+  public function getDirectory() {
+    
+    if ($this->getDocument()) return $this->getDocument()->getByName('self', SYLMA_NS_DIRECTORY);
+    else return null;
+  }
+  
+  public function getPropagation() {
+    
+    if ($this->getDocument()) return $this->getDocument()->getByName('propagate', SYLMA_NS_DIRECTORY);
+    else return null;
+  }
+  
+  public function getFile($sName) {
+    
+    if ($this->getDocument()) return $this->getDocument()->get('ld:file[@name="'.xmlize($sName).'"]', 'ld', SYLMA_NS_DIRECTORY);
+    else return null;
+  }
+  
+  public function updateFileName($sName, $sNewName) {
+    
+    $bResult = null;
+    
+    if ($nFile = $this->getFile($sName)) {
+      
+      $nFile->setAttribute('name', $sNewName);
+      $bResult = $this->save();
+    }
+    
+    return $bResult;
+  }
+  
+  public function updateFile($sName, $sOwner, $sGroup, $sMode) {
+    
+    if ($nFile = $this->getFile($sName)) $nFile->remove();
+    else if (!$this->getDocument()) $this->build();
+    
+    $nFile = new XML_Element('file', 
+      new XML_Element('ls:security', array(
+          new XML_Element('ls:owner', $sOwner, null, SYLMA_NS_SECURITY),
+          new XML_Element('ls:group', $sGroup, null, SYLMA_NS_SECURITY),
+          new XML_Element('ls:mode', $sMode, null, SYLMA_NS_SECURITY)),
+        null, SYLMA_NS_SECURITY),
+      array('name' => $sName), SYLMA_NS_DIRECTORY);
+    
+    $this->getDocument()->add($nFile);
+    
+    return $this->save();
+  }
+  
+  public function deleteFile($sName) {
+    
+    $bResult = null;
+    
+    if ($nFile = $this->getFile($sName)) {
+      
+      $nFile->remove(); // TODO check if empty
+      $bResult = $this->save();
+    }
+    
+    return $bResult;
+  }
+  
+  public function updateDirectory($sOwner, $sGroup, $sMode) {
+    
+    if ($nDirectory = $this->getDirectory()) $nDirectory->remove();
+    else if (!$this->getDocument()) $this->build();
+    
+    $nDirectory = new XML_Element('self', 
+      new XML_Element('ls:security', array(
+          new XML_Element('ls:owner', $sOwner, null, SYLMA_NS_SECURITY),
+          new XML_Element('ls:group', $sGroup, null, SYLMA_NS_SECURITY),
+          new XML_Element('ls:mode', $sMode, null, SYLMA_NS_SECURITY)),
+        null, SYLMA_NS_SECURITY), SYLMA_NS_DIRECTORY);
+    
+    $this->getDocument()->add($nDirectory);
+    
+    return $this->save();
+  }
+  
+  private function save() {
+    
+    if ($this->getDocument()) {
+      
+      if ($this->getDocument()->getRoot()->hasChildren()) return $this->getDocument()->saveFree($this->getParent(), SYLMA_SECURITY_FILE);
+      else unlink(MAIN_DIRECTORY.$this->getParent()->getFullPath().'/'.SYLMA_SECURITY_FILE);
+      
+    } else return null;
+  }
+}

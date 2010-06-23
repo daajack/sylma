@@ -169,7 +169,7 @@ class XML_Document extends DOMDocument {
       if ($oExternals->length) {
         
         $aPaths[] = $sPath;
-        $aMarks = $this->query('sxsl:mark', array('sxsl' => SYLMA_NS_SXSLT)); // mark elements source
+        $aMarks = $this->query('le:mark', array('le' => SYLMA_NS_EXECUTION)); // mark elements source
         
         foreach ($oExternals as $oExternal) {
           

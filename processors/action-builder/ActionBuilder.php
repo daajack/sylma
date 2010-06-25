@@ -318,9 +318,9 @@ class ActionBuilder extends XML_Processor  {
     // Parse as JSON xml => array() then add the result in Controler
     
     $oTemplate = new XSL_Document(SYLMA_PATH_ACTIONBUILDER.'/index.xsl');
-    dspf($oScript);
+    //dspf($oScript);
     if ($oResult = $oTemplate->parseDocument($oScript)) {
-      dspf($oResult);
+      //dspf($oResult);
       //dspm(get_class(Controler::getWindow()));
       list(, $aResult) = $oResult->toArray();
       Controler::addResult(json_encode($aResult), 'txt');

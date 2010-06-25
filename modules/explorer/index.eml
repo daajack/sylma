@@ -35,10 +35,13 @@
         <le:argument>/interface</le:argument>
       </le:string>
     </la:property>
-    <div>
+    <div id="explorer">
       <le:action path="tools/resource"/>
       <le:action path="tree"/>
       <le:action path="mozaic"/>
+      <la:replace-events>
+        <le:action path="tools/add"/>
+      </la:replace-events>
     </div>
   </la:layout>
 </le:action>

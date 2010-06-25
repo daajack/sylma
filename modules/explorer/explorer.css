@@ -72,9 +72,8 @@
   text-align: center;
 }
 
-#resource-tools .tools {
-  position: absolute;
-  left: 18px;
+#explorer .tools {
+  display: inline;
   padding: 5px;
   border: 1px solid gray;
   visibility: hidden;
@@ -85,7 +84,13 @@
   -moz-box-shadow: 0 4px 7px rgba(0, 0, 0, 0.2);
 }
 
-#resource-tools input[type=submit] { font-size: 10px; }
+#resource-tools .tools {
+  position: absolute;
+  left: 18px;
+  margin-top:-15px;
+}
+
+#explorer input[type=submit], #explorer input[type=button] { font-size: 10px; }
 
 #resource-tools input[type="text"] {
   
@@ -100,7 +105,7 @@
 /* Name */
 
 #resource-tools-name {
-  top: 18px;
+  /*top: 18px;*/
   width: 150px;
   text-align: left;
 }
@@ -108,10 +113,20 @@
 #resource-tools-name input[type=text] { width: 80px; }
 #resource-tools-name input[type=submit] { float: right; }
 
+/* Delete */
+
+#resource-tools-delete {
+  width: 200px;
+}
+
+#resource-tools-delete div.center {
+  margin-top: 5px;
+}
+
 /* Rights */
 
 #resource-tools-rights {
-  top: 2px;
+  /*top: 2px;*/
   
 }
 

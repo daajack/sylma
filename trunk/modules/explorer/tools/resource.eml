@@ -9,33 +9,25 @@
       <la:property name="pathName">/update-name</la:property>
       <la:property name="pathDelete">/delete</la:property>
       <la:property name="sub">
-        <div id="resource-tools" class="tools clear-block">
+        <div id="resource-tools">
           <div class="button">
             <span>R</span>
             <la:event name="click" limit="self, first"><![CDATA[var oParent = %ref-object%;
 
+oParent.clearSub();
 oParent.loadRights();
-oParent.clearTimer('rights');
 
 return oParent.sub.rights.show();]]></la:event>
-            <la:event name="mouseenter"><![CDATA[%ref-object%.clearTimer('rights');]]></la:event>
-            <la:event name="mouseleave" delay="300" timer="rights"><![CDATA[%ref-object%.updateRights();
-return %ref-object%.sub.rights.hide();]]></la:event>
             <le:action path="resource-rights"/>
           </div>
           <div class="button">
             <span>N</span>
-            <la:event name="click"><![CDATA[if (this === e.target || this.getFirst() === e.target) {
-  
-  var oParent = %ref-object%;
-  
-  oParent.loadName();
-  
-  return oParent.sub.editName.show();
-}
+            <la:event name="click" limit="self, first"><![CDATA[var oParent = %ref-object%;
 
-return true;]]></la:event>
-            <la:event name="mouseenter"><![CDATA[%ref-object%.clearTimer('name');]]></la:event>
+oParent.clearSub();
+oParent.loadName();
+
+return oParent.sub.editName.show();]]></la:event>
             <la:object class="menu" name="editName">
               <form class="tools" id="resource-tools-name">
                 <la:event name="submit"><![CDATA[return %ref-object%.parentObject.updateName();]]></la:event>
@@ -46,17 +38,12 @@ return true;]]></la:event>
           </div>
           <div class="button">
             <span>S</span>
-            <la:event name="click"><![CDATA[if (this === e.target || this.getFirst() === e.target) {
-  
-  var oParent = %ref-object%;
-  
-  oParent.clearTimer();  
-  return oParent.sub.deleteBox.show();
-}
+            <la:event name="click" limit="self, first"><![CDATA[var oParent = %ref-object%;
 
-return true;]]></la:event>
+oParent.clearSub();  
+return oParent.sub.deleteBox.show();]]></la:event>
             <la:object class="menu" name="deleteBox">
-              <form class="tools">
+              <form class="tools" id="resource-tools-delete">
                 <la:event name="submit"><![CDATA[return %ref-object%.parentObject.deleteResource();]]></la:event>
                 <div>Voulez-vous supprimer cette resource ?</div>
                 <div class="center">

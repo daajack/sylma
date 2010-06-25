@@ -39,8 +39,7 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
       if (this.firstShow(eTarget)) {
         
         this.resource = eTarget.retrieve('ref-object');
-        this.sub.rights.hide(true);
-        
+        this.clearSub(true);
       }
       
       return this.parent(eTarget);
@@ -49,10 +48,14 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
     'hide' : function(bQuick) {
       
       this.updateRights();
-      
-      for (var i in this.sub) this.sub[i].hide(bQuick);
+      this.clearSub(bQuick);
       
       return this.parent(bQuick);
+    },
+    
+    clearSub : function(bQuick) {
+      
+      for (var i in this.sub) this.sub[i].hide(bQuick);
     },
     
     loadRights : function() {

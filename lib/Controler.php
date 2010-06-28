@@ -103,7 +103,7 @@ class Controler {
         
         $oAction = new XML_Action(self::getPath(), $oRedirect);
         
-        if ($oAction->isEmpty()) self::errorRedirect(); // no rights / empty main action
+        if ($oAction->isEmpty() && SYLMA_EMPTY_REDIRECT) self::errorRedirect(); // no rights / empty main action
         else {
           
           if (self::getWindowSettings()->hasAttribute('action')) {

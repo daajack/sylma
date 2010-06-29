@@ -431,8 +431,15 @@ class XML_Action extends XML_Document {
         
         $bKeep = $oElement->testAttribute('keep');
         
-        if ($sName = $oElement->getAttribute('name')) $mResult = $this->getPath()->getAssoc($sName, ($bKeep !== false));
-        else if ($iIndex = $oElement->getAttribute('index')) $mResult = $this->getPath()->getIndex($iIndex, $bKeep);
+        if ($sName = $oElement->getAttribute('name')) {
+          
+          if ($this->getPath()->hasAssoc($sName)) $mResult = $this->getPath()->getAssoc($sName, ($bKeep !== false));
+          else if ($oElement->testAttribute('required', false)) {
+            
+            dspm(xt('Argument associé %s inexistant dans %s', new HTML_Strong($sName), $this->getPath()->parse()), 'action/error');
+          }
+          
+        } else if ($iIndex = $oElement->getAttribute('index')) $mResult = $this->getPath()->getIndex($iIndex, $bKeep);
         else $mResult = $this->getPath()->getIndex(0, $bKeep);
         
         $bRun = true;
@@ -594,7 +601,7 @@ class XML_Action extends XML_Document {
           'interface' => SYLMA_NS_INTERFACE,
           'message' => SYLMA_NS_MESSAGES);
         
-        if (!$sNamespace = $oElement->getAttribute('name')) {
+        if (!$sNamespace = $oElement->read()) {
           
           dspm(xt('Espace de nom introuvable dans %s', $this->getPath()), 'action/error');
           
@@ -754,7 +761,7 @@ class XML_Action extends XML_Document {
     
     foreach ($oElement->getAttributes() as $oAttribute) {
       
-      $sValue = $oAttribute->getValue();
+      $sValue = unxmlize($oAttribute->getValue());
       preg_match_all('/\[\$([\w-]+)\]/', $sValue, $aResults, PREG_OFFSET_CAPTURE);
       
       if ($aResults && $aResults[0]) {
@@ -771,7 +778,7 @@ class XML_Action extends XML_Document {
           $iSeek = strlen($sVarValue) - $iVarLength;
         }
         
-        $oAttribute->set($sValue);
+        $oAttribute->set(xmlize($sValue));
       }
     }
   }
@@ -1925,6 +1932,11 @@ class XML_Path {
     if ($mResult !== null) $this->aArguments['index'] = array_merge($this->aArguments['index']);
     
     return $mResult;
+  }
+  
+  public function hasAssoc($sKey) {
+    
+    return array_key_exists($sKey, $this->aArguments['assoc']);
   }
   
   public function getAssoc($sKey, $bKeep = false) {

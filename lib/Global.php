@@ -225,7 +225,7 @@ function dspm($mVar, $sStatut = 'success') {
   Controler::addMessage($mVar, $sStatut);
 }
 
-function view($mVar, $bFormat = true) {
+function view($mVar, $bFormat = false) {
   
   return Controler::formatResource($mVar, $bFormat);
 }

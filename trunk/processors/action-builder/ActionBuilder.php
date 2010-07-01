@@ -33,8 +33,9 @@ class ActionBuilder extends XML_Processor  {
     
     if (in_array($oElement->getName(true), array('layout', 'layer'))) {
       
-      //$oElement->setAttribute('path', $this->getAction()->getPath()->getOriginalPath());
-      $oElement->addNode('property', $this->getAction()->getPath()->getOriginalPath(), array('name' => 'sylma-update-path'), SYLMA_NS_ACTIONBUILDER);
+      if (!$sPath = $oElement->getAttribute('update-path')) $sPath = $this->getAction()->getPath()->getSimplePath();
+      
+      $oElement->addNode('property', $sPath, array('name' => 'sylma-update-path'), SYLMA_NS_ACTIONBUILDER);
     }
     
     if ($this->isFirst()) { // root object
@@ -52,7 +53,8 @@ class ActionBuilder extends XML_Processor  {
       $mResult = new XML_Document(new HTML_Div($oElement));
       
       $this->buildResult($this->parseAll($mResult));
-      $mResult = $mResult->getFirst();
+      
+      $mResult = $mResult->getChildren();
       
     } else { // not root objects
       
@@ -211,22 +213,23 @@ class ActionBuilder extends XML_Processor  {
       
       // ref node : html node visible entity of the object
       
-      if ($oRefNode = $this->buildReference($oElement)) {
+      if ($oElement->testAttribute('ref', true)) {
         
-        if (!$sId = $oRefNode->getId()) $oRefNode->setAttribute('id', $sName);
-        else $sName = $sId;
+        if ($oRefNode = $this->buildReference($oElement)) {
+          
+          if (!$sId = $oRefNode->getId()) $oRefNode->setAttribute('id', $sName);
+          else $sName = $sId;
+          
+        } else dspm(xt('Noeud HTML de référence non trouvé pour %s', view($oElement, false)), 'action/error');
         
-      } else dspm(xt('Noeud HTML de référence non trouvé pour %s', view($oElement, false)), 'action/error');
-      //dspf($sName);
-      $oElement->setAttribute('id-node', $sName);
-      //dspf($oElement);
-      //dspf($oRefNode);
-      
-      // name
-      
-      if (($oElement->getParent() && ($oElement->getParent()->getName(true) != 'group')) && (!$oElement->getAttribute('name'))) {
+        $oElement->setAttribute('id-node', $sName);
         
-        $oElement->setAttribute('name', $sName);
+        // name
+        
+        if (($oElement->getParent() && ($oElement->getParent()->getName(true) != 'group')) && (!$oElement->getAttribute('name'))) {
+          
+          $oElement->setAttribute('name', $sName);
+        }
       }
     }
   }

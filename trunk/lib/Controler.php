@@ -22,6 +22,7 @@ class Controler {
   private static $aPaths = array(); // Liste des précédents chemins redirigés, ajoutés dans oRedirect
   private static $sAction = '';     // Chemin de l'action. Ex: /utilisateur/edit
   private static $aResults = array();     // Pile of results of the same action in different mime type (typically html + json)
+  public static $hasResult = false;
   private static $aQueries = array();
   private static $bUseMessages = false;
   
@@ -236,6 +237,11 @@ class Controler {
     $_SESSION['results'] = self::$aResults;
   }
   
+  public static function hasResult() {
+    
+    return self::$hasResult;
+  }
+  
   public static function addResult($mResult, $sWindow) {
     
     $sPath = self::getPath()->getSimplePath();
@@ -245,6 +251,8 @@ class Controler {
     
     self::$aResults[$sPath][$sWindow][] = $mResult;
     self::updateResults();
+    
+    self::$hasResult = true;
     
     return $mResult;
   }

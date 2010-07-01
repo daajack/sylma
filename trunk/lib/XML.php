@@ -143,7 +143,7 @@ class XML_Attribute extends DOMAttr {
   
   public function __toString() {
     
-    return $this->name.'="'.$this->value.'"';
+    return $this->name.'="'.xmlize($this->value).'"';
   }
 }
 

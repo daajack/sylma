@@ -7,6 +7,9 @@ var sylma = {
   
   classes : {},
   
+  defaultMessagesId : false,
+  defaultMessagesContainer : false,
+  
   inttobool : function(sValue) {
     
     return parseInt(sValue) === 1 ? true : false;
@@ -17,7 +20,7 @@ var sylma = {
     return document.importNode(oElement, true);
   },
   
-  loadTree : function(sName, sPath) {
+  loadTree : function(sName, sPath, oSuccess) {
     
     var oResult = new Request.JSON({
       
@@ -26,6 +29,7 @@ var sylma = {
         
         //sylma.dsp(' - DEBUT - ');
         sylma[sName] = sylma.buildRoot(oResult);
+        if (oSuccess) oSuccess();
         //sylma.dsp(' - FIN - ');
     }}).get();
   },
@@ -349,25 +353,29 @@ var sylma = {
     return sContent;
     //this.dsp(sContent);
   }
+
 };
 
 sylma.classes.request = new Class({
   
   Extends : Request,
   
-  'parseAction' : function(oResult) {
+  'parseAction' : function(oResult, sMessages, oTarget) {
     
     var oMessages = $(oResult).getElement('messages');
     var oContent = $(oResult).getElement('content');
     
+    if (!sMessages) sMessages = sylma.defaultMessagesId;
+    if (!oTarget) oTarget = sylma.defaultMessagesContainer;
+    
     if (oMessages && oMessages.getChildren().length) {
       
-      var oContainer = $('explorer-messages');
+      var oContainer = $(sMessages);
       
       if (!oContainer) {
         
-        oContainer = new Element('div', {'id' : 'explorer-messages'});
-        sylma.explorer.node.grab(oContainer, 'bottom');
+        oContainer = new Element('div', {'id' : sMessages});
+        oTarget.grab(oContainer, 'bottom');
       }
       
       var oMessagesContent = oMessages.getFirst();
@@ -442,27 +450,40 @@ sylma.classes.layer = new Class({
       'method' : sMethod,
       'onSuccess' : function(sResult, oResult) {
         
-        var mContent = sylma.importNode(this.parseAction(oResult).getFirst());
+        var oContentContainer = this.parseAction(oResult);
+        var oContent = sylma.importNode(oContentContainer.getFirst());
         
-        mContent.setStyle('opacity', 0.2);
-        mContent.replaces(oCaller.node);
+        oContent.replaces(oCaller.node);
         
         // TODO kill old layer
         //layer.node.destroy(); 
         
-        var oSubResult = new Request.JSON({
+        if (oContentContainer.getProperty('recall') == 'true') {
           
-          'url' : sActionPath + '.txt', 
-          'onSuccess' : function(oResponse) {
+          // get new object
+          
+          oContent.setStyle('opacity', 0.2);
+          
+          var oSubResult = new Request.JSON({
             
-            var oNewObject = sylma.buildRoot(oResponse, sObjectPath, oCaller.parentObject, oCaller.rootObject);
-            
-            eval('delete(oCaller.parentObject.' + oCaller['sylma-path'] + ')'); // delete old object
-            eval('oCaller.parentObject.' + sObjectPath + ' = oNewObject'); // insert new object
-            
-            mContent.setStyle('opacity', 1);
-            
-        }}).get();
+            'url' : sActionPath + '.txt', 
+            'onSuccess' : function(oResponse) {
+              
+              var oNewObject = sylma.buildRoot(oResponse, sObjectPath, oCaller.parentObject, oCaller.rootObject);
+              
+              eval('delete(oCaller.parentObject.' + oCaller['sylma-path'] + ')'); // delete old object
+              eval('oCaller.parentObject.' + sObjectPath + ' = oNewObject'); // insert new object
+              
+              oContent.setStyle('opacity', 1);
+              
+          }}).get();
+          
+        } else {
+          
+          // only change content node
+          
+          oCaller.node = oContent;
+        }
       }
     }).send();
   },

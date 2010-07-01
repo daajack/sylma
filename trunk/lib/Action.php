@@ -1292,6 +1292,8 @@ class XML_Action extends XML_Document {
             // Just run the element, used for set-variable
             if ($oChild->testAttribute('run', true)) $this->buildArgument($oChild);
         }
+        
+        if (!$bResult) break;
       }
       
       $oSettings->remove();
@@ -1463,7 +1465,7 @@ class XML_Action extends XML_Document {
       
       if (Controler::useStatut('action/report')) {
         
-        $oSeek = new HTML_Span(t('&gt;&gt;&gt; Début'), array('style' => 'color: green;'));
+        $oSeek = new HTML_Span(t('>>> Début'), array('style' => 'color: green;'));
         dspm(array(xt('%s de l\'exécution du fichier %s', $oSeek, $this->getPath()->parse()), new HTML_Hr), 'action/report');
       }
       
@@ -1551,7 +1553,7 @@ class XML_Action extends XML_Document {
       
       if (Controler::useStatut('action/report')) {
         
-        $oSeek = new HTML_Span(t('&lt;&lt;&lt; Fin'), array('style' => 'color: red;'));
+        $oSeek = new HTML_Span(t('<<< Fin'), array('style' => 'color: red;'));
         dspm(array(xt('%s de l\'exécution du fichier %s', $oSeek,$this->getPath()->parse()), new HTML_Hr), 'action/report');
       }
       
@@ -1601,7 +1603,7 @@ class XML_Action extends XML_Document {
       case 'error' : // Error
         
         //dspm(xt('Action "%s" impossible, argument(s) invalide(s) !', new HTML_Strong($this->getPath())), 'error');
-        Controler::errorRedirect();
+        if (SYLMA_ACTION_ERROR_REDIRECT) Controler::errorRedirect();
         
       break;
       
@@ -1732,7 +1734,7 @@ class XML_Path {
     
     $sResultPath = '';
     $bError = false;
-    $bUseIndex = true;
+    $bUseIndex = false;
     
     $oDirectory = Controler::getDirectory();
     $oFile = null;

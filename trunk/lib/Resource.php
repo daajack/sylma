@@ -529,7 +529,7 @@ class XML_Directory extends XML_Resource {
     return false;
   }
   
-  public function updateName($sNewName) {
+  public function rename($sNewName) {
     
     $oResult = null;
     
@@ -724,7 +724,7 @@ class XML_File extends XML_Resource {
     return false;
   }
   
-  public function updateName($sNewName) {
+  public function rename($sNewName) {
     
     $oResult = null;
     
@@ -752,13 +752,13 @@ class XML_File extends XML_Resource {
     
     if ($this->checkRights(MODE_WRITE)) {
       
-      if (1) { //$bResult = unlink($this->getRealPath())
+      if ($bResult = unlink($this->getRealPath())) {
         
         if ($bUpdateDirectory) $this->update();
         
         // update directory settings
         $this->getSettings()->deleteFile($this->getName());
-      
+        
         dspm(xt('Suppression du fichier %s', $this->parse()), 'file/notice');
       }
     }

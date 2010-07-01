@@ -237,6 +237,7 @@ class WindowAction extends XML_Document implements Main {
     
     //$oRoot = $this->set('action');
     //$oContent = $oRoot->addNode('content');
+    
     $oRoot = $this->set(new XML_Element('action', null, null, SYLMA_NS_XHTML));
     $oContent = $oRoot->addNode('content', null, null, SYLMA_NS_XHTML);//);
     
@@ -253,6 +254,8 @@ class WindowAction extends XML_Document implements Main {
       
       $oContent->add($oAction);
     }
+    
+    if (Controler::hasResult()) $oContent->setAttribute('recall', 'true');
     
     $oRoot->addNode('messages', Controler::getMessages()->parse());
   }
@@ -343,9 +346,14 @@ class HTML_Action extends XML_Action {
     Controler::useMessages(false);
     
     // Fill empty html tags
-    
-    if ($oElements = $oView->query(SYLMA_HTML_TAGS, 'html', SYLMA_NS_XHTML))
-      foreach ($oElements as $oElement) if (!$oElement->hasChildren()) $oElement->set(' ');
+    // TODO check not to heavy (metal)
+    if ($oElements = $oView->query(SYLMA_HTML_TAGS, 'html', SYLMA_NS_XHTML)) {
+      
+      foreach ($oElements as $oElement) {
+        
+        if (!$oElement->hasChildren()) $oElement->set(' ');
+      }
+    }
     
     // Remove security elements
     

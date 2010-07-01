@@ -31,8 +31,8 @@ class XML_Database {
     $oSession = $this->oSession;
     
     $sResult = '';
-    $sMessage = '';
-    $bError = false;
+    //$sMessage = '';
+    //$bError = false;
     
     if ($oSession) {
       
@@ -48,7 +48,41 @@ class XML_Database {
   public function query($sQuery) {
     
     if (SYLMA_DB_SHOW_QUERIES) dspm(xt('xquery : %s', new HTML_Tag('pre', $sQuery)), 'db/notice');
+    
     return $this->run('xquery '.$sQuery);
+  }
+  
+  public function get($sQuery) {
+    
+    $mResult = false;
+    
+    if ($sResult = $this->query($sQuery)) {
+      
+      $mResult = new XML_Document($sQuery);
+      $mResult = $mResult->getFirst();
+    }
+    
+    return $mResult;
+  }
+  
+  public function load($sId) {
+    
+    return new XML_Document($this->query("id('$sId')"));
+  }
+  
+  public function delete($sId) {
+    
+    return $this->query("delete node id('$sId')");
+  }
+  
+  public function update($sId, $oElement) {
+    
+    return $this->query("replace node id('$sId') with $oElement");
+  }
+  
+  public function insert($oElement, $sTarget) {
+    
+    return $this->query("insert nodes $oElement as last into $sTarget");
   }
   
   public function __destruct() {

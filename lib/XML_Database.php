@@ -75,12 +75,12 @@ class XML_Database {
     return $this->query("delete node id('$sId')");
   }
   
-  public function update($sId, $oElement) {
+  public function update($sId, XML_Element $oElement) {
     
     return $this->query("replace node id('$sId') with $oElement");
   }
   
-  public function insert($oElement, $sTarget) {
+  public function insert(XML_Element $oElement, $sTarget) {
     
     return $this->query("insert nodes $oElement as last into $sTarget");
   }

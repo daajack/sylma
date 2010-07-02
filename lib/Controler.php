@@ -163,21 +163,28 @@ class Controler {
     } else return self::$oSettings;
   }
   
+  public static function parseGet() {
+    
+    $sQuery = substr($_SERVER['QUERY_STRING'], 2);
+  }
   /*
    * load GET, build action path, show-index, load window settings
    **/
   private static function loadContext() {
     
-    if (isset($_GET['q']) && $_GET['q']) {
+    //$aGET = self::parseGet();
+    $aGET = $_GET;
+    
+    if (isset($aGET['q']) && $aGET['q']) {
       
-      $sPath = $_GET['q'];
-      unset($_GET['q']);
+      $sPath = $aGET['q'];
+      unset($aGET['q']);
       
     } else $sPath = '/';
     
     // L'extension (si elle est correct) indique le type de fenêtre
     
-    $oPath = new XML_Path('/'.$sPath, $_GET, false);
+    $oPath = new XML_Path('/'.$sPath, $aGET, false);
     if (!$sExtension = $oPath->parseExtension(true)) $sExtension = 'html';
     $sExtension = strtolower($sExtension);
     

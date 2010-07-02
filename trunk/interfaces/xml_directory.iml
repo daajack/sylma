@@ -16,4 +16,7 @@
   <method return-default="true" path="get-directory" name="getDirectory">
     <argument name="name" format="php-string"/>
   </method>
+  <method return-default="true" path="get-distant-directory" name="getDistantDirectory">
+    <argument name="name" format="php-string"/>
+  </method>
 </class>

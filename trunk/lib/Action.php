@@ -1685,6 +1685,8 @@ class XML_Path {
     
     // Remove arguments following '?' of type ..?arg1=val&arg2=val..
     
+    $sPath = str_replace('__', '..', $sPath); // tmp until parseGet ^ available
+    
     if ($iAssoc = strpos($sPath, '?')) {
       
       $sAssoc = substr($sPath, $iAssoc + 1);
@@ -1806,7 +1808,8 @@ class XML_Path {
       $this->setFile($oFile);
       $this->pushIndex($aPath);
       $this->setPath($oFile);
-      $this->sSimplePath = $oFile->getActionPath();
+      
+      $this->sSimplePath = $oFile->getActionPath().'/'.$this->getAllIndex(false); // TODO add assoc
       
     } else $this->setPath('');
   }

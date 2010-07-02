@@ -1,7 +1,7 @@
 /* Document JS */
 
 var SYLMA_MODE_EXECUTION = 1, SYLMA_MODE_WRITE = 2, SYLMA_MODE_READ = 4;
-
+var SYLMA_HIDE_MESSAGES = false;
 
 var sylma = {
   
@@ -15,9 +15,20 @@ var sylma = {
     return parseInt(sValue) === 1 ? true : false;
   },
   
-  importNode : function(oElement) {
+  importNodes : function(mElements) {
     
-    return document.importNode(oElement, true);
+    if ($type(mElements) == 'array') {
+      
+      var aResults = new Array;
+      
+      mElements.each(function(oElement) {
+        
+        aResults.push(document.importNode(oElement, true));
+      });
+      
+      return aResults;
+      
+    } else return document.importNode(mElements, true);
   },
   
   loadTree : function(sName, sPath, oSuccess) {
@@ -82,46 +93,29 @@ var sylma = {
         var sClassName = object['init']['extend-class'];
         bRoot = sClassName[0] == '/';
         
+        var sArgs = "({'object' : object, 'parent' : parentLayer, 'base' : sClassBase, 'path' : sPath, 'root' : rootObject})"
+        
         if (bRoot || !sClassBase) {
           
           if (bRoot) sClassName = sClassName.substr(1);
           sClassName = sClassName[0] == '[' ? sClassName : '.' + sClassName;
           
-          try { eval('oResult = new window' + sClassName); }
-          catch(e) { this.dsp('Nom de classe introuvable : window' + sClassName); bResult = false; };
+          try { eval('oResult = new window' + sClassName + sArgs); }
+          catch(e) { this.dsp('Nom de classe introuvable : window' + sClassName + '<br/>' + e); bResult = false; };
           
         } else {
           
-          try { eval('oResult = new window' + sClassBase + sClassName); }
-          catch(e) { this.dsp("Classe '" + sClassName + "' introuvable dans la classe de base window'" + sClassBase + "'"); bResult = false; };
+          try { eval('oResult = new window' + sClassBase + sClassName + sArgs); }
+          catch(e) {
+            
+            this.dsp("Classe '" + sClassName + "' introuvable ou invalide dans la classe de base window'" + sClassBase + "'<br/>" + e); 
+            bResult = false;
+          };
         }
       }
       
-      oResult['sylma-classbase'] = sClassBase;
-      
-      if (bResult) {
-        
-        // Add default properties
-        
-        if (object['init']['id-node']) { // Attach reference node
-          
-          eNode = $(object['init']['id-node']);
-          
-          if (eNode) {
-            
-            oResult.node =  eNode;
-            eNode.store('ref-object', oResult);
-            
-          } else this.dsp("Erreur : Element '" + eNode + "' lié à l'objet introuvable !");
-        }
-        
-        oResult.parentObject = parentLayer; // Attach parent object
-        oResult['sylma-path'] = sPath; // Attach parent object ref
-        oResult.rootObject = rootObject; // Attach root object (layout)
-        
-        if (!rootObject) rootObject = oResult;
-        
-      } else this.dsp('Erreur :: Impossible de créer l\'objet');
+      if (!bResult) this.dsp('Erreur :: Impossible de créer l\'objet');
+      else if (!rootObject) rootObject = oResult;
     }
     
     if (bResult) {
@@ -302,7 +296,7 @@ var sylma = {
     if (!($type(eMessages) == 'element')) {
       
       eMessages = new Element('div', {'id' : sTargetId, 'class' : 'sylma-messages'});
-      $('content').grab(eMessages, 'bottom');
+      $('#content').grab(eMessages, 'bottom');
     }
     
     eMessages.grab(mContent, 'top');
@@ -356,6 +350,33 @@ var sylma = {
 
 };
 
+sylma.classes.Base = new Class({
+  
+  initialize : function(oArgs) {
+    
+    this['sylma-classbase'] = oArgs['base'];
+    
+    // Add default properties
+    
+    if (oArgs['object']['init']['id-node']) { // Attach reference node
+      
+      var eNode = $(oArgs['object']['init']['id-node']);
+      
+      if (eNode) {
+        
+        this.node =  eNode;
+        eNode.store('ref-object', this);
+        
+      } else this.dsp("Erreur : Element '" + eNode + "' lié à l'objet introuvable !");
+    }
+    
+    this.parentObject = oArgs['parent']; // Attach parent object
+    this['sylma-path'] = oArgs['path']; // Attach parent object ref
+    this.rootObject = oArgs['root']; // Attach root object (layout)
+  }
+  
+});
+
 sylma.classes.request = new Class({
   
   Extends : Request,
@@ -384,7 +405,7 @@ sylma.classes.request = new Class({
         
         oMessagesContent.setStyles({'opacity' : 0, 'height' : 0});
         
-        oMessagesContent = sylma.importNode(oMessagesContent);
+        oMessagesContent = sylma.importNodes(oMessagesContent);
         oContainer.adopt(oMessagesContent, 'top');
       }
       
@@ -393,25 +414,28 @@ sylma.classes.request = new Class({
       oFx.start({
         'opacity' : 1,
         'height' : 100});
+      
+      if (SYLMA_HIDE_MESSAGES) {
         
-      (function() {
-        /*
-        oMessagesContent.addEvent('mousemove', function() {
+        (function() {
+          /*
+          oMessagesContent.addEvent('mousemove', function() {
+            
+            this.get('tween').cancel();
+            //this.fade('out').delay(5000);
+          });
           
-          this.get('tween').cancel();
-          //this.fade('out').delay(5000);
-        });
-        
-        oMessagesContent.addEvent('mouseleave', function() {
-          
-          this.fade('out').delay(5000);
-        });
-        */
-        oFx.options.unit = 'px';
-        oFx.start({
-          'opacity' : 0,
-          'height' : 0});
-      }).delay(5000);
+          oMessagesContent.addEvent('mouseleave', function() {
+            
+            this.fade('out').delay(5000);
+          });
+          */
+          oFx.options.unit = 'px';
+          oFx.start({
+            'opacity' : 0,
+            'height' : 0});
+        }).delay(5000);
+      }
     }
     
     return oContent;
@@ -419,6 +443,8 @@ sylma.classes.request = new Class({
 });
 
 sylma.classes.layer = new Class({
+  
+  Extends : sylma.classes.Base,
   
   getPath : function() {
     
@@ -451,7 +477,7 @@ sylma.classes.layer = new Class({
       'onSuccess' : function(sResult, oResult) {
         
         var oContentContainer = this.parseAction(oResult);
-        var oContent = sylma.importNode(oContentContainer.getFirst());
+        var oContent = sylma.importNodes(oContentContainer.getFirst());
         
         oContent.replaces(oCaller.node);
         

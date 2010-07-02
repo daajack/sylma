@@ -468,15 +468,17 @@ class XML_Directory extends XML_Resource {
     return null;
   }
   
-  public function getDistantDirectory($aPath) {
+  public function getDistantDirectory($mPath) {
     
-    if ($aPath) {
+    if (is_string($mPath)) $mPath = explode('/', $mPath);
+    
+    if ($mPath) {
       
-      $sName = array_shift($aPath);
+      $sName = array_shift($mPath);
       
       $oSubDirectory = $this->getDirectory($sName);
       
-      if ($oSubDirectory) return $oSubDirectory->getDistantDirectory($aPath);
+      if ($oSubDirectory) return $oSubDirectory->getDistantDirectory($mPath);
       
     } else return $this;
     

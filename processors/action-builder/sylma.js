@@ -1,7 +1,7 @@
 /* Document JS */
 
 var SYLMA_MODE_EXECUTION = 1, SYLMA_MODE_WRITE = 2, SYLMA_MODE_READ = 4;
-var SYLMA_HIDE_MESSAGES = false;
+var SYLMA_HIDE_MESSAGES = true;
 
 var sylma = {
   
@@ -296,7 +296,7 @@ var sylma = {
     if (!($type(eMessages) == 'element')) {
       
       eMessages = new Element('div', {'id' : sTargetId, 'class' : 'sylma-messages'});
-      $('#content').grab(eMessages, 'bottom');
+      $('content').grab(eMessages, 'bottom');
     }
     
     eMessages.grab(mContent, 'top');

@@ -84,9 +84,9 @@ class XML_Element extends DOMElement implements XML_Composante {
       else $aPath[] = $oNode->getCSSPathName();
     }
     
-    $sResult  = ($oLastParent === $oNode) ? '' : '/';
-    
-    return $sResult.implode(' > ', array_reverse($aPath));
+    //$sResult  = ($oLastParent === $oNode) ? '' : '/';
+    //$sResult.
+    return implode(' > ', array_reverse($aPath));
   }
   
   /**

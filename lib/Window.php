@@ -260,6 +260,16 @@ class WindowAction extends XML_Document implements Main {
     $oRoot->addNode('messages', Controler::getMessages()->parse());
   }
   
+  public function addJS($sHref, $mContent = null) {
+    
+    return null; // TODO
+  }
+  
+  public function addCSS($sHref = '') {
+    
+    return null; // TODO
+  }
+  
   public function __toString() {
     
     $oView = new XML_Document($this);

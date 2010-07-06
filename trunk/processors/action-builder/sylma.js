@@ -1,7 +1,7 @@
 /* Document JS */
 
 var SYLMA_MODE_EXECUTION = 1, SYLMA_MODE_WRITE = 2, SYLMA_MODE_READ = 4;
-var SYLMA_HIDE_MESSAGES = true;
+var SYLMA_HIDE_MESSAGES = false;
 
 var sylma = {
   
@@ -367,7 +367,7 @@ sylma.classes.Base = new Class({
         this.node =  eNode;
         eNode.store('ref-object', this);
         
-      } else this.dsp("Erreur : Element '" + eNode + "' lié à l'objet introuvable !");
+      } else sylma.dsp("Erreur : Element '" + eNode + "' lié à l'objet introuvable !");
     }
     
     this.parentObject = oArgs['parent']; // Attach parent object
@@ -474,6 +474,7 @@ sylma.classes.layer = new Class({
       'url' : sActionPath + '.action',
       'data' : oArguments,
       'method' : sMethod,
+      'async ' : false,
       'onSuccess' : function(sResult, oResult) {
         
         var oContentContainer = this.parseAction(oResult);

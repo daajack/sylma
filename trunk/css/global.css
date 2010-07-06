@@ -1,5 +1,16 @@
-/* Admin Infos */
+/*.clear-block:after {
+  clear:both;
+  content:".";
+  display:block;
+  height:0pt;
+  visibility:hidden;
+}
 
+.clear-block { display:inline-block; }
+* html .clear-block { height:1%; }
+.clear-block { display:block; }*/
+
+/* Admin Infos */
 
 #admin-infos {
   position: absolute;

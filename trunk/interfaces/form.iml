@@ -16,6 +16,7 @@
     <multiple-arguments>
       <format>XML_Element</format>
       <format>XML_Document</format>
+      <format>XML_NodeList</format>
     </multiple-arguments>
   </method>
   <method path="add-cancel" name="addCancel"/>

@@ -5,7 +5,7 @@
   <object name="redirect" call="$oRedirect"/>
   <object name="user" call="Controler::getUser()"/>
   <object name="path" call="$oAction-&gt;getPath()" return="true"/>
-  <object name="path-original" call="$oAction-&gt;getPath()-&gt;getOriginalPath()" return="true"/>
+  <object return="true" name="simple-path" call="$oAction-&gt;getPath()-&gt;getSimplePath()"/>
   <object name="self" call="$oAction" return="true"/>
   <object name="directory" call="$oAction-&gt;getPath()-&gt;getDirectory()" return="true"/>
   <object name="parent-directory" call="$oAction-&gt;getPath()-&gt;getDirectory()-&gt;getParent()" return="true"/>

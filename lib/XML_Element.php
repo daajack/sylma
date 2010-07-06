@@ -35,9 +35,39 @@ class XML_Element extends DOMElement implements XML_Composante {
   }
   
   /**
+   * @return string The CSS path of the element relative to his parent and brotherhood. ex: 'div > a:eq(2)'
+   */
+  public function getCSSPath($oLastParent = null, $sNamespace = null) {
+    
+    if ($sNamespace === null) $sNamespace = $this->getNamespace();
+      
+    if ($this->getNamespace() === $sNamespace) {
+      
+      $iPrevious = 1;
+      $oSibling = $this;
+      
+      while ($oSibling = $oSibling->getPrevious()) {
+        
+        if ($oSibling->getNamespace() == $this->getNamespace()) $iPrevious++;
+        //if ($iPrevious > 10) {dspm('Prob'); break;}
+      }
+      
+      $sPath = '*:nth-child('.$iPrevious.')';
+      
+      if ($this->getParent() !== $oLastParent) $sPath = $this->getParent()->getCSSPath($oLastParent, $sNamespace).' > '.$sPath;
+      
+    } else {
+      
+      $sPath = $this->getParent()->getCSSPath($oLastParent, $sNamespace);
+    }
+    
+    return $sPath;
+  }
+  
+  /**
    * @return string The CSS name of the element relative to his brotherhood. ex: 'a:eq(2)'
    */
-  private function getCSSPathName() {
+  /*private function getCSSPathName() {
     
     if (!$sPrefix = $this->getPrefix()) {
       
@@ -50,9 +80,10 @@ class XML_Element extends DOMElement implements XML_Composante {
     
     // first check all children
     
-    $aSiblings = $this->getParent()->query($sName, $aNS);
+    if ($this->getParent()->getFirst() !== $this) $iSiblings = $this->getParent()->query($sName, $aNS)->length - 1;
+    else $iSiblings = 0;
     
-    if ($aSiblings->length - 1) {
+    if ($iSiblings) {
       
       // if there are, get the preceding count
       
@@ -66,10 +97,7 @@ class XML_Element extends DOMElement implements XML_Composante {
     return $sName;
   }
   
-  /**
-   * @return string The CSS path of the element relative to his parent and brotherhood. ex: 'div > a:eq(2)'
-   */
-  public function getCSSPath($oLastParent = null) {
+  public function _getCSSPath($oLastParent = null) {
     
     //dspf($this);
     $oNodes = $this->query("ancestor-or-self::*[namespace-uri() = '{$this->getNamespace()}']");
@@ -87,7 +115,7 @@ class XML_Element extends DOMElement implements XML_Composante {
     //$sResult  = ($oLastParent === $oNode) ? '' : '/';
     //$sResult.
     return implode(' > ', array_reverse($aPath));
-  }
+  }*/
   
   /**
    * Create a DOMXPath object
@@ -238,6 +266,10 @@ class XML_Element extends DOMElement implements XML_Composante {
     else return null;
   }
   
+  public function getById($sId) {
+    
+    return $this->getDocument()->getElementById($sId);
+  }
   /**
    * Add an attribute object to the element
    * @param XML_Attribute $oAttribute Attribute to add to the element, may be owned by the document owner
@@ -855,9 +887,14 @@ class XML_Element extends DOMElement implements XML_Composante {
   
   /*** Properties ***/
   
-  public function getParent() {
+  public function getParent($sNamespace = null) {
     
-    return $this->parentNode;
+    if ($sNamespace) {
+      
+      if ($this->getParent()->getNamespace() != $sNamespace) return $this->getParent()->getParent($sNamespace);
+      else return $this->getParent();
+      
+    } else return $this->parentNode;
   }
   
   public function getLast() {

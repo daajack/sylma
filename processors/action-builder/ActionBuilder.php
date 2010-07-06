@@ -254,7 +254,15 @@ class ActionBuilder extends XML_Processor  {
             
             if ($oElement->getParent() !== $oPreviousParent) {
               
-              $oParent = $oElement->get("ancestor::*[namespace-uri() = '".SYLMA_NS_ACTIONBUILDER."' and @id-node][position() = 1]");
+              $oParent = $oElement;
+              
+              do {
+                
+                $oParent = $oParent->getParent(SYLMA_NS_ACTIONBUILDER);
+                
+              } while ($oParent && !$oParent->hasAttribute('id-node'));
+              
+              //("ancestor::*[namespace-uri() = '".SYLMA_NS_ACTIONBUILDER."' and @id-node][position() = 1]");
               $oParentNode = $oElement->getDocument()->get("//*[@id='{$oParent->getAttribute('id-node')}']");
               
               $sPath = '#'.$oParentNode->getId().' > '.$oRefNode->getCSSPath($oParentNode);
@@ -296,13 +304,20 @@ class ActionBuilder extends XML_Processor  {
         
         if ($oElement->hasChildren() && $oElement->getFirst()->isElement()) {
           
-          if ($oElement->getFirst()->getNamespace() == $oElement->getNamespace()) {
+          // first look in children
+          
+          foreach ($oElement->getChildren() as $oChild) {
             
-            // first child is action-builder go far
-            
-            $oRefNode = $oElement->get(".//*[namespace-uri() != '".SYLMA_NS_ACTIONBUILDER."']", $this->aNS);
-            
-          } else $oRefNode = $oElement->getFirst(); // get first child
+            if ($oChild->getNamespace() != SYLMA_NS_ACTIONBUILDER) {
+              
+              $oRefNode = $oChild;
+              break;
+            }
+          }
+          
+          // children are all action-builder go far
+          
+          if (!$oRefNode) $oRefNode = $oElement->get(".//*[namespace-uri() != '".SYLMA_NS_ACTIONBUILDER."']", $this->aNS); 
           
         } else dspm(xt('ActionBuilder : Référence impossible, l\'objet %s n\'a pas d\'enfant valide dans %s', view($oElement), $this->getAction()->getPath()->parse()), 'action/error');
         

@@ -85,11 +85,10 @@ class HTML_Form extends HTML_Tag {
     
     foreach ($this->oSchema->getChildren() as $oElement) {
       
-      
       $oResult->add($this->buildField(new XML_Element('field', null, array('id' => $oElement->getId()))));
     }
     
-    return $oResult;
+    return $oResult->getChildren();
   }
   
   public function buildField($oElement, $bOptionsKey = false) {

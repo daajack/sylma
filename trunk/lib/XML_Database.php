@@ -58,8 +58,8 @@ class XML_Database {
     
     if ($sResult = $this->query($sQuery)) {
       
-      $mResult = new XML_Document($sQuery);
-      $mResult = $mResult->getFirst();
+      $mResult = new XML_Document($sResult);
+      $mResult = $mResult->getRoot();
     }
     
     return $mResult;

@@ -69,6 +69,12 @@ class ActionBuilder extends XML_Processor  {
           
         break;
         
+        case 'method' : 
+          
+          if (!$oElement->getId()) $mResult = $this->buildMethod($oElement, $oAction);
+          
+        break;
+        
         default : 
           
           $oElement->set($this->buildChildren($oElement));
@@ -95,64 +101,64 @@ class ActionBuilder extends XML_Processor  {
    * Replace methods with unique id
    */
   
+  private function buildMethod($oMethod, $oAction) {
+  
+    $sName = $oMethod->getAttribute('name');
+    
+    if (!$sSource = $oMethod->getAttribute('file-source')) $sSource = $oAction->getPath();
+    
+    $sChildId = 'method-'.sprintf('%u', crc32($sSource.$sName.$oMethod->read()));
+    //$sChildId = 'method-'.bin2hex(substr(md5($oAction->getPath().$sName.$iCount), 0, 7));
+    //$sChildId = 'method-'.bin2hex(substr(md5($sSource.$sName.$iCount), 0, 7));
+    
+    $oResult = new XML_Element($sName, null, array('id' => $sChildId));
+    
+    if ($this->isFirstPass()) {
+      
+      $sContent = $oMethod->getValue();
+      
+      $aReplaces = array(
+        '/%([\w-_]+)%/'         => '\$(this).retrieve(\'$1\')',
+        '/%([\w-_]+)\s*,\s*([^%]+)%/'  => '\$(this).store(\'$1\', $2)');
+      
+      $oResult->add(preg_replace(array_keys($aReplaces), $aReplaces, $sContent)."\n");
+      
+      /*
+      $aDatas = array();
+      $sContent = '';
+      
+      if ($oDatas = $oMethod->query('la:data', $this->aNS)) {
+        
+        foreach ($oDatas as $oData) {
+          
+          $aDatas[$oData->getAttribute('name')] = ($oData->getAttribute('format') == 'object') ? $oData->getValue() : addQuote($oData->getValue());
+          $oData->remove();
+        }
+      }
+      
+      foreach ($aDatas as $sKey => $sValue) $sContent .= "%$sKey, $sValue%;\n";
+      */
+      
+      $this->oMethods->add($oResult);
+    }
+    
+    $oNewMethod = new XML_Element('la:method', null, array(
+      'id' => $sChildId,
+      'name' => $sName,
+      'extract-ref' => 'parent'), SYLMA_NS_ACTIONBUILDER);
+    
+    $oNewMethod->cloneAttributes($oMethod, array('delay', 'timer', 'limit'));
+    if ($oMethod->getName() == 'event') $oNewMethod->setAttribute('event', 1);
+    
+    return $oNewMethod;
+  }
+  
   private function replaceMethods($oMethods, $oAction) {
     //$aMethods = array('event', 'click', 'dblclick', 'mousedown', 'mouseup', 'mouseover', 'mouseout', 'mousemove', 'key-down');
     
-    foreach ($oMethods as $iCount => $oMethod) {
+    foreach ($oMethods as $oMethod) {
       
-      // TODO really ugly
-      //$sChildId = uniqid('method-');
-      $sName = $oMethod->getAttribute('name');
-      //$sChildId = 'method-'.bin2hex(substr(md5($oAction->getPath().$sName.$iCount), 0, 7));
-      
-      if (!$sSource = $oMethod->getAttribute('file-source')) $sSource = $oAction->getPath();
-      
-      //dspm(array($sSource, ' / ', $sName, ' / ', $iCount, ' / ', sprintf('%u', crc32($sSource.$sName.$iCount))));
-      //$sChildId = 'method-'.bin2hex(substr(md5($sSource.$sName.$iCount), 0, 7));
-      $sChildId = 'method-'.sprintf('%u', crc32($sSource.$sName.$oMethod->read()));
-      
-      //dspm($sChildId);
-      $oResult = new XML_Element($sName, null, array('id' => $sChildId));
-      
-      if ($this->isFirstPass()) {
-        
-        $sContent = $oMethod->getValue();
-        // $sContent = "sylma.dsp('[event] $sName #' + %ref-object%.node.id);\n" . $sContent;
-        
-        $aReplaces = array(
-          '/%([\w-_]+)%/'         => '\$(this).retrieve(\'$1\')',
-          '/%([\w-_]+)\s*,\s*([^%]+)%/'  => '\$(this).store(\'$1\', $2)');
-        
-        $oResult->add(preg_replace(array_keys($aReplaces), $aReplaces, $sContent)."\n");
-        
-        /*
-        $aDatas = array();
-        $sContent = '';
-        
-        if ($oDatas = $oMethod->query('la:data', $this->aNS)) {
-          
-          foreach ($oDatas as $oData) {
-            
-            $aDatas[$oData->getAttribute('name')] = ($oData->getAttribute('format') == 'object') ? $oData->getValue() : addQuote($oData->getValue());
-            $oData->remove();
-          }
-        }
-        
-        foreach ($aDatas as $sKey => $sValue) $sContent .= "%$sKey, $sValue%;\n";
-        */
-        
-        $this->oMethods->add($oResult);
-      }
-      
-      $oNewMethod = new XML_Element('la:method', null, array(
-        'id' => $sChildId,
-        'name' => $sName,
-        'extract-ref' => 'parent'), SYLMA_NS_ACTIONBUILDER);
-      
-      $oNewMethod->cloneAttributes($oMethod, array('delay', 'timer', 'limit'));
-      if ($oMethod->getName() == 'event') $oNewMethod->setAttribute('event', 1);
-      
-      $oMethod->replace($oNewMethod);
+      $oMethod->replace($this->buildMethod($oMethod, $oAction));
     }
   }
   
@@ -243,40 +249,41 @@ class ActionBuilder extends XML_Processor  {
     $oPreviousParent = null;
     
     foreach ($oElements as $oElement) {
+      
+      if (!$oElement->getId()) $this->buildMethod($oElement, $oAction);
+      
+      if ($oElement->hasAttribute('event') && ($oRefNode = $this->buildReference($oElement))) {
         
-        if ($oElement->hasAttribute('event') && ($oRefNode = $this->buildReference($oElement))) {
+        if ($sRefId = $oRefNode->getId()) { // refNode has ID, just hook
           
-          if ($sRefId = $oRefNode->getId()) { // refNode has ID, just hook
-            
-            $oElement->setAttribute('id-node', $sRefId);
-            
-          } else { // refNode has no ID, get parent first ID'ed
-            
-            if ($oElement->getParent() !== $oPreviousParent) {
-              
-              $oParent = $oElement;
-              
-              do {
-                
-                $oParent = $oParent->getParent(SYLMA_NS_ACTIONBUILDER);
-                
-              } while ($oParent && !$oParent->hasAttribute('id-node'));
-              
-              //("ancestor::*[namespace-uri() = '".SYLMA_NS_ACTIONBUILDER."' and @id-node][position() = 1]");
-              $oParentNode = $oElement->getDocument()->get("//*[@id='{$oParent->getAttribute('id-node')}']");
-              
-              $sPath = '#'.$oParentNode->getId().' > '.$oRefNode->getCSSPath($oParentNode);
-              $oElement->setAttribute('path-node', $sPath);
-              
-              // to avoid too much pass, save path
-              
-              $oPreviousParent = $oElement->getParent();
-              $sPreviousPath = $sPath;
-              
-            } else $oElement->setAttribute('path-node', $sPreviousPath);
-          }
+          $oElement->setAttribute('id-node', $sRefId);
           
-        } else dspm(array(t('Impossible de créer l\'évènement'), $oElement->viewResume()), 'action/error');
+        } else { // refNode has no ID, get parent first ID'ed
+          
+          if ($oElement->getParent() !== $oPreviousParent) {
+            
+            $oParent = $oElement;
+            
+            do {
+              
+              $oParent = $oParent->getParent(SYLMA_NS_ACTIONBUILDER);
+              
+            } while ($oParent && !$oParent->hasAttribute('id-node'));
+            
+            //("ancestor::*[namespace-uri() = '".SYLMA_NS_ACTIONBUILDER."' and @id-node][position() = 1]");
+            $oParentNode = $oElement->getDocument()->get("//*[@id='{$oParent->getAttribute('id-node')}']");
+            
+            $sPath = '#'.$oParentNode->getId().' > '.$oRefNode->getCSSPath($oParentNode);
+            $oElement->setAttribute('path-node', $sPath);
+            
+            // to avoid too much pass, save path
+            
+            $oPreviousParent = $oElement->getParent();
+            $sPreviousPath = $sPath;
+            
+          } else $oElement->setAttribute('path-node', $sPreviousPath);
+        }
+      }// else dspm(xt('Impossible de créer l\'évènement %s', view($oElement)), 'action/error');
     }
   }
   

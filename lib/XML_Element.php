@@ -16,6 +16,7 @@ class XML_Element extends DOMElement implements XML_Composante {
     
     $sName = trim((string) $sName);
     if (!$sName) $sName = 'default';
+    
     parent::__construct($sName, null, $sUri);
     
     if (!$oDocument) $oDocument = new XML_Document();

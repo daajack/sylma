@@ -313,7 +313,7 @@ class XML_Action extends XML_Document {
     return $aArguments;
   }
   
-  private function buildArgumentAction($oElement, $bParse) {
+  private function buildArgumentAction($oElement) {
     
     $mResult = null;
     $bRun = false;
@@ -335,7 +335,7 @@ class XML_Action extends XML_Document {
     
     if ($sPath) {
       
-      $oPath = new XML_Path($this->getAbsolutePath($sPath), null, $bParse);
+      $oPath = new XML_Path($this->getAbsolutePath($sPath), null, true);
       
       if ((string) $oPath == (string) $this->getPath()) {
         
@@ -345,6 +345,8 @@ class XML_Action extends XML_Document {
         
         $oRedirect = clone $this->getRedirect();
         
+        // get arguments
+        
         if ($oElement->hasChildren()) {
           
           $aArguments = $this->loadElementArguments($oElement);
@@ -353,8 +355,12 @@ class XML_Action extends XML_Document {
           $oPath->mergeAssoc($aArguments['assoc']);
         }
         
+        // build
+        
         $oAction = new XML_Action($oPath, $oRedirect, $this->aProcessors);
         $mResult = $oAction->parse();
+        
+        // check result
         
         switch ($oAction->getStatut()) {
           
@@ -516,10 +522,6 @@ class XML_Action extends XML_Document {
         
       break;
       
-      case 'direct-action' :
-        
-        $bParse = false;
-      
       case 'document' :
         
         if ($oElement->hasChildren()) {
@@ -537,8 +539,7 @@ class XML_Action extends XML_Document {
       
       case 'action' :
         
-        if (!isset($bParse)) $bParse = true;
-        list($mResult, $bRun) = $this->buildArgumentAction($oElement, $bParse);
+        list($mResult, $bRun) = $this->buildArgumentAction($oElement);
         
       break;
       
@@ -879,7 +880,10 @@ class XML_Action extends XML_Document {
     
     if ($bRedirect) $aArguments = array_merge($this->getPath()->getArgument('index'), $this->getPath()->getArgument('assoc'));
     else $aArguments = array_merge(array_val('index', $aSourceArguments, array()), array_val('assoc', $aSourceArguments, array()));
-    // if ($bRedirect) dsp($aArguments);
+	
+	// merge $_POST values
+	if ($oMethod->testAttribute('use-post')) $aArguments = array_merge($aArguments, $_POST);
+    
     // CALL argument
     
     $oChildren = $oMethod->getChildren();
@@ -1850,6 +1854,11 @@ class XML_Path {
   public function setPath($mPath) {
     
     $this->sPath = (string) $mPath;
+  }
+  
+  public function getActionPath() {
+    
+    return $this->getFile()->getActionPath();
   }
   
   public function getSimplePath() {

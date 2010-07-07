@@ -11,7 +11,9 @@ function extractDirectory($sPath, $bObject = false) {
   
   $sPath = substr($sPath, strlen(getcwd().MAIN_DIRECTORY) + 1);
   if (isset($_ENV['OS']) && strpos($_ENV['OS'], 'Win') !== false) $sPath = str_replace('\\', '/', $sPath);
-  
+  //if (ereg("Win", getenv("HTTP_USER_AGENT" ))) $sPath = str_replace('\\', '/', $sPath);
+  //echo 'yo';
+  //print_r($_ENV);
   $sResult = substr($sPath, 0, strlen($sPath) - strlen(strrchr($sPath, '/')));
   
   if ($bObject) return Controler::getDirectory($sResult);

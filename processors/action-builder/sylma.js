@@ -1,7 +1,7 @@
 /* Document JS */
 
 var SYLMA_MODE_EXECUTION = 1, SYLMA_MODE_WRITE = 2, SYLMA_MODE_READ = 4;
-var SYLMA_HIDE_MESSAGES = false;
+var SYLMA_HIDE_MESSAGES = true;
 
 var sylma = {
   
@@ -462,7 +462,7 @@ sylma.classes.layer = new Class({
     return sPath;
   },
   
-  replace : function(sActionPath, sObjectPath, oArguments, sMethod) {
+  replace : function(sActionPath, sObjectPath, oArguments, sMethod, oCall) {
     
     var oCaller = this;
     
@@ -501,6 +501,8 @@ sylma.classes.layer = new Class({
               eval('delete(oCaller.parentObject.' + oCaller['sylma-path'] + ')'); // delete old object
               eval('oCaller.parentObject.' + sObjectPath + ' = oNewObject'); // insert new object
               
+              if (oCall) oCall();
+              
               oContent.setStyle('opacity', 1);
               
           }}).get();
@@ -515,11 +517,11 @@ sylma.classes.layer = new Class({
     }).send();
   },
   
-  update : function(oArguments) {
+  update : function(oArguments, oCall) {
     
     if (this['sylma-send-method']) var sMethod = this['sylma-send-method'];
     
-    this.replace(this.getPath(), this['sylma-path'], oArguments, sMethod);
+    this.replace(this.getPath(), this['sylma-path'], oArguments, sMethod, oCall);
   }
   
 }),

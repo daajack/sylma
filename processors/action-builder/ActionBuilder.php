@@ -13,7 +13,7 @@ class ActionBuilder extends XML_Processor  {
   
   public function __construct() {
     
-    if (Controler::getWindowSettings()->hasAttribute('interface')) {  // TODO : temp
+    if (Controler::getWindowSettings()->hasAttribute('interface')) {  // TODO : temp & ugly
       
       $this->oMethods = new XML_Document(new XML_Element('la:root', null, null, SYLMA_NS_ACTIONBUILDER));
       
@@ -33,62 +33,59 @@ class ActionBuilder extends XML_Processor  {
     
     if (in_array($oElement->getName(true), array('layout', 'layer'))) {
       
-      if (!$sPath = $oElement->getAttribute('update-path')) $sPath = $this->getAction()->getPath()->getSimplePath();
+      if (!$sPath = $oElement->getAttribute('update-path')) $sPath = $this->getAction()->getPath()->getActionPath();
       
       $oElement->addNode('property', $sPath, array('name' => 'sylma-update-path'), SYLMA_NS_ACTIONBUILDER);
     }
     
-    if ($this->isFirst()) { // root object
+    // not root objects
+    
+    switch ($oElement->getName()) {
       
-      $oElement->set($this->buildChildren($oElement));
-      
-      if ($oElement->getName() == 'replace-events') {
+      case 'replace-events' : // replace events before parsing for better performance
         
-        $oDocument = new XML_Document($oElement);
+        $oDocument = new XML_Document(new XML_Element('root', $this->buildChildren($oElement)));
         $this->replaceMethodsDefault($oDocument, $oAction);
         
-        $oElement = $oDocument->getFirst();
-      }
-      
-      $mResult = new XML_Document(new HTML_Div($oElement));
-      
-      $this->buildResult($this->parseAll($mResult));
-      
-      $mResult = $mResult->getChildren();
-      
-    } else { // not root objects
-      
-      switch ($oElement->getName(true)) {
+        $mResult = $oDocument->getChildren();
         
-        case 'replace-events' : // replace events before parsing for better performance
-          
-          $oDocument = new XML_Document(new XML_Element('root', $this->buildChildren($oElement)));
-          $this->replaceMethodsDefault($oDocument, $oAction);
-          
-          $mResult = $oDocument->getChildren();
-          
-        break;
+      break;
+      
+      case 'method' : 
         
-        case 'method' : 
-          
-          if (!$oElement->getId()) $mResult = $this->buildMethod($oElement, $oAction);
-          
-        break;
+        if (!$oElement->getId()) $mResult = $this->buildMethod($oElement, $oAction);
         
-        default : 
+      break;
+      
+      default :
+        //dspm(array(view($oElement), ' -> ', view($this->isFirst())), 'action/report');
+        if ($this->isFirst()) { // root object
+          
+          $oElement->set($this->buildChildren($oElement));
+          
+          /*if ($oElement->getName() == 'replace-events') {
+            
+            $oDocument = new XML_Document($oElement);
+            $this->replaceMethodsDefault($oDocument, $oAction);
+            
+            $oElement = $oDocument->getFirst();
+          }*/
+          
+          $mResult = new XML_Document(new HTML_Div($oElement));
+          
+          $this->buildResult($this->parseAll($mResult));
+          
+          $mResult = $mResult->getChildren();
+          
+        } else {
           
           $oElement->set($this->buildChildren($oElement));
           $mResult = $oElement;
-          
-        break;
-      }
+        }
+        
+      break;
     }
-    /*
-    if (Controler::useStatut('action/report')) dspm(array(
-      t('Action-builder [onElement] :'),
-      Controler::formatResource($mResult),
-      $oElement->messageParse()), 'action/report');
-    */
+    
     return $mResult;
   }
 

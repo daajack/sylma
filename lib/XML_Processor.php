@@ -72,7 +72,14 @@ class XML_Processor implements XML_ProcessorInterface {
     
     $this->aElements[] = $oElement;
     
-    return $this->onElement($oElement, $oAction);
+    $mResult = $this->onElement($oElement, $oAction);
+    
+    if (Controler::useStatut('action/report')) dspm(xt('%s [onElement] : %s &gt; %s',
+      new HTML_Tag('span', 'Processor', array('style' => 'color: red;')), view($oElement), view($mResult)), 'action/report');
+    
+    array_pop($this->aElements);
+    
+    return $mResult;
   }
   
   public function onLoad() { }

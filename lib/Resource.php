@@ -339,6 +339,9 @@ class XML_Directory extends XML_Resource {
     $oDocument->saveFree($this, $sName);
   }
   
+  /*
+   * Browse then return list of files inside the directory and sub-directories if iDepth != null
+   */
   public function getFiles(array $aExtensions = array(), $sPreg = null, $iDepth = 0) {
     
     $this->browse(array(), array(), 1);
@@ -476,9 +479,7 @@ class XML_Directory extends XML_Resource {
       
       $sName = array_shift($mPath);
       
-      $oSubDirectory = $this->getDirectory($sName);
-      
-      if ($oSubDirectory) return $oSubDirectory->getDistantDirectory($mPath);
+      if ($oSubDirectory = $this->getDirectory($sName)) return $oSubDirectory->getDistantDirectory($mPath);
       
     } else return $this;
     
@@ -553,19 +554,32 @@ class XML_Directory extends XML_Resource {
     return $this->getParent() ? MAIN_DIRECTORY.$this : MAIN_DIRECTORY;
   }
   
-  public function delete() {
+  public function delete($bDeleteChildren = false) {
     
     $bResult = false;
     
     if ($this->checkRights(MODE_WRITE)) {
       
-      if ($bResult = rmdir(MAIN_DIRECTORY.$this)) Controler::addMessage(xt('Suppression du répertoire %s', $this), 'file/notice');
+      if ($bDeleteChildren) {
+        
+        if ($this === Controler::getDirectory()) dspm('Impossible de supprimer le répertoire principal !', 'file/error');
+        else {
+          
+          $this->browse(array(), array(), 1);
+          
+          foreach ($this->aFiles as $oFile) if ($oFile) $oFile->delete();
+          foreach ($this->aDirectories as $oDirectory) $oDirectory->delete(true);
+        }
+      }
+      
+      $bResult = rmdir(MAIN_DIRECTORY.$this);
+      
       $this->getParent()->updateDirectory($this->getName());
     }
     
     return $bResult;
   }
-  
+    
   public function parseXML() {
     
     if (!$sName = xmlize($this->getName())) {

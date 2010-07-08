@@ -526,7 +526,16 @@ class XML_Action extends XML_Document {
         
         if ($oElement->hasChildren()) {
           
-          $mResult = new XML_Document($this->buildArgument($oElement->getFirst()->remove()));
+          $sClass = $oElement->getAttribute('class');
+          
+          switch ($sClass) {
+            
+            case 'xsl' : $mResult = new XSL_Document; break;
+            case 'xml' : 
+            default : $mResult = new XML_Document; break;
+          }
+          
+          $mResult->set($this->buildArgument($oElement->getFirst()->remove()));
           $bRun = true;
           
         }/* else {
@@ -1180,6 +1189,7 @@ class XML_Action extends XML_Document {
       if ($bReplace) {
         
         $bResult = true;
+        $mTemp = $mArgument;
         $mArgument = $mResult;
         
         if ($bAssoc) $this->getPath()->setAssoc($mKey, $mResult);
@@ -1188,7 +1198,7 @@ class XML_Action extends XML_Document {
         if (Controler::useStatut('action/report')) {
           
           $sArgumentType = $bAssoc ? 'assoc' : 'index';
-          dspm(xt('Argument redéfini : %s &gt; %s', Controler::formatResource($mResult), new HTML_Em($sArgumentType)), 'action/report');
+          dspm(xt('Argument redéfini : %s &gt; %s [%s:%s]', view($mTemp), view($mResult), $sArgumentType, $mKey), 'action/report');
         }
       }
     }
@@ -1225,13 +1235,13 @@ class XML_Action extends XML_Document {
       if (in_array($sActualFormat, $aFormats)) return true;
     }
     
-    dspm(array(
-      xt('L\'argument %s [%s] n\'est pas du type : %s dans %s',
-        Controler::formatResource($mArgument),
-        new HTML_em($sActualFormat),
-        new HTML_Strong(implode(', ', $aFormats)),
-        $this->getPath()->parse()),
-      $oElement->messageParse()), 'action/warning');
+    dspm(xt('L\'argument %s / %s n\'est pas du type : %s dans %s : %s',
+      
+      Controler::formatResource($mArgument),
+      new HTML_em($sActualFormat),
+      new HTML_Strong(implode(', ', $aFormats)),
+      $this->getPath()->parse(),
+      view($oElement)), 'action/warning');
     
     return false;
   }
@@ -1912,8 +1922,8 @@ class XML_Path {
   
   private function setKey($sArray, $sKey, $mValue) {
     
-    if ($mValue) $this->aArguments[$sArray][$sKey] = $mValue;
-    else if (array_key_exists($sKey, $this->aArguments[$sArray])) unset($this->aArguments[$sArray][$sKey]);
+    $this->aArguments[$sArray][$sKey] = $mValue;
+    //else if (array_key_exists($sKey, $this->aArguments[$sArray])) unset($this->aArguments[$sArray][$sKey]);
   }
   
   public function setIndex($iKey, $mValue = '') {

@@ -1,4 +1,4 @@
-/*.clear-block:after {
+.clear-block:after {
   clear:both;
   content:".";
   display:block;
@@ -8,7 +8,7 @@
 
 .clear-block { display:inline-block; }
 * html .clear-block { height:1%; }
-.clear-block { display:block; }*/
+.clear-block { display:block; }
 
 /* Admin Infos */
 

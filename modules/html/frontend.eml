@@ -29,7 +29,7 @@
       <link rel="icon" href="[$icone]" type="image/x-icon"/>
       <link rel="stylesheet" type="text/css" media="all" href="/sylma/css/global.css"/>
       <link rel="stylesheet" type="text/css" media="all" href="/sylma/css/messages.css"/>
-      <link rel="stylesheet" type="text/css" media="all" href="/modules/html/global.css"/>
+      <link rel="stylesheet" type="text/css" media="all" href="/sylma/modules/html/global.css"/>
       <link rel="stylesheet" type="text/css" media="all" href="/sylma/modules/html/frontend.css"/>
     </head>
     <body>

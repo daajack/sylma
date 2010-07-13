@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Contrôleur général du framwork
+ * Contrôleur général du framework
  */
 class Controler {
   
@@ -572,7 +572,7 @@ class Controler {
           $oContent = new HTML_Div(null, array('style' => 'display: inline;'));
           foreach ($mArgument as $mKey => $mValue) {
             
-            $oContent->add(self::formatResource($mKey), ' => ', self::formatResource($mValue, true));
+            $oContent->add(view($mKey), ' => ', self::formatResource($mValue, $bDecode));
             if ($iCount) $oContent->add(', ');
             
             $iCount--;
@@ -625,7 +625,6 @@ class Controler {
         } else if ($mArgument instanceof XML_NodeList) {
           
           if ($mArgument->length) {
-            
           
             $mArgument->store();
             
@@ -634,7 +633,7 @@ class Controler {
             $oContent = new HTML_Div(null, array('style' => 'display: inline;'));
             foreach ($mArgument as $mKey => $mValue) {
               
-              $oContent->add(self::formatResource($mKey), ' => ', self::formatResource($mValue, false));
+              $oContent->add(view($mKey), ' => ', view($mValue, false));
               if ($iCount) $oContent->add(', ');
               
               $iCount--;
@@ -762,7 +761,7 @@ class Controler {
       $i++;
     }
     
-    return new HTML_Div(array_reverse($aResult), array('style' => 'margin: 3px; padding: 3px; border: 1px solid white; border-width: 1px 0 1px 0; font-size: 0.8em'));
+    return new HTML_Div(array_reverse($aResult), array('style' => 'margin: 3px; padding: 3px; border: 1px solid white; border-width: 1px 0 1px 0; font-size: 0.9em'));
     // self::addMessage(new HTML_Strong(t('Backtrace').' : ').implode('<br/>', $aResult), $sStatut);
     // return new XML_NodeList($aResult);
   }
@@ -878,7 +877,7 @@ class Controler {
     return self::$bUseMessages;
   }
   
-  public static function addMessage($mMessage = '- message vide -', $sPath = 'notice', $aArgs = array()) {
+  public static function addMessage($mMessage = '- message vide -', $sPath = SYLMA_MESSAGES_DEFAULT_STAT, $aArgs = array()) {
     
     if (DEBUG && (SYLMA_PRINT_MESSAGES)) { // || !self::useMessages()
       

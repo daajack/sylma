@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<class xmlns="http://www.sylma.org/interface">
+  <file>List.php</file>
+  <name>SimpleList</name>
+  <method-construct>
+    <argument format="XML_Document" name="schema"/>
+    <argument format="php-string" name="name"/>
+    <argument format="XML_Directory" name="directory"/>
+    <argument format="php-string" name="path"/>
+    <argument name="redirect">
+      <format>Redirect</format>
+      <format>php-null</format>
+    </argument>
+    <argument name="path-field" format="php-string"/>
+  </method-construct>
+  <method name="getDirectory" path="get-directory" return-default="true"/>
+  <method name="getSchema" path="get-schema" return-default="true"/>
+  <method name="add" path="add" return-default="true"/>
+</class>

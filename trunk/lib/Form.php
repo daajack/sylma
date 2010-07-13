@@ -2,9 +2,9 @@
 
 class Form_Controler {
   
-  private $aSchemas = array();
+  //private $aSchemas = array();
   private $aNS = array('fs' => SYLMA_NS_FORM_SCHEMA);
-  
+  /*
   public function getSchema($sSchema = '') {
     
     if (array_key_exists($sSchema, $this->aSchemas)) return $this->aSchemas[$sSchema];
@@ -28,7 +28,7 @@ class Form_Controler {
     
     $this->aSchemas += $aSchemas;
   }
-  
+  */
   protected function checkRequest(XML_Document $oSchema) {
     
     $aMsg = array();

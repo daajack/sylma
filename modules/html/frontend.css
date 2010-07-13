@@ -63,7 +63,6 @@ a:hover #header-title {
 #center {
 	min-height: 430px;
 	/*padding-top: 110px;*/
-  overflow: auto;
 }
 
 #col-left, #content, #col-right {

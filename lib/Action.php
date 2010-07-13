@@ -289,9 +289,11 @@ class XML_Action extends XML_Document {
         
         if (!$oChild->useNamespace(SYLMA_NS_INTERFACE)) {
           
+          // get @le:name or le:argument/@name
+          
           if (!$sName = $oChild->getAttribute('name', SYLMA_NS_EXECUTION)) {
             
-            if ($oChild->getName(true) == 'argument' && $oChild->useNamespace(SYLMA_NS_EXECUTION)) $sName = $oChild->getAttribute('name');
+            if ($oChild->getName() == 'argument' && $oChild->useNamespace(SYLMA_NS_EXECUTION)) $sName = $oChild->getAttribute('name');
             else $sName = '';
           }
           
@@ -299,7 +301,6 @@ class XML_Action extends XML_Document {
           
           if ($sName) $aArguments['assoc'][$sName] = $mResult;
           else $aArguments['index'][] = $mResult;
-          
         }
         
       } else {
@@ -350,6 +351,8 @@ class XML_Action extends XML_Document {
         if ($oElement->hasChildren()) {
           
           $aArguments = $this->loadElementArguments($oElement);
+          
+          if ($oElement->testAttribute('send-all-arguments')) $aArguments = array_merge_recursive($aArguments, $this->getPath()->getAllArguments());
           
           $oPath->pushIndex($aArguments['index']);
           $oPath->mergeAssoc($aArguments['assoc']);
@@ -462,13 +465,64 @@ class XML_Action extends XML_Document {
         
         if (!$sVariable = $oElement->getAttribute('name')) {
           
-          dspm(array(t('Aucune variable définie !'), $oElement->messageParse()), 'action/warning');
+          $this->dspm(array(t('Nom de la variable indéfini !'), $oElement->messageParse()), 'action/warning');
           
         } else {
           
           $mResult = $this->getVariable($sVariable);
           
           $bRun = true;
+        }
+        
+      break;
+      
+      case 'switch' :
+        
+        if ($oElement->getChildren()->length < 2) $this->dspm(xt('Arguments insuffisants pour %s', $oElement), 'action/error');
+        else {
+          
+          if ($oElement->getFirst()->getName() == 'case') $this->dspm(xt('Le premier argument ne peux pas être %s dans %s', $oElement->getFirst(), $oElement), 'action/error');
+          else {
+            
+            $mResult = array();
+            $mTest = $this->buildArgument($oElement->getFirst()->remove());
+            
+            foreach ($oElement->getChildren() as $oChild) {
+              
+              if (!$oChild->useNamespace(SYLMA_NS_EXECUTION) || !($oChild->getName() == 'case' || $oChild->getName() == 'default')) {
+                
+                $this->dspm(xt('Element %s interdit dans %s', $oChild, $oElement), 'action/error');
+              
+              } else {
+                
+                if ($oChild->getName() == 'default') {
+                  
+                  // default
+                  
+                  if ($oChild != $oElement->getLast()) $this->dspm(xt('%s doit être placer à la fin de %s', view($oChild), view($oElement)), 'action/error');
+                  else $mResult[] = $this->buildArgument($oChild->getChildren());
+                  
+                } else {
+                  
+                  // case
+                  
+                  if (!$oChild->getChildren()->length) $this->dspm(xt('Arguments insuffisants pour %s dans %s', view($oChild), view($oElement)), 'error');
+                  else {
+                    
+                    // compare values
+                    if (!$mValue = $oChild->getAttribute('test')) $mValue = $this->buildArgument($oChild->getFirst()->remove());
+                    
+                    // if same add value
+                    if ($mValue === $mTest) {
+                      
+                      $mResult[] = $this->buildArgument($oChild->getChildren());
+                      if ($oChild->testAttribute('break', true)) break;
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
         
       break;
@@ -507,14 +561,15 @@ class XML_Action extends XML_Document {
         } else {
           
           $oInterface = Action_Controler::getInterface($sClassName);
+          
           $aArguments = array();
           
-          if ($oConstruct = $oInterface->get('ns:method-construct')) {
+          if ($oConstruct = $oInterface->getByName('method-construct')) {
             
             $aArguments = $this->parseArguments($oConstruct, $this->loadElementArguments($oElement));
           }
           
-          if ($sPath = $oInterface->read('ns:file')) $sPath = $this->getAbsolutePath($sPath);
+          if ($sPath = $oInterface->readByName('file')) $sPath = $this->getAbsolutePath($sPath);
           
           $mResult = $this->buildClass($sClassName, $sPath, $aArguments);
           $bRun = true;
@@ -1508,7 +1563,7 @@ class XML_Action extends XML_Document {
               } else {
                 
                 $this->setStatut('error');
-                dspm(xt('L\'action %s n\'a pas été exécuté', $this->getPath()->parse()), 'action/error');
+                $this->dspm(xt('L\'action n\'a pas été exécuté', $this->getPath()->parse()), 'action/error');
               }
               
             break;
@@ -1517,11 +1572,24 @@ class XML_Action extends XML_Document {
               
               if (!$oSettings = $this->getByName('settings', SYLMA_NS_EXECUTION)) {
                 
-                dspm(xt('Action %s invalide, aucuns paramètres !', new HTML_Strong($this->getPath())), 'action/warning');
+                $this->dspm(xt('Action %s invalide, aucuns paramètres !', new HTML_Strong($this->getPath())), 'action/warning');
                 
               } else {
                 
-                $sClass = $oSettings->readByName('class', SYLMA_NS_EXECUTION);
+                if ($oAction = $oSettings->getByName('use-action')) {
+                  
+                  if (!$sPath = $oAction->getAttribute('path')) $this->dspm(xt('Chemin manquant sur %s', $oAction), 'action/error');
+                  else {
+                    
+                    $oInterface = new XML_Document($sPath);
+                    Action_Builder::buildInterface($oInterface);
+                  }
+                  
+                } else if ($sClass = $oSettings->readByName('class', SYLMA_NS_EXECUTION)) {
+                  
+                  $oInterface = Action_Controler::getInterface($sClass);
+                }
+                
                 $oSettings->remove();
                 
                 if ($oRoot->hasChildren()) {
@@ -1531,7 +1599,7 @@ class XML_Action extends XML_Document {
                   $this->getPath()->mergeAssoc($aArguments['assoc']);
                 }
                 
-                if ($oInterface = Action_Controler::getInterface($sClass)) {
+                if ($oInterface) {
                   
                   $oResult = $this->loadInterface($oInterface);
                   list($oSubResult, $bSubReturn) = $this->runInterfaceList($oResult, $oRoot);
@@ -1629,6 +1697,11 @@ class XML_Action extends XML_Document {
     }
     
     return null;
+  }
+  
+  public function dspm($mMessage, $sStatut = SYLMA_MESSAGES_DEFAULT_STAT) {
+    
+    return dspm(array($this->getPath(), new HTML_Tag('hr'), $mMessage), $sStatut);
   }
 }
 
@@ -1823,7 +1896,7 @@ class XML_Path {
       $this->pushIndex($aPath);
       $this->setPath($oFile);
       
-      $this->sSimplePath = $oFile->getActionPath().'/'.$this->getAllIndex(false); // TODO add assoc
+      $this->sSimplePath = $oFile->getActionPath().'/'.$this->getStringIndex(false); // TODO add assoc
       
     } else $this->setPath('');
   }
@@ -1902,6 +1975,11 @@ class XML_Path {
     else dspm(xt('Liste d\'argument invalide, ce n\'est pas un tableau'), 'action/error');
   }
   
+  public function getAllArguments() {
+    
+    return $this->aArguments;
+  }
+  
   public function getArgument($sArgument) {
     
     if (array_key_exists($sArgument, $this->aArguments)) return $this->aArguments[$sArgument];
@@ -1942,7 +2020,7 @@ class XML_Path {
     $this->aArguments['assoc'] = array_merge($this->aArguments['assoc'], $aArguments);
   }
   
-  public function getAllIndex($bRemove = true) {
+  public function getStringIndex($bRemove = true) {
     
     $aIndex = $this->aArguments['index'];
     if ($bRemove) $this->aArguments['index'] = array();

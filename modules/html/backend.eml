@@ -33,7 +33,7 @@
             <a lang="en" id="header-title" class="notranslate" href="/">Sylma</a>
           </h1>
         </div>
-        <div id="center">
+        <div id="center" class="clear-block">
           <div id="menus">
             <le:get-variable name="menu">
               <li:get-group>

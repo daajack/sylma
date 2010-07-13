@@ -217,12 +217,12 @@ function float_format($mValue, $iDec = 2, $iPoint = '.', $iThousand = '\'') {
 
 /* Display function */
 
-function dspf($mVar, $sStatut = 'success') {
+function dspf($mVar, $sStatut = SYLMA_MESSAGES_DEFAULT_STAT) {
   
   dspm(view($mVar, false), $sStatut); 
 }
 
-function dspm($mVar, $sStatut = 'success') {
+function dspm($mVar, $sStatut = SYLMA_MESSAGES_DEFAULT_STAT) {
   
   Controler::addMessage($mVar, $sStatut);
 }

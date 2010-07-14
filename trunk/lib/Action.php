@@ -204,69 +204,67 @@ class XML_Action extends XML_Document {
     $bReturn = false;
     $sActionMethod = $oElement->getName(true);
     
-    if (!$oInterface) {
+    if ($sActionMethod == 'if') {
       
-      $aArguments = array();
+      if ($mObject) $oResult = $this->buildArgument($oElement->getChildren());
+      $bReturn = $oElement->testAttribute('return', true);
       
-      if ($sActionMethod == 'if') {
-        
-        if ($mObject) $oResult = $this->buildArgument($oElement->getChildren());
-        
-      } else if ($sActionMethod == 'if-not') {
-        
-        if (!$mObject) $oResult = $this->buildArgument($oElement->getChildren());
-        
-      } else dspm(array(xt('Pas d\'interface et instruction %s inconnue dans %s (Objet : %s) ', view($oElement, true), $this->getPath()->parse(), view($mObject))), 'action/warning');
+    } else if ($sActionMethod == 'if-not') {
       
-      if ($oElement->testAttribute('return', true)) $bReturn = true;
+      if (!$mObject) $oResult = $this->buildArgument($oElement->getChildren());
+      $bReturn = $oElement->testAttribute('return', true);
+      
+    } else if (!$oInterface) {
+      
+      dspm(array(xt('Pas d\'interface pour l\'instruction %s dans %s (Objet : %s) ',
+        view($oElement, true),
+        $this->getPath()->parse(),
+        view($mObject))), 'action/warning');
+      
+    } else if (!$oMethod = $oInterface->get("ns:method[@path='$sActionMethod']")) {
+      
+      dspm(array(xt('Méthode "%s" inexistante dans l\'interface "%s"', new HTML_Strong($oElement->getName(true)), new HTML_Strong($oInterface->read('ns:name'))), $oElement->messageParse()), 'action/warning');
       
     } else {
       
-      if (!$oMethod = $oInterface->get("ns:method[@path='$sActionMethod']")) {
+      // @return (bool) : erase & replace parent result up-to caller
+      $bReturn = $oElement->testAttribute('return');
+      if ($bReturn === null) $bReturn = $oMethod->testAttribute('return-default', false);
+      
+      // @le:format (string) : force children in one var with type indicated
+      
+      if ($sFormat = $oElement->getAttribute('format', SYLMA_NS_EXECUTION)) {
         
-        dspm(array(xt('Méthode "%s" inexistante dans l\'interface "%s"', new HTML_Strong($oElement->getName(true)), new HTML_Strong($oInterface->read('ns:name'))), $oElement->messageParse()), 'action/warning');
+        $aArguments = array('index' => array($this->parseBaseType($sFormat, $oElement)));
+        $oElement->cleanChildren();
+        
+      } else $aArguments = $this->loadElementArguments($oElement);
+      
+      // check name in interface
+      
+      if (!$sMethod = $oMethod->getAttribute('name')) {
+        
+        dspm('Interface invalide, attribut \'nom\' manquant', 'action/error');
         
       } else {
         
-        // @return (bool) : erase & replace parent result up-to caller
-        $bReturn = $oElement->testAttribute('return');
-        if ($bReturn === null) $bReturn = $oMethod->testAttribute('return-default', false);
+        // control arguments with the interface
+        $aArgumentsPatch = $this->parseArguments($oMethod, $aArguments, $oElement->testAttribute('get-redirect'));
         
-        // @le:format (string) : force children in one var with type indicated
+        // run method
+        if ($aArgumentsPatch) $oResult = $this->runMethod($mObject, $sMethod, $aArgumentsPatch, $bStatic);
+        else dspm(xt('Arguments invalides pour la méthode "%s" dans "%s"', new HTML_Strong($oElement->getName(true)), $this->getPath()->parse()), 'action/notice');
         
-        if ($sFormat = $oElement->getAttribute('format', SYLMA_NS_EXECUTION)) {
-          
-          $aArguments = array('index' => array($this->parseBaseType($sFormat, $oElement)));
-          $oElement->cleanChildren();
-          
-        } else $aArguments = $this->loadElementArguments($oElement);
+        // check variable
+        $this->setVariableElement($oElement, $oResult);
         
-        // check name in interface
+        $bSubReturn = false;
         
-        if (!$sMethod = $oMethod->getAttribute('name')) {
-          
-          dspm('Interface invalide, attribut \'nom\' manquant', 'action/error');
-          
-        } else {
-          
-          // control arguments with the interface
-          $aArgumentsPatch = $this->parseArguments($oMethod, $aArguments, $oElement->testAttribute('get-redirect'));
-          
-          // run method
-          if ($aArgumentsPatch) $oResult = $this->runMethod($mObject, $sMethod, $aArgumentsPatch, $bStatic);
-          else dspm(xt('Arguments invalides pour la méthode "%s" dans "%s"', new HTML_Strong($oElement->getName(true)), $this->getPath()->parse()), 'action/notice');
-          
-          // check variable
-          $this->setVariableElement($oElement, $oResult);
-          
-          $bSubReturn = false;
-          
-          // run children
-          if ($oElement->hasChildren()) list($oSubResult, $bSubReturn) = $this->runInterfaceList($oResult, $oElement);
-          
-          if ($bSubReturn) return array($oSubResult, true);
-          else return array($oResult, $bReturn);
-        }
+        // run children
+        if ($oElement->hasChildren()) list($oSubResult, $bSubReturn) = $this->runInterfaceList($oResult, $oElement);
+        
+        if ($bSubReturn) return array($oSubResult, true);
+        else return array($oResult, $bReturn);
       }
     }
     
@@ -297,7 +295,8 @@ class XML_Action extends XML_Document {
             else $sName = '';
           }
           
-          $mResult = $this->buildArgument($oChild->remove());
+          $mResult = $this->buildArgument($oChild);
+          $oChild->remove();
           
           if ($sName) $aArguments['assoc'][$sName] = $mResult;
           else $aArguments['index'][] = $mResult;
@@ -305,7 +304,7 @@ class XML_Action extends XML_Document {
         
       } else {
         
-        $aArguments['index'][] = (string) $oChild;
+        $aArguments['index'][] = $this->buildArgument($oChild);
         $oChild->remove();
       }
     }
@@ -458,6 +457,17 @@ class XML_Action extends XML_Document {
       case 'get-settings' :
         
         $mResult = Controler::getSettings($oElement->read());
+        
+      break;
+      
+      case 'set-variable' :
+        
+        if (!$sName = $oElement->getAttribute('name')) $this->dspm(xt('Attribute \'name\' manquant pour %s', $oElement), 'error');
+        else {
+          
+          $mResult = $this->buildArgument($oElement->getChildren());
+          $this->setVariable($sName, $mResult);
+        }
         
       break;
       
@@ -804,7 +814,18 @@ class XML_Action extends XML_Document {
       //$mResult = (string) $oArgument;
       $mResult = $oArgument->getValue();
       
-    } else if ($oArgument instanceof XML_Comment || $oArgument instanceof XML_CData) {
+      if ($oArgument->getParent()->testAttribute('parse-variables', false, SYLMA_NS_EXECUTION))
+        $mResult = $this->replaceVariables($mResult, true);
+      
+    } else if ($oArgument instanceof XML_CData) {
+      
+      $sAction = 'CData';
+      $mResult = clone $oArgument;
+      
+      if ($oArgument->getParent()->testAttribute('parse-variables', false, SYLMA_NS_EXECUTION))
+        $mResult = $this->replaceVariables($mResult, true);
+      
+    } else if ($oArgument instanceof XML_Comment) {
       
       $sAction = 'Comment';
       $mResult = clone $oArgument; // TODO : generate DOMComment
@@ -826,26 +847,36 @@ class XML_Action extends XML_Document {
     
     foreach ($oElement->getAttributes() as $oAttribute) {
       
-      $sValue = unxmlize($oAttribute->getValue());
-      preg_match_all('/\[\$([\w-]+)\]/', $sValue, $aResults, PREG_OFFSET_CAPTURE);
-      
-      if ($aResults && $aResults[0]) {
-        
-        $iSeek = 0;
-        
-        foreach ($aResults[1] as $aResult) {
-          
-          $iVarLength = strlen($aResult[0]) + 3;
-          $sVarValue = (string) $this->getVariable($aResult[0]);
-          
-          $sValue = substr($sValue, 0, $aResult[1] + $iSeek - 2) . $sVarValue . substr($sValue, $aResult[1] + $iSeek - 2 + $iVarLength);
-          
-          $iSeek = strlen($sVarValue) - $iVarLength;
-        }
-        
-        $oAttribute->set(xmlize($sValue));
-      }
+      if ($sValue = $this->replaceVariables($oAttribute->getValue())) $oAttribute->set($sValue);
     }
+  }
+  
+  private function replaceVariables($sTest, $bReturn = false) {
+    
+    //$sValue = unxmlize($sTest);
+    $sValue = $sTest;
+    preg_match_all('/\[\$([\w-]+)\]/', $sValue, $aResults, PREG_OFFSET_CAPTURE);
+    
+    if ($aResults && $aResults[0]) {
+      
+      $iSeek = 0;
+      
+      foreach ($aResults[1] as $aResult) {
+        
+        $iVarLength = strlen($aResult[0]) + 3;
+        $sVarValue = (string) $this->getVariable($aResult[0]);
+        
+        $sValue = substr($sValue, 0, $aResult[1] + $iSeek - 2) . $sVarValue . substr($sValue, $aResult[1] + $iSeek - 2 + $iVarLength);
+        
+        $iSeek = strlen($sVarValue) - $iVarLength;
+      }
+      
+      //return xmlize($sValue);
+      return $sValue;
+    }
+    
+    if ($bReturn) return $sTest;
+    else return null;
   }
   
   private function runProcessor($oElement, $oProcessor) {
@@ -1236,7 +1267,11 @@ class XML_Action extends XML_Document {
           dspm(xt('Argument "%s" valeur par défaut invalide dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'action/error');
           $bResult = false;
           
-        } else $bReplace = true;
+        } else {
+          
+          if ($oDefault->testAttribute('replace', true)) $bReplace = true;
+          $bResult = true;
+        }
       }
       
       /* Hypothetical replacement */
@@ -1354,6 +1389,9 @@ class XML_Action extends XML_Document {
               
             } else dspm(xt('Processor : attribut %s manquant %s', new HTML_Strong(t('namespace')), $oChild->messageParse()), 'action/error');
             
+          break;
+          
+          case 'setting' : // do nothing
           break;
           
           default :

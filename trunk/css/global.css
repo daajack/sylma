@@ -91,6 +91,8 @@
 
 #msg-actions .msg-action-hidden:hover {
   width: auto;
+  max-width: 350px;
+  overflow: auto;
   height: auto;
   padding: 5px;
   position: relative;

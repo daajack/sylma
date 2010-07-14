@@ -608,6 +608,15 @@ class Controler {
             
           } else $aValue = array(array(get_class($mArgument), ' => ', $mArgument->viewResume(160, false)), 'purple');
           
+        } else if ($mArgument instanceof XML_Action) {
+          
+          $oContainer = $mArgument->getPath()->parse();
+          $oContainer->addClass('hidden');
+          
+          $mContent = array(get_class($mArgument), $oContainer);
+          
+          $aValue = array(new HTML_Div($mContent, array('class' => 'element')), 'magenta');
+          
         } else if ($mArgument instanceof XML_Element) {
           
           if (MESSAGES_SHOW_XML) {
@@ -658,7 +667,6 @@ class Controler {
         } else if ($mArgument instanceof XML_Text) {
           
           $aValue = array((string) $mArgument, 'green');
-          
         } else {
           
           $sValue = get_class($mArgument);

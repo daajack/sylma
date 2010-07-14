@@ -3,11 +3,22 @@
 class SimpleList {
   
   private $sName; // name of the root
-  private $sPathField; // field to use as path when reading
+  private $sPath; // path where datas are
+  private $bDB = false; // use DB or not
   
-  public function __construct(XML_Document $oSchema, $sName, XML_Directory $oDirectory, $sPath, $oRedirect, $sPathField) {
+  public function __construct($sName, $sPath) {
     
+    if ($sPath{0} == '*') {
+      
+      $this->bDB = true;
+      $this->sPath = substr($sPath, 1);
+      
+    } else $this->sPath = $sPath;
+  }
+  
+  public function useDB() {
     
+    return $this->bDB;
   }
   
   public function add() {
@@ -16,31 +27,28 @@ class SimpleList {
   }
 }
 
-class SimpleNode extends SimpleList {
+class SimpleNode {
   
   private $oElement = null;
   private $oParent = null;
+  private $bParent = false;
+  private $sPathField; // field to use as path when reading
   
   private $oSchema;
   private $oDirectory;
-  private $sPath; // path where datas are
-  private $bDB = false; // use DB or not
   private $oRedirect;
   
-  public function __construct(XML_Document $oSchema, $sName, XML_Directory $oDirectory, $oRedirect, $sPathField) {
+  public function __construct(XML_Document $oSchema, XML_Directory $oDirectory, $oRedirect, $sPathField) {
     
-    $this->oParent = $oParent;
+    //$this->oParent = $oParent;
     $this->oSchema = $oSchema;
-    $this->sName = $sName;
+    $this->sName = $oSchema->getAttribute('element');
+    $this->sTitle = $oSchema->getAttribute('title');
+    $this->sTitle = $oSchema->getAttribute('root');
     
     $this->oDirectory = $oDirectory;
     
-    if ($sPath{0} == '*') {
-      
-      $this->bDB = true;
-      $this->sPath = substr($sPath, 1);
-      
-    } else $this->sPath = $sPath;
+    if ($oParent = $oSchema->getByName('parent')) $this->bParent = true;
     
     $this->oRedirect = $oRedirect;
     $this->sPathField = $sPathField;
@@ -49,6 +57,39 @@ class SimpleNode extends SimpleList {
   public function getDirectory() {
     
     return $this->oDirectory;
+  }
+  
+  public function getFormSchema() {
+    
+    $oSchema = new XML_Document($this->getSchema());
+    
+    if ($this->oParentElement) {
+      
+      if (!$sPath = $this->oParentElement->getAttribute('path')) dspm(xt('Chemin manquant dans %s', view($oParent)), 'error');
+      else {
+        
+        $oAction = new XML_Action($sPath);
+        
+        $mResult = $oAction->parse();
+        
+        $oField = new XML_Element('field');
+        $oField->addNode('title', $mResult->getTitle());
+        $oField->addNode('type', 'key');
+        $oField->addNode('value', $mResult->getList());
+        $oField->addNode('required', 'true');
+        
+        $oParent->replace($oField);
+      }
+    }
+  }
+  
+  public function useParent() {
+    
+  }
+  
+  public function getList() {
+    
+    return $this->getParent()->getList($this->getPath());
   }
   
   public function getSchema() {
@@ -61,14 +102,14 @@ class SimpleNode extends SimpleList {
     return $this->oRedirect;
   }
   
+  public function getTitle() {
+    
+    return $this->sTitle;
+  }
+  
   public function getPath() {
     
     return $this->sPath;
-  }
-  
-  public function useDB() {
-    
-    return $this->bDB;
   }
   
   public function transformHTML($oRedirect, $sName) {
@@ -83,11 +124,20 @@ class SimpleNode extends SimpleList {
     else $oContenu->set($oResult->getChildren());
   }
   
-  public function load($sPath) {
+  public function load($sId) {
     
-    $oResult = Controler::getDatabase()->get($this->getPath().$sPath);
+    $oResult = Controler::getDatabase()->get($this->getPath().'/id('.$sId.')');
     
     return $oResult;
+  }
+  
+  public function loadWithPath($sPath) {
+    
+    $oResult = Controler::getDatabase()->get($this->getPath().$this->getName().'[@'.$this->sPathField.' = '.addQuote($sPath).']');
+  }
+  
+  public function add($sReturn, $sSuccess) {
+    
   }
   
   public function build($sReturn, $sSuccess) {
@@ -111,25 +161,27 @@ class SimpleNode extends SimpleList {
       foreach ($oSchema->getChildren() as $nField)
         if (!$nField->get('fs:deco', 'fs', SYLMA_NS_FORM_SCHEMA)) $oValues->add($oPost->get($nField->getId()));
       
+      if ($this->useParent()) $sParent = $this->getParent($oSchema->getByName('parent'));
+      
       $sPath = urlize($oValues->read($this->sPathField));
       $oValues->setAttribute('path', $sPath);
       
       //if ($oFile = $this->getFile($sPath)) $oValues->add($oFile);;
       
-      if (Controler::getDatabase()->query()) dspm(t('Ce titre est déjà utilisé'), 'form/warning');
+      if ($this->loadWithPath($sPath)) dspm(t('Ce titre est déjà utilisé'), 'form/warning');
       else {
         
         if ($this->useDB()) {
           
           // db
           
-          //Controler::getDatabase()->insert($oValues, $this->getPath());
+          Controler::getDatabase()->insert($oValues, $this->getPath());
           
         } else {
           
           // file
           
-          //$oDocument = new XML_Document($this->getPath());
+          $oDocument = new XML_Document($this->getPath());
           
           if ($oDocument->isEmpty()) dspm(xt('Document de données %s vide', $this->getPath()), 'error');
           else {
@@ -210,17 +262,9 @@ class SimpleNode extends SimpleList {
     return $oRedirect;
   }
   
-  public function load($sId) {
-    
-    $oDocument = $this->getDB()->load($sId);
-    if (!$oDocument->isEmpty()) $oDocument->addNode('old_id', $sId);
-    
-    return $oDocument;
-  }
-  
   public function delete($sId) {
     
-    dspm(t('Actualité supprimée !'));
+    dspm(t('Enregistrement supprimé !'));
     $this->getDB()->delete($sId);
   }
 }

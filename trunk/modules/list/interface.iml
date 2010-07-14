@@ -5,6 +5,7 @@
   <method-construct>
     <argument format="XML_Document" name="schema"/>
     <argument format="php-string" name="name"/>
+    <argument format="php-string" name="title"/>
     <argument format="XML_Directory" name="directory"/>
     <argument format="php-string" name="path"/>
     <argument name="redirect">

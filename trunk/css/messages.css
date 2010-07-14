@@ -20,7 +20,7 @@
 .messages a { color: gray; text-decoration: underline; }
 .messages a:hover { color: black; text-decoration: none; }
 
-.messages pre.hidden {
+.messages .hidden {
   color: gray;
   margin: 0 !important;
   background-color: #FFF6CF !important;

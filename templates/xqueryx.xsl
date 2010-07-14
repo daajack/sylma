@@ -943,7 +943,7 @@
     <xsl:apply-templates select="xqx:tagName"/>
     <xsl:apply-templates select="xqx:tagNameExpr"/>
     <xsl:value-of select="$LBRACE"/>
-    <xsl:apply-templates select="xqx:contentExpr"/>     
+    <xsl:apply-templates select="xqx:contentExpr"/>
     <xsl:value-of select="$RBRACE"/>
   </xsl:template>
 
@@ -1231,9 +1231,10 @@
     <xsl:if test="xqx:externalDefinition">
       <xsl:text> external </xsl:text>
     </xsl:if>
+    <xsl:value-of select="$SEPARATOR"/>
+    <xsl:value-of select="$NEWLINE"/>
   </xsl:template>
-
-
+  
   <xsl:template match="xqx:queryBody">
     <xsl:apply-templates select="*"/>
     <xsl:value-of select="$NEWLINE"/>

@@ -2,7 +2,7 @@
 <le:action xmlns:le="http://www.sylma.org/execution" xmlns:li="http://www.sylma.org/interface" xmlns="http://www.w3.org/1999/xhtml">
   <le:settings>
     <le:name>Dispatch</le:name>
-    <le:argument name="list" format="SimpleList"/>
+    <le:argument name="list" format="SimpleNode"/>
   </le:settings>
   <le:switch>
     <le:get-argument/>

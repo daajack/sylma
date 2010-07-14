@@ -241,7 +241,7 @@ class XML_Document extends DOMDocument {
             XML_Controler::addStat('file');
             $oFile->isFileSecured($this->appendLoadRights());
             
-            if ($this->useInclude()) $this->includeExternals('//xi:include', array('xi' => 'http://www.w3.org/2001/XInclude')); // include
+            if ($this->useInclude()) $this->includeExternals('//xi:include', array('xi' => SYLMA_NS_XINCLUDE)); // include
           }
           
         } else dspm (xt('Problème lors du chargement du fichier %s', new HTML_Strong($oFile)), 'file/error');

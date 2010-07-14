@@ -16,6 +16,9 @@
     <argument name="path" format="php-string"/>
   </method>
   <method path="add-onload" name="addOnLoad">
-    <argument format="php-string" name="content"/>
+    <argument name="content">
+      <format>php-string</format>
+      <format>XML_CData</format>
+    </argument>
   </method>
 </class>

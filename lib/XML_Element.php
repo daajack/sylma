@@ -298,10 +298,10 @@ class XML_Element extends DOMElement implements XML_Composante {
    * @param boolean|null|string $mDefault Value to compare or return by default
    * @return boolean|null The value of the attribute, or $mDefault if it's not a boolean value
    */
-  public function testAttribute($sAttribute, $mDefault = null) {
+  public function testAttribute($sAttribute, $mDefault = null, $sNamespace = '') {
     
-    if (is_string($mDefault)) return ($this->getAttribute($sAttribute) == $mDefault);
-    return strtobool(strtolower($this->getAttribute($sAttribute)), $mDefault);
+    if (is_string($mDefault)) return ($this->getAttribute($sAttribute, $sNamespace) == $mDefault);
+    return strtobool(strtolower($this->getAttribute($sAttribute, $sNamespace)), $mDefault);
   }
   
   /**

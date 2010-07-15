@@ -296,7 +296,11 @@ var sylma = {
     if (!($type(eMessages) == 'element')) {
       
       eMessages = new Element('div', {'id' : sTargetId, 'class' : 'sylma-messages'});
-      $('content').grab(eMessages, 'bottom');
+      
+      var oContent = $('content');
+      
+      if (!oContent) alert('Contenu introuvable !');
+      else $('content').grab(eMessages, 'bottom');
     }
     
     eMessages.grab(mContent, 'top');
@@ -462,7 +466,7 @@ sylma.classes.layer = new Class({
     return sPath;
   },
   
-  replace : function(sActionPath, sObjectPath, oArguments, sMethod, oCall) {
+  replace : function(sActionPath, sObjectPath, oArguments, sMethod, oCallBack) {
     
     var oCaller = this;
     
@@ -501,7 +505,7 @@ sylma.classes.layer = new Class({
               eval('delete(oCaller.parentObject.' + oCaller['sylma-path'] + ')'); // delete old object
               eval('oCaller.parentObject.' + sObjectPath + ' = oNewObject'); // insert new object
               
-              if (oCall) oCall();
+              if (oCallBack) oCallBack();
               
               oContent.setStyle('opacity', 1);
               

@@ -144,7 +144,7 @@
 
 /* Hidden Elements */
 
-#admin-infos pre.hidden {
+#admin-infos .hidden {
   color: gray;
   margin: 0 !important;
   background-color: #FFF6CF !important;
@@ -152,7 +152,7 @@
   display: none;
   position: relative;
   z-index: 8;
-  width: 500px;
+  max-width: 500px;
   overflow: auto;
 }
 

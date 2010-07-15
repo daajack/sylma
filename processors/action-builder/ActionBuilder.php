@@ -357,7 +357,7 @@ class ActionBuilder extends XML_Processor  {
         $aKeys = array_keys($aResult);
         $sRootKey = addQuote($aKeys[0]);
         
-        if (Controler::hasResult()) Controler::getWindow()->addJS(null, "sylma.loadTree($sRootKey, $sPath)");
+        if (Controler::hasResult()) Controler::getWindow()->addOnLoad("sylma.loadTree($sRootKey, $sPath)");
         
         $oTemplate = new XSL_Document(SYLMA_PATH_ACTIONBUILDER.'/methods.xsl');
         // $oTemplate->setParameter('node-id', $sRoot);

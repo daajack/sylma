@@ -25,7 +25,11 @@ class XML_Action extends XML_Document {
       if ($mPath instanceof XML_Path) {
         
         if ($mPath->getPath()) $this->oPath = $mPath;
-        else Controler::errorRedirect();
+        else {
+          
+          dspm(xt('Chemin invalide pour l\'action %s', new HTML_Strong($mPath->getOriginalPath())), 'action/error');
+          $this->oPath = new XML_Path(SYLMA_PATH_ERROR);
+        }
         
       } else $this->oPath = new XML_Path($mPath, null, true);
       

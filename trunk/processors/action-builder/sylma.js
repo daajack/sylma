@@ -2,6 +2,7 @@
 
 var SYLMA_MODE_EXECUTION = 1, SYLMA_MODE_WRITE = 2, SYLMA_MODE_READ = 4;
 var SYLMA_HIDE_MESSAGES = false;
+var SYLMA_USE_CONSOLE = false;
 
 var sylma = {
   
@@ -400,9 +401,11 @@ var sylma = {
   
   dsp : function(sContent, sTargetId) {
     
-    console.log(sContent);
-    //var sStyle = 'border-bottom: 1px solid gray; margin-bottom: 0.5em;';
-    //this.dsp_message(new Element('div', {'html' : sContent, 'style' : sStyle}));
+    if (SYLMA_USE_CONSOLE) console.log(sContent);
+    else {
+      var sStyle = 'border-bottom: 1px solid gray; margin-bottom: 0.5em;';
+      this.dsp_message(new Element('div', {'html' : sContent, 'style' : sStyle}));
+    }
   },
   
   dsp_f : function(obj) {

@@ -231,6 +231,11 @@ class WindowAction extends XML_Document implements Main {
   
   private $sOnLoad = '';
   
+  public function addOnLoad($sValue) {
+    
+    return null;
+  }
+  
   public function loadAction($oAction) {
     
     Controler::setContentType('xml');
@@ -255,9 +260,11 @@ class WindowAction extends XML_Document implements Main {
       $oContent->add($oAction);
     }
     
-    if (Controler::hasResult()) $oContent->setAttribute('recall', 'true');
+    if (Controler::hasResult()) $oContent->setAttribute('recall', 'true'); // TODO
+    if (Controler::hasResult()) $oContent->setAttribute('methods', 'true'); // TODO
     
     $oRoot->addNode('messages', Controler::getMessages()->parse());
+    $oRoot->addNode('infos', Controler::getInfos());
   }
   
   public function addJS($sHref, $mContent = null) {
@@ -338,8 +345,10 @@ class HTML_Action extends XML_Action {
     
     if (Controler::getUser()->isMember(SYLMA_AUTHENTICATED)) {
       
-      if ($oContainer = $oView->get($sBody)) $oContainer->shift(Controler::getInfos());
-      else $oView->add(Controler::getInfos());
+      $oInfos = new XML_Element('div', Controler::getInfos(), array('id' => 'msg-admin'));
+      
+      if ($oContainer = $oView->get($sBody)) $oContainer->add($oInfos);
+      else $oView->add($oInfos);
     }
     
     // messages

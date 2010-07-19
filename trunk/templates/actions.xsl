@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns="http://www.w3.org/1999/xhtml" version="1.0">
   <xsl:template match="controler">
-    <div id="msg-actions" class="clear-block">
+    <div class="msg-actions">
       <xsl:apply-templates select="action"/>
     </div>
   </xsl:template>

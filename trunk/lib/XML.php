@@ -217,10 +217,10 @@ class XML_Text extends DOMText implements XML_Composante {
       }
     }
     
-    if (!mb_check_encoding($mContent, 'UTF-8')) {
+    if (SYLMA_ENCODING_CHECK && !mb_check_encoding($mContent, 'UTF-8')) {
       //, new HTML_Em(mb_detect_encoding($mContent))
-      $mContent = utf8_encode($mContent); //t('EREUR D\' ENCODAGE');
-      dspm(xt('Encodage invalide %s', new HTML_Strong($mContent)), 'xml/warning');
+      $mContent = utf8_encode($mContent); //t('EREUR D\' ENCODAGE'); TODO , result not always in utf-8
+      dspm(xt('L\'encodage n\'est pas utf-8 %s', new HTML_Strong($mContent)), 'xml/warning');
     }
     // if (!(is_string($mContent) || is_numeric($mContent))) $mContent = '';
     // if ($mContent === 0) $mContent = '00'; //dom bug ?

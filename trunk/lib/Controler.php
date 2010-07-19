@@ -21,7 +21,7 @@ class Controler {
   private static $oPath = null;      // Chemin complet du fichier. Ex: /utilisateur/edit/1.html
   private static $aPaths = array(); // Liste des précédents chemins redirigés, ajoutés dans oRedirect
   private static $sAction = '';     // Chemin de l'action. Ex: /utilisateur/edit
-  private static $aResults = array();     // Pile of results of the same action in different mime type (typically html + json)
+  public static $aResults = array();     // Pile of results of the same action in different mime type (typically html + json)
   public static $hasResult = false;
   private static $aQueries = array();
   private static $bUseMessages = false;
@@ -54,7 +54,7 @@ class Controler {
     
     // Set Controler ready
     self::useMessages(true);
-    
+    dspf('salut');
     if (SYLMA_USE_DB) self::setDatabase(new XML_Database($aDB));
     
     // Récupération du cookie Redirect qui indique qu'une redirection a été effectuée
@@ -236,6 +236,15 @@ class Controler {
     if (!array_key_exists('results', $_SESSION)) $_SESSION['results'] = array();
     self::$aResults = $_SESSION['results'];
     
+    foreach (self::$aResults as $sKey => $aAction) {
+      
+      if (!array_key_exists('result-time', $aAction)) $fTime = 0;
+      else $fTime = $aAction['result-time'];
+      
+      if ((microtime(true) - $fTime) > SYLMA_RESULT_LIFETIME) unset(self::$aResults[$sKey]);
+    }
+    
+    self::updateResults();
     // return self::$aResults;
   }
   
@@ -254,6 +263,8 @@ class Controler {
     $sPath = self::getPath()->getSimplePath();
     
     if (!array_key_exists($sPath, self::$aResults)) self::$aResults[$sPath] = array();
+    self::$aResults[$sPath]['result-time'] = microtime(true);
+    
     if (!array_key_exists($sWindow, self::$aResults[$sPath])) self::$aResults[$sPath][$sWindow] = array();
     
     self::$aResults[$sPath][$sWindow][] = $mResult;
@@ -384,7 +395,7 @@ class Controler {
   
   public static function getSystemInfos() {
     
-    $oView = new HTML_Ul(null, array('id' => 'system'));
+    $oView = new HTML_Ul(null, array('class' => 'msg-system'));
     
     $oMessage = new HTML_Strong(t('Authentification').' : ');
     
@@ -463,7 +474,9 @@ class Controler {
   
   public static function getInfos() {
     
-    return new XML_Element('div', array(self::getSystemInfos(), self::viewResume()), array('id' => 'admin-infos'));
+    return new XML_Element('div',
+        array(self::getSystemInfos(), self::viewResume()),
+        array('class' => 'msg-infos clear-block'));
   }
   
   /* Window methods : TODO clean */

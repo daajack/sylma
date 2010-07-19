@@ -924,9 +924,9 @@ class Controler {
   
   public static function buildSpecials() {
     
-    if (!$oDirectory = self::getDirectory(PATH_INTERFACES)) {
+    if (!$oDirectory = self::getDirectory(SYLMA_PATH_INTERFACES)) {
       
-      self::addMessage(xt('Le répértoire des interfaces "%s" n\'existe pas !', new HTML_Strong(PATH_INTERFACES)), 'action/warning');
+      dspm(xt('Le répértoire des interfaces "%s" n\'existe pas !', new HTML_Strong(SYLMA_PATH_INTERFACES)), 'action/warning');
       
     } else {
       
@@ -934,7 +934,7 @@ class Controler {
       
       if (!$aInterfaces = $oInterfaces->query('//file')) {
         
-        self::addMessage(xt('Aucun fichier d\'interface à l\'emplacement "%s" indiqué !', new HTML_Strong(PATH_INTERFACES)), 'action/warning');
+        dspm(xt('Aucun fichier d\'interface à l\'emplacement "%s" indiqué !', new HTML_Strong(SYLMA_PATH_INTERFACES)), 'action/warning');
         
       } else {
         
@@ -947,13 +947,13 @@ class Controler {
           
           if ($oInterface->isEmpty()) {
             
-            self::addMessage(xt('Fichier d\'interface "%s" vide', new HTML_Strong($sPath)), 'action/warning');
+            dspm(xt('Fichier d\'interface "%s" vide', new HTML_Strong($sPath)), 'action/warning');
             
           } else {
             
             if (!$sName = $oInterface->readByName('name')) {
               
-              self::addMessage(xt('Fichier d\'interface "%s" invalide, aucune classe n\'est indiquée !', new HTML_Strong($sPath)), 'action/warning');
+              dspm(xt('Fichier d\'interface "%s" invalide, aucune classe n\'est indiquée !', new HTML_Strong($sPath)), 'action/warning');
               
             } else {
               
@@ -962,11 +962,10 @@ class Controler {
           }
         }
         
-        $sPath = PATH_INTERFACES.'/../interfaces.cml';
-        $oPath = new XML_Path($sPath, null, false);
+        $oPath = new XML_Path(SYLMA_PATH_INTERFACES_INDEX, null, false);
         
         $oIndex->save($oPath);
-        self::addMessage(xt('Interface d\'actions %s regénéré !', $oPath->parse()), 'success');
+        dspm(xt('Interface d\'actions %s regénéré !', $oPath->parse()), 'success');
       }
     }
   }

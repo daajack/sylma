@@ -3,9 +3,10 @@
   <interface class="Action_Array">/sylma/interfaces/array.iml</interface>
   <interface class="Controler">/sylma/interfaces/controler.iml</interface>
   <interface class="HTML_Form">/sylma/interfaces/form.iml</interface>
+  <interface class="HTML_Action">/sylma/interfaces/html_action.iml</interface>
   <interface class="Redirect">/sylma/interfaces/redirect.iml</interface>
   <interface class="User">/sylma/interfaces/user.iml</interface>
-  <interface class="HTML_Document">/sylma/interfaces/window.iml</interface>
+  <interface class="WindowAction">/sylma/interfaces/window_action.iml</interface>
   <interface class="XML_Action">/sylma/interfaces/xml_action.iml</interface>
   <interface class="ActionScript">/sylma/interfaces/xml_action_script.iml</interface>
   <interface class="XML_Directory">/sylma/interfaces/xml_directory.iml</interface>

@@ -46,18 +46,13 @@ var sylma = {
     }}).get();
   },
   
-  buildArray: function(object, sClassBase, parentLayer, iDepth) {
-    
-    
-  },
-  
   buildRoot: function(object, sPath, oParent, oRoot) {
     
     if (!object) this.dsp('Aucun objet reçu pour "' + sPath + '"');
     else {
-      for (var i in object) { var bluh; }
+      for (var i in object) { var bluh; } // TODO ??
       
-      if (!oRoot) oRoot = oParent;
+      //if (!oRoot) oRoot = oParent;
       if (!sPath) sPath = i;
       
       return this.buildObject(object[i], sPath, oParent, oRoot);
@@ -548,6 +543,8 @@ sylma.classes.request = new Class({
 sylma.classes.layer = new Class({
   
   Extends : sylma.classes.Base,
+  isOpen : false,
+  timer : undefined,
   
   getPath : function() {
     
@@ -590,22 +587,7 @@ sylma.classes.layer = new Class({
       'arguments' : oArguments,
       'callback' : oCall
     }));
-  }
-  
-}),
-  
-sylma.classes.layout = new Class({
-  
-  
-}),
-
-sylma.classes.menu = new Class({
-  
-  Extends : sylma.classes.layer,
-  isOpen : false,
-  timer : undefined,
-  
-  'isVisible' : function() { return (this.node.getStyle('visibility') == 'visible'); },
+  },
   
   'clearTimer' : function(sName) {
     
@@ -645,6 +627,12 @@ sylma.classes.menu = new Class({
     
     return true;
   },
+  
+}),
+  
+sylma.classes.menu = new Class({
+  
+  Extends : sylma.classes.layer,
   
   valueOf : function() {
     

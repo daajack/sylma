@@ -348,11 +348,6 @@ class ActionBuilder extends XML_Processor  {
       
       Controler::addResult(json_encode($aResult), 'txt');
       
-      $oTemplate = new XSL_Document(SYLMA_PATH_ACTIONBUILDER.'/methods.xsl');
-      $temp = $oTemplate->parseDocument($this->oMethods, false);
-      //dspf($temp);
-      Controler::addResult($temp, 'txt');
-      
       // Add methods in JS element
       
       if ($this->isFirstPass()) {
@@ -366,7 +361,11 @@ class ActionBuilder extends XML_Processor  {
         if (Controler::hasResult()) Controler::getWindow()->addOnLoad("sylma.loadTree($sRootKey, $sPath)");
         // $oTemplate->setParameter('node-id', $sRoot);
         
-        //Controler::getWindow()->addJS('', $oTemplate->parseDocument($this->oMethods, false));
+        $oTemplate = new XSL_Document(SYLMA_PATH_ACTIONBUILDER.'/methods.xsl');
+        $sMethods = $oTemplate->parseDocument($this->oMethods, false);
+        
+        if (Controler::getWindowSettings()->testAttribute('javascript', true)) Controler::getWindow()->addJS('', $sMethods);
+        else Controler::addResult($sMethods, 'txt');
       }
       
     } else dspm('Action-Builder : Aucune balises récupérées !', 'action/warning');

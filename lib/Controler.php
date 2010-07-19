@@ -54,7 +54,7 @@ class Controler {
     
     // Set Controler ready
     self::useMessages(true);
-    dspf('salut');
+    
     if (SYLMA_USE_DB) self::setDatabase(new XML_Database($aDB));
     
     // Récupération du cookie Redirect qui indique qu'une redirection a été effectuée

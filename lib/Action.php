@@ -221,7 +221,7 @@ class XML_Action extends XML_Document {
     } else if (!$oInterface) {
       
       dspm(array(xt('Pas d\'interface pour l\'instruction %s dans %s (Objet : %s) ',
-        view($oElement, true),
+        view($oElement),
         $this->getPath()->parse(),
         view($mObject))), 'action/warning');
       

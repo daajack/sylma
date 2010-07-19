@@ -13,7 +13,7 @@ class ActionBuilder extends XML_Processor  {
   
   public function __construct() {
     
-    if (Controler::getWindowSettings()->hasAttribute('interface')) {  // TODO : temp & ugly
+    if (Controler::getWindowSettings()->testAttribute('ajax', true)) {  // TODO : temp & ugly
       
       $this->oMethods = new XML_Document(new XML_Element('la:root', null, null, SYLMA_NS_ACTIONBUILDER));
       
@@ -345,7 +345,13 @@ class ActionBuilder extends XML_Processor  {
       //dspf($oResult);
       //dspm(get_class(Controler::getWindow()));
       list(, $aResult) = $oResult->toArray();
+      
       Controler::addResult(json_encode($aResult), 'txt');
+      
+      $oTemplate = new XSL_Document(SYLMA_PATH_ACTIONBUILDER.'/methods.xsl');
+      $temp = $oTemplate->parseDocument($this->oMethods, false);
+      //dspf($temp);
+      Controler::addResult($temp, 'txt');
       
       // Add methods in JS element
       
@@ -358,11 +364,9 @@ class ActionBuilder extends XML_Processor  {
         $sRootKey = addQuote($aKeys[0]);
         
         if (Controler::hasResult()) Controler::getWindow()->addOnLoad("sylma.loadTree($sRootKey, $sPath)");
-        
-        $oTemplate = new XSL_Document(SYLMA_PATH_ACTIONBUILDER.'/methods.xsl');
         // $oTemplate->setParameter('node-id', $sRoot);
         
-        Controler::getWindow()->addJS('', $oTemplate->parseDocument($this->oMethods, false));
+        //Controler::getWindow()->addJS('', $oTemplate->parseDocument($this->oMethods, false));
       }
       
     } else dspm('Action-Builder : Aucune balises récupérées !', 'action/warning');

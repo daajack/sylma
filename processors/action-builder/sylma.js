@@ -1,7 +1,7 @@
 /* Document JS */
 
 var SYLMA_MODE_EXECUTION = 1, SYLMA_MODE_WRITE = 2, SYLMA_MODE_READ = 4;
-var SYLMA_HIDE_MESSAGES = true;
+var SYLMA_HIDE_MESSAGES = false;
 
 var sylma = {
   
@@ -52,12 +52,17 @@ var sylma = {
   
   buildRoot: function(object, sPath, oParent, oRoot) {
     
-    for (var i in object) { var bluh; }
+    if (!object) this.dsp('Aucun objet reçu pour "' + sPath + '"');
+    else {
+      for (var i in object) { var bluh; }
+      
+      if (!oRoot) oRoot = oParent;
+      if (!sPath) sPath = i;
+      
+      return this.buildObject(object[i], sPath, oParent, oRoot);
+    }
     
-    if (!oRoot) oRoot = oParent;
-    if (!sPath) sPath = i;
-    
-    return sylma.buildObject(object[i], sPath, oParent, oRoot);
+    return null;
   },
   
   buildObject: function(object, sPath, parentLayer, rootObject, iDepth) {
@@ -182,70 +187,73 @@ var sylma = {
       
       method = object.methods[sMethod];
       
-      if (sylma.methods[sMethod]) {
-        
-        if (method.event) {
+      if (!sylma.methods) sylma.dsp('Liste des méthodes introuvable');
+      else {
+        if (sylma.methods[sMethod]) {
           
-          //event
-          
-          if (method.name && (method['path-node'] || method['id-node'])) {
+          if (method.event) {
             
-            // get target node
+            //event
             
-            if (method['path-node']) {
+            if (method.name && (method['path-node'] || method['id-node'])) {
               
-              eNode = $$(method['path-node']);
-              if (eNode.length) eNode = eNode[0];
+              // get target node
               
-            } else eNode = $(method['id-node']);
-            
-            if ($type(eNode) == 'element') {
-              
-              eNode.store('ref-object', oParent); // store parent object in node
-              
-              if (method.limit) {
+              if (method['path-node']) {
                 
-                eNode.addEvent(method.name, this.limitFunc.create({
+                eNode = $$(method['path-node']);
+                if (eNode.length) eNode = eNode[0];
+                
+              } else eNode = $(method['id-node']);
+              
+              if ($type(eNode) == 'element') {
+                
+                eNode.store('ref-object', oParent); // store parent object in node
+                
+                if (method.limit) {
                   
-                  arguments : [sMethod, method.limit],
-                  event : true,
-                  bind : eNode
-                }));
-                
-              } else if (method.delay) {
-                
-                eNode.addEvent(method.name, this.delayFunc.create({
+                  eNode.addEvent(method.name, this.limitFunc.create({
+                    
+                    arguments : [sMethod, method.limit],
+                    event : true,
+                    bind : eNode
+                  }));
                   
-                  arguments : [sMethod, method.timer, parseInt(method.delay), oParent],
-                  event : true,
-                  bind : eNode
-                }));
+                } else if (method.delay) {
+                  
+                  eNode.addEvent(method.name, this.delayFunc.create({
+                    
+                    arguments : [sMethod, method.timer, parseInt(method.delay), oParent],
+                    event : true,
+                    bind : eNode
+                  }));
+                  
+                } else eNode.addEvent(method.name, sylma.methods[sMethod]); // add event
                 
-              } else eNode.addEvent(method.name, sylma.methods[sMethod]); // add event
+              } else {
+                
+                //sylma.dsp_f(eNode);
+                this.dsp('Erreur :: Objet DOM introuvable - path : "' + method['path-node'] + '" - id : ' + method['id-node']);
+              }
               
             } else {
               
-              //sylma.dsp_f(eNode);
-              this.dsp('Erreur :: Objet DOM introuvable - path : "' + method['path-node'] + '" - id : ' + method['id-node']);
+              this.dsp("Erreur :: Méthode '" + sMethod + "' invalide !");
+              this.dsp(this.view(method));
             }
             
           } else {
             
-            this.dsp("Erreur :: Méthode '" + sMethod + "' invalide !");
-            this.dsp(this.view(method));
+            // method
+            
+            oParent[method.name] = sylma.methods[sMethod];
           }
           
         } else {
           
-          // method
-          
-          oParent[method.name] = sylma.methods[sMethod];
+          this.dsp("Erreur :: Méthode '" + sMethod + "' introuvable !");
+          this.dsp(this.view(method));
         }
-        
-      } else {
-        
-        this.dsp("Erreur :: Méthode '" + sMethod + "' introuvable !");
-        this.dsp(this.view(method));
       }
     }
   },
@@ -287,6 +295,90 @@ var sylma = {
     return true;
   },
   
+  load : function(hOptions) {
+    
+    if (!hOptions.has('method')) hOptions.set('method', 'post');
+    var sPath = hOptions.get('path');
+    var self = this;
+    
+    this.request = new this.classes.request({
+      
+      'url' : sPath + '.action',
+      'data' : hOptions.get('arguments'),
+      'method' : hOptions.get('method'),
+      'async ' : false,
+      'onSuccess' : function(sResult, oHTML) {
+        
+        var oContentContainer = this.parseAction(oHTML);
+        var oContent = self.importNodes(oContentContainer.getFirst());
+        
+        if (hOptions.get('replace')) oContent.replaces(hOptions.get('html'));
+        else hOptions.get('html').grab(oContent);
+        
+        // TODO kill old layer
+        //layer.node.destroy(); 
+        
+        if (oContentContainer.getProperty('recall') == 'true') {
+          
+          // get new object
+          
+          oContent.setStyle('opacity', 0.2);
+          
+          if (oContentContainer.getProperty('methods') == 'true') {
+            
+            // has methods, first load em
+            
+            var oMethods = new Request.JSON({
+              
+              'url' : sPath + '.txt',
+              //'evalResponse' : true,
+              'onSuccess' : function(oResponse, sResponse) {
+                //alert(sResponse);
+                eval(sResponse);
+                self.replace(sPath, hOptions);
+                if (hOptions.has('callback')) hOptions.get('callback')();
+                
+                oContent.setStyle('opacity', 1);
+                
+            }}).get();
+            
+          } else {
+            
+            // no methods
+            
+            self.replace(sPath, hOptions);
+            oContent.setStyle('opacity', 1);
+          }
+          
+        } else {
+          
+          // only change content node
+          
+          oCaller.node = oContent;
+        }
+      }
+    }).send();
+  },
+  
+  replace : function(sPath, hOptions) {
+    
+    var self = this;
+    
+    var oJSON = new Request.JSON({
+      
+      'url' : sPath + '.txt', 
+      'onSuccess' : function(oResponse) {
+        
+        if (!hOptions.get('parent')) hOptions.set('parent', sylma);
+        
+        var oNewObject = self.buildRoot(oResponse, hOptions.get('name'), hOptions.get('parent'), hOptions.get('root'));
+        
+        if (hOptions.has('old-name')) eval('delete(hOptions.get(\'parent\').' + hOptions.get('old-name') + ')'); // delete old object
+        if (oNewObject) eval('hOptions.get(\'parent\').' + hOptions.get('name') + ' = oNewObject'); // insert new object
+        
+    }}).get();
+  },
+  
   dsp_message : function(mContent, sTargetId) {
     
     if (!sTargetId) sTargetId = 'sylma-messages-default';
@@ -308,8 +400,9 @@ var sylma = {
   
   dsp : function(sContent, sTargetId) {
     
-    var sStyle = 'border-bottom: 1px solid gray; margin-bottom: 0.5em;';
-    this.dsp_message(new Element('div', {'html' : sContent, 'style' : sStyle}));
+    console.log(sContent);
+    //var sStyle = 'border-bottom: 1px solid gray; margin-bottom: 0.5em;';
+    //this.dsp_message(new Element('div', {'html' : sContent, 'style' : sStyle}));
   },
   
   dsp_f : function(obj) {
@@ -389,6 +482,9 @@ sylma.classes.request = new Class({
     
     var oMessages = $(oResult).getElement('messages');
     var oContent = $(oResult).getElement('content');
+    var oInfos = $(oResult).getElement('infos');
+    
+    $('msg-admin').adopt(sylma.importNodes(oInfos.getFirst()), 'top');
     
     if (!sMessages) sMessages = sylma.defaultMessagesId;
     if (!oTarget) oTarget = sylma.defaultMessagesContainer;
@@ -466,66 +562,31 @@ sylma.classes.layer = new Class({
     return sPath;
   },
   
-  replace : function(sActionPath, sObjectPath, oArguments, sMethod, oCallBack) {
-    
-    var oCaller = this;
+  replace : function(hOptions) {
     
     this.node.setStyle('opacity', 0.2);
-    if (!sMethod) sMethod = 'post';
     
-    this.request = new sylma.classes.request({
+    hOptions.extend({
       
-      'url' : sActionPath + '.action',
-      'data' : oArguments,
-      'method' : sMethod,
-      'async ' : false,
-      'onSuccess' : function(sResult, oResult) {
-        
-        var oContentContainer = this.parseAction(oResult);
-        var oContent = sylma.importNodes(oContentContainer.getFirst());
-        
-        oContent.replaces(oCaller.node);
-        
-        // TODO kill old layer
-        //layer.node.destroy(); 
-        
-        if (oContentContainer.getProperty('recall') == 'true') {
-          
-          // get new object
-          
-          oContent.setStyle('opacity', 0.2);
-          
-          var oSubResult = new Request.JSON({
-            
-            'url' : sActionPath + '.txt', 
-            'onSuccess' : function(oResponse) {
-              
-              var oNewObject = sylma.buildRoot(oResponse, sObjectPath, oCaller.parentObject, oCaller.rootObject);
-              
-              eval('delete(oCaller.parentObject.' + oCaller['sylma-path'] + ')'); // delete old object
-              eval('oCaller.parentObject.' + sObjectPath + ' = oNewObject'); // insert new object
-              
-              if (oCallBack) oCallBack();
-              
-              oContent.setStyle('opacity', 1);
-              
-          }}).get();
-          
-        } else {
-          
-          // only change content node
-          
-          oCaller.node = oContent;
-        }
-      }
-    }).send();
+      'html' : this.node,
+      'old-name' : this['sylma-path'], // optional
+      'parent' : this.parentObject, // optional
+      'root' : this.rootObject, // optional
+      'replace' : true
+    });
+    
+    if (this['sylma-send-method']) hOptions.set('method', this['sylma-send-method']);
+    
+    sylma.load(hOptions);
   },
   
   update : function(oArguments, oCall) {
     
-    if (this['sylma-send-method']) var sMethod = this['sylma-send-method'];
-    
-    this.replace(this.getPath(), this['sylma-path'], oArguments, sMethod, oCall);
+    this.replace(new Hash({
+      'path' : this.getPath(),
+      'arguments' : oArguments,
+      'callback' : oCall
+    }));
   }
   
 }),

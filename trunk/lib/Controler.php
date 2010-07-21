@@ -109,7 +109,8 @@ class Controler {
           
           if (self::getWindowSettings()->hasAttribute('action')) {
             
-            $oResult = self::getWindow()->getPath()->setAssoc('window-action', $oAction);
+            $oResult = null;
+            self::getWindow()->getPath()->setAssoc('window-action', $oAction);
             
           } else $oResult = self::getWindow()->loadAction($oAction); // TODO or not todo : make XML_Action
         }
@@ -900,16 +901,22 @@ class Controler {
   
   public static function addMessage($mMessage = '- message vide -', $sPath = SYLMA_MESSAGES_DEFAULT_STAT, $aArgs = array()) {
     
+    if (Controler::isAdmin() && SYLMA_MESSAGES_BACKTRACE && strstr($sPath, 'error') && self::$iBacktraceLimit !== 0) {
+      
+      if (self::$iBacktraceLimit) self::$iBacktraceLimit--;
+      $mMessage = array($mMessage, Controler::getBacktrace());
+    }
+    
     if (DEBUG && (SYLMA_PRINT_MESSAGES)) { // || !self::useMessages()
       
       if (is_array($mMessage)) foreach ($mMessage as $mContent) echo $mContent.new HTML_Br;
       else echo $mMessage.new HTML_Br;
     }
     
-    if (Controler::isAdmin() && SYLMA_MESSAGES_BACKTRACE && strstr($sPath, 'error') && self::$iBacktraceLimit !== 0) {
+    if (DEBUG && (SYLMA_LOG_MESSAGES)) {
       
-      if (self::$iBacktraceLimit) self::$iBacktraceLimit--;
-      $mMessage = array($mMessage, Controler::getBacktrace());
+      if (is_array($mMessage)) foreach ($mMessage as $mContent) dspl($mContent."\n");
+      else dspl($mMessage."\n");
     }
     
     if (self::getMessages()) self::getMessages()->addMessage(new Message($mMessage, $sPath, $aArgs));

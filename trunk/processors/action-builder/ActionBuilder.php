@@ -369,7 +369,7 @@ class ActionBuilder extends XML_Processor  {
         
         $oTemplate = new XSL_Document(SYLMA_PATH_ACTIONBUILDER.'/methods.xsl');
         $sMethods = $oTemplate->parseDocument($this->oMethods, false);
-        
+        //dspm(new HTML_Tag('pre', $sMethods));
         if (Controler::getWindowSettings()->testAttribute('javascript', true)) Controler::getWindow()->addJS('', $sMethods);
         else Controler::addResult($sMethods, 'txt');
       }

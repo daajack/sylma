@@ -887,6 +887,7 @@ class XML_Action extends XML_Document {
     
     $mResult = $oProcessor->loadElement($oElement, $this);
     
+    
     /*if ($oElement->hasElementChildren()) {
       
       if ($oProcessor->useInterface()) list($mSubResult, $bSubReturn) = $this->runInterfaceList($mResult, $oElement);

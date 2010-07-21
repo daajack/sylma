@@ -245,7 +245,7 @@ function dspm($mVar, $sStatut = SYLMA_MESSAGES_DEFAULT_STAT) {
 
 function dspl($sVar) {
   
-  $fp = fopen(Controler::getSettings('@path-config').'/debug.log', 'a+');
+  $fp = fopen(MAIN_DIRECTORY.Controler::getSettings('@path-config').'/debug.log', 'a+');
   fwrite($fp, "----\n".$sVar."\n"); //.Controler::getBacktrace()
   fclose($fp);
 }

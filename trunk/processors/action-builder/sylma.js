@@ -185,6 +185,7 @@ var sylma = {
       
       if (!sylma.methods) sylma.dsp('Liste des méthodes introuvable');
       else {
+        
         if (sylma.methods[sMethod]) {
           
           if (method.event) {
@@ -205,7 +206,7 @@ var sylma = {
               if ($type(eNode) == 'element') {
                 
                 eNode.store('ref-object', oParent); // store parent object in node
-                
+                //sylma.dsp(method['path-node'] + ' :: ' + method['id-node']);
                 if (method.limit) {
                   
                   eNode.addEvent(method.name, this.limitFunc.create({
@@ -343,7 +344,6 @@ var sylma = {
                 //alert(sResponse);
                 eval(sResponse);
                 self.replace(sPath, hOptions);
-                if (hOptions.has('callback')) hOptions.get('callback')();
                 
                 oContent.setStyle('opacity', 1);
                 
@@ -381,14 +381,18 @@ var sylma = {
         if (!hOptions.get('parent')) hOptions.set('parent', sylma);
         
         var oNewObject = self.buildRoot(oResponse, hOptions.get('name'), hOptions.get('parent'), hOptions.get('root'));
-        
         if (hOptions.has('position')) oNewObject['sylma-position'] = hOptions.get('position');
         
         if (hOptions.has('old-name')) eval('delete(hOptions.get(\'parent\').' + hOptions.get('old-name') + ')'); // delete old object
         if (oNewObject) eval('hOptions.get(\'parent\').' + hOptions.get('name') + ' = oNewObject'); // insert new object
         
+        // at last : callback function
+        if (hOptions.has('callback')) hOptions.get('callback')();
+        
     }}).get();
   },
+  
+  'methods' : {},
   
   dsp_message : function(mContent, sTargetId) {
     
@@ -418,7 +422,7 @@ var sylma = {
     }
   },
   
-  dsp_f : function(obj) {
+  dspf : function(obj) {
     
     this.dsp(this.view(obj));
   },
@@ -473,12 +477,14 @@ sylma.classes.Base = new Class({
       var eNode = $(oArgs['object']['init']['id-node']);
       
       if (eNode) {
-        
+        //sylma.dsp(oArgs['path'] + ' : ' + oArgs['parent']['sylma-path'] + ' / ' + eNode.get('class'));
         this.node =  eNode;
         eNode.store('ref-object', this);
         
       } else sylma.dsp("Erreur : Element '" + eNode + "' lié à l'objet introuvable !");
     }
+    
+    //sylma.dsp(oArgs['path'] + ' : ' + oArgs['parent']['sylma-path']);
     
     this.parentObject = oArgs['parent']; // Attach parent object
     this['sylma-path'] = oArgs['path']; // Attach parent object ref

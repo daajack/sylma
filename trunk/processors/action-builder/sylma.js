@@ -292,7 +292,9 @@ var sylma = {
     return true;
   },
   
-  load : function(hOptions) {
+  load : function(oOptions) {
+    
+    var hOptions = $H(oOptions);
     
     if (!hOptions.has('method')) hOptions.set('method', 'post');
     
@@ -316,6 +318,8 @@ var sylma = {
         
         if (hOptions.get('replace')) oContent.replaces(hOptions.get('html'));
         else hOptions.get('html').grab(oContent);
+        
+        if (hOptions.has('onLoad')) hOptions.get('onLoad')();
         
         if (hOptions.get('position') == 'center') {
           
@@ -387,8 +391,8 @@ var sylma = {
         if (hOptions.has('old-name')) eval('delete(hOptions.get(\'parent\').' + hOptions.get('old-name') + ')'); // delete old object
         if (oNewObject) eval('hOptions.get(\'parent\').' + hOptions.get('name') + ' = oNewObject'); // insert new object
         
-        // at last : callback function
-        if (hOptions.has('callback')) hOptions.get('callback')();
+        // at last : onSuccess function
+        if (hOptions.has('onSuccess')) hOptions.get('onSuccess')();
         
     }}).get();
   },
@@ -557,11 +561,23 @@ sylma.classes.layer = new Class({
     return sPath;
   },
   
-  replace : function(hOptions) {
+  center : function() {
+    
+    var iLeft = (window.getSize().x - this.node.getSize().x) / 2;
+    var iTop = ($(window).getSize().y - this.node.getSize().y) / 2;
+    
+    //this.node.setStyle('top', iTop);
+    var oFX = new Fx.Tween(this.node, {'transition' : 'sine:in:out' });
+    oFX.start('top', iTop);
+    //this.node.tween('left', iLeft);
+    //.setStyles({'left' : iLeft, 'top' : iTop});
+  },
+  
+  replace : function(oOptions) {
     
     this.node.setStyle('opacity', 0.2);
     
-    hOptions.extend({
+    oOptions = $extend({
       
       'html' : this.node,
       'old-name' : this['sylma-path'], // optional
@@ -569,25 +585,22 @@ sylma.classes.layer = new Class({
       'parent' : this.parentObject, // optional
       'root' : this.rootObject, // optional
       'replace' : true
-    });
+    }, oOptions);
     
-    if (this['sylma-send-method']) hOptions.set('method', this['sylma-send-method']);
-    if (this['sylma-position']) hOptions.set('position', this['sylma-position']);
-    /*hOptions.each(function(value, key) { sylma.dsp(key + ' : ' + value); });
-    sylma.dsp('- - -');*/
-    return sylma.load(hOptions);
+    if (this['sylma-send-method']) oOptions.method = this['sylma-send-method'];
+    if (this['sylma-position']) oOptions.position = this['sylma-position'];
+    
+    return sylma.load(oOptions);
   },
   
-  update : function(oArguments, oCall) {
+  update : function(oArguments, oOptions) {
     
-    var hOptions = new Hash({
+    oOptions = $extend({
       'path' : this.getPath(),
       'arguments' : oArguments,
-    });
+    }, oOptions);
     
-    if (oCall) hOptions.set('callback', oCall);
-    
-    return this.replace(hOptions);
+    return this.replace(oOptions);
   },
   
   'clearTimer' : function(sName) {

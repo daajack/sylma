@@ -57,6 +57,12 @@ class ActionBuilder extends XML_Processor  {
         
       break;
       
+      case 'event' :
+        
+        $mResult = $oElement->replace($this->buildMethod($oElement, $oAction));
+        
+      break;
+      
       default :
         //dspm(array(view($oElement), ' -> ', view($this->isFirst())), 'action/report');
         if ($this->isFirst()) { // root object
@@ -92,6 +98,15 @@ class ActionBuilder extends XML_Processor  {
   private function replaceMethodsDefault($oDocument, $oAction) {
     
     $this->replaceMethods($oDocument->query('//la:event | //la:method', $this->aNS), $oAction);
+  }
+  
+  private function replaceMethods($oMethods, $oAction) {
+    //$aMethods = array('event', 'click', 'dblclick', 'mousedown', 'mouseup', 'mouseover', 'mouseout', 'mousemove', 'key-down');
+    
+    foreach ($oMethods as $oMethod) {
+      
+      $oMethod->replace($this->buildMethod($oMethod, $oAction));
+    }
   }
   
   /**
@@ -148,15 +163,6 @@ class ActionBuilder extends XML_Processor  {
     if ($oMethod->getName() == 'event') $oNewMethod->setAttribute('event', 1);
     
     return $oNewMethod;
-  }
-  
-  private function replaceMethods($oMethods, $oAction) {
-    //$aMethods = array('event', 'click', 'dblclick', 'mousedown', 'mouseup', 'mouseover', 'mouseout', 'mousemove', 'key-down');
-    
-    foreach ($oMethods as $oMethod) {
-      
-      $oMethod->replace($this->buildMethod($oMethod, $oAction));
-    }
   }
   
   /**

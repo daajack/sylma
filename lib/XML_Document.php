@@ -305,6 +305,8 @@ class XML_Document extends DOMDocument {
         
       } else if ($this->isEmpty()) Controler::addMessage(t('Chargement texte échoué, aucun résultat'), 'xml/warning');
       
+      //dspl($sContent);
+      
       XML_Controler::addStat('load');
       
     } else Controler::addMessage(t('Document : Chargement texte impossible, la chaîne est vide !'), 'xml/error');

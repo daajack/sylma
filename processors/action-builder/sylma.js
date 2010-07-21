@@ -1,7 +1,7 @@
 /* Document JS */
 
 var SYLMA_MODE_EXECUTION = 1, SYLMA_MODE_WRITE = 2, SYLMA_MODE_READ = 4;
-var SYLMA_HIDE_MESSAGES = false;
+var SYLMA_HIDE_MESSAGES = true;
 var SYLMA_USE_CONSOLE = false;
 
 var sylma = {
@@ -294,12 +294,15 @@ var sylma = {
   load : function(hOptions) {
     
     if (!hOptions.has('method')) hOptions.set('method', 'post');
+    
     var sPath = hOptions.get('path');
     var self = this;
     
+    var sWindow = hOptions.has('window') ? hOptions.get('window') : 'action';
+    
     this.request = new this.classes.request({
       
-      'url' : sPath + '.action',
+      'url' : sPath + '.' + sWindow,
       'data' : hOptions.get('arguments'),
       'method' : hOptions.get('method'),
       'async ' : false,
@@ -308,8 +311,18 @@ var sylma = {
         var oContentContainer = this.parseAction(oHTML);
         var oContent = self.importNodes(oContentContainer.getFirst());
         
+        oContent.setStyle('opacity', 0.2);
+        
         if (hOptions.get('replace')) oContent.replaces(hOptions.get('html'));
         else hOptions.get('html').grab(oContent);
+        
+        if (hOptions.get('position') == 'center') {
+          
+          var iLeft = (window.getSize().x - oContent.getSize().x) / 2;
+          var iTop = ($(window).getSize().y - oContent.getSize().y) / 2;
+          
+          oContent.setStyles({'left' : iLeft, 'top' : iTop});
+        }
         
         // TODO kill old layer
         //layer.node.destroy(); 
@@ -317,8 +330,6 @@ var sylma = {
         if (oContentContainer.getProperty('recall') == 'true') {
           
           // get new object
-          
-          oContent.setStyle('opacity', 0.2);
           
           if (oContentContainer.getProperty('methods') == 'true') {
             
@@ -349,11 +360,13 @@ var sylma = {
         } else {
           
           // only change content node
-          
+          oContent.setStyle('opacity', 1);
           oCaller.node = oContent;
         }
       }
     }).send();
+    
+    return true;
   },
   
   replace : function(sPath, hOptions) {
@@ -368,6 +381,8 @@ var sylma = {
         if (!hOptions.get('parent')) hOptions.set('parent', sylma);
         
         var oNewObject = self.buildRoot(oResponse, hOptions.get('name'), hOptions.get('parent'), hOptions.get('root'));
+        
+        if (hOptions.has('position')) oNewObject['sylma-position'] = hOptions.get('position');
         
         if (hOptions.has('old-name')) eval('delete(hOptions.get(\'parent\').' + hOptions.get('old-name') + ')'); // delete old object
         if (oNewObject) eval('hOptions.get(\'parent\').' + hOptions.get('name') + ' = oNewObject'); // insert new object
@@ -478,61 +493,34 @@ sylma.classes.request = new Class({
   
   'parseAction' : function(oResult, sMessages, oTarget) {
     
+    var oContainer = $('msg-admin');
+    
     var oMessages = $(oResult).getElement('messages');
     var oContent = $(oResult).getElement('content');
     var oInfos = $(oResult).getElement('infos');
     
-    $('msg-admin').adopt(sylma.importNodes(oInfos.getFirst()), 'top');
+    oContainer.adopt(sylma.importNodes(oInfos.getFirst()), 'top');
     
     if (!sMessages) sMessages = sylma.defaultMessagesId;
     if (!oTarget) oTarget = sylma.defaultMessagesContainer;
     
     if (oMessages && oMessages.getChildren().length) {
       
-      var oContainer = $(sMessages);
-      
-      if (!oContainer) {
-        
-        oContainer = new Element('div', {'id' : sMessages});
-        oTarget.grab(oContainer, 'bottom');
-      }
-      
       var oMessagesContent = oMessages.getFirst();
       
       if (oMessagesContent) {
         
-        oMessagesContent.setStyles({'opacity' : 0, 'height' : 0});
-        
         oMessagesContent = sylma.importNodes(oMessagesContent);
-        oContainer.adopt(oMessagesContent, 'top');
-      }
-      
-      var oFx = new Fx.Morph(oMessagesContent, {'unit' : '%'});
-      
-      oFx.start({
-        'opacity' : 1,
-        'height' : 100});
-      
-      if (SYLMA_HIDE_MESSAGES) {
         
-        (function() {
-          /*
-          oMessagesContent.addEvent('mousemove', function() {
-            
-            this.get('tween').cancel();
-            //this.fade('out').delay(5000);
-          });
-          
-          oMessagesContent.addEvent('mouseleave', function() {
-            
-            this.fade('out').delay(5000);
-          });
-          */
-          oFx.options.unit = 'px';
-          oFx.start({
-            'opacity' : 0,
-            'height' : 0});
-        }).delay(5000);
+        //oMessagesContent.fade('hide');
+        
+        oMessagesContent.addClass('messages-float');
+        oContainer.adopt(oMessagesContent, 'top');
+        
+        var pf = new PulseFade(oMessagesContent, {'times':  6, 'duration':  600, 'max' : 1, 'min' : 0.2}); //
+        pf.start();
+        
+        //oMessagesContent.fade('in').;
       }
     }
     
@@ -543,7 +531,7 @@ sylma.classes.request = new Class({
 sylma.classes.layer = new Class({
   
   Extends : sylma.classes.Base,
-  isOpen : false,
+  isOpen : true,
   timer : undefined,
   
   getPath : function() {
@@ -576,17 +564,21 @@ sylma.classes.layer = new Class({
     });
     
     if (this['sylma-send-method']) hOptions.set('method', this['sylma-send-method']);
+    if (this['sylma-position']) hOptions.set('position', this['sylma-position']);
     
-    sylma.load(hOptions);
+    return sylma.load(hOptions);
   },
   
   update : function(oArguments, oCall) {
     
-    this.replace(new Hash({
+    var hOptions = new Hash({
       'path' : this.getPath(),
       'arguments' : oArguments,
-      'callback' : oCall
-    }));
+    });
+    
+    if (oCall) hOptions.set('callback', oCall);
+    
+    return this.replace(hOptions);
   },
   
   'clearTimer' : function(sName) {
@@ -620,7 +612,7 @@ sylma.classes.layer = new Class({
     } else if (this.isOpen) {
       
       this.node.fade('out');
-      // sylma.dsp('[hide] ' + this.node.id);
+       //sylma.dsp('[hide] ' + this.node.id);
     }
     
     this.isOpen = false;
@@ -682,4 +674,58 @@ sylma.classes['menu-common'] = new Class({
   }
 });
 
+var PulseFade = new Class({
+			
+	//implements
+	Implements: [Options,Events],
 
+	//options
+	options: {
+		min: 0,
+		max: 1,
+		duration: 200,
+		times: 5
+	},
+	
+	//initialization
+	initialize: function(el,options) {
+		//set options
+		this.setOptions(options);
+		this.element = $(el);
+		this.times = 0;
+	},
+	
+	//starts the pulse fade
+	start: function(times) {
+		if(!times) times = this.options.times * 2;
+		this.running = 1;
+		this.fireEvent('start').run(times -1);
+	},
+	
+	//stops the pulse fade
+	stop: function() {
+		this.running = 0;
+		this.fireEvent('stop');
+	},
+	
+	//runs the shizzle
+	run: function(times) {
+		//make it happen
+		var self = this;
+		var to = self.element.get('opacity') == self.options.min ? self.options.max : self.options.min;
+		self.fx = new Fx.Tween(self.element,{
+			duration: self.options.duration / 2,
+			onComplete: function() {
+				self.fireEvent('tick');
+				if(self.running && times)
+				{
+					self.run(times-1);
+				}
+				else
+				{
+					self.fireEvent('complete');
+				}
+			}
+		}).start('opacity',to);
+	}
+});

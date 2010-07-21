@@ -7,7 +7,7 @@
   <div class="sylma-window-head">
     <a href="#">
       <span>X</span>
-      <la:event xmlns="" name="click"><![CDATA[%ref-object%.show();
+      <la:event xmlns="" name="click"><![CDATA[//%ref-object%.show();
 %ref-object%.hide();
 
 return false;]]></la:event>

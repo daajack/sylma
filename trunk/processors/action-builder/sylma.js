@@ -381,6 +381,7 @@ var sylma = {
         if (!hOptions.get('parent')) hOptions.set('parent', sylma);
         
         var oNewObject = self.buildRoot(oResponse, hOptions.get('name'), hOptions.get('parent'), hOptions.get('root'));
+        
         if (hOptions.has('position')) oNewObject['sylma-position'] = hOptions.get('position');
         
         if (hOptions.has('old-name')) eval('delete(hOptions.get(\'parent\').' + hOptions.get('old-name') + ')'); // delete old object
@@ -564,6 +565,7 @@ sylma.classes.layer = new Class({
       
       'html' : this.node,
       'old-name' : this['sylma-path'], // optional
+      'name' : this['sylma-path'], // temp : replace js + html
       'parent' : this.parentObject, // optional
       'root' : this.rootObject, // optional
       'replace' : true
@@ -571,7 +573,8 @@ sylma.classes.layer = new Class({
     
     if (this['sylma-send-method']) hOptions.set('method', this['sylma-send-method']);
     if (this['sylma-position']) hOptions.set('position', this['sylma-position']);
-    
+    /*hOptions.each(function(value, key) { sylma.dsp(key + ' : ' + value); });
+    sylma.dsp('- - -');*/
     return sylma.load(hOptions);
   },
   

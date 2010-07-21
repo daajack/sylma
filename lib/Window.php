@@ -43,6 +43,78 @@ class Img implements Main {
     if ($oFile instanceof XML_File) $this->oFile = $oFile;
   }
   
+  public function resize($sExtension, $iMaxWidth, $iMaxHeight, $bCrop = false) {
+    
+    // Calcul des nouvelles dimensions
+    
+    list($iWidth, $iHeight) = getimagesize(MAIN_DIRECTORY.$this->oFile);
+    
+    $iWidthRatio = $iHeightRatio = 1;
+    $iXSource = $iYSource = 0;
+    
+    $iSourceHeight = $iHeight;
+    $iSourceWidth = $iWidth;
+    
+    // look up for ratios
+    
+    if ($iWidth > $iMaxWidth) {
+      
+      $iWidthRatio = $iWidth / $iMaxWidth;
+      $iPreviewWidth = $iMaxWidth;
+      
+    } else $iPreviewWidth = $iWidth;
+    
+    if ($iHeight > $iMaxHeight) {
+      
+      $iHeightRatio = $iHeight / $iMaxHeight;
+      $iPreviewHeight = $iMaxHeight;
+      
+    } else $iPreviewHeight = $iHeight;
+    
+    // set croping
+    if ($iWidthRatio > $iHeightRatio) {
+      
+      if ($bCrop) {
+        
+        $iSourceWidth = $iPreviewWidth * $iHeightRatio;
+        $iXSource = ($iWidth - $iSourceWidth) / 2;
+        
+      } else $iPreviewWidth = $iSourceWidth;
+      
+    } else if ($iWidthRatio < $iHeightRatio) {
+      
+      if ($bCrop) {
+        
+        $iSourceHeight = $iPreviewHeight * $iWidthRatio;
+        $iYSource = ($iHeight - $iSourceHeight) / 2;
+        
+      } else $iPreviewHeight = $iSourceHeight;
+      
+    }
+    
+    $oImagePreview = imagecreatetruecolor($iPreviewWidth, $iPreviewHeight);
+    
+    if ($sExtension == 'png') {
+      
+      imagealphablending($oImagePreview, false);
+      $iTransparent = imagecolortransparent($oImagePreview, imagecolorallocatealpha($oImagePreview, 0, 0, 0, 127));
+      imagefill($oImagePreview, 0, 0, $iTransparent);
+      imagesavealpha($oImagePreview, true);
+    }
+    
+    $sExtension = strtolower($this->oFile->getExtension());
+    if ($sExtension == 'jpg') $sExtension = 'jpeg';
+    
+    $sFunction = 'imagecreatefrom'.$sExtension;
+    $oImageSource = @$sFunction(MAIN_DIRECTORY.$this->oFile) or die("Cannot Initialize new GD image stream");
+    
+    // Redimensionnement
+    
+    imagecopyresampled($oImagePreview, $oImageSource, 0, 0, $iXSource, $iYSource, $iPreviewWidth, $iPreviewHeight, $iSourceWidth, $iSourceHeight);
+    
+    return $oImagePreview;
+  }
+  
   public function __toString() {
     
     if ($this->oFile) {
@@ -58,16 +130,28 @@ class Img implements Main {
         
         Controler::setContentType($sExtension);
         
-        $sFunction = 'imagecreatefrom'.strtolower($sExtension);
-        $img = @$sFunction(MAIN_DIRECTORY.$sFilePath)
-        or die("Cannot Initialize new GD image stream");
+        $iWidth = Controler::getPath()->getAssoc('width');
+        $iHeight = Controler::getPath()->getAssoc('height');
         
-        if ($sExtension == 'png') {
+        if ($iWidth || $iHeight) {
           
-          imagealphablending($img, false);
-          imagesavealpha($img, true);
+          if (!$iWidth) $iWidth = 200;
+          if (!$iHeight) $iHeight = 200;
+          
+          $img = $this->resize($sExtension, $iWidth, $iHeight, true);
+          
+        } else {
+          
+          $sFunction = 'imagecreatefrom'.strtolower($sExtension);
+          $img = @$sFunction(MAIN_DIRECTORY.$sFilePath) or die("Cannot Initialize new GD image stream");
+          
+          if ($sExtension == 'png') {
+            
+            imagealphablending($img, false);
+            imagesavealpha($img, true);
+          }
         }
-        
+        //echo Controler::getMessages();
         // imagefilter($img, IMG_FILTER_GRAYSCALE);
         // imagestring($img, 2, 5, 15, date('H:i:s'), imagecolorallocate($img, 255, 216, 147));
         

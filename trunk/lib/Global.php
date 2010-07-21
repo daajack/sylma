@@ -215,8 +215,24 @@ function float_format($mValue, $iDec = 2, $iPoint = '.', $iThousand = '\'') {
   return (is_float($mValue) ? number_format($mValue, $iDec, $iPoint, $iThousand) : $mValue);
 }
 
+/**
+ * Check encoding and optionnaly return value in utf-8
+ */
+function checkEncoding($sContent) {
+  
+  if (SYLMA_ENCODING_CHECK && !mb_check_encoding($sContent, 'UTF-8')) {
+    
+    $sContent = utf8_encode($sContent); //t('EREUR D\' ENCODAGE'); TODO , result not always in utf-8
+    dspm(xt('L\'encodage n\'est pas utf-8 %s', new HTML_Strong(stringResume($sContent))), 'xml/warning');
+  }
+  
+  return $sContent;
+}
 /* Display function */
 
+/*
+ *
+ **/
 function dspf($mVar, $sStatut = SYLMA_MESSAGES_DEFAULT_STAT) {
   
   dspm(view($mVar, false), $sStatut); 
@@ -225,6 +241,13 @@ function dspf($mVar, $sStatut = SYLMA_MESSAGES_DEFAULT_STAT) {
 function dspm($mVar, $sStatut = SYLMA_MESSAGES_DEFAULT_STAT) {
   
   Controler::addMessage($mVar, $sStatut);
+}
+
+function dspl($sVar) {
+  
+  $fp = fopen(Controler::getSettings('@path-config').'/debug.log', 'a+');
+  fwrite($fp, "----\n".$sVar."\n"); //.Controler::getBacktrace()
+  fclose($fp);
 }
 
 function view($mVar, $bFormat = false) {

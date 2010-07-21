@@ -315,8 +315,8 @@ class XML_Element extends DOMElement implements XML_Composante {
     
     if ($sValue !== '' && $sValue !== null) {
       
-      if ($sUri) return parent::setAttribute($sName, $sValue);
-      else return parent::setAttributeNS($sUri, $sName, $sValue);
+      if (!$sUri) return parent::setAttribute($sName, checkEncoding($sValue));
+      else return parent::setAttributeNS($sUri, $sName, checkEncoding($sValue));
       
     } else return $this->removeAttribute($sName);
   }
@@ -504,8 +504,13 @@ class XML_Element extends DOMElement implements XML_Composante {
    */
   public function insertBefore() {
     
-    if (!$this->isRoot() && $this->getParent()) $this->getParent()->insert(func_get_args(), $this);
-    else Controler::addMessage(array(t('Element : Impossible d\'insérer un noeud avant le noeud racine'), $this->messageParse()), 'xml/error');
+    $mResult = null;
+    
+    if (!$this->isRoot() && $this->getParent()) $mResult = $this->getParent()->insert(func_get_args(), $this);
+    else dspm(array(t('Element : Impossible d\'insérer un noeud avant le noeud racine'), $this->messageParse()),
+ 'xml/error');
+    
+    return $mResult;
   }
   
   /**

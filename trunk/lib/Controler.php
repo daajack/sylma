@@ -156,7 +156,7 @@ class Controler {
       if (array_key_exists($sQuery, self::$aQueries)) return self::$aQueries[$sQuery];
       else $sResult = self::$aQueries[$sQuery] = self::$oSettings->read($sQuery);
       
-      if (!$sResult) dspm(xt('Aucun paramètre recupéré dans %s avec la requête "%s"', self::$oSettings->getFile()->parse(), $sQuery), 'action/error');
+      if (!$sResult) dspm(xt('Aucun paramètre recupéré dans %s avec la requête "%s"', self::$oSettings->getFile()->parse(), new HTML_Strong($sQuery)), 'action/error');
       
       return $sResult;
       

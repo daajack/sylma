@@ -165,3 +165,29 @@
 #msg-admin div.element pre { font-size: 1em; }
 #msg-admin div.element:hover { background-color: orange !important; cursor: default; }
 #msg-admin div.element:hover .hidden { display: block; }
+
+/* ActionBuilder */
+
+.sylma-window {
+  background-color: #EFF5FA;
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: auto;
+  text-align: left;
+  padding: 7px;
+  border: 1px solid gray;
+  -moz-border-radius: 10px;
+  -moz-box-shadow:0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+.sylma-window-head {
+  border-bottom: 1px dotted gray;
+  margin-bottom: 5px;
+  text-align: right;
+  padding-bottom: 4px;
+}
+
+.sylma-window-head a {
+  text-decoration: none;
+}

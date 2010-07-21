@@ -113,6 +113,8 @@ class XML_Attribute extends DOMAttr {
   
   public function __construct($sName, $sValue) {
     
+    $sValue = checkEncoding($sValue);
+    
     parent::__construct($sName, $sValue);
   }
   
@@ -138,7 +140,7 @@ class XML_Attribute extends DOMAttr {
   
   public function set($sValue) {
     
-    $this->value = (string) $sValue;
+    $this->value = (string) checkEncoding($sValue);
   }
   
   public function __toString() {
@@ -217,13 +219,11 @@ class XML_Text extends DOMText implements XML_Composante {
       }
     }
     
-    if (SYLMA_ENCODING_CHECK && !mb_check_encoding($mContent, 'UTF-8')) {
-      //, new HTML_Em(mb_detect_encoding($mContent))
-      $mContent = utf8_encode($mContent); //t('EREUR D\' ENCODAGE'); TODO , result not always in utf-8
-      dspm(xt('L\'encodage n\'est pas utf-8 %s', new HTML_Strong($mContent)), 'xml/warning');
-    }
+    $mContent = checkEncoding($mContent);
+    
     // if (!(is_string($mContent) || is_numeric($mContent))) $mContent = '';
     // if ($mContent === 0) $mContent = '00'; //dom bug ?
+    
     parent::__construct($mContent);
   }
   

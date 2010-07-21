@@ -244,19 +244,30 @@ class WindowAction extends XML_Document implements Main {
     //$oContent = $oRoot->addNode('content');
     
     $oRoot = $this->set(new XML_Element('action', null, null, SYLMA_NS_XHTML));
-    $oContent = $oRoot->addNode('content', null, null, SYLMA_NS_XHTML);//);
+    $oContent = $oRoot->addNode('content', null, null, SYLMA_NS_XHTML);
     
     if ($oAction instanceof XML_Action) {
       
       $oResult = $oAction->parse();
+      
+      /*if (Controler::getPath()->getExtension() == 'popup') {
+        
+        $oPath = new XML_Path(Controler::getWindowSettings()->read('popup'), array('result' => $oResult));
+        $oAction = new XML_Action($oPath);
+        
+        $oResult = $oAction->parse();
+      }*/
+      
       $oContent->add($oResult);
       
     } else if ($oAction instanceof XML_File) {
       
+      // action
       $oContent->add(new XML_Document((string) $oAction));
       
     } else {
       
+      // file
       $oContent->add($oAction);
     }
     

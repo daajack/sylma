@@ -54,6 +54,8 @@ interface XML_Composante {
   public function remove();
   public function getDocument();
   public function getParent();
+  public function getPrevious();
+  public function getNext();
   public function messageParse();
   //public function __toString();
 }
@@ -181,6 +183,16 @@ class XML_CData extends DOMCdataSection implements XML_Composante {
     return $this->parentNode;
   }
   
+  public function getNext() {
+    
+    return $this->nextSibling;
+  }
+  
+  public function getPrevious() {
+    
+    return $this->previousSibling;
+  }
+  
   public function isElement() {
     
     return false;
@@ -230,6 +242,16 @@ class XML_Text extends DOMText implements XML_Composante {
   public function getDocument() {
     
     return $this->ownerDocument;
+  }
+  
+  public function getNext() {
+    
+    return $this->nextSibling;
+  }
+  
+  public function getPrevious() {
+    
+    return $this->previousSibling;
   }
   
   public function getParent() {
@@ -447,6 +469,16 @@ class XML_Comment extends DOMComment implements XML_Composante {
   public function getParent() {
     
     return $this->parentNode;
+  }
+  
+  public function getNext() {
+    
+    return $this->nextSibling;
+  }
+  
+  public function getPrevious() {
+    
+    return $this->previousSibling;
   }
   
   public function remove() {

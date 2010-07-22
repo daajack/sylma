@@ -10,7 +10,7 @@
       <xsl:copy-of select="@key"/>
       <init>
         <xsl:call-template name="attributes-to-nodes">
-          <xsl:with-param name="attributes" select="@path | @extend-base | @extend-class | @id-node"/>
+          <xsl:with-param name="attributes" select="@path | @extend-base | @extend-class | @id-node | @hidden"/>
         </xsl:call-template>
         <xsl:if test="(local-name() = 'layout') or (local-name() = 'layer')">
           <xsl:call-template name="containers"/>

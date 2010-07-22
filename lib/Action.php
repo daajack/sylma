@@ -210,6 +210,9 @@ class XML_Action extends XML_Document {
     
     if ($sActionMethod == 'if') {
       
+      if (Controler::useStatut('action/report'))
+        dspm(xt('Test [%s] : %s &gt; %s', view($oElement), view($mObject), view((bool) $mObject)), 'action/report');
+      
       if ($mObject) $oResult = $this->buildArgument($oElement->getChildren());
       $bReturn = $oElement->testAttribute('return', true);
       

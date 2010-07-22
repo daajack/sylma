@@ -94,7 +94,9 @@ var sylma = {
         var sClassName = object['init']['extend-class'];
         bRoot = sClassName[0] == '/';
         
-        var sArgs = "({'object' : object, 'parent' : parentLayer, 'base' : sClassBase, 'path' : sPath, 'root' : rootObject})"
+        var bHidden = object['init']['hidden'] ? true : false;
+        
+        var sArgs = "({'object' : object, 'parent' : parentLayer, 'base' : sClassBase, 'path' : sPath, 'root' : rootObject, 'hidden' : bHidden})"
         
         if (bRoot || !sClassBase) {
           
@@ -317,7 +319,11 @@ var sylma = {
         oContent.setStyle('opacity', 0.2);
         
         if (hOptions.get('replace')) oContent.replaces(hOptions.get('html'));
-        else hOptions.get('html').grab(oContent);
+        else {
+          
+          if (hOptions.has('html-position')) oContent.inject(hOptions.get('html'), hOptions.get('html-position'));
+          else hOptions.get('html').grab(oContent);
+        }
         
         if (hOptions.has('onLoad')) hOptions.get('onLoad')();
         
@@ -328,6 +334,8 @@ var sylma = {
           
           oContent.setStyles({'left' : iLeft, 'top' : iTop});
         }
+        
+        var iOpacity = hOptions.has('opacity') ? hOptions.get('opacity') : 1;
         
         // TODO kill old layer
         //layer.node.destroy(); 
@@ -349,7 +357,7 @@ var sylma = {
                 eval(sResponse);
                 self.replace(sPath, hOptions);
                 
-                oContent.setStyle('opacity', 1);
+                oContent.setStyle('opacity', iOpacity);
                 
             }}).get();
             
@@ -358,14 +366,15 @@ var sylma = {
             // no methods
             
             self.replace(sPath, hOptions);
-            oContent.setStyle('opacity', 1);
+            oContent.setStyle('opacity', iOpacity);
           }
           
         } else {
           
           // only change content node
-          oContent.setStyle('opacity', 1);
-          oCaller.node = oContent;
+          oContent.setStyle('opacity', iOpacity);
+          if (hOptions.has('onSuccess')) hOptions.get('onSuccess')(oContent);
+          //oCaller.node = oContent;
         }
       }
     }).send();
@@ -545,6 +554,12 @@ sylma.classes.layer = new Class({
   isOpen : true,
   timer : undefined,
   
+  initialize : function(oArgs) {
+    
+    if (oArgs['hidden']) this.isOpen = false;
+    this.parent(oArgs);
+  },
+  
   getPath : function() {
     
     var sPath = this['sylma-update-path'];
@@ -567,8 +582,12 @@ sylma.classes.layer = new Class({
     var iTop = ($(window).getSize().y - this.node.getSize().y) / 2;
     
     //this.node.setStyle('top', iTop);
+    
+    iTop = iTop >= 0 ? iTop : 0;
+    
     var oFX = new Fx.Tween(this.node, {'transition' : 'sine:in:out' });
     oFX.start('top', iTop);
+    
     //this.node.tween('left', iLeft);
     //.setStyles({'left' : iLeft, 'top' : iTop});
   },
@@ -595,6 +614,7 @@ sylma.classes.layer = new Class({
   
   update : function(oArguments, oOptions) {
     
+    if (!oOptions) oOptions = {};
     oOptions = $extend({
       'path' : this.getPath(),
       'arguments' : oArguments,
@@ -616,7 +636,6 @@ sylma.classes.layer = new Class({
     
     if (!this.isOpen) {
       
-      // sylma.dsp('[show] ' + this.node.id);
       this.node.fade('in');
       this.isOpen = true;
     }

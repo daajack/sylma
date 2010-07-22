@@ -6,5 +6,6 @@
   <method path="update-name" name="updateName"/>
   <method path="update-file" name="updateFile"/>
   <method path="update-directory" name="updateDirectory"/>
+  <method path="add-directory" name="addDirectory"/>
   <method path="delete" name="delete"/>
 </class>

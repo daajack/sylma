@@ -5,6 +5,9 @@
     <le:processor path="/sylma/processors/action-builder" namespace="/sylma/processors/action-builder/schema"/>
   </le:settings>
   <div class="sylma-window-head">
+    <h4>
+      <le:get-argument/>
+    </h4>
     <a href="#">
       <span>X</span>
       <la:event xmlns="" name="click"><![CDATA[//%ref-object%.show();

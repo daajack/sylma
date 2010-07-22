@@ -12,6 +12,23 @@ class Explorer {
     return $oAction;
   }
   
+  public function addDirectory() {
+    
+    $mResult = null;
+    
+    $sDirectory = array_val('directory', $_POST);
+    $sName = array_val('name', $_POST);
+    
+    if (!$sName) dspm(t('Erreur dans la requête !'), 'error');
+    else {
+      
+      if (!$oDirectory = Controler::getDirectory($sDirectory)) dspm(xt('Répertoire %s introuvable', $sDirectory), 'error');
+      else if ($mResult = $oDirectory->addDirectory($sName)) dspm(xt('Répertoire %s crée', new HTML_Strong($mResult)), 'success');
+    }
+    
+    return $mResult;
+  }
+  
   public function updateDirectory() {
     
     $sPath = array_val('resource', $_POST);
@@ -24,7 +41,7 @@ class Explorer {
   
   public function delete() {
     
-    $bResult = false;
+    $mResult = null;
     
     $bDirectory = array_val('directory', $_POST) ? true : false;
     $sPath      = array_val('resource', $_POST);
@@ -32,13 +49,15 @@ class Explorer {
     if ($bDirectory) { // directory
       
       if (!$oDirectory = Controler::getDirectory($sPath)) dspm(t('Répertoire introuvable'), 'error');
-      else $oResult = $oDirectory->delete();
+      else $mResult = $oDirectory->delete();
       
     } else { // file
       
       if (!$oFile = Controler::getFile($sPath)) dspm(t('Fichier introuvable'), 'error');
-      else $oResult = $oFile->delete(); // update
+      else $mResult = $oFile->delete(); // update
     }
+    
+    return $mResult;
   }
   
   public function updateRights() {
@@ -85,12 +104,12 @@ class Explorer {
       if ($bDirectory) { // directory
         
         if (!$oDirectory = Controler::getDirectory($sPath)) dspm(t('Répertoire introuvable'), 'error');
-        else $oResult = $oDirectory->updateName($sName);
+        else $oResult = $oDirectory->rename($sName);
         
       } else { // file
         
         if (!$oFile = Controler::getFile($sPath)) dspm(t('Fichier introuvable'), 'error');
-        else $oResult = $oFile->updateName($sName); // update
+        else $oResult = $oFile->rename($sName); // update
       }
     }
     

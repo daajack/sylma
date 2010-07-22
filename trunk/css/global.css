@@ -184,8 +184,18 @@
 .sylma-window-head {
   border-bottom: 1px dotted gray;
   margin-bottom: 5px;
-  text-align: right;
   padding-bottom: 4px;
+}
+
+.sylma-window-head h4 {
+  display: inline;
+  margin: 0;
+  padding: 0;
+}
+
+.sylma-window-head a {
+  
+  float: right;
 }
 
 .sylma-window-head a {

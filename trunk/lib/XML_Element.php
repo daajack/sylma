@@ -41,7 +41,7 @@ class XML_Element extends DOMElement implements XML_Composante {
   public function getCSSPath($oLastParent = null, $sNamespace = null) {
     
     if ($sNamespace === null) $sNamespace = $this->getNamespace();
-      
+    
     if ($this->getNamespace() === $sNamespace) {
       
       $iPrevious = 1;
@@ -49,13 +49,17 @@ class XML_Element extends DOMElement implements XML_Composante {
       
       while ($oSibling = $oSibling->getPrevious()) {
         
-        if ($oSibling->getNamespace() == $this->getNamespace()) $iPrevious++;
+        if ($oSibling->isElement() && $oSibling->getNamespace() == $this->getNamespace()) $iPrevious++;
         //if ($iPrevious > 10) {dspm('Prob'); break;}
       }
       
       $sPath = '*:nth-child('.$iPrevious.')';
       
-      if ($this->getParent() !== $oLastParent) $sPath = $this->getParent()->getCSSPath($oLastParent, $sNamespace).' > '.$sPath;
+      if ($this->getParent() instanceof XML_Element) {
+        
+        if ($this->getParent() !== $oLastParent) $sPath = $this->getParent()->getCSSPath($oLastParent, $sNamespace).' > '.$sPath;
+        
+      } else dspm(xt('Impossible de déterminer le chemin CSS de %s depuis %s', view($this), view($oLastParent)), 'xml/error');
       
     } else {
       

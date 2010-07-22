@@ -501,7 +501,7 @@ class XML_Directory extends XML_Resource {
         unset($this->aDirectories[$sName]);
         $oDirectory = $this->getDirectory($sName);
         
-        dspm(xt('Création du répertoire %s', new HTML_Strong($oDirectory)), 'file/notice');
+        //dspm(xt('Création du répertoire %s', new HTML_Strong($oDirectory)), 'file/notice');
         
         //} else dspm(xt('Création du répertoire %s impossible', new HTML_Stong($this.$sName)), 'file/error');
       }

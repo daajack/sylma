@@ -475,7 +475,7 @@ class Controler {
   
   public static function getInfos() {
     
-    return new XML_Element('div',
+    return new HTML_Tag('div',
         array(self::getSystemInfos(), self::viewResume()),
         array('class' => 'msg-infos clear-block'));
   }

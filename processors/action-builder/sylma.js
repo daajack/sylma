@@ -293,6 +293,47 @@ var sylma = {
     
     return true;
   },
+
+  createXML : function(xml, parent) {
+    
+    switch (xml.nodeType) {
+      
+      case  1 : // Element type
+        
+        var tmp;
+        var oElement = new Element(xml.nodeName);
+        
+        for(var j = 0; j < xml.attributes.length; j++) {
+          
+          tmp = xml.attributes[j];
+          oElement.setProperty(tmp.nodeName, tmp.nodeValue);
+        }
+        
+        if (xml.childNodes.length)
+          for(var i = 0; i < xml.childNodes.length; i++)
+            this.createXML(xml.childNodes[i], oElement);
+        
+        if (parent) {
+          //alert(parent.ownerDocument);
+          //oElement = parent.ownerDocument.importNode(oElement, true);
+          parent.adopt(oElement);
+        }
+        
+        return oElement;
+        
+      break;
+      
+      case 3 :
+        
+        parent.set({'text' : xml.nodeValue});
+        
+      break;
+      
+      default : sylma.dsp('Impossible d\'ajouter ' + xml.nodeValue + ' de type ' + xml.nodeType);
+    }
+    
+    return null;
+  },
   
   load : function(oOptions) {
     
@@ -310,10 +351,17 @@ var sylma = {
       'url' : sPath + '.' + sWindow,
       'data' : hOptions.get('arguments'),
       'method' : hOptions.get('method'),
-      'async ' : false,
-      'onSuccess' : function(sResult, oHTML) {
+      //'async ' : true,
+      'onSuccess' : function(sResult, oXML) {
         
-        var oContentContainer = this.parseAction(oHTML);
+        if (Browser.Engine.trident) {
+          
+          //oXML = { documentElement: self.createXML(oXML.documentElement) }; // not working yet
+          oXML = self.createXML(oXML.documentElement); // not working yet
+          //oXML = oXML.ownerDocument;
+        }
+        
+        var oContentContainer = this.parseAction(oXML);
         var oContent = self.importNodes(oContentContainer.getFirst());
         
         oContent.setStyle('opacity', 0.2);
@@ -515,9 +563,16 @@ sylma.classes.request = new Class({
     
     var oContainer = $('msg-admin');
     
-    var oMessages = $(oResult).getElement('messages');
-    var oContent = $(oResult).getElement('content');
-    var oInfos = $(oResult).getElement('infos');
+    if (0 && Browser.Engine.trident) {
+      
+      sylma.dsp($(oResult).children.length);
+      
+    } else {
+      
+      var oMessages = $(oResult).getElement('messages');
+      var oContent = $(oResult).getElement('content');
+      var oInfos = $(oResult).getElement('infos');
+    }
     
     oContainer.adopt(sylma.importNodes(oInfos.getFirst()), 'top');
     
@@ -617,7 +672,7 @@ sylma.classes.layer = new Class({
     if (!oOptions) oOptions = {};
     oOptions = $extend({
       'path' : this.getPath(),
-      'arguments' : oArguments,
+      'arguments' : oArguments
     }, oOptions);
     
     return this.replace(oOptions);
@@ -659,9 +714,9 @@ sylma.classes.layer = new Class({
     this.isOpen = false;
     
     return true;
-  },
+  }
   
-}),
+});
   
 sylma.classes.menu = new Class({
   

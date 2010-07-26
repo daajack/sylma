@@ -556,6 +556,7 @@ class XML_Action extends XML_Document {
           
           switch ($sName) {
             
+            case 'urlencode' : $mResult = urlencode($mResult); break;
             case 'add-quote' : $mResult = addQuote($mResult); break;
             case 'escape-path' : $mResult = '"'.xmlize($mResult).'"'; break;
             
@@ -860,7 +861,7 @@ class XML_Action extends XML_Document {
   
   private function replaceVariables($sTest, $bReturn = false) {
     
-    //$sValue = unxmlize($sTest);
+    $sValue = unxmlize($sTest);
     $sValue = $sTest;
     preg_match_all('/\[\$([\w-]+)\]/', $sValue, $aResults, PREG_OFFSET_CAPTURE);
     
@@ -878,7 +879,7 @@ class XML_Action extends XML_Document {
         $iSeek = strlen($sVarValue) - $iVarLength;
       }
       
-      //return xmlize($sValue);
+      return xmlize($sValue);
       return $sValue;
     }
     
@@ -1942,7 +1943,7 @@ class XML_Path {
       $this->pushIndex($aPath);
       $this->setPath($oFile);
       
-      $this->sSimplePath = $oFile->getActionPath().'/'.$this->getStringIndex(false); // TODO add assoc
+      $this->sSimplePath = $oFile->getActionPath().$this->getStringIndex(false); // TODO add assoc
       
     } else $this->setPath('');
   }
@@ -2071,7 +2072,8 @@ class XML_Path {
     $aIndex = $this->aArguments['index'];
     if ($bRemove) $this->aArguments['index'] = array();
     
-    return implode('/', $aIndex);
+    if ($aIndex) return '/'.implode('/', $aIndex);
+    else return '';
   }
   
   public function getIndex($iKey = 0, $bKeep = false) {
@@ -2087,7 +2089,7 @@ class XML_Path {
     return array_key_exists($sKey, $this->aArguments['assoc']);
   }
   
-  public function getAssoc($sKey, $bKeep = false) {
+  public function getAssoc($sKey, $bKeep = true) {
     
     return $this->getKey('assoc', $sKey, $bKeep);
   }

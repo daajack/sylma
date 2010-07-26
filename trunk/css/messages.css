@@ -127,3 +127,26 @@
   border-bottom-color: #cca3a3;
   border-right-color: #cca3a3;
 }
+
+/* floating */
+
+
+.messages-float ul {
+  opacity: 1;
+  left: 10px;
+  top: 10px;
+  width: 5px;
+  height: 5px;
+  padding-left: 8px !important;
+  margin: 5px 0 5px 0 !important;
+}
+
+.messages-float ul > * { display: none;}
+
+.messages-float ul:hover {
+  width: auto;
+  height: auto;
+}
+
+.messages-float ul:hover > * { display: block;}
+

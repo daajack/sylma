@@ -94,7 +94,7 @@ class Img implements Main {
     
     $oImagePreview = imagecreatetruecolor($iPreviewWidth, $iPreviewHeight);
     
-    if ($sExtension == 'png') {
+    if ($sExtension == 'png' || $sExtension == 'gif') {
       
       imagealphablending($oImagePreview, false);
       $iTransparent = imagecolortransparent($oImagePreview, imagecolorallocatealpha($oImagePreview, 0, 0, 0, 127));
@@ -145,7 +145,7 @@ class Img implements Main {
           $sFunction = 'imagecreatefrom'.strtolower($sExtension);
           $img = @$sFunction(MAIN_DIRECTORY.$sFilePath) or die("Cannot Initialize new GD image stream");
           
-          if ($sExtension == 'png') {
+          if ($sExtension == 'png' || $sExtension == 'gif') {
             
             imagealphablending($img, false);
             imagesavealpha($img, true);

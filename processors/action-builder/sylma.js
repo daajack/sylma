@@ -403,7 +403,7 @@ var sylma = {
               'onSuccess' : function(oResponse, sResponse) {
                 //alert(sResponse);
                 eval(sResponse);
-                self.replace(sPath, hOptions);
+                self.replace(sPath, hOptions, oContent);
                 
                 oContent.setStyle('opacity', iOpacity);
                 
@@ -415,12 +415,15 @@ var sylma = {
             
             self.replace(sPath, hOptions);
             oContent.setStyle('opacity', iOpacity);
+            
+            if (hOptions.has('onSuccess')) hOptions.get('onSuccess')(oContent);
           }
           
         } else {
           
           // only change content node
           oContent.setStyle('opacity', iOpacity);
+          
           if (hOptions.has('onSuccess')) hOptions.get('onSuccess')(oContent);
           //oCaller.node = oContent;
         }
@@ -430,7 +433,7 @@ var sylma = {
     return true;
   },
   
-  replace : function(sPath, hOptions) {
+  replace : function(sPath, hOptions, oResult) {
     
     var self = this;
     
@@ -449,7 +452,7 @@ var sylma = {
         if (oNewObject) eval('hOptions.get(\'parent\').' + hOptions.get('name') + ' = oNewObject'); // insert new object
         
         // at last : onSuccess function
-        if (hOptions.has('onSuccess')) hOptions.get('onSuccess')();
+        if (hOptions.has('onSuccess')) hOptions.get('onSuccess')(oResult);
         
     }}).get();
   },

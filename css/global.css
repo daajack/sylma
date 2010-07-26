@@ -191,6 +191,9 @@
   display: inline;
   margin: 0;
   padding: 0;
+  background-color: transparent;
+  text-transform: none;
+  color: gray;
 }
 
 .sylma-window-head a {

@@ -650,6 +650,11 @@ class XML_File extends XML_Resource {
     return substr($this->getFullPath(), 0, strlen($this->getFullPath()) - strlen($this->getExtension()) - 1);
   }
   
+  public function getDisplayName() {
+    
+    return str_replace('_', ' ', substr($this->getName(), 0, strlen($this->getName()) - strlen($this->getExtension()) - 1));
+  }
+  
   public function getExtension() {
     
     return $this->sExtension;
@@ -812,6 +817,7 @@ class XML_File extends XML_Resource {
     return new XML_Element('file', null, array(
       'full-path' => $this->getFullPath(),
       'name' => $this->getName(),
+      'display-name' => $this->getDisplayName(),
       'owner' => $this->getOwner(),
       'group' => $this->getGroup(),
       'mode' => $this->getMode(),

@@ -70,59 +70,6 @@ class XML_Element extends DOMElement implements XML_Composante {
   }
   
   /**
-   * @return string The CSS name of the element relative to his brotherhood. ex: 'a:eq(2)'
-   */
-  /*private function getCSSPathName() {
-    
-    if (!$sPrefix = $this->getPrefix()) {
-      
-      $sPrefix = 'ns';
-      $sName = 'ns:'.$this->getName(false);
-      
-    } else $sName = $this->getName();
-    
-    $aNS = array($sPrefix => $this->getNamespace());
-    
-    // first check all children
-    
-    if ($this->getParent()->getFirst() !== $this) $iSiblings = $this->getParent()->query($sName, $aNS)->length - 1;
-    else $iSiblings = 0;
-    
-    if ($iSiblings) {
-      
-      // if there are, get the preceding count
-      
-      // $iPrevious = $this->query("preceding-sibling::$sName", $aNS)->length + 1;
-      // $sName = $this->getName(true).':nth-child('.$iPrevious.')';
-      $iPrevious = $this->query("preceding-sibling::*[namespace-uri() = '{$this->getNamespace()}']")->length + 1;
-      $sName = '*:nth-child('.$iPrevious.')';
-      
-    } else $sName = $this->getName(true);
-    
-    return $sName;
-  }
-  
-  public function _getCSSPath($oLastParent = null) {
-    
-    //dspf($this);
-    $oNodes = $this->query("ancestor-or-self::*[namespace-uri() = '{$this->getNamespace()}']");
-    $oNodes->reverse();
-    //dspf($oNodes);
-    $oNode = null;
-    $aPath = array();
-    
-    foreach ($oNodes as $oNode) {
-      
-      if ($oLastParent && ($oLastParent === $oNode)) break;
-      else $aPath[] = $oNode->getCSSPathName();
-    }
-    
-    //$sResult  = ($oLastParent === $oNode) ? '' : '/';
-    //$sResult.
-    return implode(' > ', array_reverse($aPath));
-  }*/
-  
-  /**
    * Create a DOMXPath object
    * @return DOMXPath An XPath associated with querie's namespaces
    */
@@ -192,7 +139,7 @@ class XML_Element extends DOMElement implements XML_Composante {
         $mResult = $this->getDocument()->queryString($mResult);
         
         XML_Controler::addStat('query');
-        if (SYLMA_ACTION_STATS && Controler::getUser()->isMember('0')) Controler::infosSetQuery($sQuery);
+        if (SYLMA_ACTION_STATS && Controler::getUser()->isMember(SYLMA_AUTHENTICATED)) Controler::infosSetQuery($sQuery);
         
         if ($mResult === null) {
           
@@ -227,7 +174,7 @@ class XML_Element extends DOMElement implements XML_Composante {
         $mResult = $oXPath->query($sQuery, $this);
         
         XML_Controler::addStat('query');
-        if (SYLMA_ACTION_STATS && Controler::getUser()->isMember('0')) Controler::infosSetQuery($sQuery);
+        if (SYLMA_ACTION_STATS && Controler::getUser()->isMember(SYLMA_AUTHENTICATED)) Controler::infosSetQuery($sQuery);
         
         // if (!$mResult || !$mResult->length) Controler::addMessage(xt("Element->query(%s) : Aucun résultat", new HTML_Strong($sQuery)), 'xml/report');
         // ////// report & notice type will crash system, maybe something TODO /////// //

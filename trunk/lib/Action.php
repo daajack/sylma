@@ -1551,7 +1551,7 @@ class XML_Action extends XML_Document {
     
     // Load stats
     
-    if (SYLMA_ACTION_STATS && Controler::getUser()->isMember('0')) {
+    if (SYLMA_ACTION_STATS && Controler::getUser()->isMember(SYLMA_AUTHENTICATED)) {
       
       $bStats = true;
       

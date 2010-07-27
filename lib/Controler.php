@@ -467,7 +467,7 @@ class Controler {
     $oResume = new XML_Element('controler', $oAction->viewResume());
     
     $oResume->getFirst()->setAttribute('path', '<controler>');
-    $oTemplate = new XSL_Document(Controler::getSettings('actions/template/@path'));
+    $oTemplate = new XSL_Document(Controler::getSettings('actions/template/@path'), MODE_EXECUTION);
     $oTemplate->setParameter('path-editor', SYLMA_PATH_EDITOR);
     
     return $oResume->getDocument()->parseXSL($oTemplate);

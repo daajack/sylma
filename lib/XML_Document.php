@@ -220,11 +220,13 @@ class XML_Document extends DOMDocument {
       
       $this->setFile($oFile);
       
+      $bLog = Controler::getUser()->isMember(SYLMA_AUTHENTICATED);
+      
       if (!$oFile->isLoaded()) {
         
         // not yet loaded
         
-        if (SYLMA_ACTION_STATS && ($oFile->getExtension() != 'eml') && Controler::getUser()->isMember('0'))
+        if (SYLMA_ACTION_STATS && ($oFile->getExtension() != 'eml') && $bLog)
           Controler::infosSetFile($oFile, true); // if action, add it to controler infos array
         
         $bResult = parent::load(MAIN_DIRECTORY.$sPath);
@@ -252,7 +254,7 @@ class XML_Document extends DOMDocument {
         
         // already loaded
         
-        if (SYLMA_ACTION_STATS && ($oFile->getExtension() != 'eml') && Controler::getUser()->isMember('0'))
+        if (SYLMA_ACTION_STATS && ($oFile->getExtension() != 'eml') && $bLog)
           Controler::infosSetFile($oFile, false);
         
         // GET a copy from XML_File's XML_document instance

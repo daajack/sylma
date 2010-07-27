@@ -24,6 +24,7 @@ class Explorer {
       
       if (!$oDirectory = Controler::getDirectory($sDirectory)) dspm(xt('Répertoire %s introuvable', $sDirectory), 'error');
       else if ($mResult = $oDirectory->addDirectory($sName)) dspm(xt('Répertoire %s crée', new HTML_Strong($mResult)), 'success');
+      else dspm(xt('Impossible de créer le répertoire, droits insuffisants'), 'error');
     }
     
     return $mResult;

@@ -346,7 +346,7 @@ class ActionBuilder extends XML_Processor  {
     
     // Parse as JSON xml => array() then add the result in Controler
     
-    $oTemplate = new XSL_Document(SYLMA_PATH_ACTIONBUILDER.'/index.xsl');
+    $oTemplate = new XSL_Document(SYLMA_PATH_ACTIONBUILDER.'/index.xsl', MODE_EXECUTION);
     //dspf($oScript);
     if ($oResult = $oTemplate->parseDocument($oScript)) {
       //dspf($oResult);
@@ -368,7 +368,7 @@ class ActionBuilder extends XML_Processor  {
         if (Controler::hasResult()) Controler::getWindow()->addOnLoad("sylma.loadTree($sRootKey, $sPath)");
         // $oTemplate->setParameter('node-id', $sRoot);
         
-        $oTemplate = new XSL_Document(SYLMA_PATH_ACTIONBUILDER.'/methods.xsl');
+        $oTemplate = new XSL_Document(SYLMA_PATH_ACTIONBUILDER.'/methods.xsl', MODE_EXECUTION);
         $sMethods = $oTemplate->parseDocument($this->oMethods, false);
         
         //dspm(new HTML_Tag('pre', $sMethods));

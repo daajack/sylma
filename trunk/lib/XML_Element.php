@@ -35,6 +35,22 @@ class XML_Element extends DOMElement implements XML_Composante {
     return $this->ownerDocument;
   }
   
+  public function isReal() {
+    
+    //try {
+      
+      if (@$this->parentNode) return true;
+      else return false;
+      
+    //} catch (Exception $e) {
+      
+      //dspm(xt('Elément invalide : %s', $e->getMessage()), 'error');
+      //return false;
+    //}
+    
+    //return true;
+  }
+  
   /**
    * @return string The CSS path of the element relative to his parent and brotherhood. ex: 'div > a:eq(2)'
    */
@@ -669,15 +685,6 @@ class XML_Element extends DOMElement implements XML_Composante {
    * Test wether actual element has children or not
    * @return boolean The children actual existenz fact (or not)
    */
-  public function hasElementChildren() {
-    
-    return ($this->hasChildren() && ($this->countChildren() > 1 || $this->getFirst()->isElement()));
-  }
-  
-  /**
-   * Test wether actual element has children or not
-   * @return boolean The children actual existenz fact (or not)
-   */
   public function hasChildren() {
     
     return $this->hasChildNodes();
@@ -827,9 +834,29 @@ class XML_Element extends DOMElement implements XML_Composante {
     return !$this->hasChildren();
   }
   
-  public function isTextElement() {
+  public function isComplex() {
+    
+    return ($this->hasChildren() && ($this->countChildren() > 1 || $this->getFirst()->isElement()));
+  }
+  
+  public function isSimple() {
     
     return (!$this->hasElementChildren() && $this->hasChildren());
+  }
+  
+  /**
+   * Test wether actual element has children or not
+   * @return boolean The children actual existenz fact (or not)
+   */
+  
+  public function hasElementChildren() { // TODO remove
+    
+    return $this->isComplex();
+  }
+  
+  public function isTextElement() { // TODO remove
+    
+    return $this->isSimple();
   }
   
   public function isText() {
@@ -969,10 +996,14 @@ class XML_Element extends DOMElement implements XML_Composante {
     
     $oResult = $this->cloneNode(true);
     
-    if ($bIndent) $oResult->formatOutput();
-    if ($bFormat) $oResult = htmlspecialchars((string) $oResult);
-    
-    if ($bContainer) $oResult = new HTML_Tag('pre', wordwrap($oResult, 100));
+    if ($oResult) { // TODO, check if isReal()
+      
+      if ($bIndent) $oResult->formatOutput();
+      if ($bFormat) $oResult = htmlspecialchars((string) $oResult);
+      
+      if ($bContainer) $oResult = new HTML_Tag('pre', wordwrap($oResult, 100));
+      
+    } else dspm(t('Impossible de créer l\'élément'), 'error');
     
     return $oResult;
   }

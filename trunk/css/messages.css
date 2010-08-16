@@ -50,6 +50,9 @@
 .messages div.element:hover .hidden { display: block; }
 /*.messages div.element .hidden:hover { display: none; }*/
 
+.messages div.array { display: inline; border: 1px solid transparent; }
+.messages div.array:hover { border: 1px solid #aaa; }
+
 /* Specials */
 
 .messages-xml li:before { 

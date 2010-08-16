@@ -2,6 +2,7 @@
 
 class XML_Action extends XML_Document {
   
+  private $oParent = null; // parent action, null if not an action
   private $oPath = null;
   private $oPathResume = null;
   private $sName = '';
@@ -18,7 +19,9 @@ class XML_Action extends XML_Document {
   public $aSubActions = array();
   private $oResume = null;
   
-  public function __construct($mPath = null, $oRedirect = null, $aProcessors = array()) {
+  public function __construct($mPath = null, $oRedirect = null, $aProcessors = array(), $oParent = null) {
+    
+    $this->oParent = $oParent;
     
     if ($mPath) { // allow anonymouse action
       
@@ -45,6 +48,11 @@ class XML_Action extends XML_Document {
       parent::__construct((string) $this->getPath(), MODE_EXECUTION);
       
     } else parent::__construct();
+  }
+  
+  public function getParent() {
+    
+    return $this->oParent;
   }
   
   private function getDirectory() {
@@ -139,7 +147,8 @@ class XML_Action extends XML_Document {
   
   private function setVariableElement($oElement, $mVariable) {
     
-    if ($sVariable = $oElement->getAttribute('set-variable')) {
+    if (($sVariable = $oElement->getAttribute('set-variable', SYLMA_NS_EXECUTION)) ||
+      ($sVariable = $oElement->getAttribute('set-variable'))) { // TODO remove no namespaced one
       
       $this->setVariable($sVariable, $mVariable);
       if (Controler::useStatut('action/report')) dspm(xt('Ajout de la variable "%s" : %s', $sVariable, Controler::formatResource($mVariable)), 'action/report');
@@ -178,7 +187,7 @@ class XML_Action extends XML_Document {
           
         } else {
           
-          dspm(array(xt('runInterfaceList() : L\'élément suivant n\'est pas permis dans %s ', $this->getPath()->parse()), $oChild->messageParse()), 'action/error');
+          dspm(array(xt('runInterfaceList() : L\'élément %s n\'est pas permis dans %s ', view($oChild), $this->getPath()->parse())), 'action/error');
           $oChild->remove();
         }
         
@@ -188,7 +197,7 @@ class XML_Action extends XML_Document {
     if ($aResults) {
       
       if (count($aResults) == 1) $mResult = $aResults[0];
-      else $mResult = new XML_NodeList($aResults);
+      else $mResult = $aResults;//$mResult = new XML_NodeList($aResults);
     }
     
     return array($mResult, ($aResults));
@@ -211,12 +220,15 @@ class XML_Action extends XML_Document {
     if ($sActionMethod == 'if') {
       
       if (Controler::useStatut('action/report'))
-        dspm(xt('Test [%s] : %s &gt; %s', view($oElement), view($mObject), view((bool) $mObject)), 'action/report');
+        dspm(xt('Condition [%s] : %s &gt; %s', view($oElement), view($mObject), view((bool) $mObject)), 'action/report');
       
       if ($mObject) $oResult = $this->buildArgument($oElement->getChildren());
       $bReturn = $oElement->testAttribute('return', true);
       
     } else if ($sActionMethod == 'if-not') {
+      
+      if (Controler::useStatut('action/report'))
+        dspm(xt('Condition [%s] : %s &gt; %s', view($oElement), view($mObject), view((bool) $mObject)), 'action/report');
       
       if (!$mObject) $oResult = $this->buildArgument($oElement->getChildren());
       $bReturn = $oElement->testAttribute('return', true);
@@ -366,7 +378,7 @@ class XML_Action extends XML_Document {
         
         // build
         
-        $oAction = new XML_Action($oPath, $oRedirect, $this->aProcessors);
+        $oAction = new XML_Action($oPath, $oRedirect, $this->aProcessors, $this);
         $mResult = $oAction->parse();
         
         // check result
@@ -619,6 +631,56 @@ class XML_Action extends XML_Document {
         
       break;
       
+      case 'element' : // used to handle html element
+        
+        if (!$oElement->hasChildren() || !$oElement->getFirst()->isElement()) {
+          
+          $this->dspm(xt('L\'élément %s ne possède pas d\'enfant valide', view($oElement)), 'action/error');
+          
+        } else { // validated
+          
+          $mResult = $this->buildArgument($oElement->getFirst()->remove());
+          $bRun = true;
+        }
+        
+      break;
+      
+      /**
+       * Create attribute XML_Attribute
+       * [optional] attribute name : name of the builded attribute
+       * first child : builded attribute name or-
+       * second child : content of the attribute transformed to string
+       */
+      
+      case 'attribute' :
+        
+        if (!$oElement->hasChildren() || !$oElement->getFirst()->isElement()) {
+          
+          $this->dspm(xt('L\'élément %s ne possède pas d\'enfant valide', view($oElement)), 'action/error');
+          
+        } else { // validated
+          
+          if (!$sName = $oElement->getAttribute('name')) {
+            
+            if ($oElement->countChildren() < 2) {
+              
+              $this->dspm(xt('Eléments enfants insuffisant dans %s ou attribut %s nécessaire',
+                view($oElement),
+                new HTML_Strong('name')), 'action/error');
+              
+            } else {
+              
+              $sName = (string) $this->buildArgument($oElement->getFirst()->remove());
+            }
+          }
+          
+          $sContent = (string) $this->buildArgument($oElement->getFirst()->remove());
+          
+          $mResult = new XML_Attribute($sName, $sContent);
+        }
+        
+      break;
+      
       case 'action' :
         
         list($mResult, $bRun) = $this->buildArgumentAction($oElement);
@@ -717,7 +779,7 @@ class XML_Action extends XML_Document {
           
         } else {
           
-          dspm(array(t('Argument d\'action incorrect, nom inconnu'), $oElement->messageParse()), 'action/error');
+          dspm(xt('Elément d\'action %s inconnu', view($oElement)), 'action/error');
         }
         
       break;
@@ -725,7 +787,7 @@ class XML_Action extends XML_Document {
     
     $this->setVariableElement($oElement, $mResult);
     
-    if (Controler::useStatut('action/report')) dspm(array(xt('Exécution [%s] :', view($oElement)),view($mResult, false)), 'action/report');
+    // if (Controler::useStatut('action/report')) dspm(array(xt('Exécution [%s] :', view($oElement)),view($mResult, false)), 'action/report');
     
     // Run children if allowed
     
@@ -760,6 +822,8 @@ class XML_Action extends XML_Document {
     
     $mResult = null;
     $sAction = 'default';
+        
+    // msg
     
     if ($oArgument instanceof XML_Element) { // XML_Element
       
@@ -767,22 +831,34 @@ class XML_Action extends XML_Document {
         
         /* Execution */
         
-        $sAction = 'Executable';
+        if (Controler::useStatut('action/report') && $oArgument->isComplex())
+          dspm(xt('Build:%s [%s]',
+            new HTML_Span('start', array('style' => 'color: green')),
+            view($oArgument)), 'action/report');
+        
         $mResult = $this->buildArgumentExecution($oArgument);
+        
+        // msg
+        if (Controler::useStatut('action/report')) {
+          
+          if ($oArgument->isComplex())
+            $oContent = xt('Build:%s [%s] &gt; ', new HTML_Span('end', array('style' => 'color: red')), view($oArgument));
+          else
+            $oContent = xt('Build [%s] &gt; ', view($oArgument));
+          
+          dspm(array($oContent, view($mResult, false)), 'action/report');
+        }
         
       } else if ($oArgument->useNamespace(SYLMA_NS_INTERFACE)) {
         
         /* Interface */
         
-        $sAction = 'Interface';
         dspm(array(t('Aucune méthode ne peut être appellée ici !'), $oArgument->messageParse()), 'action/error');
         $mResult = null;
         
       } else if ($oProcessor = $this->getProcessor($oArgument->getNamespace())) {
         
         /* Other Processors */
-        
-        $sAction = 'Processus';
         
         $this->replaceAttributesVariables($oArgument);
         $mResult = $this->runProcessor($oArgument, $oProcessor);
@@ -791,12 +867,14 @@ class XML_Action extends XML_Document {
         
         /* Unknown namespace -> copy element */
         
-        $sAction = 'Element';
+        if (Controler::useStatut('action/report')) dspm(xt('Copy [%s]', view($oArgument)), 'action/report');
         
         $mResult = clone $oArgument;
         $mResult->cleanChildren();
         
         $this->replaceAttributesVariables($mResult);
+        
+        $this->setVariableElement($oArgument, $mResult);
         
         if ($oArgument->hasChildren()) {
           
@@ -810,41 +888,48 @@ class XML_Action extends XML_Document {
       
     } else if ($oArgument instanceof XML_NodeList) {
       
-      $sAction = 'List';
-      $oContainer = new XML_Element();
-      foreach ($oArgument as $oChild) $oContainer->add($this->buildArgument($oChild));
+      /* NodeList */
       
-      $mResult = $oContainer->getChildren();
+      $aResult = array();
+      foreach ($oArgument as $oChild) $aResult[] = $this->buildArgument($oChild);
+      
+      if ($aResult) {
+        
+        if (count($aResult) > 1) $mResult = $aResult;
+        else $mResult = $aResult[0];
+      }
+      
+      if (Controler::useStatut('action/report'))
+        dspm(array(xt('List [%s] &gt; ', view($oArgument)), view($mResult)), 'action/report');
       
     } else if ($oArgument->isText()) {
       
-      $sAction = 'Text';
-      //$mResult = (string) $oArgument;
+      /* Text */
+      
       $mResult = $oArgument->getValue();
       
       if ($oArgument->getParent()->testAttribute('parse-variables', false, SYLMA_NS_EXECUTION))
         $mResult = $this->replaceVariables($mResult, true);
       
+      if (Controler::useStatut('action/report'))
+        dspm(array(xt('Text [%s] &gt; ', view($oArgument)), view($mResult)), 'action/report');
+      
     } else if ($oArgument instanceof XML_CData) {
       
-      $sAction = 'CData';
       $mResult = clone $oArgument;
       
       if ($oArgument->getParent()->testAttribute('parse-variables', false, SYLMA_NS_EXECUTION))
         $mResult = $this->replaceVariables($mResult, true);
       
+      if (Controler::useStatut('action/report'))
+        dspm(array(xt('CData [%s] &gt; ', view($oArgument)), view($mResult)), 'action/report');
+      
     } else if ($oArgument instanceof XML_Comment) {
       
-      $sAction = 'Comment';
       $mResult = clone $oArgument; // TODO : generate DOMComment
     }
     
     // msg
-    
-    if (Controler::useStatut('action/report')) {
-      
-      dspm(array(xt('Build [%s] : ', new HTML_Strong($sAction)), view($mResult, false)), 'action/report');
-    }
     
     return $mResult;
   }

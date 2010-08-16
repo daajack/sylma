@@ -102,7 +102,7 @@ class Controler {
         
         // Get then send the action
         
-        $oAction = new XML_Action(self::getPath(), $oRedirect);
+        $oAction = new XML_Action(self::getPath(), $oRedirect, null, self::getWindow());
         
         if ($oAction->isEmpty() && SYLMA_EMPTY_REDIRECT) self::errorRedirect(); // no rights / empty main action
         else {
@@ -594,7 +594,7 @@ class Controler {
           
         } else $oContent = '';
         
-        $aValue = array(xt('array[%s](%s)', new HTML_Strong(count($mArgument)), $oContent), 'orange');
+        $aValue = array(new HTML_Div(xt('array[%s](%s)', new HTML_Strong(count($mArgument)), $oContent), array('class' => 'array')), 'violet');
         
       } else if (is_object($mArgument)) {
         
@@ -633,17 +633,20 @@ class Controler {
           
         } else if ($mArgument instanceof XML_Element) {
           
-          if (MESSAGES_SHOW_XML) {
+          if ($mArgument->isReal()) { // prevent from dom lost cf. http://bugs.php.net/bug.php?id=39593
             
-            $oContainer = $mArgument->view(true, true, $bDecode);
-            // $oContainer = new HTML_Span;
-            $oContainer->addClass('hidden');
-            
-            $aValue = array(new HTML_Div(array(
-              strtoupper($mArgument->getName()),
-              $oContainer), array('class' => 'element')), 'blue');
-            
-          } else $aValue = array(new HTML_Span($mArgument->viewResume(160, false)), 'gray');
+            if (MESSAGES_SHOW_XML) {
+              
+              $oContainer = $mArgument->view(true, true, $bDecode);
+              // $oContainer = new HTML_Span;
+              $oContainer->addClass('hidden');
+              
+              $aValue = array(new HTML_Div(array(
+                strtoupper($mArgument->getName()),
+                $oContainer), array('class' => 'element')), 'blue');
+              
+            } else $aValue = array($mArgument->getName(), 'gray');// else $aValue = array(new HTML_Span($mArgument->viewResume(160, false)), 'gray');
+          } else $aValue = array(new HTML_Span('-DEAD-', array('class' => 'element')), 'blue');
           
         } else if ($mArgument instanceof XML_NodeList) {
           
@@ -666,7 +669,7 @@ class Controler {
             
           } else $oContent = '';
           
-          $aValue = array(xt('XML_NodeList[%s](%s)', new HTML_Strong($mArgument->length), $oContent), 'green');
+          $aValue = array(new HTML_Div(xt('XML_NodeList[%s](%s)', new HTML_Strong($mArgument->length), $oContent), array('class' => 'array')), 'green');
           
         } else if ($mArgument instanceof XML_Comment) {
           
@@ -680,7 +683,8 @@ class Controler {
           
         } else if ($mArgument instanceof XML_Text) {
           
-          $aValue = array((string) $mArgument, 'green');
+          $aValue = array(stringResume($mArgument, $iMaxLength), 'orange');
+          
         } else {
           
           $sValue = get_class($mArgument);

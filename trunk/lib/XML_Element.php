@@ -37,18 +37,8 @@ class XML_Element extends DOMElement implements XML_Composante {
   
   public function isReal() {
     
-    //try {
-      
-      if (@$this->parentNode) return true;
-      else return false;
-      
-    //} catch (Exception $e) {
-      
-      //dspm(xt('Elément invalide : %s', $e->getMessage()), 'error');
-      //return false;
-    //}
-    
-    //return true;
+    if (isset($this->localName)) return true;
+    else return false;
   }
   
   /**

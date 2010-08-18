@@ -735,10 +735,10 @@ class XML_Document extends DOMDocument {
     
     if (!$this->isEmpty()) {
       
-      if ($bHtml) $sResult = parent::saveXML(null, LIBXML_NOEMPTYTAG); //
+      if ($bHtml) $sResult = parent::saveXML(null); //LIBXML_NOEMPTYTAG
       else {
         
-        if ($bDeclaration) $sResult = parent::saveXML();
+        if ($bDeclaration) $sResult = parent::saveXML(); // TODO (?) empty tag ar not closed with ../> but with closing tag
         else $sResult = parent::saveHTML(); // entity encoding
       }
     }

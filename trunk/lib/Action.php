@@ -800,7 +800,7 @@ class XML_Action extends XML_Document {
     
     // msg
     
-    if (Controler::useStatut('action/report') && $bSubReturn) {
+    /*if (Controler::useStatut('action/report') && $bSubReturn) {
       
       dspm(array(xt('%s return sub-result  :', view($oElement)), view($mSubResult, false)), 'action/report');
     }
@@ -824,6 +824,8 @@ class XML_Action extends XML_Document {
     $sAction = 'default';
         
     // msg
+    
+    if ($oArgument instanceof XML_Document) $oArgument = $oArgument->getRoot(); // XML_Document => XML_Element
     
     if ($oArgument instanceof XML_Element) { // XML_Element
       
@@ -898,6 +900,15 @@ class XML_Action extends XML_Document {
         if (count($aResult) > 1) $mResult = $aResult;
         else $mResult = $aResult[0];
       }
+      
+      /*$oResult = new XML_Element('undefined');
+      foreach ($oArgument as $oChild) $oResult->add($this->buildArgument($oChild));
+      
+      if ($oResult->hasChildren()) {
+        
+        if ($oResult->countChildren() == 1) $mResult = $oResult->getFirst();
+        else $mResult = $oResult->getChildren();
+      }*/
       
       if (Controler::useStatut('action/report'))
         dspm(array(xt('List [%s] &gt; ', view($oArgument)), view($mResult)), 'action/report');

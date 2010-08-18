@@ -480,7 +480,7 @@ class HTML_Action extends XML_Action {
     } else {
       
       $oView->formatOutput();
-      return $sDocType."\n".$oView->display(false);
+      return $sDocType."\n".$oView->display(false, true);
     }
   }
   

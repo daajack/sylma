@@ -301,7 +301,7 @@ class XML_Document extends DOMDocument {
       
       if (!@parent::loadXML($sContent)) {
         
-        Controler::addMessage(t('Chargement texte impossible, contenu invalide'), 'xml/warning');
+        Controler::addMessage(array(t('Chargement texte impossible, contenu invalide :'), new HTML_Hr, $sContent), 'xml/warning');
         return false;
         //if (DEBUG) echo 'Chargement texte impossible : '.xmlize($sContent).new HTML_Br;
         

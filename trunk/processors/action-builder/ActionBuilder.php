@@ -67,8 +67,9 @@ class ActionBuilder extends XML_Processor  {
         //dspm(array(view($oElement), ' -> ', view($this->isFirst())), 'action/report');
         if ($this->isFirst()) { // root object
           
-          
           $oElement->set($this->buildChildren($oElement));
+          
+          //$this->replaceMethodsDefault($oElement, $oAction);
           
           /*if ($oElement->getName() == 'replace-events') {
             
@@ -80,7 +81,7 @@ class ActionBuilder extends XML_Processor  {
           
           $mResult = new XML_Document(new HTML_Div($oElement));
           
-          $this->buildResult($this->parseAll($mResult));
+          $this->buildResult($this->parseAll($mResult, $oAction));
           
           $mResult = $mResult->getChildren();
           
@@ -170,10 +171,10 @@ class ActionBuilder extends XML_Processor  {
    * Adapt objects and methods for last parsing to js object.
    */
   
-  private function parseAll($oDocument) {
+  private function parseAll($oDocument, $oAction) {
     
-    $this->parseObjects($oDocument->query("//la:layout | //la:layer | //la:object", $this->aNS));
-    $this->parseMethods($oDocument->query("//la:method", $this->aNS));
+    $this->parseObjects($oDocument->query("//la:layout | //la:layer | //la:object", $this->aNS), $oAction);
+    $this->parseMethods($oDocument->query("//la:method | //la:event", $this->aNS), $oAction);
     
     return $oDocument->extractNS(SYLMA_NS_ACTIONBUILDER, false); // Extract action tree
   }
@@ -182,7 +183,7 @@ class ActionBuilder extends XML_Processor  {
    * clone some attributes, define class, build references and set the name
    */
    
-  private function parseObjects($oElements) {
+  private function parseObjects($oElements, $oAction) {
     
     foreach ($oElements as $oElement) {
       
@@ -248,13 +249,13 @@ class ActionBuilder extends XML_Processor  {
    * build references and set path to node
    */
   
-  private function parseMethods($oElements) {
+  private function parseMethods($oElements, $oAction) {
     
     $oPreviousParent = null;
     
     foreach ($oElements as $oElement) {
       
-      if (!$oElement->getId()) $this->buildMethod($oElement, $oAction);
+      if (!$oElement->getId()) $oElement = $oElement->replace($this->buildMethod($oElement, $oAction));
       
       if ($oElement->hasAttribute('event') && ($oRefNode = $this->buildReference($oElement))) {
         
@@ -271,16 +272,21 @@ class ActionBuilder extends XML_Processor  {
               
             } while ($oParent && !$oParent->hasAttribute('id-node'));
             
-            //("ancestor::*[namespace-uri() = '".SYLMA_NS_ACTIONBUILDER."' and @id-node][position() = 1]");
-            $oParentNode = $oElement->getDocument()->get("//*[@id='{$oParent->getAttribute('id-node')}']");
+            if (!$oParent) dspm(xt('Aucun parent valide pour %s dans %s', view($oElement), view($oElement->getDocument())), 'action/error');
+            else {
             
-            $sPath = '#'.$oParentNode->getId().' > '.$oRefNode->getCSSPath($oParentNode);
-            $oElement->setAttribute('path-node', $sPath);
-            
-            // to avoid too much pass, save path
-            
-            $oPreviousParent = $oElement->getParent();
-            $sPreviousPath = $sPath;
+              //("ancestor::*[namespace-uri() = '".SYLMA_NS_ACTIONBUILDER."' and @id-node][position() = 1]");
+              
+              $oParentNode = $oElement->getDocument()->get("//*[@id='{$oParent->getAttribute('id-node')}']");
+              
+              $sPath = '#'.$oParentNode->getId().' > '.$oRefNode->getCSSPath($oParentNode);
+              $oElement->setAttribute('path-node', $sPath);
+              
+              // to avoid too much pass, save path
+              
+              $oPreviousParent = $oElement->getParent();
+              $sPreviousPath = $sPath;
+            }
             
           } else $oElement->setAttribute('path-node', $sPreviousPath);
         }

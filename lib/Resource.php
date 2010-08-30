@@ -450,7 +450,7 @@ class XML_Directory extends XML_Resource {
     return null;
   }
   
-  public function getDistantFile($aPath, $bDebug = true) {
+  public function getDistantFile($aPath, $bDebug = false) {
     
     if ($aPath) {
       
@@ -600,6 +600,11 @@ class XML_Directory extends XML_Resource {
       'name' => $sName));
   }
   
+  public function parse() {
+    
+    return new HTML_A(Controler::getSettings('modules/module[@name="explorer"]/path').'?path='.$this->getFullPath(), $this->getFullPath());
+  }
+  
   public function __toString() {
     
     if ($this->getFullPath()) return $this->getFullPath();
@@ -637,7 +642,7 @@ class XML_File extends XML_Resource {
       
       $this->doExist(true);
       
-    } else if ($bDebug) Controler::addMessage(xt('Fichier "%s" introuvable dans "%s" !', new HTML_Strong($sName), new HTML_Strong((string) $oParent)), 'file/notice');
+    } else if ($bDebug) dspm(xt('Fichier %s introuvable dans %s', view($sName), $oParent->parse()), 'file/notice');
   }
   
   public function getLastChange() {

@@ -613,7 +613,7 @@ class XML_Element extends DOMElement implements XML_Composante {
         
         if (!($mContent instanceof XML_Element)) Controler::addMessage(array(t('L\'élément parent ne peut être remplacé que par un objet XML_Element !'), $this->messageParse()), 'xml/error');
         else {
-          
+          // TODO : strange things
           if ($mContent->isDefaultNamespace($mContent->getNamespace())) {
             //$oResult = $this->getDocument()->set($mContent); return $oResult;
             

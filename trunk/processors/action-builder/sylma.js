@@ -167,7 +167,7 @@ var sylma = {
           else this.dsp('Type \'' + sType + '\' inconnu dans ' + sKey + ' !'); // JS Others
         }
       }
-      
+      //sylma.dsp(sPath);
       if (object['methods']) this.buildMethods(object, oResult);
       
       return oResult;
@@ -204,9 +204,9 @@ var sylma = {
                 if (eNode.length) eNode = eNode[0];
                 
               } else eNode = $(method['id-node']);
-              
+              //sPath = method['path-node'] ? method['path-node'] : '#' + method['id-node']
               if ($type(eNode) == 'element') {
-                
+                //sylma.dsp(sPath + ' (' + oParent['sylma-path'] + ') / ' + sMethod);
                 eNode.store('ref-object', oParent); // store parent object in node
                 //sylma.dsp(method['path-node'] + ' :: ' + method['id-node']);
                 if (method.limit) {

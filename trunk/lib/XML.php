@@ -315,24 +315,13 @@ class XML_Text extends DOMText implements XML_Composante {
 class XML_NodeList implements Iterator {
   
   private $aNodes = array();
-  public $length;
+  public $length = 0;
   protected $iIndex = 0;
   private $aStore = array();
   
-  public function __construct($oNodeList = null) {
+  public function __construct($mValues = null) {
     
-    if ($oNodeList) {
-      
-      foreach ($oNodeList as $oNode) $this->aNodes[] = $oNode;
-      
-      if (is_array($oNodeList)) $this->length = count($oNodeList);
-      else if ($oNodeList instanceof DOMNodeList || $oNodeList instanceof DOMNamedNodeMap) $this->length = $oNodeList->length;
-      else Controler::addMessage('NodeList : Type invalide !', 'xml/error');
-      
-    } else {
-      
-      // Controler::addMessage('NodeList : Tableau vide !', 'xml/warning');
-    }
+    if ($mValues) $this->add($mValues);
   }
   
   public function toArray($sMode = null) {
@@ -419,6 +408,26 @@ class XML_NodeList implements Iterator {
   public function valid() {
     
     return ($this->iIndex < count($this->aNodes));
+  }
+  
+  public function addNode($mValue) {
+    
+    $this->aNodes[] = $mValue;
+    $this->length++;
+    
+  }
+  
+  public function add($mValue) {
+    
+    if ($mValue) {
+      
+      if (is_array($mValue) || // TODO, bad test
+        (is_object($mValue) && ($mValue instanceof DOMNodeList || $mValue instanceof DOMNamedNodeMap || $mValue instanceof Iterator))) {
+        
+        foreach ($mValue as $oNode) $this->addNode($oNode);
+        
+      } else $this->addNode($mValue);
+    }
   }
   
   public function store() {

@@ -2,20 +2,11 @@
 
 var sExplorerClasses = 'explorer-classes';
 
-window.addEvent('domready', function() {
-  
-  sylma.loadTree('explorer', SYLMA_EXPLORER_PATH + '.txt');
-});
-
 var oExplorerClasses = sylma[sExplorerClasses] = {
   
   'resource' : new Class({
     
     Extends : sylma.classes.layer,
-    initialize : function(sPath) {
-      
-      this.path = sPath
-    },
     
     replace : function(sPath) {
       

@@ -424,7 +424,22 @@ class Controler {
       foreach (self::getRedirect()->getDocuments() as $sKey => $oDocument) $nItem->add($sKey, ': ', view($oDocument, false));
     }
     
-    $oView->addMultiItem(new HTML_Strong(t('Fenêtre').' : '), self::getWindowType());
+    
+    $sPath = self::getPath()->getSimplePath();
+    if (array_key_exists($sPath, self::$aResults)) {
+      
+      $oResults = new HTML_Div();
+      
+      foreach (self::$aResults[$sPath] as $sWindow => $mResult) {
+        
+        if (is_array($mResult))
+          foreach ($mResult as $iKey => $sResult) $oResults->add(view(new HTML_Tag($sWindow, new XML_CData($sResult), array('path' => $sPath)), false));
+      }
+      
+    } else $oResults = null;
+    //$oResults = view(self::$aResults);
+    
+    $oView->addMultiItem(new HTML_Strong(t('Fenêtre').' : '), self::getWindowType(), new HTML_Br, $oResults);
     $oView->addMultiItem(new HTML_Strong(t('Date & heure').' : '), date('j M Y').' - '.date('H:i'));
     $oView->addMultiItem(new HTML_Strong(t('Statistiques XML').' : '), XML_Controler::viewStats());
     $oView->addMultiItem(new HTML_Strong(t('Resources').' : '),

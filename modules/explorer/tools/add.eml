@@ -3,7 +3,7 @@
   <le:settings>
     <le:name>Créer une resource</le:name>
   </le:settings>
-  <div>
+  <div id="explorer-tools-add-directory">
     <a href="#">
       <span>Créer un répertoire</span>
       <la:event name="click"><![CDATA[%ref-object%.addDirectory.show();

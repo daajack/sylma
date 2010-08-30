@@ -263,13 +263,10 @@ class ActionBuilder extends XML_Processor  {
           $oElement->setAttribute('id-node', $sRefId);
           
         } else { // refNode has no ID, get parent first ID'ed
-          
-          if ($oElement->getParent() !== $oPreviousParent) {
+          if ($oElement->getParent() !== $oPreviousParent) { // if methods are siblings
             
             $oParent = $oElement;
-            
             do {
-              
               $oParent = $oParent->getParent(SYLMA_NS_ACTIONBUILDER);
               
             } while ($oParent && !$oParent->hasAttribute('id-node'));
@@ -304,7 +301,7 @@ class ActionBuilder extends XML_Processor  {
     switch ($sRefAxis) {
       
       case 'parent' :
-        
+
         if (!$oElement->isRoot()) $oRefNode = $oElement->getParent();
         else dspm(xt('ActionBuilder : Référence impossible, l\'objet %s n\'a pas de parent dans %s', view($oElement), $this->getAction()->getPath()->parse()), 'action/error');
         

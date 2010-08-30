@@ -32,30 +32,28 @@
         </le:get-argument>
       </le:string>
     </la:property>
-    <div class="clear-block" style="overflow: auto;">
-      <la:replace-events>
-        <div>
-          <a href="#">
-            <la:event name="click"><![CDATA[$('explorer-messages').getChildren().fade('in').setStyle('height', 'auto');]]></la:event>
-            <span>SM</span>
-          </a>
-          <a href="#">
-            <la:event name="click"><![CDATA[var layer = %ref-object%;
+    <div class="clear-block">
+      <div>
+        <a href="#">
+          <la:event name="click"><![CDATA[$('explorer-messages').getChildren().fade('in').setStyle('height', 'auto');]]></la:event>
+          <span>SM</span>
+        </a>
+        <a href="#">
+          <la:event name="click"><![CDATA[var layer = %ref-object%;
 
 sylma.explorer.tools.reset();
 
 return layer.update({'path' : layer.parentDirectory});
 
 ]]></la:event>
-            <img src="[$directory]/directory-up.png"/>
-          </a>
-          <span>
-            <le:string>
-              <le:get-argument name="path"/>
-            </le:string>
-          </span>
-        </div>
-      </la:replace-events>
+          <img src="[$directory]/directory-up.png"/>
+        </a>
+        <span>
+          <le:string>
+            <le:get-argument name="path"/>
+          </le:string>
+        </span>
+      </div>
       <le:get-argument return="false" name="path">
         <li:browse>
           <le:array/>

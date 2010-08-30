@@ -48,15 +48,18 @@ class XML_Element extends DOMElement implements XML_Composante {
     
     if ($sNamespace === null) $sNamespace = $this->getNamespace();
     
-    if ($this->getNamespace() === $sNamespace) {
+    if ($this->useNamespace($sNamespace)) {
       
       $iPrevious = 1;
       $oSibling = $this;
       
       while ($oSibling = $oSibling->getPrevious()) {
         
-        if ($oSibling->isElement() && $oSibling->getNamespace() == $this->getNamespace()) $iPrevious++;
-        //if ($iPrevious > 10) {dspm('Prob'); break;}
+        if (!$oSibling->useNamespace($sNamespace)) {
+          
+          $iPrevious += $oSibling->getChildren($sNamespace, null)->length;
+          
+        } else if ($oSibling->isElement()) $iPrevious++;
       }
       
       $sPath = '*:nth-child('.$iPrevious.')';
@@ -657,9 +660,28 @@ class XML_Element extends DOMElement implements XML_Composante {
    * Return the list of children of the current element with {@link $childNodes}
    * @return XML_NodeList The children :)
    */
-  public function getChildren() {
+  public function getChildren($sNamespace = null, $mDepth = null) {
     
-    return new XML_NodeList($this->childNodes);
+    if ($sNamespace) {
+      
+      $lResult = new XML_NodeList();
+      
+      if ($this->isComplex()) {
+        
+        foreach ($this->getChildren() as $oChild) {
+          
+          if ($oChild->useNamespace($sNamespace)) $lResult->add($oChild);
+          else if ($mDepth === null || $mDepth > 0) {
+            
+            if ($mDepth) $mDepth--;
+            $lResult->add($oChild->getChildren($sNamespace));
+          }
+        }
+      }
+      
+      return $lResult;
+      
+    } else return new XML_NodeList($this->childNodes);
   }
   
   /**
@@ -865,7 +887,8 @@ class XML_Element extends DOMElement implements XML_Composante {
     
     if ($sNamespace) {
       
-      if ($this->getParent()->getNamespace() != $sNamespace) return $this->getParent()->getParent($sNamespace);
+      if ($this->isRoot()) return null;
+      else if ($this->getParent()->getNamespace() != $sNamespace) return $this->getParent()->getParent($sNamespace);
       else return $this->getParent();
       
     } else return $this->parentNode;

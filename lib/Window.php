@@ -267,6 +267,18 @@ class Txt implements Main {
   
   private $sContent = '';
   
+  public function addJS($sHref, $mContent = null) {
+    
+  }
+  
+  public function addCSS($sHref = '') {
+    
+  }
+  
+  public function addOnLoad($sContent) {
+    
+  }
+  
   public function loadAction($oAction) {
     
     if ($oAction) {

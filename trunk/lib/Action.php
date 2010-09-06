@@ -1032,7 +1032,7 @@ class XML_Action extends XML_Document {
             
             $mArgument = $this->buildArgument($oChild);
             
-            if ($sKey = $oChild->getAttribute('key')) $mResult[$sKey] = $mArgument;
+            if ($sKey = $oChild->getAttribute('key', SYLMA_NS_EXECUTION)) $mResult[$sKey] = $mArgument;
             else $mResult[] = $mArgument;
           }
         }

@@ -18,12 +18,15 @@
   <method return-default="true" path="has-children" name="hasChildren"/>
   <method path="get" name="get" output="XML_Element">
     <argument name="path" format="php-string"/>
+    <argument name="namespaces" format="php-array" required="false"/>
   </method>
   <method path="read" name="read" output="php-string">
     <argument name="path" format="php-string"/>
+    <argument name="namespaces" format="php-array" required="false"/>
   </method>
   <method path="query" name="query" output="XML_NodeList">
     <argument name="path" format="php-string"/>
+    <argument name="namespaces" format="php-array" required="false"/>
   </method>
   <method path="set" name="set">
     <multiple-arguments required-count="1"/>

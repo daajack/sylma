@@ -26,7 +26,7 @@ class XML_Database {
     }
   }
   
-  private function run($sCommand) {
+  public function run($sCommand) {
     
     $oSession = $this->oSession;
     

@@ -507,9 +507,14 @@ class HTML_Action extends XML_Action {
       if (DEBUG && Controler::isAdmin()) {
         
         dsp($e->getMessage());
-        dsp($e->getFile());
-        dsp($e->getLine());
-        foreach ($e->getTrace() as $mVal) echo $mVal['file'].' ['.$mVal['line'].'] '.$mVal['function'].'<br/>';
+        dsp($e->getFile().' : ligne '.$e->getLine());
+        foreach ($e->getTrace() as $mVal) {
+          
+          echo $mVal['file'].' ['.$mVal['line'].'] '.$mVal['function'].'(';
+          //foreach ($mVal as $sKey => $mPeuimpor) echo $sKey.', ';
+          foreach ($mVal['args'] as $sKey => $mArgument) echo $sKey.' => '.view($mArgument).',<br/>';
+          echo ')<br/>';
+        }
         /*
         foreach (debug_backtrace() as $aLine1)
           foreach ($aLine1 as $aLine2) echo($aLine2);*/

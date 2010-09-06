@@ -19,9 +19,9 @@
         <le:argument>input</le:argument>
         <le:null/>
         <le:array>
-          <le:argument key="type">hidden</le:argument>
-          <le:argument key="name">redirect</le:argument>
-          <le:argument key="value">
+          <le:argument le:key="type">hidden</le:argument>
+          <le:argument le:key="name">redirect</le:argument>
+          <le:argument le:key="value">
             <le:redirect>
               <li:get-source/>
             </le:redirect>

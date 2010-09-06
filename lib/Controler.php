@@ -25,6 +25,7 @@ class Controler {
   public static $hasResult = false;
   private static $aQueries = array();
   private static $bUseMessages = false;
+  private static $sSystemPath = '';
   
   private static $aActions = null;      // Array of running actions
   
@@ -36,6 +37,8 @@ class Controler {
     
     self::$iStartTime = microtime(true);
     self::$aActions[] = new XML_Action();
+    
+    self::$sSystemPath = $_SERVER['DOCUMENT_ROOT'];
     
     // Authentification : récupération du cookie User
     self::setUser(self::loadUser());
@@ -859,6 +862,17 @@ class Controler {
     return self::$oDatabase;
   }
   
+  public static function exportDatabase() {
+    
+    $sPath = self::getSystemPath().'/'.self::getDirectory()->getRealPath().self::getSettings('@path-config');
+    $sName = 'db.xml';
+    
+    self::getDatabase()->run("export $sPath $sName");
+    dspm(xt('Donnée exportée dans %s', new HTML_Strong($sPath.'/'.$sName)), 'success');
+    
+    return '';
+  }
+  
   public static function setUser($oUser = null) {
     
     if (is_object($oUser) && get_class($oUser) == 'User') self::$oUser = $oUser;
@@ -999,6 +1013,11 @@ class Controler {
   public static function getAction() {
     
     return self::$sAction;
+  }
+  
+  public static function getSystemPath() {
+    
+    return self::$sSystemPath;
   }
   
   public static function getPath() {

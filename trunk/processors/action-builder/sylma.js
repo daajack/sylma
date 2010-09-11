@@ -29,7 +29,11 @@ var sylma = {
       
       return aResults;
       
-    } else return document.importNode(mElements, true);
+    } else {
+      
+      if (document.importNode) return window.document.importNode(mElements, true);
+      else return mElements;
+    }
   },
   
   loadTree : function(sName, sPath, oSuccess) {
@@ -566,16 +570,9 @@ sylma.classes.request = new Class({
     
     var oContainer = $('msg-admin');
     
-    if (0 && Browser.Engine.trident) {
-      
-      sylma.dsp($(oResult).children.length);
-      
-    } else {
-      
-      var oMessages = $(oResult).getElement('messages');
-      var oContent = $(oResult).getElement('content');
-      var oInfos = $(oResult).getElement('infos');
-    }
+    var oMessages = $(oResult).getElement('messages');
+    var oContent = $(oResult).getElement('content');
+    var oInfos = $(oResult).getElement('infos');
     
     oContainer.adopt(sylma.importNodes(oInfos.getFirst()), 'top');
     

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<le:action xmlns:le="http://www.sylma.org/execution" xmlns:ls="http://www.sylma.org/security" xmlns:li="http://www.sylma.org/interface" xmlns="http://www.w3.org/1999/xhtml">
+  <le:settings>
+    <le:name>Sylma</le:name>
+  </le:settings>
+  <p>Bonjour et bienvenue dans Sylma</p>
+  <p>Grâce à Sylma, vous allez pouvoir gérer de A à Z votre site.<br/>Sécurité, action, génération de formulaires sont quelqu'uns des problèmes que sylma se propose de résoudre pour vous.</p>
+</le:action>

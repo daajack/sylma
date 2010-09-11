@@ -19,4 +19,5 @@
     <argument name="remove" format="php-boolean" required="false"/>
   </method>
   <method return-default="true" path="get-original" name="getOriginalPath"/>
+  <method return-default="true" path="get-extension" name="getExtension"/>
 </class>

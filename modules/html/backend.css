@@ -37,6 +37,20 @@ table.list td, table.list th {
 /* ****** */
 /* Header */
 /* ****** */
+#user-login {
+  color: gray;
+  font-size: 10px;
+  position: absolute;
+  right: 5px;
+  text-decoration: none;
+  top: 2px;
+  z-index: 6;
+}
+
+#user-login:hover {
+  color: white;
+  text-decoration: underline;
+}
 
 h1 {
 	font-size: 22px;

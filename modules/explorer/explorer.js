@@ -171,7 +171,7 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
       var oInput = this.sub.editName.node.getElement('input[name=resource-name]');
       
       oInput.set('value', this.resource.name);
-      oInput.focus();
+      //oInput.focus();
     },
     
     updateName : function() {

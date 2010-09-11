@@ -142,8 +142,9 @@
   float: left;
   clear: right;
   border: 1px solid gray;
-  border-width: 1px 0 0 1px;
+  border-width: 1px 0 0 5px;
   padding: 2px;
+  margin-left: 10px;
   padding-right: 0;
 }
 

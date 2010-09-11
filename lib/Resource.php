@@ -602,7 +602,7 @@ class XML_Directory extends XML_Resource {
   
   public function parse() {
     
-    return new HTML_A(Controler::getSettings('modules/module[@name="explorer"]/path').'?path='.$this->getFullPath(), $this->getFullPath());
+    return new HTML_A(Controler::getSettings('module[@name="explorer"]/path').'?path='.$this->getFullPath(), $this->getFullPath());
   }
   
   public function __toString() {

@@ -876,7 +876,7 @@ class Controler {
       if ($sPath{0} != '/') $sPath = self::getSystemPath().'/'.self::getDirectory()->getRealPath().'/'.$sPath;
       
       self::getDatabase()->run("export $sPath $sName");
-      dspm(xt('Donnée exportée dans %s', new HTML_Strong($sPath.'/'.$sName)), 'success');
+      dspm(xt('Données exportées dans %s', new HTML_Strong($sPath.'/'.$sName)), 'success');
     }
     
     return '';

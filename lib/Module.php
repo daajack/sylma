@@ -3,6 +3,7 @@
 class Module {
   
   private $oDirectory = null;
+  private $aNamespaces = array();
   private $sNamespace = SYLMA_NS_XHTML;
   private $sPrefix = '';
   
@@ -16,22 +17,30 @@ class Module {
     return $this->oDirectory;
   }
   
-  public function setNamespace($sNamespace) {
+  public function setNamespace($sUri, $sPrefix, $bDefault = false) {
     
-    $this->sNamespace = $sNamespace;
+    $this->aNamespaces[$sPrefix] = $sUri;
+    
+    if ($bDefault) {
+      
+      $this->sNamespace = $sNamespace;
+      $this->sPrefix = $sPrefix;
+    }
   }
   
-  public function getNamespace() {
+  public function getNS($sPrefix) {
     
-    return $this->sNamespace;
+    if ($sPrefix) return array($sPrefix => array_val($sPrefix, $this->aNamespaces));
+    return $this->aNamespaces;
   }
   
-  public function setPrefix($sPrefix) {
+  public function getNamespace($sPrefix = null) {
     
-    $this->sPrefix = $sPrefix;
+    if ($sPrefix) return array_val($sPrefix, $this->aNamespaces);
+    else return $this->sNamespace;
   }
   
-  public function getPrefix() {
+  public function getPrefix($sName = null) {
     
     return $this->sPrefix;
   }

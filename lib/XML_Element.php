@@ -247,7 +247,11 @@ class XML_Element extends DOMElement implements XML_Composante {
   
   public function hasAttributes() {
     
-    foreach (func_get_args() as $sArg) if (!$this->getAttribute($sArg)) return false;
+    if (func_get_args()) {
+      
+      foreach (func_get_args() as $sArg) if (!$this->getAttribute($sArg)) return false;
+      
+    } else return ($this->attributes->length);
     
     return true;
   }
@@ -914,9 +918,10 @@ class XML_Element extends DOMElement implements XML_Composante {
     return $this->previousSibling;
   }
   
-  public function getNamespace() {
+  public function getNamespace($sPrefix = '') {
     
-    return $this->namespaceURI;
+    if ($sPrefix != '') return $this->lookupNamespaceURI($sPrefix);
+    else return $this->namespaceURI;
   }
   
   public function useDefaultNamespace() {

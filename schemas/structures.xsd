@@ -780,9 +780,7 @@
     </xs:annotation>
     <xs:complexContent>
       <xs:extension base="xs:annotated">
-        
-          <xs:group ref="xs:particle" minOccurs="0" maxOccurs="unbounded"/>
-          
+        <xs:group ref="xs:particle" minOccurs="0" maxOccurs="unbounded"/>
         <xs:attributeGroup ref="xs:defRef"/>
         <xs:attributeGroup ref="xs:occurs"/>
       </xs:extension>

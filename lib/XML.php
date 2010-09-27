@@ -414,7 +414,6 @@ class XML_NodeList implements Iterator {
     
     $this->aNodes[] = $mValue;
     $this->length++;
-    
   }
   
   public function add($mValue) {

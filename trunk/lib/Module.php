@@ -23,15 +23,15 @@ class Module {
     
     if ($bDefault) {
       
-      $this->sNamespace = $sNamespace;
+      $this->sNamespace = $sUri;
       $this->sPrefix = $sPrefix;
     }
   }
   
-  public function getNS($sPrefix) {
+  public function getNS($sPrefix = null) {
     
     if ($sPrefix) return array($sPrefix => array_val($sPrefix, $this->aNamespaces));
-    return $this->aNamespaces;
+    else return $this->aNamespaces;
   }
   
   public function getNamespace($sPrefix = null) {

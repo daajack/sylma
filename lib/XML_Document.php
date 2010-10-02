@@ -137,11 +137,6 @@ class XML_Document extends DOMDocument {
     else return $this->set(new XML_Element($sString, '', null, '', $this));
   }
   
-  public function createNode($sName, $oContent = '', $aAttributes = null, $sUri = null) {
-    
-    return new XML_Element($sName, $oContent, $aAttributes, $sUri, $this);
-  }
-  
   public function isEmpty() {
     
     return !$this->getRoot();
@@ -519,6 +514,11 @@ class XML_Document extends DOMDocument {
     return $mResult;
   }
   
+  public function createNode($sName, $oContent = '', $aAttributes = null, $sUri = null) {
+    
+    return new XML_Element($sName, $oContent, $aAttributes, $sUri, $this);
+  }
+  
   public function addNode($sName, $oContent = '', $aAttributes = null, $sUri = '') {
     
     if ($this->getRoot()) return $this->getRoot()->addNode($sName, $oContent, $aAttributes, $sUri);
@@ -630,8 +630,25 @@ class XML_Document extends DOMDocument {
   }
   
   /** 
-   * Parse a template with this document as parameter
+   * Check validity against W3C XMLSchema
    */
+  public function validate(XML_Document $oSchema) {
+    
+    $oParser = new XSD_Parser($oSchema, $this);
+    
+    return $oParser->validate();
+  }
+  
+  /** 
+   * Build validity model with W3C XMLSchema
+   */
+  public function getModel(XML_Document $oSchema) {
+    
+    $oParser = new XSD_Parser($oSchema, $this);
+    
+    return $oParser->parse();
+  }
+  
   public function parseXSL($oDocument, $bXML = true) {
     
     if (is_object($oDocument)) {
@@ -816,6 +833,12 @@ class XSL_Document extends XML_Document {
       $this->getProcessor()->importStylesheet($this);
       
       $sResult = $this->getProcessor()->transformToXML($oDocument);
+      
+      if (libxml_get_errors()) { // TODO, nice view
+        foreach (libxml_get_errors() as $oError) {
+          dspf(get_object_vars($oError));
+        }
+      }
       
       if ($bXML) {
         

@@ -19,9 +19,27 @@ class XML_Element extends DOMElement implements XML_Composante {
     
     parent::__construct($sName, null, $sUri);
     
-    if (!$oDocument) $oDocument = new XML_Document();
-    
-    $oDocument->add($this);
+    if (!$oDocument) {
+      
+      $oDocument = new XML_Document();
+      $oDocument->add($this);
+      
+    } else {
+      
+      $oDocument->importNode($this, 1);
+      $oDocument->add($this); // TODO ??
+      $this->remove();
+    }
+    /* else {
+      
+      if ($sUri) {
+        
+        $oElement = parent::createElementNS($sUri, $sName);
+        $oElement->add($oContent);
+        $oElement->addAttributes($aAttributes);
+      }
+      
+    } else */
     $this->set($mContent);
     
     if ($aAttributes) $this->addAttributes($aAttributes);
@@ -280,7 +298,7 @@ class XML_Element extends DOMElement implements XML_Composante {
     if ($sValue !== '' && $sValue !== null) {
       
       if (!$sUri) return parent::setAttribute($sName, checkEncoding($sValue));
-      else return parent::setAttributeNS($sUri, $sName, checkEncoding($sValue));
+      else return $this->setAttributeNS($sUri, $sName, $sValue);
       
     } else return $this->removeAttribute($sName);
   }
@@ -302,7 +320,7 @@ class XML_Element extends DOMElement implements XML_Composante {
    * @param XML_Attribute $oAttribute Attribute to add to the element
    * @return XML_Attribute The attribute added to the element
    */
-  public function addAttribute($oAttribute) {
+  /*public function addAttribute(XML_Attribute $oAttribute) {
     
     //$oAttribute = clone $oAttribute;
     
@@ -314,7 +332,7 @@ class XML_Element extends DOMElement implements XML_Composante {
     $this->setAttributeNode($oAttribute);
     
     return $oAttribute;
-  }
+  }*/
   
   /**
    * Remove all attributes then add the new ones via {@link addAttributes}
@@ -410,7 +428,7 @@ class XML_Element extends DOMElement implements XML_Composante {
         foreach ($mAttribute as $sAttribute)
           if ($oElement->hasAttribute($sAttribute)) $this->cloneAttributes($oElement, $sAttribute);
         
-      } else $this->setAttribute($mAttribute, $oElement->getAttribute($mAttribute));
+      } else if ($oAttribute = $oElement->getAttributeNode($mAttribute)) $this->setAttributeNode($oAttribute);
       
     } else {
       

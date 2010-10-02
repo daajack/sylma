@@ -15,5 +15,6 @@
   <interface class="XML_File">/sylma/interfaces/xml_file.iml</interface>
   <interface class="XML_NodeList">/sylma/interfaces/xml_nodelist.iml</interface>
   <interface class="XML_Path">/sylma/interfaces/xml_path.iml</interface>
+  <interface class="XSD_Parser">/sylma/schemas/interface.iml</interface>
   <interface class="XSL_Document">/sylma/interfaces/xsl_document.iml</interface>
 </interfaces>

@@ -13,7 +13,7 @@ function userErrorHandler($errno, $errstr, $errfile, $errline) {
       $oMessage = new HTML_Div;
       $oMessage->add(
         new HTML_Strong("ERREUR [$errno] "),
-        xt($errstr),
+        $errstr,
         new HTML_Tag('i', " - $errfile [ligne $errline]"));
         
     } else $oMessage = "ERREUR [$errno] $errstr - [$errline] - $errfile : ";//.Controler::getBacktrace();

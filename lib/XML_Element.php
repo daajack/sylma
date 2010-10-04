@@ -1037,6 +1037,7 @@ class XML_Element extends DOMElement implements XML_Composante {
       if ($bIndent) $oResult->formatOutput();
       if ($bFormat) $oResult = htmlspecialchars((string) $oResult);
       
+      //if ($bContainer) $oResult = new HTML_Tag('pre', $oResult); // TODO, not clean
       if ($bContainer) $oResult = new HTML_Tag('pre', wordwrap($oResult, 100));
       
     } else dspm(t('Impossible de créer l\'élément'), 'error');

@@ -7,7 +7,6 @@ define('SYLMA_PATH_ERROR',    '/error');
 define('SYLMA_EMPTY_REDIRECT', true); // redirect on SYLMA_PATH_ERROR if no main action is found
 
 define('SYLMA_PATH_EDITOR',   '/modules/editeur');
-define('SYLMA_PATH_SETTINGS',   '/sylma/system/root.xml');
 define('SYLMA_PATH_MODULES',   '/modules');
 
 define('SYLMA_PATH_INTERFACES', '/sylma/interfaces');
@@ -32,13 +31,6 @@ define('SYLMA_NS_FORM_SCHEMA', 'http://schemas.sylma.org/form-schema');
 define('SYLMA_HTML_TAGS', '//html:div | //html:span | //html:a | //html:ul | //html:h2 | //html:iframe | //html:textarea');
 define('SYLMA_FIELD_PREFIX', 'field-');
 define('SYLMA_USE_DB', true);
-
-$aDB = array(
-  'host' => 'localhost',
-  'user' => 'admin',
-  'password' => 'admin',
-  'database' => 'cmp',
-  'port' => 1984);
 
 define('SYLMA_SECURITY_FILE', 'directory.sml');
 define('SYLMA_DEFAULT_MODE', 0770);

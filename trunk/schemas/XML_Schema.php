@@ -2,14 +2,19 @@
 
 class XSD_Parser extends Module {
   
+  private $bModel = false; // if false, it will not build the model
+  private $bMessages = false; // if false, validation and building will stop at first error
+  private $bValid = null; // valid or not, null if not tested
+  
   private $oResult = null;
   private $oSchema = null;
   
+  private $aMessages = array();
   private $aTypes = array();
   private $aGroups = array();
   private $iID = 1;
   
-  public function __construct(XML_Document $oSchema, XML_Document $oDatas = null) {
+  public function __construct(XML_Document $oSchema, XML_Document $oDatas = null, $bModel = true, $bMessages = false) {
     
     $this->setDirectory(__file__);
     
@@ -20,6 +25,9 @@ class XSD_Parser extends Module {
     $this->oResult = new XML_Document();
     
     $this->oSchema = $oSchema;
+    
+    $this->bModel = $bModel;
+    $this->bMessages = $bMessages;
     
     $this->buildSchema($oDatas);
   }
@@ -44,7 +52,7 @@ class XSD_Parser extends Module {
       $oSchemas = new XML_Element('schemas', array(
         $this->aTypes,
         $this->aGroups,
-        new XSD_Model($oElement, $oRoot, null)), null, $this->getNamespace());
+        $oElement->getInstance(null, $oRoot)), null, $this->getNamespace());
       
       $oResult = new XML_Element('sylma-schema', array($oDatas, $oSchemas), array(
         'xmlns:html' => SYLMA_NS_XHTML, 'xmlns:lc' => $this->getSchema()), $this->getNamespace());
@@ -145,13 +153,56 @@ class XSD_Parser extends Module {
     return $mResult;
   }
   
+  public function isValid($bValid = null) {
+    
+    if ($bValid !== null) $this->bValid = $bValid;
+    
+    return $this->bValid;
+  }
+  
+  public function keepValidate() {
+    
+    return $this->useModel() || $this->useMessages() || $this->isValid();
+  }
+  
+  public function useModel() {
+    
+    return $this->bModel;
+  }
+  
+  public function useMessages() {
+    
+    return $this->bMessages;
+  }
+  
+  public function getMessages() {
+    
+    return $this->aMessages;
+  }
+  
+  public function addMessages($aMessages) {
+    
+    $this->aMessages += $aMessages;
+  }
+  
+  public function addMessage($oSource, $oMessage) {
+    
+    $this->aMessages[] = array($oSource, $oMessage);
+  }
+  
   public function parse() {
     
+    if ($this->getMessages()) dspm('Fichier invalide !');
     return $this->oResult;
   }
 }
 
-class XSD_Basic {
+abstract class XSD_Basic {
+  
+  private $iMax = 1;
+  private $iMin = 1;
+  
+  protected $sPath = '';
   
   public function __construct(XML_Element $oSource, $oParent, $oNode = null, XSD_Parser $oParser = null) {
     
@@ -176,31 +227,53 @@ class XSD_Basic {
     return $this->getParser()->getNamespace();
   }
   
+  public function getMin() {
+    
+    return $this->iMin;
+  }
+  
+  public function getMax() {
+    
+    return $this->iMax;
+  }
+  
+  public function useMessages() {
+    
+    return $this->getParser()->useMessages();
+  }
+  
+  public function keepValidate() {
+    
+    return $this->getParser()->keepValidate();
+  }
+  
   public function getSource() {
     
     return $this->oSource;
   }
   
-  public function getInstancables() {
+  public function getClasses() { // Extends : element, particle, groupRef, [type]
     
     if ($this->getParent() instanceof XSD_Particle) $aResult[] = $this;
-    else $aResult = $this->getParent()->getInstancables();
+    else $aResult = $this->getParent()->getClasses();
     
     return $aResult;
   }
   
-  public function getPath() {
+  /**
+   * Build the name if anonymous definition
+   */
+  public function getPath() { // Extends : [container : [type], [group]] / Classes : particle, groupRef
     
     if ($this->getParent()) return $this->getParent()->getPath();
-    else return 'erreur';
+    else dspm(xt('Aucun chemin parent valide pour l\'objet %s %s', view($this), view($this->getSource())), 'xml/error');
   }
 }
 
-class XSD_Container extends XSD_Basic {
+abstract class XSD_Container extends XSD_Basic {
   
   private $sName = '';
-  private $sPath = '';
-  private $bNew = false;
+  private $bNew = false; // anonymous definition
   
   protected $oParticle = null;
   
@@ -215,7 +288,7 @@ class XSD_Container extends XSD_Basic {
     }
   }
   
-  public function isNew() {
+  protected function isNew() { // Classes : type, group
     
     return $this->bNew;
   }
@@ -235,29 +308,33 @@ class XSD_Container extends XSD_Basic {
     return $this->oParticle = $oParticle;
   }
   
-  public function getElement(XML_Element $oElement) {
-    
-    return $this->getParticle()->getElement($oElement);
-  }
-  
-  public function getPath() {
+  public function getPath() { // Classes : [type], [group]
     
     if (!$this->sPath) $this->sPath = ($this->getParent() ? $this->getParent()->getPath().'/' : '').$this->getName();
     
     return $this->sPath;
   }
+  
+  public function getElement(XML_Element $oElement) { // Instances : model, [particle], group
+    
+    return $this->getParticle()->getElement($oElement);
+  }
 }
 
-class XSD_Node extends XSD_Container {
+abstract class XSD_Node extends XSD_Container {
   
   private $oType = null;
   private $sID = '';
+  
+  protected $aInstances = array(); // instanced particles derived from this particle
   
   public function __construct(XML_Element $oSource, $oParent, $oNode = null, XSD_Parser $oParser = null) {
     
     parent::__construct($oSource, $oParent, $oNode, $oParser);
     
     //$oElement = new XML_Element('model', null, array('id', $iID), $this->getNamespace());
+    
+    if ($this->getParent() && $this->getParent()->getParent() instanceof XSD_Particle) $this->setID($this->getParser()->getID());
     
     if ($sType = $oSource->getAttribute('type')) $this->oType = $this->getParser()->getType($sType, $oSource);
     else {
@@ -282,6 +359,25 @@ class XSD_Node extends XSD_Container {
     return $this->sID;
   }
   
+  public function getInstances() {
+    
+    return $this->aInstances;
+  }
+  
+  protected function addInstance(XSD_Instance $oInstance) {
+    
+    $this->aInstances[] = $oInstance;
+    
+    return $oInstance;
+  }
+  
+  protected function hasInstance(XSD_Instance $oNeedle) { // TODO : replicate of XSD_Class
+    
+    foreach ($this->aInstances as $oInstance) if ($oNeedle === $oInstance) return true;
+    
+    return false;
+  }
+  
   public function setID($iID) {
     
     return $this->sID = (string) $iID;
@@ -294,46 +390,43 @@ class XSD_Node extends XSD_Container {
   
 }
 
-class XSD_Element extends XSD_Node {
+abstract class XSD_Class extends XSD_Basic {
   
-  public function getParents() {
+  protected $aInstances = array(); // instanced particles derived from this particle
+  
+  abstract public function getInstance($oParent);
+  abstract protected function buildInstance(XSD_Instance $oParent);
+  
+  public function getInstances() {
     
-    return $this->getParent()->getInstancables();
+    return $this->aInstances;
   }
   
-  public function parse() {
+  protected function hasInstance(XSD_Instance $oNeedle) {
     
-    $oResult = new XML_Element('element', null, array(
-      'name'=> $this->getName(),
-      'type' => $this->getType(),
-      'id' => $this->getID()), $this->getNamespace());
+    foreach ($this->aInstances as $oInstance) if ($oNeedle === $oInstance) return true;
     
-    $oResult->cloneAttributes($this->getSource(), array('lc:title', 'lc:line-break'));
-    
-    return $oResult;
-  }
-}
-
-class XSD_Attribute extends XSD_Node {
-  
-  public function parse() {
-    
-    return new XML_Element('attribute', null, array('name' => $this->getName(), 'type' => $this->getType()), $this->getNamespace());
+    return false;
   }
 }
 
-class XSD_Instance {
+abstract class XSD_Instance {
   
   private $oParent = null;
   private $oClass = null;
   
-  private $aMessages = null;
+  private $aMessages = array();
   private $sStatut = '';
   
   public function __construct(XSD_Basic $oClass, XSD_Instance $oParent = null) {
     
     $this->oClass = $oClass;
     $this->oParent = $oParent;
+  }
+  
+  public function validate() {
+    
+    if ($this->keepValidate()) $this->getClass()->validate($this);
   }
   
   protected function getMessages() {
@@ -343,8 +436,38 @@ class XSD_Instance {
   
   public function addMessage($mMessage, $sContext, $sStatut) {
     
-    $this->aMessages[] = new XML_Element('message', $mMessage,
-      array('context' => $sContext, 'statut' => $sStatut), $this->getNamespace());
+    $oMessage = null;
+    
+    if ($this->getParser()->useMessages()) {
+      
+      $oMessage = new XML_Element('message', $mMessage,
+        array('context' => $sContext, 'statut' => $sStatut), $this->getNamespace());
+      
+      $this->getParser()->addMessage($this, $oMessage);
+      $this->aMessages[] = $oMessage;
+    }
+    
+    return $oMessage;
+  }
+  
+  public function addMessages($aMessages) {
+    
+    $this->aMessages += $aMessages;
+  }
+  
+  public function useMessages() { // TODO : replicate of XSD_Basic
+    
+    return $this->getParser()->useMessages();
+  }
+  
+  public function keepValidate() { // TODO : replicate of XSD_Basic
+    
+    return $this->getParser()->keepValidate();
+  }
+  
+  public function getStatut() {
+    
+    return $this->sStatut;
   }
   
   public function setStatut($sStatut) {
@@ -373,62 +496,122 @@ class XSD_Instance {
   }
 }
 
+/*** Real Classes ***/
+
+class XSD_Element extends XSD_Node {
+  
+  public function getParents() {
+    
+    return $this->getParent()->getClasses();
+  }
+  
+  public function validate(XSD_Instance $oInstance) {
+    
+    $bResult = false;
+    dspf('yo');
+    exit;
+    if ($oInstance && $this->hasInstance($oInstance)) {
+      
+      $bResult = $this->getType()->validate($oInstance);
+      
+    } else {
+      
+      if ($this->useMessages()) $oInstance->addMessage(
+        xt('L\'élément %s est manquant dans %s',
+        new HTML_Strong($this->getName()), view($oInstance->getParent())), 'content', 'invalid');
+      else $this->getParser()->isValid(false);
+      
+      // if child is required, then add it as an missing model
+      // TODO occurs
+      if ($this->keepValidate()) $this->buildInstance($oInstance->getParent()); // DEBUG
+    }
+    
+    return $bResult;
+  }
+  
+  private function buildInstance(XSD_Instance $oParent) {
+    
+    $oInstance = $this->getInstance($oParent);
+    $oParent->insert($oInstance);
+  }
+  
+  public function getInstance($oParent = null, $oNode = null) {
+    
+    return $this->addInstance(new XSD_Model($this, $oNode, $oParent));
+  }
+  
+  public function parse() {
+    
+    $oResult = new XML_Element('element', null, array(
+      'name'=> $this->getName(),
+      'type' => $this->getType(),
+      'id' => $this->getID()), $this->getNamespace());
+    
+    $oResult->cloneAttributes($this->getSource(), array('lc:title', 'lc:line-break'));
+    
+    return $oResult;
+  }
+}
+
+class XSD_Attribute extends XSD_Node {
+  
+  public function parse() {
+    
+    return new XML_Element('attribute', null, array('name' => $this->getName(), 'type' => $this->getType()), $this->getNamespace());
+  }
+}
+
 class XSD_Model extends XSD_Instance { // XSD_ElementInstance
   
-  private $oElement = array();
-  
-  private $aChildren = array();
-  private $aAttributes = array();
-  private $aElements = array();
   private $oParticle = null;
+  private $oNode = null;
   
-  private $oType = null;
-  private $sType = '';
-  
-  public function __construct(XSD_Element $oClass, XML_Element $oNode, XSD_Instance $oParent = null) {
+  public function __construct(XSD_Element $oClass, XML_Element $oNode = null, XSD_Instance $oParent = null) {
     
     parent::__construct($oClass, $oParent);
     
     $this->oNode = $oNode;
     
-    if ($oNode->isComplex()) {
+    if ($oNode) {
       
-      // complexType
-      $this->buildParticle();
+      if ($oNode->isComplex()) {
+        
+        // complexType
+        $this->buildParticle();
+        
+        if ($oNode->hasChildren()) $this->buildChildren();
+        if ($oNode->hasAttributes()) $this->buildAttributes();
+        
+      } else {
+        
+        // simpleType
+        $this->sType = $oClass->getSource()->getAttribute('type');
+      }
       
-      if ($oNode->hasChildren()) $this->buildChildren();
-      if ($oNode->hasAttributes()) $this->buildAttributes();
-      
-    } else {
-      
-      // simpleType
-      $this->sType = $oClass->getSource()->getAttribute('type');
-    }
-    
-    if ($this->getParent() && $this->getParent()->getParent() instanceof XSD_ParticleInstance) { // element ID
-      
-      if (!$sID = $this->getClass()->getID()) $this->getClass()->setID($this->getParser()->getID());
-    }
+    } else $this->setStatut('missing');
     
     $this->validate();
   }
   
-  public function validate() {
-    
-    $this->getClass()->getType()->validate($this);
-  }
-  
   private function buildParticle() {
     
-    if ($this->getClass()) {
+    if (!$this->getClass()) dspm(xt('Aucun élément classe défini pour %s', view($this)), 'xml/error');
+    else {
       
-      if ($this->getClass()->getType()->isSimple()) { // node is mixed but type is simple
+      if ($this->getClass()->getType()->isComplex()) { // complex type
         
-        // TODO : msg bad type
-        $oParticle = new XSD_Particle(new XML_Element('sequence', null, null, $this->getNamespace()), null);
-        $this->oParticle = new XSD_ParticleInstance($oParticle, $this);
+        $this->oParticle = $this->getClass()->getType()->getParticle()->getInstance($this);
         
-      } else $this->oParticle = $this->getClass()->getType()->getParticle()->getInstance($this);
+      } else { // simple type
+        
+        if ($this->getNode()) { // node is mixed but type is simple
+          
+          if ($this->useMessages()) $this->addMessage(
+            xt('L\'élément %s ne devrait pas contenir d\'autre éléments, le type %s est attendu',
+            view($this->getNode()), view($this->getSource())), 'content', 'badtype');
+          else $this->getParser()->isValid(false);
+        }
+      } 
     }
   }
   
@@ -457,15 +640,17 @@ class XSD_Model extends XSD_Instance { // XSD_ElementInstance
     foreach ($this->getNode()->getChildren() as $oChild) {
       
       if ($oCurrent = $this->getClass()->getType()->getElement($oChild)) {
-        //dspf($oCurrent->getParents());
+        
         $this->getParticle()->add($oChild, $oCurrent->getParents());
+        
+      } else {
+        
+        $this->getParser()->addMessage($oInstance, $oInstance->addMessage(
+          xt('L\'élément %s n\'est pas autorisé au sein de l\'élément %s',
+          view($oChild), view($this->getNode())), 'element', 'denied'));
+        
+        if (!$this->keepValidate()) break;
       }
-/*      {
-        
-        $aParents = array();
-        while ($oCurrent = $oCurrent->getParent()) array_unshift($aParents, $oCurrent);
-        
-        $oParent = array_pop($aParents);*/
     }
   }
   
@@ -474,57 +659,99 @@ class XSD_Model extends XSD_Instance { // XSD_ElementInstance
     // TODO
   }
   
-  private function getAttributesMessages() {
-    
-    $aResult = array();
-    foreach ($this->aAttributes as $oAttribute) $aResult = $oAttribute->getMessages();
-    return $aResult;
-  }
-  
   public function parse() {
     
-    $oModel = new XML_Element('model', array($this->getMessages(), $this->getAttributesMessages()), null, $this->getNamespace());
+    $iID = $this->getParser()->getID();
     
-    $oModel->setAttribute('element', $this->getClass()->getID());
-    
-    if ($this->getNode()->isComplex()) { // complex type
-      
-      $oContent = $oModel->addNode('schema', null, null, $this->getNamespace());
-      $oContent->add($this->getParticle());
-      
-      $oModel->setAttribute('base', $this->getClass()->getType());
-      
-    } else if ($this->getClass()->getType()->hasRestrictions()) { // simple type with restrictions
-      
-      $oModel->setAttribute('base', $this->getClass()->getType());
-      
-    } else { // base type
-      
-      $oModel->setAttribute('type', $this->getClass()->getType());
-    }
-    
-    $iID = $this->getClass()->getParser()->getID();
-    $this->getNode()->setAttribute('lc:model', $iID, $this->getNamespace());
-    
-    $oModel->addAttributes(array(
+    $oModel = new XML_Element('model', null, array(
       'name' => $this->getClass()->getName(),
-      'id' => $iID));
+      'id' => $iID,
+      'element' => $this->getClass()->getID(),
+      'statut' => $this->getStatut()), $this->getNamespace());
+    
+    if ($this->getNode()) {
+      
+      $this->getNode()->setAttribute('lc:model', $iID, $this->getNamespace());
+      
+      if ($this->getNode()->isComplex()) { // complex type
+        
+        $oContent = $oModel->addNode('schema', null, null, $this->getNamespace());
+        $oContent->add($this->getParticle());
+        
+        $oModel->setAttribute('base', $this->getClass()->getType());
+        
+      } else if ($this->getClass()->getType()->hasRestrictions()) { // simple type with restrictions
+        
+        $oModel->setAttribute('base', $this->getClass()->getType());
+        
+      } else { // base type
+        
+        $oModel->setAttribute('type', $this->getClass()->getType());
+      }
+      
+      if ($this->getMessages()) $oModel->shift(new XML_Element('annotations', $this->getMessages(), null, $this->getNamespace()));
+    }
     
     return $oModel;
   }
 }
 
-class XSD_Particle extends XSD_Basic {
+class XSD_Particle extends XSD_Class {
   
   private $aChildren = array();
   
   private $aElements = array();
   private $aParticles = array();
   
-  public function __construct(XML_Element $oSource, $oParent, $oNode = null, XSD_Parser $oParser = null) {
+  public function __construct(XML_Element $oSource, $oParent) {
     
-    parent::__construct($oSource, $oParent, $oNode, $oParser);
+    parent::__construct($oSource, $oParent);
     $this->indexChildren();
+  }
+  
+  public function validate(XSD_Instance $oInstance) {
+    
+    $bResult = false;
+    
+    if ($oInstance && $this->hasInstance($oInstance)) { // valid particle
+      
+      $oInstance->shiftSeek();
+      
+      $bResult = true;
+      $iShift = 0;
+      
+      $aSubInstances = $oInstance->getChildren();
+      list(,$oSubInstance) = each($aSubInstances);
+      
+      // TODO, if sequence
+      if ($this->getMin()) {
+        
+        foreach ($this->getChildren() as $oChild) {
+          
+          if ($oChild->validate($oSubInstance)) list(,$oSubInstance) = each($aSubInstances);
+          else $bResult = false;
+        }
+      }
+      
+    } else { // missing particle
+      
+      if ($this->useMessages()) $oInstance->addMessage(
+        xt('La particule %s est manquante dans %s',
+        new HTML_Strong($this->getName()), view($this->getParent()->getSource())), 'content', 'invalid');
+      else $this->getParser()->isValid(false);
+      
+      if ($this->keepValidate()) $this->buildInstance($oInstance->getParent()); // DEBUG
+    }
+    
+    return $bResult;
+  }
+  
+  protected function buildInstance(XSD_Instance $oParent) {
+    
+    $oInstance = $this->getInstance($this, $oParent);
+    $oInstance->validate();
+    
+    $oParent->insert($oInstance);
   }
   
   public function indexChildren() {
@@ -574,6 +801,11 @@ class XSD_Particle extends XSD_Basic {
     
     return $this->aParticles;
   }
+    
+  public function getChildren() {
+    
+    return $this->aChildren;
+  }
   
   public function getElement(XML_Element $oElement) {
     
@@ -593,7 +825,10 @@ class XSD_Particle extends XSD_Basic {
   
   public function getInstance($oParent) {
     
-    return new XSD_ParticleInstance($this, $oParent);
+    $oInstance = new XSD_ParticleInstance($this, $oParent);
+    $this->aInstances[] = $oInstance; // used for final schema validation
+    
+    return $oInstance;
   }
   
   public function parse() {
@@ -608,8 +843,31 @@ class XSD_ParticleInstance extends XSD_Instance {
   
   private $aChildren = array();
   
+  private $iSeek = 0; // current validated child position
   private $aParticles = array(); // child instance particles
   private $aElements = array(); // child instance elements
+  
+  public function shiftSeek() {
+    
+    $this->iSeek++;
+  }
+  
+  public function getSeek() {
+    
+    return $this->iSeek;
+  }
+  
+  public function insert(XSD_Instance $oInstance) {
+    
+    $iIndex =$this->getSeek();
+    $aChildren = $this->getChildren();
+    
+    if ($iIndex === null || $iIndex == count($aChildren)) $this->aChildren[] = $oInstance;
+    if (!$iIndex) $this->aChildren = array($oInstance) + $aChildren;
+    else $this->aChildren = array_slice($aChildren, 0, $iIndex) + array($oInstance) + array_slice($aChildren, $iIndex);
+    
+    $this->shiftSeek();
+  }
   
   public function add(XML_Element $oElement, array $aParents) {
     
@@ -654,27 +912,42 @@ class XSD_ParticleInstance extends XSD_Instance {
         }
       }
       
-      if (!$oResult) dspm(xt('Erreur, particule %s introuvable dans le type', view($oParent)), 'xml/warning');
-      else {
-        
-        $oResult->add($oElement, $aParents);
-      }
+      if (!$oResult) dspm(xt('Erreur, particule %s introuvable dans le type', view($oParent)), 'xml/warning'); // shouldn't happend
+      else $oResult->add($oElement, $aParents);
       
     } else { // this one
       
-      $this->aChildren[] = new XSD_Model($this->getClass()->getElement($oElement), $oElement, $this);;
+      $this->aChildren[] = $this->getClass()->getElement($oElement)->getInstance($this, $oElement);
     }
+  }
+  
+  public function getChildren() {
     
-    
+    return $this->aChildren;
   }
   
   public function parse() {
     
-    $oResult = new XML_Element($this->getClass()->getSource()->getName(), $this->aChildren, null, $this->getNamespace());
+    $oResult = null;
     
-    // if first, no display
-    if ($this->getParent() instanceof XSD_ParticleInstance) return $oResult;
-    else return $oResult->getChildren();
+    if ($this->getParent() instanceof XSD_ParticleInstance) { // is not root particle
+      
+      $oResult = new XML_Element($this->getClass()->getSource()->getName(), null, array(
+        'statut' => $this->getStatut()), $this->getNamespace());
+      if ($this->getMessages()) { // if messages, add 2 children
+        
+        $oResult->addNode('annotations', $this->getMessages(), null, $this->getNamespace());
+        $oResult->addNode('schema', $this->aChildren, null, $this->getNamespace());
+        
+      } else $oResult->add($this->aChildren);
+      
+    } else { // if first, do not display itself
+      
+      $this->getParent()->addMessages($this->getMessages());
+      $oResult = $this->aChildren;
+    }
+    
+    return $oResult;
   }
   
 }
@@ -689,11 +962,25 @@ class XSD_Group extends XSD_Container {
     $this->build();
   }
   
+  private function validate($oInstance) {
+    
+    $this->getParticle()->validate($oInstance->getParticle());
+  }
+  
+  private function getInstance(XSD_Instance $oParent) {
+    
+    // TODO occurs
+    $oElement = new XML_Element('group', null, array('ref' => $this->getName()), $this->getNamespace());
+    $oGroupRef = new XSD_GroupReference($oElement, $oParent);
+    
+    return $oGroupRef->getInstance($oParent); 
+  }
+  
   private function build() {
     
     if (!$oFirst = $this->getSource()->getFirst()) {
       
-      dspm('Impossible de construire le groupe, aucun enfant');
+      dspm(xt('Impossible de construire le groupe %s, car il ne possède aucun enfant', view($this->getSource())), 'xml/error');
       
     } else {
       
@@ -717,11 +1004,11 @@ class XSD_Group extends XSD_Container {
   }
 }
 
-class XSD_GroupReference extends XSD_Basic {
+class XSD_GroupReference extends XSD_Class {
   
   private $oGroup = null;
   
-  public function __construct(XML_Element $oSource, $oParent, $oNode = null, XSD_Parser $oParser = null) {
+  public function __construct(XML_Element $oSource, $oParent) {
     
     parent::__construct($oSource, $oParent, $oNode, $oParser);
     
@@ -731,6 +1018,35 @@ class XSD_GroupReference extends XSD_Basic {
   public function getParticle() {
     
     return $this->getGroup()->getParticle();
+  }
+  
+  public function validate($oInstance) {
+    
+    // TODO occurences
+    
+    if ($oInstance && $this->hasInstance($oInstance)) {
+      
+      $bResult = $this->getGroup()->validate($oInstance);
+      
+    } else {
+      
+      if ($this->useMessages()) $oInstance->addMessage(
+        xt('Le groupe %s est manquant dans %s',
+        new HTML_Strong($this->getClass()->getName()), view($this->getName())), 'content', 'invalid');
+      else $this->getParser()->isValid(false);
+      
+      if ($this->keepValidate()) $this->buildInstance($oInstance->getParent()); // DEBUG
+    }
+    
+    return $bResult;
+  }
+  
+  protected function buildInstance(XSD_Instance $oParent) {
+    
+    $oInstance = $this->getInstance($oParent);
+    $oInstance->validate();
+    
+    $oParent->insert($oInstance);
   }
   
   public function getGroup() {
@@ -902,12 +1218,14 @@ class XSD_Type extends XSD_Container {
       
       if ($oInstance->getNode()->isComplex()) {
         
-        $oInstance->addMessage(xt('L\'élément %s devrait être du type simple %s',
-          view($oInstance->getNode()), view($this->getSource())), 'content', 'badtype');
+        dspm(xt('L\'élément ne devrait pas être de type complex'), 'xml/error');
         
       } else if (!$bResult = $this->getBase()->validate($oInstance)) {
         
-        $oInstance->addMessage(xt('Cette valeur n\'est pas du type %s', new HTML_Strong($this->getBase())), 'content', 'invalid');
+        if ($this->useMessages()) $oInstance->addMessage(
+          xt('Cette valeur n\'est pas du type %s',
+          new HTML_Strong($this->getBase())), 'content', 'invalid');
+        else $this->getParser()->isValid(false);
         
       } else {
         
@@ -978,17 +1296,19 @@ class XSD_Type extends XSD_Container {
       }
       
     } else {
-      
-      // TODO : complex
+      dspf('ok');
+      $this->getParticle()->validate($oInstance->getParticle()); // DEBUG
     }
-
-    
-    return $bResult;
   }
   
   public function isBasic() {
     
     return false;
+  }
+  
+  public function isComplex() {
+    
+    return !$this->isSimple();
   }
   
   public function isSimple() {
@@ -1080,7 +1400,8 @@ class XSD_Type extends XSD_Container {
         
       } else { // complex type definition
         
-        if ($oFirst->getName() == 'group') $this->setParticle(XSD_Group($oFirst, $this));
+        // WARNING : no check if valid children, if not group
+        if ($oFirst->getName() == 'group') $this->setParticle(new XSD_Group($oFirst, $this));
         else $this->setParticle(new XSD_Particle($oFirst, $this));
       }
     }
@@ -1104,7 +1425,7 @@ class XSD_Type extends XSD_Container {
     }
   }
   
-  public function getInstancables() {
+  public function getClasses() {
     
     return array();
   }

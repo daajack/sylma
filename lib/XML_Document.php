@@ -346,6 +346,8 @@ class XML_Document extends DOMDocument {
   
   public function save($sPath = null) {
     
+    $bResult = false;
+    
     if ($sPath || ($sPath = (string) $this->getFile())) {
       
       $sName = substr(strrchr($sPath, '/'), 1);
@@ -358,7 +360,7 @@ class XML_Document extends DOMDocument {
         
         // TEMPORARY System fo avoiding erasing of protected files from not admin users. TODO
         
-        if ((!$bSecurityFile && $bAccess) || ($bSecurityFile && Controler::isAdmin())) {
+        if ((!$bSecurityFile && $bAccess) || (Controler::isAdmin())) { //$bSecurityFile && 
           
           if ($oFile) $oDocument = $oFile->getFreeDocument();
           
@@ -383,7 +385,7 @@ class XML_Document extends DOMDocument {
             
           } else $bSecured = false; // Not secured file
           
-          if (!$bSecured) {
+          if (!$bSecured || Controler::isAdmin()) {
             
             $bResult = $this->saveFree($oDirectory, $sName);
             
@@ -400,7 +402,7 @@ class XML_Document extends DOMDocument {
       
     } else  dspm(t('Aucun chemin pour la sauvegarde !'), 'error');
     
-    return false;
+    return $bResult;
   }
   
   /**

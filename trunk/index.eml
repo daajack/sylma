@@ -3,6 +3,9 @@
   <le:settings>
     <le:name>Sylma</le:name>
   </le:settings>
-  <p>Bonjour et bienvenue dans Sylma</p>
-  <p>Grâce à Sylma, vous allez pouvoir gérer de A à Z votre site.<br/>Sécurité, action, génération de formulaires sont quelqu'uns des problèmes que sylma se propose de résoudre pour vous.</p>
+  <p>Bienvenue</p>
+  <p>
+Vous vous trouvez sur l'interface de gestion de votre site web. Depuis ici vous allez pouvoir modifier votre site, la manière dont il s'affiche, et les fonctionnalités proposés.
+  </p>
+  <le:action path="/modules/explorer"/>
 </le:action>

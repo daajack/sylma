@@ -51,7 +51,11 @@
 /*.messages div.element .hidden:hover { display: none; }*/
 
 .messages div.array { display: inline; border: 1px solid transparent; }
-.messages div.array:hover { border: 1px solid #aaa; }
+.messages div.array:hover {
+  border: 1px solid #aaa;
+  margin: 1px 0 1px 0;
+  border-width: 1px 4px 1px 4px;
+}
 
 /* Specials */
 

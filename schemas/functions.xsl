@@ -29,11 +29,14 @@
   </func:function>
   <func:function name="lc:get-title">
     <xsl:choose>
-      <xsl:when test="lc:get-element() and lc:get-element()/@title">
+      <xsl:when test="boolean(lc:get-element()) and lc:get-element()/@title">
         <func:result select="lc:get-element()/@title"/>
       </xsl:when>
-      <xsl:otherwise>
+      <xsl:when test="boolean(lc:get-model())">
         <func:result select="lc:get-model()/@name"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <func:result select="local-name()"/>
       </xsl:otherwise>
     </xsl:choose>
   </func:function>

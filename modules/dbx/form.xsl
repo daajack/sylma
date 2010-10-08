@@ -4,6 +4,7 @@
   <xsl:import href="/sylma/xslt/string.xsl"/>
   <xsl:template match="/*">
     <form method="POST" action="{@lc:action}">
+      <xsl:apply-templates select="lc:get-model(*[1])/lc:annotations/lc:message"/>
       <xsl:apply-templates select="*[1]/@*"/>
       <xsl:apply-templates select="*[1]/*"/>
     </form>
@@ -17,6 +18,11 @@
         <xsl:text> :</xsl:text>
       </label>
       <xsl:choose>
+        <xsl:when test="not(lc:get-model())">
+          <textarea name="{$name}" id="{$id}" style="background-color: #eee">
+            <xsl:value-of select="."/>
+          </textarea>
+        </xsl:when>
         <xsl:when test="lc:is-string()">
           <xsl:choose>
             <xsl:when test="lc:is-enum()">
@@ -39,12 +45,13 @@
           <input type="text" name="{$name}" id="{$id}" value="{.}"/>
         </xsl:when>
         <xsl:otherwise>
-          <textarea name="lc:get-name()" id="{$id}">
+          <textarea id="{$id}" name="{$name}">
             <xsl:value-of select="."/>
           </textarea>
         </xsl:otherwise>
       </xsl:choose>
       <xsl:apply-templates select="@*"/>
+      <xsl:apply-templates select="lc:get-model()/lc:annotations/lc:message"/>
     </div>
   </xsl:template>
   <xsl:template match="@*">
@@ -56,5 +63,10 @@
     <option value="{position()}">
       <xsl:value-of select="."/>
     </option>
+  </xsl:template>
+  <xsl:template match="lc:message">
+    <div class="field-message">
+      <xsl:copy-of select="."/>
+    </div>
   </xsl:template>
 </xsl:stylesheet>

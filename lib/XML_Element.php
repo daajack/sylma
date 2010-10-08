@@ -563,7 +563,13 @@ class XML_Element extends DOMElement implements XML_Composante {
       
     } else if (is_array($mValue)) {
       
-      if ($mValue) foreach ($mValue as $mSubValue) $mValue = $this->insert($mSubValue, $oNext);
+      if ($mValue) {
+        
+        $mResult = array();
+        foreach ($mValue as $mSubValue) $mResult[] = $this->insert($mSubValue, $oNext);
+        
+        $mValue = $mResult;
+      }
       
     } else if ($mValue !== null) {
       
@@ -756,9 +762,9 @@ class XML_Element extends DOMElement implements XML_Composante {
    * @param XML_Element $oNext The element that will follow the value
    * @return XML_Element The element added to content
    */
-  public function insertNode($sName, $oContent = '', $aAttributes = null, $oNext = null) {
+  public function insertNode($sName, $oContent = '', $aAttributes = null, $sUri = null, $oNext = null) {
     
-    return $this->insertChild($this->getDocument()->createNode($sName, $oContent, $aAttributes), $oNext);
+    return $this->insertChild($this->getDocument()->createNode($sName, $oContent, $aAttributes, $sUri), $oNext);
   }
   
   public function toArray($sAttribute = null, $iDepthAttribute = 0) {

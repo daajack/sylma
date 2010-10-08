@@ -14,7 +14,7 @@ class XSD_Parser extends Module {
   private $aGroups = array();
   private $iID = 1;
   
-  public function __construct(XML_Document $oSchema, XML_Document $oDatas = null, $bModel = true, $bMessages = false) {
+  public function __construct(XML_Document $oSchema, XML_Document $oDatas = null, $bModel = true, $bMessages = true) {
     
     $this->setDirectory(__file__);
     
@@ -37,6 +37,11 @@ class XSD_Parser extends Module {
     return $this->oSchema;
   }
   
+  public function getTargetNamespace() {
+    
+    return $this->getSchema()->getAttribute('targetNamespace');
+  }
+  
   public function getID() {
     
     return $this->iID++;
@@ -49,10 +54,14 @@ class XSD_Parser extends Module {
     if ($oRoot && ($oElement = $this->getSchema()->get("/*/xs:element[@name='".$oRoot->getName()."']", $this->getNS()))) {
       
       $oElement = new XSD_Element($oElement, null, null, $this);
+      $oModel = $oElement->getInstance(null, $oRoot);
+      
+      $oModel->validate();
+      
       $oSchemas = new XML_Element('schemas', array(
         $this->aTypes,
         $this->aGroups,
-        $oElement->getInstance(null, $oRoot)), null, $this->getNamespace());
+        $oModel), null, $this->getNamespace());
       
       $oResult = new XML_Element('sylma-schema', array($oDatas, $oSchemas), array(
         'xmlns:html' => SYLMA_NS_XHTML, 'xmlns:lc' => $this->getSchema()), $this->getNamespace());
@@ -127,7 +136,7 @@ class XSD_Parser extends Module {
     
     if ($iPrefix && $sNamespace == SYLMA_NS_XSD) { // XMLSchema Base Datatypes
       
-      $mResult = new XSD_BaseType($sType);
+      $mResult = new XSD_BaseType($sType, $this);
       
     } else { // Other namespaces datatypes
       
@@ -328,6 +337,8 @@ abstract class XSD_Node extends XSD_Container {
   
   protected $aInstances = array(); // instanced particles derived from this particle
   
+  abstract public function buildInstance(XSD_Instance $oParent);
+
   public function __construct(XML_Element $oSource, $oParent, $oNode = null, XSD_Parser $oParser = null) {
     
     parent::__construct($oSource, $oParent, $oNode, $oParser);
@@ -371,16 +382,11 @@ abstract class XSD_Node extends XSD_Container {
     return $oInstance;
   }
   
-  protected function hasInstance(XSD_Instance $oNeedle) { // TODO : replicate of XSD_Class
+  public function hasInstance(XSD_Instance $oNeedle) { // TODO : replicate of XSD_Class, DEBUG protected
     
     foreach ($this->aInstances as $oInstance) if ($oNeedle === $oInstance) return true;
     
     return false;
-  }
-  
-  public function setID($iID) {
-    
-    return $this->sID = (string) $iID;
   }
   
   public function getType() {
@@ -395,7 +401,7 @@ abstract class XSD_Class extends XSD_Basic {
   protected $aInstances = array(); // instanced particles derived from this particle
   
   abstract public function getInstance($oParent);
-  abstract protected function buildInstance(XSD_Instance $oParent);
+  //abstract protected function buildInstance(XSD_Instance $oParent);
   
   public function getInstances() {
     
@@ -437,8 +443,7 @@ abstract class XSD_Instance {
   public function addMessage($mMessage, $sContext, $sStatut) {
     
     $oMessage = null;
-    
-    if ($this->getParser()->useMessages()) {
+    if ($this->useMessages()) {
       
       $oMessage = new XML_Element('message', $mMessage,
         array('context' => $sContext, 'statut' => $sStatut), $this->getNamespace());
@@ -447,7 +452,7 @@ abstract class XSD_Instance {
       $this->aMessages[] = $oMessage;
     }
     
-    return $oMessage;
+    //return $oMessage;
   }
   
   public function addMessages($aMessages) {
@@ -485,6 +490,16 @@ abstract class XSD_Instance {
     return $this->getClass()->getParser();
   }
   
+  public function getModel() {
+    
+    return $this->getParent()->getModel();
+  }
+  
+  public function getNode() {
+    
+    return $this->getModel()->getNode();
+  }
+  
   public function getNamespace() {
     
     return $this->getClass()->getNamespace();
@@ -505,39 +520,32 @@ class XSD_Element extends XSD_Node {
     return $this->getParent()->getClasses();
   }
   
-  public function validate(XSD_Instance $oInstance) {
+  public function validate(XSD_Instance $oInstance, $bParent = false) {
     
-    $bResult = false;
-    dspf('yo');
-    exit;
-    if ($oInstance && $this->hasInstance($oInstance)) {
-      
-      $bResult = $this->getType()->validate($oInstance);
-      
-    } else {
-      
-      if ($this->useMessages()) $oInstance->addMessage(
-        xt('L\'élément %s est manquant dans %s',
-        new HTML_Strong($this->getName()), view($oInstance->getParent())), 'content', 'invalid');
-      else $this->getParser()->isValid(false);
-      
-      // if child is required, then add it as an missing model
-      // TODO occurs
-      if ($this->keepValidate()) $this->buildInstance($oInstance->getParent()); // DEBUG
-    }
+    $bResult = $this->getType()->validate($oInstance);
     
     return $bResult;
   }
   
-  private function buildInstance(XSD_Instance $oParent) {
+  public function buildInstance(XSD_Instance $oParent, XML_Element $oPrevious = null) {
     
-    $oInstance = $this->getInstance($oParent);
+    $oElement = $oParent->getModel()->getNode()->insertChild(
+      new XML_Element($this->getName(), null, null, $this->getType()->getNamespace(true)),
+      $oPrevious);
+    
+    $oInstance = $this->getInstance($oParent, $oElement);
     $oParent->insert($oInstance);
+    
+    $oInstance->validate();
+    
+    return $oInstance;
   }
   
-  public function getInstance($oParent = null, $oNode = null) {
+  public function getInstance($oParent, $oNode) {
     
-    return $this->addInstance(new XSD_Model($this, $oNode, $oParent));
+    $oModel = new XSD_Model($this, $oNode, $oParent);
+    
+    return $this->addInstance($oModel);
   }
   
   public function parse() {
@@ -554,6 +562,11 @@ class XSD_Element extends XSD_Node {
 }
 
 class XSD_Attribute extends XSD_Node {
+  
+  public function buildInstance(XSD_Instance $oParent) {
+    
+    return null; // TODO
+  }
   
   public function parse() {
     
@@ -589,8 +602,6 @@ class XSD_Model extends XSD_Instance { // XSD_ElementInstance
       }
       
     } else $this->setStatut('missing');
-    
-    $this->validate();
   }
   
   private function buildParticle() {
@@ -635,6 +646,11 @@ class XSD_Model extends XSD_Instance { // XSD_ElementInstance
     return $this->getClass()->getParser();
   }
   
+  public function getModel() {
+    
+    return $this;
+  }
+  
   private function buildChildren() {
     
     foreach ($this->getNode()->getChildren() as $oChild) {
@@ -645,9 +661,9 @@ class XSD_Model extends XSD_Instance { // XSD_ElementInstance
         
       } else {
         
-        $this->getParser()->addMessage($oInstance, $oInstance->addMessage(
+        if ($this->useMessages()) $this->addMessage(
           xt('L\'élément %s n\'est pas autorisé au sein de l\'élément %s',
-          view($oChild), view($this->getNode())), 'element', 'denied'));
+          view($oChild->getName()), view($this)), 'element', 'denied');
         
         if (!$this->keepValidate()) break;
       }
@@ -707,51 +723,6 @@ class XSD_Particle extends XSD_Class {
     
     parent::__construct($oSource, $oParent);
     $this->indexChildren();
-  }
-  
-  public function validate(XSD_Instance $oInstance) {
-    
-    $bResult = false;
-    
-    if ($oInstance && $this->hasInstance($oInstance)) { // valid particle
-      
-      $oInstance->shiftSeek();
-      
-      $bResult = true;
-      $iShift = 0;
-      
-      $aSubInstances = $oInstance->getChildren();
-      list(,$oSubInstance) = each($aSubInstances);
-      
-      // TODO, if sequence
-      if ($this->getMin()) {
-        
-        foreach ($this->getChildren() as $oChild) {
-          
-          if ($oChild->validate($oSubInstance)) list(,$oSubInstance) = each($aSubInstances);
-          else $bResult = false;
-        }
-      }
-      
-    } else { // missing particle
-      
-      if ($this->useMessages()) $oInstance->addMessage(
-        xt('La particule %s est manquante dans %s',
-        new HTML_Strong($this->getName()), view($this->getParent()->getSource())), 'content', 'invalid');
-      else $this->getParser()->isValid(false);
-      
-      if ($this->keepValidate()) $this->buildInstance($oInstance->getParent()); // DEBUG
-    }
-    
-    return $bResult;
-  }
-  
-  protected function buildInstance(XSD_Instance $oParent) {
-    
-    $oInstance = $this->getInstance($this, $oParent);
-    $oInstance->validate();
-    
-    $oParent->insert($oInstance);
   }
   
   public function indexChildren() {
@@ -823,6 +794,55 @@ class XSD_Particle extends XSD_Class {
     return $oResult;
   }
   
+  public function validate(XSD_Instance $oInstance) {
+    
+    $bResult = true;
+    $oPrevious = null;
+    
+    $iShift = 0;
+    
+    $aSubInstances = $oInstance->getChildren();
+    list(,$oSubInstance) = each($aSubInstances);
+    
+    // TODO, if sequence
+    if ($this->getMin()) {
+      
+      foreach ($this->getChildren() as $oChild) {
+        
+        if ($oChild->hasInstance($oSubInstance)) {
+          
+          $oInstance->shiftSeek();
+          
+          $oChild->validate($oSubInstance);
+          
+          $oPrevious = $oSubInstance;
+          list(,$oSubInstance) = each($aSubInstances);
+          
+        } else {
+          
+          if ($this->keepValidate()) {
+            
+            $oNewInstance = $oChild->buildInstance($oInstance, $oPrevious->getNode()); // TODO occurs
+            if ($oInstance->useMessages()) $oNewInstance->addMessage(xt('Ce champ doit être indiqué'), 'content', 'invalid');
+            
+          } else if ($oInstance->useMessages()) {
+            
+            $oInstance->addMessage(xt('Ce champ %s doit être indiqué', $oChild->getName()), 'content', 'invalid');
+          }
+          
+          $bResult = false;
+        }
+      }
+    }
+    
+    return $bResult;
+  }
+  
+  public function buildInstance(XSD_Instance $oParent) {
+    
+    $oParent->insert($this->getInstance($oParent));
+  }
+  
   public function getInstance($oParent) {
     
     $oInstance = new XSD_ParticleInstance($this, $oParent);
@@ -864,7 +884,7 @@ class XSD_ParticleInstance extends XSD_Instance {
     
     if ($iIndex === null || $iIndex == count($aChildren)) $this->aChildren[] = $oInstance;
     if (!$iIndex) $this->aChildren = array($oInstance) + $aChildren;
-    else $this->aChildren = array_slice($aChildren, 0, $iIndex) + array($oInstance) + array_slice($aChildren, $iIndex);
+    else $this->aChildren = array_merge(array_slice($aChildren, 0, $iIndex), array($oInstance), array_slice($aChildren, $iIndex));
     
     $this->shiftSeek();
   }
@@ -873,11 +893,8 @@ class XSD_ParticleInstance extends XSD_Instance {
     
     if ($aParents) {  // browse inside particles
       
-      //$oParticle->add($oElement, $aParents);
-      
       $oParent = array_pop($aParents);
       
-      //dspf($this->getClass()->getParticles());
       $oResult = null;
       
       if ($this->aParticles) { // first, search in ever added particle
@@ -928,30 +945,40 @@ class XSD_ParticleInstance extends XSD_Instance {
   
   public function parse() {
     
-    $oResult = null;
+    $oResult = new XML_Element($this->getClass()->getSource()->getName(), null, array(
+        'statut' => $this->getStatut()), $this->getNamespace());
     
     if ($this->getParent() instanceof XSD_ParticleInstance) { // is not root particle
       
-      $oResult = new XML_Element($this->getClass()->getSource()->getName(), null, array(
-        'statut' => $this->getStatut()), $this->getNamespace());
+      // required to parse children before self
+      $oSchema = $oResult->addNode('schema', $this->getChildren(), null, $this->getNamespace()); 
+      
       if ($this->getMessages()) { // if messages, add 2 children
         
-        $oResult->addNode('annotations', $this->getMessages(), null, $this->getNamespace());
-        $oResult->addNode('schema', $this->aChildren, null, $this->getNamespace());
+        $oResult->insertNode('annotations', $this->getMessages(), null, $this->getNamespace(), $oSchema);
         
-      } else $oResult->add($this->aChildren);
+      } else {
+        
+        $oResult->add($oSchema->getChildren());
+        $oSchema->remove();
+      }
       
     } else { // if first, do not display itself
       
+      // required to parse children before self
+      $oResult = $oResult->add($this->getChildren());
       $this->getParent()->addMessages($this->getMessages());
-      $oResult = $this->aChildren;
     }
     
     return $oResult;
   }
   
 }
-
+function dsparray($aChildren) {
+    $oTest = new HTML_Div();
+    foreach ($aChildren as $i => $oChild) $oTest->add($i.' -> ', new HTML_Span($oChild->getClass()->getName()), new HTML_Br);
+    dspm($oTest);
+}
 class XSD_Group extends XSD_Container {
   
   public function __construct(XML_Element $oSource, $oParent, $oNode = null, XSD_Parser $oParser = null) {
@@ -1108,14 +1135,20 @@ class XSD_BaseType {
   
   private $sType = '';
   
-  public function __construct($sType) {
+  public function __construct($sType, XSD_Parser $oParser) {
     
     $this->sType = $sType;
+    $this->oParser = $oParser;
   }
   
   public function getName() {
     
     return substr($this->getType(), 3);
+  }
+  
+  public function getParser() {
+    
+    return $this->oParser;
   }
   
   public function getType() {
@@ -1166,6 +1199,11 @@ class XSD_BaseType {
   public function isSimple() {
     
     return true;
+  }
+  
+  public function getNamespace() {
+    
+    return $this->getParser()->getTargetNamespace();
   }
   
   public function hasRestrictions() {
@@ -1296,7 +1334,7 @@ class XSD_Type extends XSD_Container {
       }
       
     } else {
-      dspf('ok');
+      
       $this->getParticle()->validate($oInstance->getParticle()); // DEBUG
     }
   }
@@ -1324,6 +1362,12 @@ class XSD_Type extends XSD_Container {
   public function getBase() {
     
     return $this->oBase;
+  }
+  
+  public function getNamespace($bReal = false) {
+    
+    if ($bReal) return $this->getParser()->getTargetNamespace();
+    else return parent::getNamespace();
   }
   
   public function getName($bReal = false) {

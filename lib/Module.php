@@ -2,9 +2,9 @@
 
 class Module {
   
-  private $oDirectory = null;
+  protected $oDirectory = null;
   
-  private $oSchema = null;  
+  protected $oSchema = null;  
   private $sSchema = '';
   
   private $aNamespaces = array();
@@ -37,7 +37,7 @@ class Module {
     return $this->oDirectory;
   }
   
-  public function setNamespace($sUri, $sPrefix, $bDefault = true) {
+  public function setNamespace($sUri, $sPrefix = '', $bDefault = true) {
     
     $this->aNamespaces[$sPrefix] = $sUri;
     
@@ -65,10 +65,14 @@ class Module {
     return $this->sPrefix;
   }
   
-  public function getDocument($sPath) {
+  public function getDocument($sPath, $bXSL = true) {
     
-    if ($oFile = Controler::getFile(Controler::getAbsolutePath($sPath, $this->getDirectory()))) return $oFile->getDocument();
-    else return null;
+    if ($oFile = Controler::getFile(Controler::getAbsolutePath($sPath, $this->getDirectory()))) {
+      
+      if ($bXSL) return new XSL_Document((string) $oFile);
+      else return $oFile->getDocument();
+      
+    } else return null;
   }
 }
 

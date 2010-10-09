@@ -2,11 +2,114 @@
 
 class DBX_Module extends Module {
   
-  private $aPaths = array();
+  private $oEmpty = null;
+  private $sPath = '';
+  private $sExtension = '';
+  
+  private $bSelfDirectory = true;
+  private $oSelfDirectory = null;
+  private $oExtendDirectory = null;
+  
+  public function __construct(XML_Directory $oDirectory, XML_Document $oSchema, $sNamespace, XML_Document $oOptions) {
+    
+    $this->setDirectory(__file__);
+    $this->oSelfDirectory = $this->getDirectory();
+    $this->oExtendDirectory = $oDirectory;
+    
+    $this->switchDirectory();
+    
+    $this->oSchema = $oSchema;
+    $this->setNamespace($sNamespace);
+    $this->setNamespace('http://www.sylma.org/modules/dbx', 'dbx', false);
+    
+    // options
+    
+    $this->oEmpty = new XML_Document($oOptions->getByName('empty', $this->getNamespace('dbx'))->getFirst());
+    
+    $this->sPath = $oOptions->readByName('path', $this->getNamespace('dbx'));
+    $this->sExtension = $oOptions->readByName('extension', $this->getNamespace('dbx'));
+  }
+  
+  private function getExtension() {
+    
+    return $this->sExtension;
+  }
+  
+  private function getPath() {
+    
+    return $this->sPath;
+  }
+  
+  private function getExtendDirectory() {
+    
+    return $this->oExtendDirectory;
+  }
+  
+  private function switchDirectory() {
+    
+    if ($this->bSelfDirectory) $this->oDirectory = $this->oExtendDirectory;
+    else $this->oDirectory = $this->oSelfDirectory;
+    
+    $this->bSelfDirectory = !$this->bSelfDirectory;
+  }
+  
+  private function getEmpty() {
+    
+    return $this->oEmpty;
+  }
   
   private function getDB() {
     
     return Controler::getDatabase();
+  }
+  
+  public function run(Redirect $oRedirect, $sAction, $sID = '') {
+    
+    $mResult = null;
+    $this->switchDirectory();
+    
+    switch ($sAction) {
+      
+      case 'add' :
+        
+        if ($oPost = $oRedirect->getDocument('post')) {
+          
+          if (!$oValues = $this->buildValues($oPost))
+            dspm(xt('Erreur dans la conversion des valeurs de %s à %s', view($oPost), view($oValues)), 'error');
+          dspf($oValues);
+        } else $oValues = null;
+        
+        if (!$oValues) $oValues = $this->getEmpty();
+        
+        $oModel = $oValues->getModel($this->getSchema(), (bool) $oPost);
+        $oTemplate = $this->getDocument('form.xsl', true);
+        $oTemplate->setParameter('action', $this->getPath().'/add-do.redirect');
+        
+        $oPath = new XML_Path($this->getDirectory().'/form.eml', array(
+          'form' => $oModel->parseXSL($oTemplate)), true, false);
+        
+        $mResult = new XML_Action($oPath);
+        
+      break;
+      
+      case 'add-do' :
+        
+        if (!$this->add($oRedirect)) {
+          
+          $oRedirect->setPath($this->getPath().'/add'.$this->getExtension());
+          $mResult = $oRedirect;
+          //dspf($this->getPath().'/add'.$this->getExtension());
+        } else {
+          
+          $oRedirect->setPath($this->getExtendDirectory().$this->getExtension());
+          $mResult = $oRedirect;
+        }
+        
+      break;
+    }
+    
+    $this->switchDirectory();
+    return $mResult;
   }
   
   private function getFile($sPath) {
@@ -49,61 +152,60 @@ class DBX_Module extends Module {
     return $oResult;
   }
   
-  public function add(Redirect $oRedirect, XML_Document $oSchema, $sReturn, $sSuccess) {
+  public function add(Redirect $oRedirect) {
     
-    $oRedirect->setMessages($this->checkRequest($oSchema));
-    $oRedirect->setPath($sReturn);
+    $bResult = false;
     
-    $this->transformHTML($oRedirect);
-    
-    if (!$oRedirect->getMessages('form/warning')) {
+    if (!$oPost = $oRedirect->getDocument('post')) {
       
-      $oPost = $oRedirect->getDocument('post');
-      $oValues = new XML_Element('new');
+      dspm(t('Impossible de revenir sur la page d\'édition. Modifications perdues'), 'error');
       
-      foreach ($oSchema->getChildren() as $nField)
-        if (!$nField->get('fs:deco', 'fs', SYLMA_NS_FORM_SCHEMA)) $oValues->add($oPost->get($nField->getId()));
+    } else {
       
-      // get html contenu
+      $oValues = $this->buildValues($oPost);
+      //dspf($oValues);
       
-      $sPath = urlize($oValues->read('titre'));
-      
-      if (!$this->load($sPath)->isEmpty()) {
+      if (!$oValues || !$oValues->validate($this->getSchema())) {
         
-        dspm(t('Ce titre est déjà utilisé'), 'form/warning');
+        dspm(t('Un ou plusieurs champs ne semblent pas corrects, ceux-ci sont indiqués en rouge'), 'warning');
         
       } else {
         
+        $sPath = urlize($oValues->getByName('intitule'));
         $oValues->setAttribute('id', $sPath);
         
-        if ($oFile = $this->getFile($sPath)) $oValues->add($oFile);;
-        
         $this->getDB()->insert($oValues, '/*');
-        dspm(t('Actualité créée'));
+        //dspm(t($this->getTitle().));
         
-        $oRedirect = new Redirect($sSuccess.$sPath);
+        $bResult = true;
       }
     }
     
-    return $oRedirect;
+    return $bResult;
   }
   
-  public function buildValues($oValues, $oParent = null) {
+  public function buildValues($oValues, XML_Element $oParent = null) {
     
-    if (!$oParent) { // root
-      
-      $oParent = new XML_Element($this->getRootName(), null, null, $this->getNamespace());
-    }
+    if (!$oParent) $oParent = new XML_Document($this->getEmpty());
     
     foreach ($oValues->getChildren() as $oValue) {
       
-      if (substr($oValue->getName(), 0, 4) != 'element') $oParent->setAttribute($oValue->getName(), $oValue);
-      else {
+      if ($oValue->isElement()) {
         
-        $oChild = $oParent->addNode($oValue->getName(), null, null, $this->getNamespace());
-        if ($oValue->hasChildren()) $this->buildValues($oValue, $oChild);
-      }
+        if (substr($oValue->getName(), 0, 4) == 'attr') $oParent->setAttribute(substr($oValue->getName(), 4), $oValue);
+        else {
+          
+          $oChild = $oParent->addNode($oValue->getName(), null, null, $this->getNamespace());
+          
+          if ($oValue->isComplex()) $oChild->add($this->buildValues($oValue, $oChild));
+          else $oChild->add($oValue->read());
+          
+          if (!trim($oChild->read())) $oChild->remove();
+        }
+      }// else dspf($oValue);
     }
+    
+    return $oParent;
   }
   
   public function edit(Redirect $oRedirect) {

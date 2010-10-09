@@ -2,17 +2,23 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns="http://www.w3.org/1999/xhtml" xmlns:func="http://exslt.org/functions" xmlns:lc="http://www.sylma.org/schemas" xmlns:lx="http://ns.sylma.org/xslt" version="1.0" extension-element-prefixes="func lx">
   <xsl:import href="../../schemas/functions.xsl"/>
   <xsl:import href="/sylma/xslt/string.xsl"/>
+  <xsl:param name="action"/>
+  <xsl:param name="method" select="'POST'"/>
   <xsl:template match="/*">
-    <form method="POST" action="{@lc:action}">
+    <form method="{$method}" action="{$action}">
       <xsl:apply-templates select="lc:get-model(*[1])/lc:annotations/lc:message"/>
       <xsl:apply-templates select="*[1]/@*"/>
       <xsl:apply-templates select="*[1]/*"/>
+      <div class="field-actions">
+        <input type="submit" value="Enregistrer"/>
+        <input type="button" value="Annuler" onclick="history.go(-1);"/>
+      </div>
     </form>
   </xsl:template>
   <xsl:template match="*">
     <xsl:variable name="name" select="lc:get-name()"/>
     <xsl:variable name="id" select="concat('field-', lc:get-name())"/>
-    <div class="field">
+    <div class="field clear-block">
       <label for="{$id}">
         <xsl:value-of select="lx:first-case(lc:get-title())"/>
         <xsl:text> :</xsl:text>
@@ -27,8 +33,10 @@
           <xsl:choose>
             <xsl:when test="lc:is-enum()">
               <select name="{$name}" id="{$id}">
-                <option>&lt; choisissez &gt;</option>
-                <xsl:apply-templates select="lc:get-schema()/lc:restriction/lc:enumeration"/>
+                <option value="0">&lt; choisissez &gt;</option>
+                <xsl:apply-templates select="lc:get-schema()/lc:restriction/lc:enumeration">
+                  <xsl:with-param name="value" select="node()"/>
+                </xsl:apply-templates>
               </select>
             </xsl:when>
             <xsl:when test="lc:get-element()/@line-break">
@@ -56,17 +64,20 @@
   </xsl:template>
   <xsl:template match="@*">
     <xsl:if test="namespace-uri() != 'http://www.sylma.org/schemas'">
-      <input type="hidden" value="{.}" name="{local-name()}"/>
+      <input type="hidden" value="{.}" name="attr-{local-name()}"/>
     </xsl:if>
   </xsl:template>
   <xsl:template match="lc:enumeration">
-    <option value="{position()}">
+    <option>
+      <xsl:if test="$value = text()">
+        <xsl:attribute name="selected">selected</xsl:attribute>
+      </xsl:if>
       <xsl:value-of select="."/>
     </option>
   </xsl:template>
   <xsl:template match="lc:message">
     <div class="field-message">
-      <xsl:copy-of select="."/>
+      <xsl:copy-of select="node()"/>
     </div>
   </xsl:template>
 </xsl:stylesheet>

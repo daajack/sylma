@@ -599,9 +599,9 @@ class XML_Element extends DOMElement implements XML_Composante {
    * @param XML_Element $oNext The element that will follow the value
    * @return XML_Element The element added to content
    */
-  public function insertChild($oChild, $oNext = null) {
+  public function insertChild($oChild, $oReferer = null, $bPrevious = false) {
     
-    if ($oChild === $oNext) $oNext = null;
+    if ($oChild === $oReferer) $oReferer = null;
     
     if (is_object($oChild) && ($oChild instanceof XML_Element || $oChild instanceof XML_Text || $oChild instanceof XML_CData || $oChild instanceof XML_Comment)) {
       
@@ -611,10 +611,18 @@ class XML_Element extends DOMElement implements XML_Composante {
         
       }
       
-      // TODO : RIGHTS
-      if ($oNext) parent::insertBefore($oChild, $oNext);
-      else parent::appendChild($oChild);
+      if ($bPrevious) {
+        
+        if ($oReferer && $oReferer->getNext()) parent::insertBefore($oChild, $oReferer->getNext());
+        else if ($oReferer) parent::appendChild($oChild);
+        else parent::insertBefore($oChild, $this->getFirst());
+        
+      } else {
+        
+        if ($oReferer) parent::insertBefore($oChild, $oReferer);
+        else parent::appendChild($oChild);
       
+      }
       return $oChild;
       
     } return null;
@@ -1062,6 +1070,14 @@ class XML_Element extends DOMElement implements XML_Composante {
   public function messageParse() {
     
     return new HTML_Div($this->viewResume(), array('class' => 'message-element'));
+  }
+  
+  public function __clone() {
+    
+    $oClone = $this->cloneNode(true);
+    // dspm($this->getNamespace());
+    // dspm($oClone->getNamespace());
+    return $oClone;
   }
   
   public function __toString() {

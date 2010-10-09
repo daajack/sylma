@@ -18,6 +18,8 @@
     <argument name="key" format="php-string" required="false"/>
     <argument name="remove" format="php-boolean" required="false"/>
   </method>
+  <method return-default="true" path="get-simple" name="getSimplePath"/>
   <method return-default="true" path="get-original" name="getOriginalPath"/>
+  <method return-default="true" path="get-action" name="getActionPath"/>
   <method return-default="true" path="get-extension" name="getExtension"/>
 </class>

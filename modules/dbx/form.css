@@ -1,0 +1,33 @@
+
+.field {
+  margin-bottom: 0.5em;
+}
+
+.field label {
+  display: block;
+  float: left;
+  vertical-align: top;
+  width: 20%;
+}
+
+.field input, .field textarea, .field select {
+  float: left;
+}
+
+.field input, .field textarea {
+  width: 40%;
+}
+
+.field-actions {
+  border-top: 1px dotted #eee;
+  margin-top: 1em;
+  text-align: center;
+}
+
+.field-message {
+  float: left;
+  width: 35%;
+  margin-left: 3%;
+  font-size: 0.9em;
+  color: red;
+}

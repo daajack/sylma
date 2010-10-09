@@ -40,7 +40,7 @@ class Controler {
     
     self::$sSystemPath = $_SERVER['DOCUMENT_ROOT'];
     
-    // Authentification : récupération du cookie User
+    // Authentication : load user's session var - $_SESSION['user']
     self::setUser(self::loadUser());
     
     // Define error_report
@@ -52,7 +52,7 @@ class Controler {
     // Root directory
     self::$oDirectory = new XML_Directory('', '', array('owner' => 'root', 'group' => '0', 'mode' => '700', 'user-mode' => null));
     
-    // Loading general parameters
+    // Load general parameters - root.xml
     self::loadSettings();
     
     // Set Controler ready
@@ -60,13 +60,13 @@ class Controler {
     
     if (SYLMA_USE_DB) self::setDatabase(new XML_Database($aDB));
     
-    // Récupération du cookie Redirect qui indique qu'une redirection a été effectuée
+    // Load Redirect session var, if present means it has been redirected - $_SESSION['redirect'], $_POST in 'document'
     $oRedirect = self::loadRedirect();
     
-    // Parse of the request_uri, creation of the window
+    // Parse of the request_uri, creation of the window - $_GET
     self::loadContext();
     
-    // Reload last alternatives mime-type results
+    // Reload last alternatives mime-type results - $_SESSION['results']
     self::loadResults();
     
     if (($sExtension = Controler::getPath()->getExtension()) &&
@@ -1231,3 +1231,6 @@ class Redirect {
     return (string) $this->oPath;
   }
 }
+
+
+

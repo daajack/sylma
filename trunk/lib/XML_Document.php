@@ -634,19 +634,19 @@ class XML_Document extends DOMDocument {
   /** 
    * Check validity against W3C XMLSchema
    */
-  public function validate(XML_Document $oSchema) {
+  public function validate(XML_Document $oSchema, $bMessages = false) {
     
-    $oParser = new XSD_Parser($oSchema, $this);
+    $oParser = new XSD_Parser($oSchema, $this, false, $bMessages);
     
-    return $oParser->validate();
+    return $oParser->isValid();
   }
   
   /** 
    * Build validity model with W3C XMLSchema
    */
-  public function getModel(XML_Document $oSchema) {
+  public function getModel(XML_Document $oSchema, $bMessages = true) {
     
-    $oParser = new XSD_Parser($oSchema, $this);
+    $oParser = new XSD_Parser($oSchema, $this, true, $bMessages);
     
     return $oParser->parse();
   }

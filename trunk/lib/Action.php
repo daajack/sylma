@@ -4,6 +4,7 @@ class XML_Action extends XML_Document {
   
   private $oParent = null; // parent action, null if not an action
   private $oPath = null;
+  private $oSettings = null;
   private $oPathResume = null;
   private $sName = '';
   private $aVariables = array();
@@ -259,6 +260,13 @@ class XML_Action extends XML_Document {
         
       } else $aArguments = $this->loadElementArguments($oElement);
       
+      // send all arguments in addition with previously defined
+      if ($oElement->testAttribute('send-all-arguments')) {
+        
+        if ($aArguments) $aArguments = array_merge_recursive($aArguments, $this->getPath()->getAllArguments());
+        else $aArguments = $this->getPath()->getAllArguments();
+      }
+      
       // check name in interface
       
       if (!$sMethod = $oMethod->getAttribute('name')) {
@@ -366,11 +374,16 @@ class XML_Action extends XML_Document {
         
         // get arguments
         
-        if ($oElement->hasChildren()) {
+        if ($oElement->hasChildren()) $aArguments = $this->loadElementArguments($oElement);
+        else $aArguments = array();
+        
+        if ($oElement->testAttribute('send-all-arguments')) {
           
-          $aArguments = $this->loadElementArguments($oElement);
-          
-          if ($oElement->testAttribute('send-all-arguments')) $aArguments = array_merge_recursive($aArguments, $this->getPath()->getAllArguments());
+          if ($aArguments) $aArguments = array_merge_recursive($aArguments, $this->getPath()->getAllArguments());
+          else $aArguments = $this->getPath()->getAllArguments();
+        }
+        
+        if ($aArguments) {
           
           $oPath->pushIndex($aArguments['index']);
           $oPath->mergeAssoc($aArguments['assoc']);
@@ -507,35 +520,45 @@ class XML_Action extends XML_Document {
       
       case 'switch' :
         
-        if ($oElement->getChildren()->length < 2) $this->dspm(xt('Arguments insuffisants pour %s', $oElement), 'action/error');
-        else {
+        if ($oElement->getChildren()->length < 2) {
           
-          if ($oElement->getFirst()->getName() == 'case') $this->dspm(xt('Le premier argument ne peux pas être %s dans %s', $oElement->getFirst(), $oElement), 'action/error');
-          else {
+          $this->dspm(xt('Arguments insuffisants pour %s', $oElement), 'action/error');
+          
+        } else {
+          
+          if ($oElement->getFirst()->getName() == 'case') {
+            
+            $this->dspm(xt('Le premier argument ne peux pas être %s dans %s',
+              $oElement->getFirst(), $oElement), 'action/error');
+            
+          } else {
             
             $mResult = array();
             $mTest = $this->buildArgument($oElement->getFirst()->remove());
             
             foreach ($oElement->getChildren() as $oChild) {
               
-              if (!$oChild->useNamespace(SYLMA_NS_EXECUTION) || !($oChild->getName() == 'case' || $oChild->getName() == 'default')) {
+              if (!$oChild->useNamespace(SYLMA_NS_EXECUTION) ||
+                !($oChild->getName() == 'case' || $oChild->getName() == 'default')) {
                 
                 $this->dspm(xt('Element %s interdit dans %s', $oChild, $oElement), 'action/error');
-              
+                
               } else {
                 
                 if ($oChild->getName() == 'default') {
                   
                   // default
                   
-                  if ($oChild != $oElement->getLast()) $this->dspm(xt('%s doit être placer à la fin de %s', view($oChild), view($oElement)), 'action/error');
+                  if ($oChild != $oElement->getLast()) $this->dspm(xt('%s doit être placer à la fin de %s',
+                    view($oChild), view($oElement)), 'action/error');
                   else $mResult[] = $this->buildArgument($oChild->getChildren());
                   
                 } else {
                   
                   // case
                   
-                  if (!$oChild->getChildren()->length) $this->dspm(xt('Arguments insuffisants pour %s dans %s', view($oChild), view($oElement)), 'error');
+                  if (!$oChild->getChildren()->length) $this->dspm(xt('Arguments insuffisants pour %s dans %s',
+                    view($oChild), view($oElement)), 'error');
                   else {
                     
                     // compare values
@@ -551,6 +574,8 @@ class XML_Action extends XML_Document {
                 }
               }
             }
+            
+            if (count($mResult) == 1) $mResult = $mResult[0];
           }
         }
         
@@ -873,6 +898,7 @@ class XML_Action extends XML_Document {
         if (Controler::useStatut('action/report')) dspm(xt('Copy [%s]', view($oArgument)), 'action/report');
         
         $mResult = clone $oArgument;
+        
         $mResult->cleanChildren();
         
         $this->replaceAttributesVariables($mResult);
@@ -914,7 +940,7 @@ class XML_Action extends XML_Document {
       if (Controler::useStatut('action/report'))
         dspm(array(xt('List [%s] &gt; ', view($oArgument)), view($mResult)), 'action/report');
       
-    } else if ($oArgument->isText()) {
+    } else if ($oArgument instanceof XML_Text) {
       
       /* Text */
       
@@ -939,7 +965,8 @@ class XML_Action extends XML_Document {
     } else if ($oArgument instanceof XML_Comment) {
       
       $mResult = clone $oArgument; // TODO : generate DOMComment
-    }
+      
+    } else dspm(xt('Type d\'argument %s inconnu', view($oArgument)), 'action/error');
     
     // msg
     
@@ -1442,10 +1469,17 @@ class XML_Action extends XML_Document {
     return false;
   }
   
+  public function getSettings() {
+    
+    return $this->oSettings;
+  }
+  
   public function loadSettings($oSettings) {
     
     $bResult = true;
     $iArgument = 0;
+    
+    $this->oSettings = new XML_Document($oSettings);
     
     if ($oSettings && $oSettings->hasChildren()) {
       
@@ -1453,6 +1487,7 @@ class XML_Action extends XML_Document {
         
         switch ($oChild->getName(true)) {
           
+          case 'return' : break;
           case 'name' : break;
           case 'argument' :
             
@@ -1696,13 +1731,21 @@ class XML_Action extends XML_Document {
               
               if ($this->loadSettings($oDocument->getByName('settings', SYLMA_NS_EXECUTION))) {
                 
-                $oResult = new XML_Document('temp');
-                
-                $oMethod = new XML_Element('li:add', $oDocument->getRoot()->getChildren(), null, SYLMA_NS_INTERFACE);
-                $this->runInterfaceMethod($oResult, $oMethod, Action_Controler::getInterface($oResult, $this->getRedirect()));
-                
-                if (!$oResult->isEmpty()) $oResult = $oResult->getRoot()->getChildren();
-                else dspm(xt('Aucune valeur retournée pour l\'action %s', $this->getPath()), 'action/warning');
+                if ($this->getSettings()->getByName('return', SYLMA_NS_EXECUTION)) {
+                  
+                  $oResult = $this->buildArgument($oDocument->getFirst());
+                  // TODO format check
+                  
+                } else {
+                  
+                  $oResult = new XML_Document('temp');
+                  
+                  $oMethod = new XML_Element('li:add', $oDocument->getRoot()->getChildren(), null, SYLMA_NS_INTERFACE);
+                  $this->runInterfaceMethod($oResult, $oMethod, Action_Controler::getInterface($oResult, $this->getRedirect()));
+                  
+                  if (!$oResult->isEmpty()) $oResult = $oResult->getRoot()->getChildren();
+                  else dspm(xt('Aucune valeur retournée pour l\'action %s', $this->getPath()), 'action/warning');
+                }
                 
               } else {
                 

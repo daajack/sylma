@@ -1,20 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <class xmlns="http://www.sylma.org/interface" xmlns:ls="http://www.sylma.org/security">
-  <file>Commande.php</file>
-  <name>Commande</name>
+  <file>DBX.php</file>
+  <name>DBX_Module</name>
+  <method-construct>
+    <argument format="XML_Directory" name="directory"/>
+    <argument format="XML_Document" name="schema"/>
+    <argument format="php-string" name="namespace"/>
+    <argument format="XML_Document" name="options"/>
+  </method-construct>
+  <method name="run" path="run" return-default="true" ls:owner="root" ls:group="users" ls:mode="710">
+    <argument format="Redirect" name="redirect"/>
+    <argument format="php-string" name="action"/>
+    <argument format="php-string" name="id" required="false"/>
+  </method>
   <method name="add" path="add" ls:owner="root" ls:group="users" ls:mode="710">
-    <argument format="Redirect" required="true" name="redirect"/>
-    <argument format="XML_Document" required="true" name="schema"/>
-    <argument format="php-string" required="true" name="error"/>
-    <argument format="php-string" required="true" name="success"/>
+    <argument format="Redirect" name="redirect"/>
+    <argument format="XML_Document" name="schema"/>
+    <argument format="php-string" name="error"/>
+    <argument format="php-string" name="success"/>
   </method>
   <method name="edit" path="edit" ls:owner="root" ls:group="users" ls:mode="710">
-    <argument format="Redirect" required="true" name="redirect"/>
+    <argument format="Redirect" name="redirect"/>
   </method>
   <method name="load" path="load" ls:group="users" ls:owner="root" ls:mode="711">
-    <argument format="php-string" required="true" name="id"/>
+    <argument format="php-string" name="id"/>
   </method>
   <method name="delete" path="delete" ls:owner="root" ls:mode="710" ls:group="users">
-    <argument format="php-string" required="true" name="id"/>
+    <argument format="php-string" name="id"/>
   </method>
 </class>

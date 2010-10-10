@@ -39,6 +39,7 @@ $aDB = array(
   'user' => 'admin',
   'password' => 'admin',
   'database' => 'cmp',
+  'namespace' => 'http://www.example.com',
   'port' => 1984);
 
 

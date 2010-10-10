@@ -68,6 +68,7 @@
     </xsl:if>
   </xsl:template>
   <xsl:template match="lc:enumeration">
+    <xsl:param name="value"/>
     <option>
       <xsl:if test="$value = text()">
         <xsl:attribute name="selected">selected</xsl:attribute>

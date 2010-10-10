@@ -30,7 +30,7 @@ define('SYLMA_NS_MESSAGES', 'http://www.sylma.org/messages');
 define('SYLMA_NS_PROCESSOR_FORM', '/sylma/processors/form/schema');
 define('SYLMA_NS_FORM_SCHEMA', 'http://schemas.sylma.org/form-schema');
 
-define('SYLMA_HTML_TAGS', '//html:div | //html:span | //html:a | //html:ul | //html:h2 | //html:iframe | //html:textarea');
+define('SYLMA_HTML_TAGS', '//html:div | //html:span | //html:a | //html:ul | //html:h2 | //html:iframe | //html:textarea | //html:script');
 define('SYLMA_FIELD_PREFIX', 'field-');
 define('SYLMA_USE_DB', true);
 

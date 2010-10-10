@@ -956,15 +956,35 @@ class XML_Element extends DOMElement implements XML_Composante {
     else return $this->namespaceURI;
   }
   
+  public function updateNamespace($sFrom, $sTo, $sPrefix = '') {
+    
+    if ($this->useNamespace($sFrom)) {
+      
+      $oResult = new XML_Element(($sPrefix ? $sPrefix.':' : '').$this->getName(), null, $this->getAttributes(), $sTo);
+      
+    } else {
+      
+      $oResult = clone $this;
+      $oResult->cleanChildren();
+    }
+    
+    foreach ($this->getChildren() as $oChild) {
+      
+      if ($oChild->isElement()) $oResult->add($oChild->updateNamespace($sFrom, $sTo, $sPrefix));
+      else $oResult->add($oChild);
+    }
+    
+    return $oResult;
+  }
+  
   public function useDefaultNamespace() {
     
     return $this->isDefaultNamespace($this->getNamespace());
   }
   
-  public function useNamespace($sNamespace = '') {
+  public function useNamespace($sNamespace = null) {
     
-    if ($sNamespace) return ($this->getNamespace() == $sNamespace);
-    else return ($this->getNamespace());
+    return $this->getNamespace() == $sNamespace; // WARNING : null (default) != ''
   }
   
   public function getPrefix() {

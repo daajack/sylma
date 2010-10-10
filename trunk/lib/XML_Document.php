@@ -280,10 +280,13 @@ class XML_Document extends DOMDocument {
   
   public function loadDB($sPath) {
     
-    $oDB = Controler::getDatabase();
     $bResult = false;
     
-    if ($sResult = $oDB->query(substr($sPath, 1))) $bResult = $this->loadText('<root>'.$sResult.'</root>');
+    if (Controler::isAdmin()) {
+      
+      if ($sResult = Controler::getDatabase()->query(substr($sPath, 1)))
+        $bResult = $this->loadText('<root>'.$sResult.'</root>');
+    }
     
     return $bResult;
   }
@@ -622,6 +625,12 @@ class XML_Document extends DOMDocument {
     return (string) $mValue;
   }
   
+  public function updateNamespace($sFrom, $sTo, $sPrefix = '') {
+    
+    if ($this->getRoot()) return new XML_Document($this->getRoot()->updateNamespace($sFrom, $sTo, $sPrefix));
+    else return new XML_Document;
+  }
+  
   /**
    * Return a new document, with only the elements selected by namespace
    */
@@ -825,7 +834,7 @@ class XSL_Document extends XML_Document {
     //dspf($this);
   }
   
-  public function parseDocument($oDocument, $bXML = true) {
+  public function parseDocument(XML_Document $oDocument, $bXML = true) { // WARNING, XML_Document typed can cause crashes
     
     $mResult = null;
     

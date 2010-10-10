@@ -4,8 +4,10 @@ class Module {
   
   protected $oDirectory = null;
   
+  private $oSettings = null;  
   protected $oSchema = null;  
   private $sSchema = '';
+  private $sName = '';
   
   private $aNamespaces = array();
   private $sNamespace = SYLMA_NS_XHTML;
@@ -14,6 +16,17 @@ class Module {
   public function setDirectory($sPath) {
     
     $this->oDirectory = extractDirectory($sPath, true);
+  }
+  
+  public function getSettings($sPath = '') {
+    
+    if (!$this->oSettings && $this->getName()) {
+      
+      $this->oSettings = Controler::getSettings()->get("module[@name='{$this->getName()}']");
+    }
+    
+    if ($sPath && $this->oSettings) return $this->oSettings->read($sPath);
+    else return $this->oSettings;
   }
   
   public function getSchema() {
@@ -25,6 +38,16 @@ class Module {
     }
     
     return $this->oSchema;
+  }
+  
+  public function getName() {
+    
+    return $this->sName;
+  }
+  
+  public function setName($sName) {
+    
+    $this->sName = $sName;
   }
   
   public function setSchema($sPath) {

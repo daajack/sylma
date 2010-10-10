@@ -901,8 +901,6 @@ class XML_Action extends XML_Document {
         
         $mResult->cleanChildren();
         
-        $this->replaceAttributesVariables($mResult);
-        
         $this->setVariableElement($oArgument, $mResult);
         
         if ($oArgument->hasChildren()) {
@@ -913,6 +911,8 @@ class XML_Action extends XML_Document {
           
           $mResult->add($this->buildArgument($oChildren));
         }
+        
+        $this->replaceAttributesVariables($mResult);
       }
       
     } else if ($oArgument instanceof XML_NodeList) {

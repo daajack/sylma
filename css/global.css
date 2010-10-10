@@ -12,6 +12,49 @@
 
 /* Admin Infos */
 
+#menu-admin {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  list-style-type: none;
+  padding: 5px;
+  opacity: 0.5;
+}
+
+#menu-admin:hover {
+  opacity: 1;
+}
+
+#menu-admin li {
+  display: block;
+  float: left;
+  border-left: 1px solid #ddd;
+}
+
+#menu-admin li:first-child {
+  border-left: none;
+}
+
+#menu-admin a {
+  display: block;
+  float: left;
+  margin: 0 5px 0 5px;
+  padding: 3px 6px 3px 6px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  color: #888;
+}
+
+#menu-admin a:hover {
+  border: 1px solid #ccc;
+  padding: 2px 5px 2px 5px;
+  border-top-color: #eee;
+  border-left-color: #eee;
+  text-decoration: none;
+  color: #444;
+}
+
 #msg-admin {
   position: absolute;
   left: 10px;

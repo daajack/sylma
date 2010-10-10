@@ -4,7 +4,9 @@ class XML_Database {
   
   //private $sDatabase;
   private $oSession;
-  private $aSession;
+  
+  private $aNamespaces = array();
+  private $sNamespace = '';
   
   public function __construct($aDB) {
     
@@ -19,6 +21,7 @@ class XML_Database {
       
       //$this->sDatabase = $sDatabase;
       $this->oSession = $oSession;
+      $this->sNamespace = $aDB['namespace'];
       
     } catch (Exception $e) {
       
@@ -45,7 +48,18 @@ class XML_Database {
     return $sResult;
   }
   
-  public function query($sQuery) {
+  public function query($sQuery, array $aNamespaces = array()) {
+    
+    $sDeclare = ''; // namespaces declarations
+    $aNamespaces = array_merge(array($this->sNamespace), $this->aNamespaces, $aNamespaces);
+    
+    foreach ($aNamespaces as $sPrefix => $sNamespace) {
+      
+      if (!$sPrefix) $sDeclare .= "declare default element namespace '{$sNamespace}';\n";
+      else $sDeclare .= "declare namespace {$sPrefix}='{$sNamespace}';\n";
+    }
+    
+    $sQuery = $sDeclare.$sQuery;
     
     if (SYLMA_DB_SHOW_QUERIES) dspm(xt('xquery : %s', new HTML_Tag('pre', $sQuery)), 'db/notice');
     
@@ -80,9 +94,24 @@ class XML_Database {
     return $this->query("replace node id('$sId') with $oElement");
   }
   
-  public function insert(XML_Element $oElement, $sTarget) {
+  public function getNamespace($sPrefix = '') {
     
-    return $this->query("insert nodes $oElement as last into $sTarget");
+    if ($sPrefix) return $this->aNamespaces[$sPrefix];
+    else return $this->sNamespace;
+  }
+  
+  public function setNamespace($sNamespace, $sPrefix = '') {
+    
+    if ($sPrefix) $this->aNamespaces[$sPrefix] = $sNamespace;
+    else $this->sNamespace = $sNamespace;
+  }
+  
+  public function insert(XML_Element $oElement, $sTarget, array $aNamespaces = array()) {
+    
+    $oDocument = new XML_Document($oElement);
+    $sElement = substr($oDocument->display(true), 39);
+    
+    return $this->query("insert nodes $sElement into $sTarget", $aNamespaces);
   }
   
   public function __destruct() {

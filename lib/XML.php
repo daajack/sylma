@@ -17,9 +17,9 @@ function xt() {
   return '';
 }
 
-function strtoxml($sValue, $aNS = array()) {
-  // xmlns:le="'.SYLMA_NS_EXECUTION.'" xmlns:li="'.SYLMA_NS_INTERFACE.'"
+function strtoxml($sValue, array $aNS = array(), $bMessage = false) {
   
+  $mResult = null;
   $oDocument = new XML_Document;
   $sAttributes = '';
   
@@ -33,16 +33,14 @@ function strtoxml($sValue, $aNS = array()) {
     $sAttributes .= " $sPrefix=\"$sUri\"";
   }
   
-  if ($oDocument->loadText('<div'.$sAttributes.'>'.$sValue.'</div>') && $oDocument->getRoot() && !$oDocument->getRoot()->isEmpty()) {
+  if ($oDocument->loadText('<div'.$sAttributes.'>'.$sValue.'</div>') &&
+    $oDocument->getRoot() && !$oDocument->getRoot()->isEmpty()) {
     
-    return $oDocument->getRoot()->getChildren();
+    $mResult = $oDocument->getRoot()->getChildren();
     
-  } else {
-    //echo 'pas ok';
-    Controler::addMessage(array(t('StrToXml : Transformation impossible'), new HTML_Hr, $sValue), 'xml/warning');
-    
-    return null;
-  }
+  } else if ($bMessage) dspm(array(t('StrToXml : Transformation impossible'), new HTML_Hr, $sValue), 'xml/warning');
+  
+  return $mResult;
 }
 
 interface XML_Composante {

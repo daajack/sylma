@@ -76,7 +76,7 @@ class DBX_Module extends Module {
           
           if (!$oValues = $this->buildValues($oPost))
             dspm(xt('Erreur dans la conversion des valeurs de %s à %s', view($oPost), view($oValues)), 'error');
-          dspf($oValues);
+          
         } else $oValues = null;
         
         if (!$oValues) $oValues = $this->getEmpty();

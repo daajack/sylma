@@ -27,12 +27,8 @@ class XML_Document extends DOMDocument {
     if ($mChildren) {
       
       // if Object else String
-      if (is_object($mChildren)) {
-        
-        if ($mChildren instanceof XML_XQuery) $this->set($mChildren->read());
-        else $this->set($mChildren);
-        
-      } else if (is_string($mChildren)) $this->startString($mChildren);
+      if (is_object($mChildren)) $this->set($mChildren);
+      else if (is_string($mChildren)) $this->startString($mChildren);
     }
   }
   
@@ -299,7 +295,8 @@ class XML_Document extends DOMDocument {
       
       if (!@parent::loadXML($sContent)) {
         
-        Controler::addMessage(array(t('Chargement texte impossible, contenu invalide :'), new HTML_Hr, $sContent), 'xml/warning');
+        Controler::addMessage(array(t('Chargement texte impossible, contenu invalide :'),
+          new HTML_Hr, stringResume($sContent, 500)), 'xml/warning');
         return false;
         //if (DEBUG) echo 'Chargement texte impossible : '.xmlize($sContent).new HTML_Br;
         
@@ -363,7 +360,7 @@ class XML_Document extends DOMDocument {
         
         // TEMPORARY System fo avoiding erasing of protected files from not admin users. TODO
         
-        if ((!$bSecurityFile && $bAccess) || (Controler::isAdmin())) { //$bSecurityFile && 
+        if (!$bSecurityFile && $bAccess) { //$bSecurityFile &&  || (Controler::isAdmin())
           
           if ($oFile) $oDocument = $oFile->getFreeDocument();
           
@@ -388,7 +385,7 @@ class XML_Document extends DOMDocument {
             
           } else $bSecured = false; // Not secured file
           
-          if (!$bSecured || Controler::isAdmin()) {
+          if (!$bSecured) {
             
             $bResult = $this->saveFree($oDirectory, $sName);
             
@@ -625,9 +622,9 @@ class XML_Document extends DOMDocument {
     return (string) $mValue;
   }
   
-  public function updateNamespace($sFrom, $sTo, $sPrefix = '') {
+  public function updateNamespaces($mFrom = null, $mTo = null, $mPrefix = '', $oParent = null) {
     
-    if ($this->getRoot()) return new XML_Document($this->getRoot()->updateNamespace($sFrom, $sTo, $sPrefix));
+    if ($this->getRoot()) return new XML_Document($this->getRoot()->updateNamespaces($mFrom, $mTo, $mPrefix, $oParent));
     else return new XML_Document;
   }
   
@@ -845,9 +842,9 @@ class XSL_Document extends XML_Document {
       
       $sResult = $this->getProcessor()->transformToXML($oDocument);
       
-      if (libxml_get_errors()) { // TODO, nice view
+      if (Controler::isAdmin() && libxml_get_errors()) { // TODO, nice view
         foreach (libxml_get_errors() as $oError) {
-          dspf(get_object_vars($oError));
+          dspm(xt('%s : %s', new HTML_Strong('Libxml'), xmlize($oError->message)), 'warning');
         }
       }
       
@@ -866,3 +863,5 @@ class XSL_Document extends XML_Document {
     return $mResult;
   }
 }
+
+

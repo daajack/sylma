@@ -6,8 +6,6 @@ define('SYLMA_PATH_USER_EDIT',   '/sylma/modules/users/edit/');
 define('SYLMA_PATH_ERROR',    '/error');
 define('SYLMA_EMPTY_REDIRECT', true); // redirect on SYLMA_PATH_ERROR if no main action is found
 
-define('SYLMA_ADMIN_EXTENSION',   '.sylma');
-
 define('SYLMA_PATH_EDITOR',   '/modules/editeur'.SYLMA_ADMIN_EXTENSION);
 define('SYLMA_PATH_MODULES',   '/modules');
 

@@ -956,23 +956,47 @@ class XML_Element extends DOMElement implements XML_Composante {
     else return $this->namespaceURI;
   }
   
-  public function updateNamespace($sFrom, $sTo, $sPrefix = '') {
+  public function updateNamespaces($mFrom = null, $mTo = null, $mPrefix = '', $oParent = null) {
     
-    if ($this->useNamespace($sFrom)) {
+    if (is_array($mFrom)) {
       
-      $oResult = new XML_Element(($sPrefix ? $sPrefix.':' : '').$this->getName(), null, $this->getAttributes(), $sTo);
+      $bNamespace = false;
       
-    } else {
+      foreach ($mFrom as $i => $sFrom) {
+        
+        $sPrefix = $mPrefix[$i];
+        $sTo = $mTo[$i];
+        
+        if ($this->useNamespace($sFrom)) {
+          
+          $bNamespace = true;
+          
+          $sName = ($sPrefix ? $sPrefix.':' : '').$this->getName();
+          
+          if ($oParent) $oResult = $oParent->addNode($sName, null, $this->getAttributes(), $sTo);
+          else $oResult = new XML_Element($sName, null, $this->getAttributes(), $sTo);
+          
+          break;
+        }
+      }
       
-      $oResult = clone $this;
-      $oResult->cleanChildren();
-    }
-    
-    foreach ($this->getChildren() as $oChild) {
+      if (!$bNamespace) {
+        
+        if ($oParent) $oResult = $oParent->addNode($this->getName(false), null, $this->getAttributes(), $this->getNamespace());
+        else {
+          
+          $oResult = clone $this;
+          $oResult->cleanChildren();
+        }
+      }
       
-      if ($oChild->isElement()) $oResult->add($oChild->updateNamespace($sFrom, $sTo, $sPrefix));
-      else $oResult->add($oChild);
-    }
+      foreach ($this->getChildren() as $oChild) {
+        
+        if ($oChild->isElement()) $oChild->updateNamespaces($mFrom, $mTo, $mPrefix, $oResult);
+        else $oResult->add($oChild);
+      }
+      
+    } else $oResult = $this->updateNamespaces(array($mFrom), array($mTo), array($mPrefix), $oParent);
     
     return $oResult;
   }

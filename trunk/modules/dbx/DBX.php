@@ -58,7 +58,7 @@ class DBX_Module extends Module {
     return $this->oEmpty;
   }
   
-  private function getDB() {
+  protected function getDB() {
     
     return Controler::getDatabase();
   }
@@ -110,46 +110,6 @@ class DBX_Module extends Module {
     
     $this->switchDirectory();
     return $mResult;
-  }
-  
-  private function getFile($sPath) {
-    
-    $oResult = null;
-    $sFile = 'document';
-    
-    if (isset($_FILES[$sFile]) && $_FILES[$sFile]['name']) {
-      
-      if ($_FILES[$sFile]['size'] > SYLMA_UPLOAD_MAX_SIZE) dspm(t('Le fichier lié est trop grand'), 'warning');
-      else {
-        
-        $oParentDirectory = extractDirectory(__file__, true);
-        
-        if (!$oDirectory = $oParentDirectory->getParent()->addDirectory('documents')) dspm(t('Impossible de créer le répertoire de destination des fichiers'), 'error');
-        else {
-          
-          $sExtension = '';
-          
-          if ($iExtension = strrpos($_FILES[$sFile]['name'], '.')) $sExtension = strtolower(substr($_FILES[$sFile]['name'], $iExtension));
-          
-          if ($sExtension == '.php') dspm(xt('L\'extension "%s" de ce fichier est interdite !', new HTML_Strong($sExtension)), 'warning');
-          else {
-            
-            $sName = $sPath.$sExtension;
-            $sPath = $oDirectory->getRealPath().'/'.$sName;
-            
-            if(!move_uploaded_file($_FILES[$sFile]['tmp_name'], $sPath)) dspm(t('Problème lors du chargement du fichier'), 'warning');
-            else {
-              
-              $oResult = new XML_Element($sFile, $sName);
-              
-              dspm(xt('Fichier %s ajouté dans %s', new HTML_Strong($sName), (string) $oDirectory));
-            }
-          }
-        }
-      }
-    }
-    
-    return $oResult;
   }
   
   public function add(Redirect $oRedirect) {
@@ -270,14 +230,72 @@ class DBX_Module extends Module {
     return $oRedirect;
   }
   
+  private function getFile($sPath) {
+    
+    $oResult = null;
+    $sFile = 'document';
+    
+    if (isset($_FILES[$sFile]) && $_FILES[$sFile]['name']) {
+      
+      if ($_FILES[$sFile]['size'] > SYLMA_UPLOAD_MAX_SIZE) dspm(t('Le fichier lié est trop grand'), 'warning');
+      else {
+        
+        $oParentDirectory = extractDirectory(__file__, true);
+        
+        if (!$oDirectory = $oParentDirectory->getParent()->addDirectory('documents')) dspm(t('Impossible de créer le répertoire de destination des fichiers'), 'error');
+        else {
+          
+          $sExtension = '';
+          
+          if ($iExtension = strrpos($_FILES[$sFile]['name'], '.')) $sExtension = strtolower(substr($_FILES[$sFile]['name'], $iExtension));
+          
+          if ($sExtension == '.php') dspm(xt('L\'extension "%s" de ce fichier est interdite !', new HTML_Strong($sExtension)), 'warning');
+          else {
+            
+            $sName = $sPath.$sExtension;
+            $sPath = $oDirectory->getRealPath().'/'.$sName;
+            
+            if(!move_uploaded_file($_FILES[$sFile]['tmp_name'], $sPath)) dspm(t('Problème lors du chargement du fichier'), 'warning');
+            else {
+              
+              $oResult = new XML_Element($sFile, $sName);
+              
+              dspm(xt('Fichier %s ajouté dans %s', new HTML_Strong($sName), (string) $oDirectory));
+            }
+          }
+        }
+      }
+    }
+    
+    return $oResult;
+  }
+  
   public function load($sId) {
     
     return $this->getDB()->load($sId);;
   }
   
-  public function delete($sId) {
+  public function query($sQuery, array $aNamespaces = array()) {
     
-    dspm(t('Actualité supprimée !'));
-    $this->getDB()->delete($sId);
+    $aNamespaces = array_merge($this->getNS(), $aNamespaces);
+    
+    return $this->getDB()->query($sQuery, $aNamespaces);
+  }
+  
+  public function insert($mElement, $sTarget, array $aNamespaces = array()) {
+    
+    $aNamespaces = array_merge($this->getNS(), $aNamespaces);
+    
+    return $this->getDB()->insert($mElement, $sTarget, $aNamespaces);
+  }
+  
+  public function delete($sId, array $aNamespaces = array()) {
+    
+    $aNamespaces = array_merge($this->getNS(), $aNamespaces);
+    
+    return $this->getDB()->delete($sId, $aNamespaces);
   }
 }
+
+
+

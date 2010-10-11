@@ -12,21 +12,6 @@ a { color: #467ca2; }
 a:hover { color: #ec8a23; }
 a:visited { color: #575757; }
 
-
-table.list {
-  width: 100%;
-  border: 1px solid #777;
-  border-bottom-color: #444;
-  border-right-color: #444;
-  border-collapse : collapse;
-  clear: both;
-}
-
-table.list td, table.list th {
-  padding: 2px 5px 2px 5px;
-  border: 1px dotted #555;
-}
-
 .center { text-align: center; }
 
 #container {

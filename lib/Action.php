@@ -714,7 +714,7 @@ class XML_Action extends XML_Document {
       
       case 'xquery' :
         
-        if (!$oArgument = $this->buildArgument($oElement->getFirst()->remove())) {
+        if (!$oArgument = $this->buildArgument($oElement->getFirst())) {
           
           dspm(xt('Argument %s invalide pour la création de requête'), 'action/error');
           
@@ -1333,7 +1333,7 @@ class XML_Action extends XML_Document {
       
       // Argument is here
       
-      if ($mArgument) {
+      if ($mArgument !== null) {
         
         // Argument has value
         

@@ -553,6 +553,11 @@ class XML_XQuery {
     return $sResult;
   }
   
+  public function parse() {
+    
+    return $this->read(true);
+  }
+  
   public function read($bXML = false) {
     
     $oDB = Controler::getDatabase();
@@ -568,3 +573,6 @@ class XML_XQuery {
     return null;
   }
 }
+
+
+

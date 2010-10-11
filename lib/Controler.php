@@ -1075,11 +1075,6 @@ class Controler {
     
     return self::$bReady;
   }
-  
-  public static function getYAML($sFilePath) {
-    
-    return Spyc::YAMLLoad(MAIN_DIRECTORY.'/'.$sFilePath);
-  }
 }
 
 class Redirect {

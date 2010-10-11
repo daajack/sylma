@@ -27,7 +27,7 @@
       <link rel="stylesheet" type="text/css" media="all" href="/sylma/modules/html/backend.css"/>
     </head>
     <body>
-      <a id="user-login" ls:owner="root" ls:mode="701" ls:group="famous" href="/sylma/modules/users/login">connexion</a>
+      <a id="user-login" ls:mode="710" ls:group="famous" href="/sylma/modules/users/login" ls:owner="root">connexion</a>
       <div id="container">
         <div id="header">
           <h1>

@@ -34,16 +34,17 @@ class XML_Database {
     $oSession = $this->oSession;
     
     $sResult = '';
+    $bResult = true;
     //$sMessage = '';
-    //$bError = false;
     
     if ($oSession) {
       
-      if ($oSession->execute($sCommand)) $sResult = $oSession->result();
+      if ($bResult = $oSession->execute($sCommand)) $sResult = $oSession->result();
       else dspm(xt('Commande %s invalide. (%s)', view($sCommand), new HTML_Tag('em', $oSession->info())), 'action/error');
     }
     
     //$oSession->close();
+    if (SYLMA_DB_SHOW_RESULTS) dspm(xt('xquery [result] : %s', new HTML_Tag('pre', ($bResult ? $sResult : '[error]'))), 'db/notice');
     
     return $sResult;
   }
@@ -61,7 +62,7 @@ class XML_Database {
     
     $sQuery = $sDeclare.$sQuery;
     
-    if (SYLMA_DB_SHOW_QUERIES) dspm(xt('xquery : %s', new HTML_Tag('pre', $sQuery)), 'db/notice');
+    if (SYLMA_DB_SHOW_QUERIES) dspm(xt('xquery [query] : %s', new HTML_Tag('pre', $sQuery)), 'db/notice');
     
     return $this->run('xquery '.$sQuery);
   }
@@ -106,12 +107,9 @@ class XML_Database {
     else $this->sNamespace = $sNamespace;
   }
   
-  public function insert(XML_Element $oElement, $sTarget, array $aNamespaces = array()) {
+  public function insert($mElement, $sTarget, array $aNamespaces = array()) {
     
-    $oDocument = new XML_Document($oElement);
-    $sElement = substr($oDocument->display(true), 39);
-    
-    return $this->query("insert nodes $sElement into $sTarget", $aNamespaces);
+    return $this->query("insert nodes $mElement into $sTarget", $aNamespaces);
   }
   
   public function __destruct() {

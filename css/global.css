@@ -55,6 +55,25 @@
   color: #444;
 }
 
+/* Tables */
+
+table.list {
+  border-collapse:collapse;
+  border-color:#777777 #444444 #444444 #777777;
+  border-style:solid;
+  border-width:1px;
+  clear:both;
+  width:100%;
+}
+
+table.list td, table.list th {
+  border:1px dotted #555555;
+  padding:2px 5px;
+}
+
+
+/* Messages */
+
 #msg-admin {
   position: absolute;
   left: 10px;

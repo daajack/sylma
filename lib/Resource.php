@@ -585,7 +585,7 @@ class XML_Directory extends XML_Resource {
     if (!$sName = xmlize($this->getName())) {
       
       $sName = t('<racine>');
-      $sPath = '/';
+      $sPath = ''; //'/';
       
     } else $sPath = $this->getFullPath();
     
@@ -608,7 +608,7 @@ class XML_Directory extends XML_Resource {
   public function __toString() {
     
     if ($this->getFullPath()) return $this->getFullPath();
-    else return '/';
+    else return '';//'/';
   }
 }
 

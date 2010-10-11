@@ -17,6 +17,7 @@ define('SYLMA_LOG_MESSAGES', false); // DEFAULT = false
 define('FORMAT_MESSAGES', true); // DEFAULT = true
 
 define('SYLMA_DB_SHOW_QUERIES', false); // DEFAULT = false
+define('SYLMA_DB_SHOW_RESULTS', false); // DEFAULT = false
 
 /* Global */ // Could be different for production or test server
 
@@ -27,6 +28,8 @@ define('MAIN_DIRECTORY', PATH_PHP);
 define('SESSION_MAX_LIFETIME', 3600 * 8);
 define('ERROR_LEVEL', E_ALL); // or E_ALL ^ E_WARNING ^ E_NOTICE
 define('SYLMA_PATH_SETTINGS',   '/config/root.xml');
+
+define('SYLMA_ADMIN_EXTENSION',   '.sylma');
 
 define('SYLMA_RESULT_LIFETIME', 30); // seconds, JS results stored in the $_SESSION, read in AJAX
 define('SYLMA_ENCODING_CHECK', true);

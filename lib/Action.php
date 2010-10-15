@@ -103,7 +103,7 @@ class XML_Action extends XML_Document {
           
           $aArguments = $this->parseArguments($oConstruct, array(), true);
           
-          if (!$aArguments && ($oConstruct->query('ns:argument[@required="false"]')->length != $oConstruct->query('ns:argument')->length)) {
+          if (!$aArguments && ($oConstruct->query('ns:argument[not(@required="false")]'))) {
             
             dspm('Erreur dans les arguments, impossible de construire l\'objet', 'action/warning');
             return null;
@@ -894,12 +894,9 @@ class XML_Action extends XML_Document {
       } else {
         
         /* Unknown namespace -> copy element */
-        
         if (Controler::useStatut('action/report')) dspm(xt('Copy [%s]', view($oArgument)), 'action/report');
         
-        $mResult = clone $oArgument;
-        
-        $mResult->cleanChildren();
+        $mResult = $oArgument->cloneNode(false);
         
         $this->setVariableElement($oArgument, $mResult);
         
@@ -1156,6 +1153,8 @@ class XML_Action extends XML_Document {
       
       // Normal arguments (defined number)
       
+      $aMethodArguments = array();
+      
       foreach($oChildren as $iArgument => $oChild) {
         
         $sName = $oChild->getAttribute('name');
@@ -1238,20 +1237,20 @@ class XML_Action extends XML_Document {
       if (Controler::useStatut('action/report')) {
         
         $aDspArguments = array();
-        foreach ($aArguments['arguments'] as $mArgument) $aDspArguments[] = Controler::formatResource($mArgument, false);
+        foreach ($aArguments['arguments'] as $mArgument) $aDspArguments[] = view($mArgument, false);
         
         $oArguments = new XML_NodeList($aDspArguments);
         
         if (!$bStatic) {
           
           eval("\$oObject = $sObject;");
-          $mObject = Controler::formatResource($oObject);
+          $mObject = view($oObject);
           
         } else $mObject = $sObject;
         
         dspm(array(
         t('Evaluation : '),
-        Controler::formatResource($oResult),
+        view($oResult),
         " = ",
         $mObject,
         "$sCaller$sMethodName(",
@@ -1277,15 +1276,17 @@ class XML_Action extends XML_Document {
         if ($aArguments) {
           
           $aDspArguments = array();
-          foreach ($aArguments as $mArgument) $aDspArguments[] = Controler::formatResource($mArgument);
+          foreach ($aArguments as $mArgument) $aDspArguments[] = view($mArgument);
           
           $oArguments = new XML_NodeList($aDspArguments);
           $sArguments = $oArguments->implode(', ');
           
         } else $sArguments = '';
         
+        $sCaller = 
+        
         dspm(array(
-        t('Evaluation : ')."\$oAction = new $sClassName(",
+        t('Instanciation : ')."\$oAction = new $sClassName(",
         $sArguments,
         ");"), 'action/report');
       }

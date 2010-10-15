@@ -107,7 +107,7 @@ class Controler {
         
         $oAction = new XML_Action(self::getPath(), $oRedirect, null, self::getWindow());
         
-        if ($oAction->isEmpty() && SYLMA_EMPTY_REDIRECT) self::errorRedirect(); // no rights / empty main action
+        if ($oAction->isEmpty() && SYLMA_ACTION_ERROR_REDIRECT) self::errorRedirect(); // no rights / empty main action
         else {
           
           if (self::getWindowSettings()->hasAttribute('action')) {
@@ -466,6 +466,69 @@ class Controler {
   public static function infosOpenAction($oCaller) {
     
     self::$aActions[] = $oCaller;
+  }
+  
+  public static function testAction($sPath, $iMaxTime = 5, $iMaxCount = 100) {
+    
+    $iCount = $iMaxCount;
+    
+    if ($iCount > 1000) {
+      
+      dspm(xt('%s récurences est un chiffre trop élévé, remplacement par %s',
+        new HTML_Strong($iCount), new HTML_Strong(100)), 'warning');
+      $iCount = 100;
+    }
+    
+    if ($iMaxTime > 60) {
+      
+      dspm(xt('%s de temps maximum un chiffre trop élévé, remplacement par %s',
+        new HTML_Strong($iCount), new HTML_Strong(10)), 'warning');
+      $iMaxTime = 10;
+    }
+    
+    $iCalls = 0;
+    $iBiggerTime = 0;
+    
+    $sPath = '/commandes/admin/add';
+    $oResult = new XML_Document('root');
+    
+    $iStart = microtime(true);
+    
+    while ($iCount) {
+      
+      $oAction = new XML_Action($sPath);
+      $iActionTime = microtime(true);
+      
+      $oResult->add($oAction);
+      
+      $iDeltaTime = microtime(true) - $iActionTime;
+      if ($iDeltaTime > $iBiggerTime) $iBiggerTime = $iDeltaTime;
+      
+      if (microtime(true) - $iStart > $iMaxTime) $iCount = 0;
+      else {
+        
+        $iCount--;
+        $iCalls++;
+      }
+    }
+    
+    $iTotalTime = microtime(true) - $iStart;
+    $iAverageTime = $iTotalTime / $iCalls;
+    $iDeltaTime = ((100 / $iAverageTime) * ($iBiggerTime - $iAverageTime));
+    
+    $oCalls = new HTML_Strong($iCalls);
+    if ($iCalls != $iMaxCount) $oCalls->setAttribute('style', 'color : red');
+    
+    dspm(t('Test terminé'), 'success');
+    dspm(xt('Action : %s', new HTML_Strong($sPath)));
+    dspm(xt('Temps total : %s', new HTML_Strong(number_format($iTotalTime, 3).' s')));
+    dspm(xt('Nombre d\'appels : %s', $oCalls));
+    dspm(new HTML_Hr());
+    dspm(xt('Mémoire utilisée : %s', new HTML_Strong(formatMemory(memory_get_peak_usage()))));
+    dspm(xt('Temps moyen : %s', new HTML_Strong(number_format($iAverageTime, 3).' s')));
+    dspm(xt('Variation : %s%%', new HTML_Strong(number_format($iDeltaTime, 1))));
+    
+    return $oAction;
   }
   
   public static function infosCloseAction($oAction) {
@@ -863,6 +926,29 @@ class Controler {
     return self::$oDatabase;
   }
   
+  public static function importDatabase() {
+    
+    $xDirectory = 'database/import';
+    
+    if (!$sPath = self::getSettings($xDirectory)) {
+      
+      dspm(xt('Chemin %s inexistant ou invalide pour l\'importation dans le fichier root', new HTML_Strong($xDirectory)), 'warning');
+      
+    } else if ($oFile = self::getFile($sPath, true)) {
+      
+      $oDocument = $oFile->getDocument();
+      
+      if ($oDocument->isEmpty()) dspm(xt('Le document d\'importation %s est vide', new HTML_Strong), 'warning');
+      else {
+        
+        self::getDatabase()->run('add '.$oFile->getSystemPath());
+        dspm(xt('Base de donnée importée depuis %s', $oDocument->getFile()->parse()), 'success');
+      }
+    }
+    
+    return '';
+  }
+  
   public static function exportDatabase() {
     
     $xDirectory = 'database/export';
@@ -870,11 +956,11 @@ class Controler {
     
     if ((!$sPath = self::getSettings($xDirectory)) || (!$sName = self::getSettings($xName))) {
       
-      dspm(xt('Chemin inexistant ou invalide pour l\'export dans %s', new HTML_Strong($xDirectory)), 'warning');
+      dspm(xt('Chemin %s inexistant ou invalide pour l\'exportation dans le fichier root', new HTML_Strong($xDirectory)), 'warning');
       
     } else {
       
-      if ($sPath{0} != '/') $sPath = self::getSystemPath().'/'.self::getDirectory()->getRealPath().'/'.$sPath;
+      if ($sPath{0} != '/') $sPath = self::getDirectory()->getSystemPath().'/'.$sPath;
       
       self::getDatabase()->run("export $sPath $sName");
       dspm(xt('Données exportées dans %s', new HTML_Strong($sPath.'/'.$sName)), 'success');
@@ -1074,6 +1160,11 @@ class Controler {
   public static function isReady() {
     
     return self::$bReady;
+  }
+  
+  public function __toString() {
+    
+    return t('[Controler]');
   }
 }
 

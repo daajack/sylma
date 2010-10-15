@@ -8,7 +8,7 @@
     <form method="{$method}" action="{$action}">
       <xsl:apply-templates select="lc:get-model(*[1])/lc:annotations/lc:message"/>
       <xsl:apply-templates select="*[1]/@*"/>
-      <xsl:apply-templates select="*[1]/*"/>
+      <xsl:apply-templates select="*[1]/*[not(@lc:editable = 'false')]"/>
       <div class="field-actions">
         <input type="submit" value="Enregistrer"/>
         <input type="button" value="Annuler" onclick="history.go(-1);"/>
@@ -39,7 +39,7 @@
                 </xsl:apply-templates>
               </select>
             </xsl:when>
-            <xsl:when test="lc:get-element()/@line-break">
+            <xsl:when test="@lc:line-break">
               <textarea id="{$id}" name="{$name}">
                 <xsl:value-of select="."/>
               </textarea>

@@ -56,8 +56,8 @@ class XML_Database {
     
     foreach ($aNamespaces as $sPrefix => $sNamespace) {
       
-      if (!$sPrefix) $sDeclare .= "declare default element namespace '{$sNamespace}';\n";
-      else $sDeclare .= "declare namespace {$sPrefix}='{$sNamespace}';\n";
+      if ($sPrefix === 0) $sDeclare .= "declare default element namespace '{$sNamespace}';\n";
+      else if ($sPrefix) $sDeclare .= "declare namespace {$sPrefix}='{$sNamespace}';\n";
     }
     
     $sQuery = $sDeclare.$sQuery;

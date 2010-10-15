@@ -148,17 +148,17 @@ class XML_Element extends DOMElement implements XML_Composante {
   /**
    * XPath Evaluation if {@link $sQuery} is not null else return {@link getValue()}
    * @param string $sQuery Query to execute
-   * @param string $sPrefix Prefix of the namespace used in the query
-   * @param string $sUri Uri corresponding to the prefix precedly defined
+   * @param string | array $mNS Prefix of the namespace used in the query, or array of type prefix => namespace
+   * @param string $sUri Uri corresponding to the prefix precedly defined if it's a string
    * @return string Result of the XPath evaluation or {@link getValue()}
    */
-  public function read($sQuery = '', $sPrefix = '', $sUri = '') {
+  public function read($sQuery = '', $mNS = '', $sUri = '') {
     
     if ($sQuery) {
       
       $mResult = '';
       
-      $oXPath = $this->buildXPath($sPrefix, $sUri);
+      $oXPath = $this->buildXPath($mNS, $sUri);
       
       if ($oXPath) {
         
@@ -186,15 +186,15 @@ class XML_Element extends DOMElement implements XML_Composante {
   /**
    * XPath Query
    * @param string $sQuery Query to execute
-   * @param string $sPrefix Prefix of the namespace used in the query
-   * @param string $sUri Uri corresponding to the prefix precedly defined
+   * @param string | array $mNS Prefix of the namespace used in the query, or array of type prefix => namespace
+   * @param string $sUri Uri corresponding to the prefix precedly defined if it's a string
    * @return XML_NodeList Result of the XPath query
    */
-  public function query($sQuery, $mValue = '', $sUri = '') {
+  public function query($sQuery, $mNS = '', $sUri = '') {
     
     if (is_string($sQuery) && $sQuery) {
       
-      $oXPath = $this->buildXPath($mValue, $sUri);
+      $oXPath = $this->buildXPath($mNS, $sUri);
       
       if ($oXPath) {
         
@@ -221,13 +221,13 @@ class XML_Element extends DOMElement implements XML_Composante {
   /**
    * XPath Query
    * @param string $sQuery Query to execute
-   * @param string $sPrefix Prefix of the namespace used in the query
-   * @param string $sUri Uri corresponding to the prefix precedly defined
+   * @param string | array $mNS Prefix of the namespace used in the query, or array of type prefix => namespace
+   * @param string $sUri Uri corresponding to the prefix precedly defined if it's a string
    * @return XML_Element The first element resulting from the XPath query
    */
-  public function get($sQuery, $sPrefix = '', $sUri = '') {
+  public function get($sQuery, $mNS = '', $sUri = '') {
     
-    return $this->getDocument()->queryOne($this->query($sQuery, $sPrefix, $sUri));
+    return $this->getDocument()->queryOne($this->query($sQuery, $mNS, $sUri));
   }
   
   public function readByName($sName, $sUri = null) {
@@ -258,9 +258,19 @@ class XML_Element extends DOMElement implements XML_Composante {
     
     // TODO : RIGHTS
     
-    if (!($oAttribute->getDocument() === $this->getDocument())) $oAttribute = $this->getDocument()->importNode($oAttribute);
-    
-    return parent::setAttributeNode($oAttribute);
+    // TODO Bug #47848 : will be fixed
+    if ($oAttribute->getPrefix()) {
+      
+      $sName = $oAttribute->getName(true);
+      
+      $this->setAttribute($sName, $oAttribute->getValue(), $oAttribute->getNamespace());
+      return $this->getAttribute($sName);
+      
+    } else {
+      
+      if (!($oAttribute->getDocument() === $this->getDocument())) $oAttribute = $this->getDocument()->importNode($oAttribute);
+      return parent::setAttributeNode($oAttribute);
+    }
   }
   
   public function hasAttributes() {
@@ -526,7 +536,7 @@ class XML_Element extends DOMElement implements XML_Composante {
         
         /* XML_Attribute */
         
-        $mValue = $this->addAttribute($mValue);
+        $this->setAttributeNode($mValue);
         
       } else if ($mValue instanceof XML_NodeList) {
         
@@ -770,9 +780,9 @@ class XML_Element extends DOMElement implements XML_Composante {
    * @param XML_Element $oNext The element that will follow the value
    * @return XML_Element The element added to content
    */
-  public function insertNode($sName, $oContent = '', $aAttributes = null, $sUri = null, $oNext = null) {
+  public function insertNode($sName, $oContent = '', $aAttributes = null, $sUri = null, $oNext = null, $bPrevious = false) {
     
-    return $this->insertChild($this->getDocument()->createNode($sName, $oContent, $aAttributes, $sUri), $oNext);
+    return $this->insertChild($this->getDocument()->createNode($sName, $oContent, $aAttributes, $sUri), $oNext, $bPrevious);
   }
   
   public function toArray($sAttribute = null, $iDepthAttribute = 0) {
@@ -1116,12 +1126,21 @@ class XML_Element extends DOMElement implements XML_Composante {
     return new HTML_Div($this->viewResume(), array('class' => 'message-element'));
   }
   
+  public function cloneNode($bDepth = true) {
+    
+    if ($this->getParent() && $this->getPrefix() && !$this->getParent()->useNamespace($this->getNamespace())) { // TODO, bug ?
+      
+      $oResult = new XML_Element($this->getName(false), null, $this->getAttributes(), $this->getNamespace());
+      if ($bDepth) $oResult->add($this->getChildren());
+      
+    } else $oResult = parent::cloneNode($bDepth);
+    
+    return $oResult;
+  }
+  
   public function __clone() {
     
-    $oClone = $this->cloneNode(true);
-    // dspm($this->getNamespace());
-    // dspm($oClone->getNamespace());
-    return $oClone;
+    return $this->cloneNode(false);
   }
   
   public function __toString() {

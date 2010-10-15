@@ -410,7 +410,7 @@ class HTML_Action extends XML_Action {
       if ($mContent) $oHead->add(new HTML_Script('', (string) $mContent));
       else if (!$oHead->get("ns:script[@src='$sHref']")) $oHead->add(new HTML_Script($sHref));
       
-    } else dspm(xt('Impossible d\'ajouter le fichier script %s', new HTML_Strong($sHref)), 'warning');
+    }// else dspm(xt('Impossible d\'ajouter le fichier script %s', new HTML_Strong($sHref)), 'warning');
   }
   
   public function addCSS($sHref = '') {
@@ -419,7 +419,7 @@ class HTML_Action extends XML_Action {
       
       $oHead->add(new HTML_Style($sHref));
       
-    } else dspm(xt('Impossible d\'ajouter la feuille de style %s', new HTML_Strong($sHref)), 'warning');
+    }// else dspm(xt('Impossible d\'ajouter la feuille de style %s', new HTML_Strong($sHref)), 'warning');
   }
   
   public function getHead() {

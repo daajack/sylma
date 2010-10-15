@@ -5,7 +5,6 @@
   <method-construct>
     <argument format="XML_Directory" name="directory"/>
     <argument format="XML_Document" name="schema"/>
-    <argument format="php-string" name="namespace"/>
     <argument format="XML_Document" name="options"/>
   </method-construct>
   <method name="run" path="run" return-default="true" ls:owner="root" ls:group="users" ls:mode="710">

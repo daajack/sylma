@@ -118,14 +118,35 @@ class XML_Attribute extends DOMAttr {
     parent::__construct($sName, $sValue);
   }
   
-  public function getName() {
+  public function getPrefix() {
     
-    return $this->name;
+    return $this->prefix;
+  }
+  
+  public function getName($bFull = false) {
+    
+    if ($bFull && $this->getPrefix()) return $this->getPrefix().':'.$this->name;
+    else return $this->name;
   }
   
   public function getValue() {
     
     return $this->value;
+  }
+  
+  public function getParent() {
+    
+    return $this->ownerElement;
+  }
+  
+  public function useNamespace($sNamespace) {
+    
+    return $this->getNamespace() == $sNamespace;
+  }
+  
+  public function getNamespace() {
+    
+    return $this->namespaceURI;
   }
   
   public function getDocument() {
@@ -145,7 +166,7 @@ class XML_Attribute extends DOMAttr {
   
   public function __toString() {
     
-    return $this->name.'="'.xmlize($this->value).'"';
+    return $this->getName(true).'="'.xmlize($this->value).'"';
   }
 }
 
@@ -566,8 +587,16 @@ class XML_XQuery {
     
     if ($sResult = $oDB->query($sQuery)) {
       
-      if ($bXML) return new XML_Document($sResult);
-      else return $sResult;
+      if ($bXML) {
+        
+        return strtoxml($sResult);
+        /*
+        $oDocument = new XML_Document('root');
+        $oDocument->add()
+        if (!$oDocument->isEmpty() && $oDocument->countChildren() > 1) $oResult = $oDocument->getChildren();
+        else $oResult = $oDocument->getRoot();*/
+        
+      } else return $sResult;
     }
     
     return null;

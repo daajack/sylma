@@ -4,10 +4,10 @@ define('SYLMA_PATH_LOGIN',    '/login');
 define('SYLMA_PATH_LOGOUT',   '/logout');
 define('SYLMA_PATH_USER_EDIT',   '/sylma/modules/users/edit/');
 define('SYLMA_PATH_ERROR',    '/error');
-define('SYLMA_EMPTY_REDIRECT', true); // redirect on SYLMA_PATH_ERROR if no main action is found
 
 define('SYLMA_PATH_EDITOR',   '/modules/editeur'.SYLMA_ADMIN_EXTENSION);
 define('SYLMA_PATH_MODULES',   '/modules');
+define('SYLMA_PATH_TEMP',   '/config/tmp');
 
 define('SYLMA_PATH_INTERFACES', '/sylma/interfaces');
 define('SYLMA_PATH_INTERFACES_INDEX', '/sylma/system/interfaces.cml');
@@ -24,6 +24,7 @@ define('SYLMA_NS_DIRECTORY', 'http://www.sylma.org/directory');
 define('SYLMA_NS_SECURITY', 'http://www.sylma.org/security');
 define('SYLMA_NS_INTERFACE', 'http://www.sylma.org/interface');
 define('SYLMA_NS_MESSAGES', 'http://www.sylma.org/messages');
+define('SYLMA_NS_SCHEMAS', 'http://www.sylma.org/schemas');
 
 define('SYLMA_NS_PROCESSOR_FORM', '/sylma/processors/form/schema');
 define('SYLMA_NS_FORM_SCHEMA', 'http://schemas.sylma.org/form-schema');

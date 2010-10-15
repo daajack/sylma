@@ -29,8 +29,8 @@
   </func:function>
   <func:function name="lc:get-title">
     <xsl:choose>
-      <xsl:when test="boolean(lc:get-element()) and lc:get-element()/@title">
-        <func:result select="lc:get-element()/@title"/>
+      <xsl:when test="@lc:title">
+        <func:result select="@lc:title"/>
       </xsl:when>
       <xsl:when test="boolean(lc:get-model())">
         <func:result select="lc:get-model()/@name"/>

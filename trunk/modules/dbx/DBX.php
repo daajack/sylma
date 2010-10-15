@@ -5,12 +5,15 @@ class DBX_Module extends Module {
   private $oEmpty = null;
   private $sPath = '';
   private $sExtension = '';
+  private $sRootName = '';
+  private $sParentPath = '';
+  private $sParentName = '';
   
   private $bSelfDirectory = true;
   private $oSelfDirectory = null;
   private $oExtendDirectory = null;
   
-  public function __construct(XML_Directory $oDirectory, XML_Document $oSchema, $sNamespace, XML_Document $oOptions) {
+  public function __construct(XML_Directory $oDirectory, XML_Document $oSchema, XML_Document $oOptions) {
     
     $this->setDirectory(__file__);
     $this->oSelfDirectory = $this->getDirectory();
@@ -19,15 +22,24 @@ class DBX_Module extends Module {
     $this->switchDirectory();
     
     $this->oSchema = $oSchema;
-    $this->setNamespace($sNamespace);
+    
     $this->setNamespace('http://www.sylma.org/modules/dbx', 'dbx', false);
+    
+    $this->sParentName = $oOptions->readByName('parent', $this->getNamespace('dbx'));
+    $this->sParentPath = $oOptions->readByName('parent-path', $this->getNamespace('dbx'));
+    $this->sRootName = $oOptions->readByName('name', $this->getNamespace('dbx'));
+    $this->sPath = $oOptions->readByName('path', $this->getNamespace('dbx'));
+    $this->sExtension = $oOptions->readByName('extension', $this->getNamespace('dbx'));
+    $sPrefix = $oOptions->readByName('prefix', $this->getNamespace('dbx'));
+    
+    $this->setNamespace($oSchema->getAttribute('targetNamespace'), $sPrefix);
+    $this->setNamespace(SYLMA_NS_SCHEMAS, 'lc', false);
     
     // options
     
-    $this->oEmpty = new XML_Document($oOptions->getByName('empty', $this->getNamespace('dbx'))->getFirst());
+    // $this->oEmpty = new XML_Document($oOptions->getByName('empty', $this->getNamespace('dbx'))->getFirst());
     
-    $this->sPath = $oOptions->readByName('path', $this->getNamespace('dbx'));
-    $this->sExtension = $oOptions->readByName('extension', $this->getNamespace('dbx'));
+    //dspf($oOptions->getByName('empty')->getFirst()->getNamespace());
   }
   
   private function getExtension() {
@@ -35,9 +47,32 @@ class DBX_Module extends Module {
     return $this->sExtension;
   }
   
+  private function getParentName() {
+    
+    return $this->sParentName;
+  }
+  
+  private function getParent() {
+    
+    return $this->sParentPath.$this->getParentName();
+  }
+  
   private function getPath() {
     
     return $this->sPath;
+  }
+  
+  private function getEmpty() {
+    
+    $oResult = new XML_Document();
+    $oResult->addNode($this->getFullPrefix().$this->getRootName(), null, null, $this->getNamespace());
+    
+    return $oResult;
+  }
+  
+  private function getRootName() {
+    
+    return $this->sRootName;
   }
   
   private function getExtendDirectory() {
@@ -51,11 +86,6 @@ class DBX_Module extends Module {
     else $this->oDirectory = $this->oSelfDirectory;
     
     $this->bSelfDirectory = !$this->bSelfDirectory;
-  }
-  
-  private function getEmpty() {
-    
-    return $this->oEmpty;
   }
   
   protected function getDB() {
@@ -77,9 +107,7 @@ class DBX_Module extends Module {
           if (!$oValues = $this->buildValues($oPost))
             dspm(xt('Erreur dans la conversion des valeurs de %s à %s', view($oPost), view($oValues)), 'error');
           
-        } else $oValues = null;
-        
-        if (!$oValues) $oValues = $this->getEmpty();
+        } else $oValues = $this->getEmpty();
         
         $oModel = $oValues->getModel($this->getSchema(), (bool) $oPost);
         $oTemplate = $this->getDocument('form.xsl', true);
@@ -106,6 +134,23 @@ class DBX_Module extends Module {
         }
         
       break;
+      
+      case 'list' :
+        
+        $iStart = 0;
+        $iLength = 10;
+        
+        $mResult = new XML_Document($this->getParentName());
+        
+        $sQuery = $this->getParent().'/'.$this->getFullPrefix().$this->getRootName();
+        
+        if (!($sResult = $this->query($sQuery)) || !($oResult = strtoxml($sResult))) {
+          
+          dspm(xt('Aucun résultat'), 'warning');
+          
+        } else $mResult->add($oResult);
+        
+      break;
     }
     
     $this->switchDirectory();
@@ -123,7 +168,6 @@ class DBX_Module extends Module {
     } else {
       
       $oValues = $this->buildValues($oPost);
-      //dspf($oValues);
       
       if (!$oValues || !$oValues->validate($this->getSchema())) {
         
@@ -131,10 +175,12 @@ class DBX_Module extends Module {
         
       } else {
         
-        $sPath = urlize($oValues->getByName('intitule'));
-        $oValues->setAttribute('id', $sPath);
+        $this->validateElement($oValues->getRoot());
         
-        $this->getDB()->insert($oValues, '/*');
+        $oValues = $oValues->updateNamespaces($this->getNamespace(), $this->getNamespace(), $this->getPrefix());
+        
+        // if ($oFile = $oValues->saveTemp()) $this->getDB()->run("add to {$this->getParent()} {$oFile->getSystemPath()}");
+        $this->insert($oValues->display(true, false), $this->getParent());
         //dspm(t($this->getTitle().));
         
         $bResult = true;
@@ -144,18 +190,81 @@ class DBX_Module extends Module {
     return $bResult;
   }
   
+  public function validateElement(XML_Element $oElement) {
+    
+    $oAttributes = $oElement->query("@*[namespace-uri()='{$this->getNamespace()}']");
+    
+    foreach ($oElement->getAttributes() as $oAttribute) {
+      
+      $sValue = $oAttribute->getValue();
+      
+      if ($oAttribute->useNamespace($this->getNamespace('lc'))) {
+        
+        switch ($oAttribute->getName()) {
+          
+          case 'duplicate' :
+            
+            // load function and targeted element
+            
+            $aValue = explode(' ', $sValue);
+            
+            if (!count($aValue) == 2) dspm(xt('Arguments %s insuffisant pour la duplication dans %s',
+              new HTML_Strong($sValue), view($oElement)), 'xml/warning');
+            else {
+              
+              list($sFunction, $sTarget) = $aValue;
+              
+              if ($sTarget{0} == '@') $oNode = $oElement->setAttribute(substr($sTarget, 1), 'null');
+              else $oNode = $oElement->getParent()->insertNode($sTarget, null, null, $this->getNamespace(), $oElement, true);
+              
+              switch ($sFunction) {
+                
+                case 'urlize' : $oNode->set(urlize($oElement->getValue())); break;
+                
+                default :
+                  
+                  dspm(xt('Fonction %s inconnu sur le champ %s', new HTML_Strong($sValue), view($oElement)), 'xml/warning');
+              }
+            }
+            
+          break;
+          
+          case 'gen-id' :
+            
+            $oElement->setAttribute($sValue, uniqid());
+            
+          break;
+          
+          case 'wiki' :
+          
+          break;
+          
+          case 'model' :
+          default :
+            
+            // dspm(xt('Attribut %s inconnu dans l\'élément %s',
+              // new HTML_Strong($oAttribute->getName()), view($oAttribute->getParent())), 'xml/warning');
+        }
+        
+        $oAttribute->remove();
+      }
+    }
+    
+    foreach ($oElement->getChildren() as $oChild) if ($oChild->isElement()) $this->validateElement($oChild);
+  }
+  
   public function buildValues($oValues, XML_Element $oParent = null) {
     
     if (!$oParent) $oParent = new XML_Document($this->getEmpty());
-    
+    // dspf($this->getEmpty());
     foreach ($oValues->getChildren() as $oValue) {
       
       if ($oValue->isElement()) {
         
-        if (substr($oValue->getName(), 0, 4) == 'attr') $oParent->setAttribute(substr($oValue->getName(), 4), $oValue);
+        if (substr($oValue->getName(), 0, 4) == 'attr') $oParent->setAttribute(substr($oValue->getName(), 5), $oValue->read());
         else {
           
-          $oChild = $oParent->addNode($oValue->getName(), null, null, $this->getNamespace());
+          $oChild = $oParent->addNode($this->getFullPrefix().$oValue->getName(), null, null, $this->getNamespace());
           
           if ($oValue->isComplex()) $oChild->add($this->buildValues($oValue, $oChild));
           else $oChild->add($oValue->read());

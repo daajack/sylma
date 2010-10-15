@@ -5,6 +5,7 @@ class XML_Document extends DOMDocument {
   private $iMode = null;
   private $oFile = null;
   private $bInclude = true;
+  private $bTemp = false; // WARNING, must be set to false, temp files are deleted on __destruct
   
   public function __construct($mChildren = '', $iMode = MODE_READ, $bInclude = true) {
     
@@ -325,7 +326,7 @@ class XML_Document extends DOMDocument {
   
   public function saveFree(XML_Directory $oDirectory = null, $sName = null) {
     
-    $bResult = false;
+    $oResult = null;
     
     if ($oDirectory && $sName) {
       
@@ -339,14 +340,16 @@ class XML_Document extends DOMDocument {
       if (!$bResult) dspm(t('Le document n\'a pu être sauvegardé'), 'file/error');
       else $oDirectory->updateFile($sName);
       
+      $oResult = $oDirectory->getFile($sName);
+      
     } else dspm(t('Impossible de sauvegarder le document, arguments invalide'), 'file/error');
     
-    return $bResult;
+    return $oResult;
   }
   
   public function save($sPath = null) {
     
-    $bResult = false;
+    $oResult = null;
     
     if ($sPath || ($sPath = (string) $this->getFile())) {
       
@@ -387,14 +390,11 @@ class XML_Document extends DOMDocument {
           
           if (!$bSecured) {
             
-            $bResult = $this->saveFree($oDirectory, $sName);
-            
+            $this->setFile($this->saveFree($oDirectory, $sName));
+            $oResult = $this->getFile();
             //$oDirectory->updateFile($sName);
             
           } else dspm(xt('Le fichier %s contient des balises protégées, le système ne permet actuellement pas de modifier ce type de fichier, veuillez contacter l\'administrateur !', new HTML_Strong($sPath)), 'error');
-
-          
-          return $bResult;
           
         } else dspm(xt('Droits insuffisants pour sauvegarder le fichier dans %s !', new HTML_Strong($sPath)), 'error');
         
@@ -402,9 +402,20 @@ class XML_Document extends DOMDocument {
       
     } else  dspm(t('Aucun chemin pour la sauvegarde !'), 'error');
     
-    return $bResult;
+    return $oResult;
   }
   
+  public function saveTemp($sPath = null) {
+    
+    $sPath = SYLMA_PATH_TEMP.'/dbx-'.uniqid().'.xml';
+    
+    $this->save($sPath);
+    $this->bTemp = true;
+    
+    if (!$this->getFile()) dspm(xt('Impossible de créer le fichier temporaire dans %s', new HTML_Strong($sPath)), 'xml/warning');
+    
+    return $this->getFile();
+  }
   /**
    * Method loadText() alias
    */
@@ -768,12 +779,19 @@ class XML_Document extends DOMDocument {
       }
     }
     
+    if (!$bDeclaration) $sResult = substr($sResult, 39);
+    
     return $sResult;
   }
   
   public function __toString() {
     
     return $this->display();
+  }
+  
+  public function __destruct() {
+    
+    if ($this->bTemp && $this->getFile()) $this->getFile()->delete();
   }
 }
 

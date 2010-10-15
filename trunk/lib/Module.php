@@ -83,7 +83,11 @@ class Module {
     else return $this->sNamespace;
   }
   
-  public function getPrefix($sName = null) {
+  public function getFullPrefix() {
+    
+    return $this->getPrefix() ? $this->getPrefix().':' : '';
+  }
+  public function getPrefix() {
     
     return $this->sPrefix;
   }

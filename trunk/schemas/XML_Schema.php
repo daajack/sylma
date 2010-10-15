@@ -4,31 +4,31 @@ class XSD_Parser extends Module {
   
   private $bModel = false; // if false, it will not build the model
   private $bMessages = false; // if false, validation and building will stop at first error
-  private $bValid = null; // valid or not, null if not tested
+  private $bValid = true; // valid or not
   
-  private $oResult = null;
+  private $oModel = null;
   
   private $aMessages = array();
   private $aTypes = array();
   private $aGroups = array();
   private $iID = 1;
   
-  public function __construct(XML_Document $oSchema, XML_Document $oDatas = null, $bModel = true, $bMessages = true) {
+  public function __construct(XML_Document $oSchema, XML_Document $oDatas = null, $bModel = true, $bMessages = true, $bMark = true) {
     
     $this->setDirectory(__file__);
     
-    $this->setNamespace('http://www.sylma.org/schemas', 'lc');
+    $this->setNamespace(SYLMA_NS_SCHEMAS, 'lc');
     $this->setNamespace(SYLMA_NS_XSD, 'xs', false);
     
     $this->iMoreDepth = null;
-    $this->oResult = new XML_Document();
     
     $this->oSchema = $oSchema;
     
+    $this->bMark = $bMark;
     $this->bModel = $bModel;
     $this->bMessages = $bMessages;
     
-    $this->buildSchema($oDatas);
+    $this->oModel = $this->buildSchema($oDatas);
   }
   
   public function getSchema() {
@@ -36,11 +36,18 @@ class XSD_Parser extends Module {
     return $this->oSchema;
   }
   
+  /*
+   * Namespace that should use the document to validate
+   **/
   public function getTargetNamespace() {
     
     return $this->getSchema()->getAttribute('targetNamespace');
   }
   
+  /*
+   * Generate a random ID number incremented each time
+   * @return int
+   **/
   public function getID() {
     
     return $this->iID++;
@@ -74,7 +81,8 @@ class XSD_Parser extends Module {
       }
     }
     
-    $this->oResult->add($oResult);
+    if ($oResult) return new XML_Document($oResult);
+    else return null;
   }
   
   public function addType($oType, $oElement) {
@@ -164,7 +172,7 @@ class XSD_Parser extends Module {
   
   public function isValid($bValid = null) {
     
-    if ($bValid !== null) $this->bValid = $bValid;
+    if ($bValid !== null) {$this->bValid = $bValid;dspm('hello');}
     
     return $this->bValid;
   }
@@ -174,10 +182,17 @@ class XSD_Parser extends Module {
     return $this->useModel() || $this->useMessages() || $this->isValid();
   }
   
+  public function useMark() {
+    
+    return $this->bMark;
+  }
+  
   public function useModel() {
     
     return $this->bModel;
   }
+  
+  /*** Messages ***/
   
   public function useMessages() {
     
@@ -201,7 +216,7 @@ class XSD_Parser extends Module {
   
   public function parse() {
     
-    return $this->oResult;
+    return $this->oModel;
   }
 }
 
@@ -368,7 +383,7 @@ abstract class XSD_Node extends XSD_Container {
     } else {
       
       if ($sType) $this->oType = $this->getParser()->getType($sType, $oSource);
-      else dspm(xt('Aucun type défini pour %s', view($oSource)), 'xml/error');
+      else dspm(xt('Aucun type défini pour %s', view($oSource)), 'xml/warning');
     }
   }
   
@@ -541,14 +556,17 @@ class XSD_Element extends XSD_Node {
   
   public function buildInstance(XSD_Instance $oParent, XML_Element $oPrevious = null) {
     
-    $oElement = $oParent->getModel()->getNode()->insertChild(
-      new XML_Element($this->getName(), null, null, $this->getType()->getNamespace(true)),
-      $oPrevious, true);
+    $oInstance = null;
     
-    $oInstance = $this->getInstance($oParent, $oElement);
-    $oParent->insert($oInstance);
-    
-    // $oInstance->validate();
+    if ($this->getType()) {
+      
+      $oElement = $oParent->getModel()->getNode()->insertChild(
+        new XML_Element($this->getName(), null, null, $this->getType()->getNamespace(true)),
+        $oPrevious, true);
+      
+      $oInstance = $this->getInstance($oParent, $oElement);
+      $oParent->insert($oInstance);
+    }
     
     return $oInstance;
   }
@@ -566,8 +584,6 @@ class XSD_Element extends XSD_Node {
       'name'=> $this->getName(),
       'type' => $this->getType(),
       'id' => $this->getID()), $this->getNamespace());
-    
-    $oResult->cloneAttributes($this->getSource(), array('lc:title', 'lc:line-break'));
     
     return $oResult;
   }
@@ -694,6 +710,13 @@ class XSD_Model extends XSD_Instance { // XSD_ElementInstance
       'statut' => $this->getStatut()), $this->getNamespace());
     
     if ($this->getNode()) {
+      
+      // copy @lc:* to current node
+      if ($this->getParser()->useMark()) {
+        
+        $oAttributes = $this->getClass()->getSource()->query("@*[namespace-uri()='{$this->getNamespace()}']");
+        $this->getNode()->add($oAttributes);
+      }
       
       $this->getNode()->setAttribute('lc:model', $iID, $this->getNamespace());
       
@@ -828,12 +851,12 @@ class XSD_Particle extends XSD_Class {
           
         } else {
           
-          if ($this->keepValidate()) {
+          if ($this->keepValidate() && $this->getParser()->useModel()) {
             
             $oNode = $oPrevious ? $oPrevious->getNode() : null;
             
             $oNewInstance = $oChild->buildInstance($oInstance, $oNode); // TODO occurs
-            if ($oInstance->useMessages()) $oNewInstance->addMessage(xt('Ce champ doit être indiqué'), 'content', 'invalid');
+            if ($oNewInstance && $oInstance->useMessages()) $oNewInstance->addMessage(xt('Ce champ doit être indiqué'), 'content', 'invalid');
             
             $oPrevious = $oNewInstance;
             
@@ -870,11 +893,6 @@ class XSD_Particle extends XSD_Class {
     
     return $oParticle;
   }
-}
-function dsparray($aChildren) {
-    $oTest = new HTML_Div();
-    foreach ($aChildren as $i => $oChild) $oTest->add($i.' -> ', new HTML_Span($oChild->getClass()->getName()), new HTML_Br);
-    dspm($oTest);
 }
 
 class XSD_ParticleInstance extends XSD_Instance {

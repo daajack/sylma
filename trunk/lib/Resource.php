@@ -549,6 +549,11 @@ class XML_Directory extends XML_Resource {
     return $oResult;
   }
   
+  public function getSystemPath() {
+    
+    return Controler::getSystemPath().'/'.$this->getRealPath();
+  }
+  
   public function getRealPath() {
     
     return $this->getParent() ? MAIN_DIRECTORY.$this : MAIN_DIRECTORY;
@@ -673,6 +678,11 @@ class XML_File extends XML_Resource {
   public function getSize() {
     
     return $this->iSize;
+  }
+  
+  public function getSystemPath() {
+    
+    return $this->getParent()->getSystemPath().'/'.$this->getName();
   }
   
   public function getRealPath() {

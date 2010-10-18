@@ -82,7 +82,8 @@ class XML_Database {
   
   public function load($sId) {
     
-    return new XML_Document($this->query("id('$sId')"));
+    if ($sResult = $this->query("id('$sId')")) return new XML_Document($sResult);
+    return null;
   }
   
   public function delete($sId) {
@@ -90,9 +91,9 @@ class XML_Database {
     return $this->query("delete node id('$sId')");
   }
   
-  public function update($sId, XML_Element $oElement) {
+  public function update($sId, XML_Document $oDocument, array $aNamespaces = array()) {
     
-    return $this->query("replace node id('$sId') with $oElement");
+    return $this->query("replace node id('$sId') with {$oDocument->display(true, false)}", $aNamespaces);
   }
   
   public function getNamespace($sPrefix = '') {

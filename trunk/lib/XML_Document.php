@@ -791,7 +791,7 @@ class XML_Document extends DOMDocument {
   
   public function __destruct() {
     
-    if ($this->bTemp && $this->getFile()) $this->getFile()->delete();
+    if ($this->bTemp && $this->getFile()) $this->getFile()->delete(false, false);
   }
 }
 

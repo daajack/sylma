@@ -40,6 +40,9 @@
       </xsl:otherwise>
     </xsl:choose>
   </func:function>
+  <func:function name="lc:get-statut">
+    <func:result select="lc:get-model()/@statut"/>
+  </func:function>
   <func:function name="lc:get-name">
     <xsl:variable name="name" select="local-name()"/>
     <xsl:choose>

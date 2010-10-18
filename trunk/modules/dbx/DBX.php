@@ -12,6 +12,7 @@ class DBX_Module extends Module {
   private $bSelfDirectory = true;
   private $oSelfDirectory = null;
   private $oExtendDirectory = null;
+  private $oHeaders = null;
   
   public function __construct(XML_Directory $oDirectory, XML_Document $oSchema, XML_Document $oOptions) {
     
@@ -30,6 +31,7 @@ class DBX_Module extends Module {
     $this->sRootName = $oOptions->readByName('name', $this->getNamespace('dbx'));
     $this->sPath = $oOptions->readByName('path', $this->getNamespace('dbx'));
     $this->sExtension = $oOptions->readByName('extension', $this->getNamespace('dbx'));
+    $this->oHeaders = new XML_Document($oOptions->getByName('headers', $this->getNamespace('dbx')));
     $sPrefix = $oOptions->readByName('prefix', $this->getNamespace('dbx'));
     
     $this->setNamespace($oSchema->getAttribute('targetNamespace'), $sPrefix);
@@ -50,6 +52,11 @@ class DBX_Module extends Module {
   private function getParentName() {
     
     return $this->sParentName;
+  }
+  
+  private function getHeaders() {
+    
+    return $this->oHeaders;
   }
   
   private function getParent() {
@@ -93,104 +100,47 @@ class DBX_Module extends Module {
     return Controler::getDatabase();
   }
   
-  public function run(Redirect $oRedirect, $sAction, $sID = '') {
+  private function getFile($sPath) {
     
-    $mResult = null;
-    $this->switchDirectory();
+    $oResult = null;
+    $sFile = 'document';
     
-    switch ($sAction) {
+    if (isset($_FILES[$sFile]) && $_FILES[$sFile]['name']) {
       
-      case 'add' :
+      if ($_FILES[$sFile]['size'] > SYLMA_UPLOAD_MAX_SIZE) dspm(t('Le fichier lié est trop grand'), 'warning');
+      else {
         
-        if ($oPost = $oRedirect->getDocument('post')) {
+        $oParentDirectory = extractDirectory(__file__, true);
+        
+        if (!$oDirectory = $oParentDirectory->getParent()->addDirectory('documents')) dspm(t('Impossible de créer le répertoire de destination des fichiers'), 'error');
+        else {
           
-          if (!$oValues = $this->buildValues($oPost))
-            dspm(xt('Erreur dans la conversion des valeurs de %s à %s', view($oPost), view($oValues)), 'error');
+          $sExtension = '';
           
-        } else $oValues = $this->getEmpty();
-        
-        $oModel = $oValues->getModel($this->getSchema(), (bool) $oPost);
-        $oTemplate = $this->getDocument('form.xsl', true);
-        $oTemplate->setParameter('action', $this->getPath().'/add-do.redirect');
-        
-        $oPath = new XML_Path($this->getDirectory().'/form.eml', array(
-          'form' => $oModel->parseXSL($oTemplate)), true, false);
-        
-        $mResult = new XML_Action($oPath);
-        
-      break;
-      
-      case 'add-do' :
-        
-        if (!$this->add($oRedirect)) {
+          if ($iExtension = strrpos($_FILES[$sFile]['name'], '.')) $sExtension = strtolower(substr($_FILES[$sFile]['name'], $iExtension));
           
-          $oRedirect->setPath($this->getPath().'/add'.$this->getExtension());
-          $mResult = $oRedirect;
-          //dspf($this->getPath().'/add'.$this->getExtension());
-        } else {
-          
-          $oRedirect->setPath($this->getExtendDirectory().$this->getExtension());
-          $mResult = $oRedirect;
+          if ($sExtension == '.php') dspm(xt('L\'extension "%s" de ce fichier est interdite !', new HTML_Strong($sExtension)), 'warning');
+          else {
+            
+            $sName = $sPath.$sExtension;
+            $sPath = $oDirectory->getRealPath().'/'.$sName;
+            
+            if(!move_uploaded_file($_FILES[$sFile]['tmp_name'], $sPath)) dspm(t('Problème lors du chargement du fichier'), 'warning');
+            else {
+              
+              $oResult = new XML_Element($sFile, $sName);
+              
+              dspm(xt('Fichier %s ajouté dans %s', new HTML_Strong($sName), (string) $oDirectory));
+            }
+          }
         }
-        
-      break;
-      
-      case 'list' :
-        
-        $iStart = 0;
-        $iLength = 10;
-        
-        $mResult = new XML_Document($this->getParentName());
-        
-        $sQuery = $this->getParent().'/'.$this->getFullPrefix().$this->getRootName();
-        
-        if (!($sResult = $this->query($sQuery)) || !($oResult = strtoxml($sResult))) {
-          
-          dspm(xt('Aucun résultat'), 'warning');
-          
-        } else $mResult->add($oResult);
-        
-      break;
-    }
-    
-    $this->switchDirectory();
-    return $mResult;
-  }
-  
-  public function add(Redirect $oRedirect) {
-    
-    $bResult = false;
-    
-    if (!$oPost = $oRedirect->getDocument('post')) {
-      
-      dspm(t('Impossible de revenir sur la page d\'édition. Modifications perdues'), 'error');
-      
-    } else {
-      
-      $oValues = $this->buildValues($oPost);
-      
-      if (!$oValues || !$oValues->validate($this->getSchema())) {
-        
-        dspm(t('Un ou plusieurs champs ne semblent pas corrects, ceux-ci sont indiqués en rouge'), 'warning');
-        
-      } else {
-        
-        $this->validateElement($oValues->getRoot());
-        
-        $oValues = $oValues->updateNamespaces($this->getNamespace(), $this->getNamespace(), $this->getPrefix());
-        
-        // if ($oFile = $oValues->saveTemp()) $this->getDB()->run("add to {$this->getParent()} {$oFile->getSystemPath()}");
-        $this->insert($oValues->display(true, false), $this->getParent());
-        //dspm(t($this->getTitle().));
-        
-        $bResult = true;
       }
     }
     
-    return $bResult;
+    return $oResult;
   }
   
-  public function validateElement(XML_Element $oElement) {
+  public function validateElement(XML_Element $oElement, $bID = false) {
     
     $oAttributes = $oElement->query("@*[namespace-uri()='{$this->getNamespace()}']");
     
@@ -231,7 +181,7 @@ class DBX_Module extends Module {
           
           case 'gen-id' :
             
-            $oElement->setAttribute($sValue, uniqid());
+            if ($bID) $oElement->setAttribute($sValue, uniqid());
             
           break;
           
@@ -277,132 +227,231 @@ class DBX_Module extends Module {
     return $oParent;
   }
   
-  public function edit(Redirect $oRedirect) {
+  public function getPost(Redirect $oRedirect, $bMessage = true) {
     
-    if (!$oValues = $oRedirect->getDocument('post')) {
+    $oResult = null;
+    
+    if (!$oPost = $oRedirect->getDocument('post')) {
       
-      dspm(t('Impossible de revenir sur la page d\'édition. Modifications perdues'), 'error');
-      $oRedirect->setPath($this->getDirectory());
+      if ($bMessage) {
+        
+        dspm(t('Une erreur s\'est produite. Impossible de continuer. Modifications perdues'), 'error');
+        dspm(t('Aucune données dans $_POST'), 'action/error');
+      }
       
     } else {
       
-      $oValues = $this->buildValues($oValues);
-      dspf($oValues);
-      
-      $sPath = $oValues->readByName('id');
-      $oRedirect->setPath($sReturn.$sPath);
-      return '';
-      if (!$oValues->validate($this->getSchema())) {
+      if (!$oValues = $this->buildValues($oPost)) {
         
-        //$sFile = 'document';
-        $oPost = $oRedirect->getDocument('post');
-        
-        $oValues = new XML_Element('new');
-        
-        foreach ($oSchema->getChildren() as $nField)
-          if (!$nField->get('fs:deco', 'fs', SYLMA_NS_FORM_SCHEMA)) $oValues->add($oPost->get($nField->getId()));
-        
-        // get html contenu
-        
-        $sPath = urlize($oValues->read('titre'));
-        
-        if (!$sOldPath = $oPost->read('old_id')) {
+        if ($bMessage) {
           
-          // pas d'ancien id
-          $oRedirect->setPath($sSuccess);
-          dspm(t('Désolé, erreur lors de l\'édition.'), 'error');
-          
-        } else {
-          
-          $sOldPath = xmlize($sOldPath);
-          $oValues->setAttribute('id', $sPath);
-          
-          if ($this->load($sOldPath)->isEmpty()) {
-            
-            dspm(t('Impossible de retrouver les anciennes valeurs'), 'warning');
-            
-          } else {
-            
-            if ($oFile = $this->getFile($sPath)) $oValues->add($oFile);
-            
-            if ($sPath != $sOldPath) dspm('Titre modifié', 'db/notice');
-            
-            dspm(t('Actualité mise-à-jour'));
-            $this->getDB()->update($sOldPath, $oValues);
-          }
-          
-          $oRedirect = new Redirect($sSuccess.$sPath);
+          dspm(t('Impossible de lire les valeurs envoyés par le formulaire'), 'error');
+          dspm(xt('Erreur dans la conversion des valeurs %s dans $_POST', view($oPost)), 'action/error');
         }
-      }
-    }
-    
-    return $oRedirect;
-  }
-  
-  private function getFile($sPath) {
-    
-    $oResult = null;
-    $sFile = 'document';
-    
-    if (isset($_FILES[$sFile]) && $_FILES[$sFile]['name']) {
-      
-      if ($_FILES[$sFile]['size'] > SYLMA_UPLOAD_MAX_SIZE) dspm(t('Le fichier lié est trop grand'), 'warning');
-      else {
         
-        $oParentDirectory = extractDirectory(__file__, true);
-        
-        if (!$oDirectory = $oParentDirectory->getParent()->addDirectory('documents')) dspm(t('Impossible de créer le répertoire de destination des fichiers'), 'error');
-        else {
-          
-          $sExtension = '';
-          
-          if ($iExtension = strrpos($_FILES[$sFile]['name'], '.')) $sExtension = strtolower(substr($_FILES[$sFile]['name'], $iExtension));
-          
-          if ($sExtension == '.php') dspm(xt('L\'extension "%s" de ce fichier est interdite !', new HTML_Strong($sExtension)), 'warning');
-          else {
-            
-            $sName = $sPath.$sExtension;
-            $sPath = $oDirectory->getRealPath().'/'.$sName;
-            
-            if(!move_uploaded_file($_FILES[$sFile]['tmp_name'], $sPath)) dspm(t('Problème lors du chargement du fichier'), 'warning');
-            else {
-              
-              $oResult = new XML_Element($sFile, $sName);
-              
-              dspm(xt('Fichier %s ajouté dans %s', new HTML_Strong($sName), (string) $oDirectory));
-            }
-          }
-        }
-      }
+      } else $oResult = $oValues;
     }
     
     return $oResult;
   }
   
+  public function run(Redirect $oRedirect, $sAction, $sID = '') {
+    
+    $mResult = null;
+    $this->switchDirectory();
+    
+    switch ($sAction) {
+      
+      case 'edit' :
+        
+        if ((!$oValues = $this->getPost($oRedirect, false)) && (!$oValues = $this->load($sID))) {
+          
+          dspm(xt('L\'élément identifié par %s n\'existe pas', new HTML_Strong($sID)), 'warning');
+          
+        } else {
+          
+          if (!$oModel = $oValues->getModel($this->getSchema(), (bool) $oRedirect->getDocument('post'))) {
+            
+            dspm(xt('Impossible de charger l\'élément'), 'error');
+            dspm(xt('Aucun modèle chargé pour %s', view($oValues)), 'action/error');
+            
+          } else {
+            
+            $oTemplate = $this->getDocument('form.xsl', true);
+            $oTemplate->setParameter('action', $this->getPath()."/edit-do/$sID.redirect");//.redirect
+            
+            $oPath = new XML_Path($this->getDirectory().'/form.eml', array(
+              'form' => $oModel->parseXSL($oTemplate)), true, false);
+            
+            $mResult = new XML_Action($oPath);
+          }
+        }
+        
+      break;
+      
+      case 'edit-do' :
+        
+        if (!$this->edit($oRedirect, $sID)) $oRedirect->setPath($this->getPath().'/edit/'.$sID);
+        else $oRedirect->setPath($this->getExtendDirectory().'/admin/list');
+        
+        $mResult = $oRedirect;
+        
+      break;
+      
+      case 'add' :
+        
+        if (!$oValues = $this->getPost($oRedirect, false)) $oValues = $this->getEmpty();
+        
+        if (!$oModel = $oValues->getModel($this->getSchema(), (bool) $oRedirect->getDocument('post'))) {
+          
+          dspm(xt('Impossible de charger l\'élément'), 'error');
+          dspm(xt('Aucun modèle chargé pour %s', view($oValues)), 'action/error');
+          
+        } else {
+          
+          $oTemplate = $this->getDocument('form.xsl', true);
+          $oTemplate->setParameter('action', $this->getPath().'/add-do.redirect'); //.redirect
+          
+          $oPath = new XML_Path($this->getDirectory().'/form.eml', array(
+            'form' => $oModel->parseXSL($oTemplate)), true, false);
+          
+          $mResult = new XML_Action($oPath);
+        }
+        
+      break;
+      
+      case 'add-do' :
+        
+        if (!$this->add($oRedirect)) $oRedirect->setPath($this->getPath().'/add');
+        else $oRedirect->setPath($this->getExtendDirectory().'/admin/list');
+        
+        $mResult = $oRedirect;
+        
+      break;
+      
+      case 'list' :
+        
+        $iStart = 0;
+        $iLength = 10;
+        
+        $mResult = new XML_Document($this->getParentName());
+        
+        $sQuery = $this->getParent().'/'.$this->getFullPrefix().$this->getRootName();
+        
+        if (!($sResult = $this->query($sQuery)) || !($oResult = strtoxml($sResult))) {
+          
+          dspm(xt('Aucun résultat'), 'warning');
+          
+        } else $mResult->add($oResult);
+        
+        $oHeaders = $this->getHeaders();
+        $oFile = $oHeaders->saveTemp();
+        
+        $oPath = new XML_Path($this->getDirectory().'/list', array(
+          'model' => $this->getEmpty()->getModel($this->getSchema(), false),
+          'datas' => $mResult,
+          'headers' => (string) $oFile->getSystemPath(),
+          'module' => (string) $this->getExtendDirectory()));
+        
+        $mResult = new XML_Action($oPath);
+        
+      break;
+    }
+    
+    $this->switchDirectory();
+    return $mResult;
+  }
+  
+  public function add(Redirect $oRedirect) {
+    
+    $bResult = false;
+    
+    if ($oValues = $this->getPost($oRedirect)) {
+      
+      if (!$oValues->validate($this->getSchema())) {
+        
+        dspm(t('Un ou plusieurs champs ne sont pas corrects, ceux-ci sont indiqués en rouge'), 'warning');
+        
+      } else {
+        
+        $this->validateElement($oValues->getRoot(), true);
+        
+        $oValues = $oValues->updateNamespaces($this->getNamespace(), $this->getNamespace(), $this->getPrefix());
+        
+        // if ($oFile = $oValues->saveTemp()) $this->getDB()->run("add to {$this->getParent()} {$oFile->getSystemPath()}");
+        if ($this->insert($oValues->display(true, false), $this->getParent()) || 1) {
+          
+          dspm(t('Elément ajouté'), 'success');
+          $bResult = true;
+        }
+      }
+    }
+    
+    return $bResult;
+  }
+  
+  public function edit(Redirect $oRedirect, $sID) {
+    
+    $bResult = false;
+    
+    if ($oValues = $this->getPost($oRedirect)) {
+      
+      if (!$oValues->validate($this->getSchema())) {
+        
+        dspm(t('Un ou plusieurs champs ne sont pas corrects, ceux-ci sont indiqués en rouge'), 'warning');
+        
+      } else {
+        
+        $this->validateElement($oValues->getRoot(), false);
+        
+        $oValues = $oValues->updateNamespaces($this->getNamespace(), $this->getNamespace(), $this->getPrefix());
+        
+        if (!$this->load($sID)) {
+          
+          dspm(xt('L\'élément %s n\'existe pas. Modifications perdues', new HTML_Strong($sID)), 'warning');
+          
+        } else {
+          
+          if ($this->update($sID, $oValues) || 1) {
+            
+            dspm(t('Elément mis-à-jour'), 'success');
+            $bResult = true;
+          }
+        }
+      }
+    }
+    
+    return $bResult;
+  }
+  
   public function load($sId) {
     
-    return $this->getDB()->load($sId);;
+    return $this->getDB()->load($sId);
+  }
+  
+  public function getNamespaces($aNamespaces = array()) {
+    
+    return array_merge($this->getNS(), $aNamespaces);
   }
   
   public function query($sQuery, array $aNamespaces = array()) {
     
-    $aNamespaces = array_merge($this->getNS(), $aNamespaces);
+    return $this->getDB()->query($sQuery, $this->getNamespaces($aNamespaces));
+  }
+  
+  public function update($sID, XML_Document $oDocument, array $aNamespaces = array()) {
     
-    return $this->getDB()->query($sQuery, $aNamespaces);
+    return $this->getDB()->update($sID, $oDocument, $this->getNamespaces($aNamespaces));
   }
   
   public function insert($mElement, $sTarget, array $aNamespaces = array()) {
     
-    $aNamespaces = array_merge($this->getNS(), $aNamespaces);
-    
-    return $this->getDB()->insert($mElement, $sTarget, $aNamespaces);
+    return $this->getDB()->insert($mElement, $sTarget, $this->getNamespaces($aNamespaces));
   }
   
   public function delete($sId, array $aNamespaces = array()) {
     
-    $aNamespaces = array_merge($this->getNS(), $aNamespaces);
-    
-    return $this->getDB()->delete($sId, $aNamespaces);
+    return $this->getDB()->delete($sId, $this->getNamespaces($aNamespaces));
   }
 }
 

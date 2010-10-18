@@ -793,14 +793,14 @@ class XML_File extends XML_Resource {
     
     if ($this->checkRights(MODE_WRITE)) {
       
-      if ($bResult = unlink($this->getRealPath())) {
+      if ($bResult = unlink($this->getSystemPath())) {
         
         if ($bUpdateDirectory) $this->update();
         
         // update directory settings
         $this->getSettings()->deleteFile($this->getName());
         
-        dspm(xt('Suppression du fichier %s', $this->parse()), 'file/notice');
+        if ($bMessage) dspm(xt('Suppression du fichier %s', $this->parse()), 'file/notice');
       }
     }
     

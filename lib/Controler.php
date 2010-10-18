@@ -489,7 +489,6 @@ class Controler {
     $iCalls = 0;
     $iBiggerTime = 0;
     
-    $sPath = '/commandes/admin/add';
     $oResult = new XML_Document('root');
     
     $iStart = microtime(true);

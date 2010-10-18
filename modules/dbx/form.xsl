@@ -18,21 +18,23 @@
   <xsl:template match="*">
     <xsl:variable name="name" select="lc:get-name()"/>
     <xsl:variable name="id" select="concat('field-', lc:get-name())"/>
-    <div class="field clear-block">
+    <xsl:variable name="statut" select="concat('field-statut-', lc:get-statut())"/>
+    <xsl:variable name="input-class" select="'field-input-element'"/>
+    <div class="field clear-block {$statut}">
       <label for="{$id}">
         <xsl:value-of select="lx:first-case(lc:get-title())"/>
         <xsl:text> :</xsl:text>
       </label>
       <xsl:choose>
         <xsl:when test="not(lc:get-model())">
-          <textarea name="{$name}" id="{$id}" style="background-color: #eee">
+          <textarea name="{$name}" id="{$id}" class="{$input-class}" style="background-color: #eee">
             <xsl:value-of select="."/>
           </textarea>
         </xsl:when>
         <xsl:when test="lc:is-string()">
           <xsl:choose>
             <xsl:when test="lc:is-enum()">
-              <select name="{$name}" id="{$id}">
+              <select name="{$name}" id="{$id}" class="{$input-class}">
                 <option value="0">&lt; choisissez &gt;</option>
                 <xsl:apply-templates select="lc:get-schema()/lc:restriction/lc:enumeration">
                   <xsl:with-param name="value" select="node()"/>
@@ -40,20 +42,20 @@
               </select>
             </xsl:when>
             <xsl:when test="@lc:line-break">
-              <textarea id="{$id}" name="{$name}">
+              <textarea id="{$id}" name="{$name}" class="{$input-class}">
                 <xsl:value-of select="."/>
               </textarea>
             </xsl:when>
             <xsl:otherwise>
-              <input type="text" value="{.}" name="{$name}" id="{$id}"/>
+              <input type="text" value="{.}" name="{$name}" id="{$id}" class="{$input-class}"/>
             </xsl:otherwise>
           </xsl:choose>
         </xsl:when>
         <xsl:when test="lc:is-date()">
-          <input type="text" name="{$name}" id="{$id}" value="{.}"/>
+          <input type="text" name="{$name}" id="{$id}" value="{.}" class="{$input-class}"/>
         </xsl:when>
         <xsl:otherwise>
-          <textarea id="{$id}" name="{$name}">
+          <textarea id="{$id}" name="{$name}" class="{$input-class}">
             <xsl:value-of select="."/>
           </textarea>
         </xsl:otherwise>

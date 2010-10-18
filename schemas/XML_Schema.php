@@ -63,15 +63,18 @@ class XSD_Parser extends Module {
       $oElement = new XSD_Element($oElement, null, null, $this);
       $oModel = $oElement->getInstance(null, $oRoot);
       
-      $oModel->validate();
+      $this->isValid($oElement->validate($oModel));
       
-      $oSchemas = new XML_Element('schemas', array(
-        $this->aTypes,
-        $this->aGroups,
-        $oModel), null, $this->getNamespace());
-      
-      $oResult = new XML_Element('sylma-schema', array($oDatas, $oSchemas), array(
-        'xmlns:html' => SYLMA_NS_XHTML, 'xmlns:lc' => $this->getNamespace()), $this->getNamespace());
+      if ($this->keepValidate()) {
+        
+        $oSchemas = new XML_Element('schemas', array(
+          $this->aTypes,
+          $this->aGroups,
+          $oModel), null, $this->getNamespace());
+        
+        $oResult = new XML_Element('sylma-schema', array($oDatas, $oSchemas), array(
+          'xmlns:html' => SYLMA_NS_XHTML, 'xmlns:lc' => $this->getNamespace()), $this->getNamespace());
+      }
       
     } else {
       
@@ -172,8 +175,8 @@ class XSD_Parser extends Module {
   
   public function isValid($bValid = null) {
     
-    if ($bValid !== null) {$this->bValid = $bValid;dspm('hello');}
-    
+    //dspm(array(view($this->bValid), ' = ', view($bValid)), 'error');
+    if ($bValid !== null) $this->bValid = $bValid;
     return $this->bValid;
   }
   
@@ -452,19 +455,15 @@ abstract class XSD_Instance {
     $this->oParent = $oParent;
   }
   
-  public function validate() {
-    
-    if ($this->keepValidate()) $this->getClass()->validate($this);
-  }
-  
   protected function getMessages() {
   
     return $this->aMessages;
   }
   
-  public function addMessage($mMessage, $sContext, $sStatut) {
+  public function addMessage($mMessage, $sContext, $sStatut = 'invalid') {
     
     $oMessage = null;
+    
     if ($this->useMessages()) {
       
       $oMessage = new XML_Element('message', $mMessage,
@@ -549,7 +548,9 @@ class XSD_Element extends XSD_Node {
   
   public function validate(XSD_Instance $oInstance, $bParent = false) {
     
-    $bResult = $this->getType()->validate($oInstance);
+    $bResult = null;
+    
+    if (!$bResult = $this->getType()->validate($oInstance)) $oInstance->setStatut('invalid');
     
     return $bResult;
   }
@@ -760,7 +761,7 @@ class XSD_Particle extends XSD_Class {
     
     return $this->aParticles;
   }
-    
+  
   public function getChildren() {
     
     return $this->aChildren;
@@ -844,29 +845,37 @@ class XSD_Particle extends XSD_Class {
           
           $oInstance->shiftSeek();
           
-          $oChild->validate($oSubInstance);
+          if (!$oChild->validate($oSubInstance)) {
+            
+            $bResult = $this->getParser()->isValid(false);
+            if (!$this->keepValidate()) break; // do not control next children if invalid and parser is in validation mode
+          }
           
           $oPrevious = $oSubInstance;
           list(,$oSubInstance) = each($aSubInstances);
           
         } else {
           
-          if ($this->keepValidate() && $this->getParser()->useModel()) {
+          if ($oChild->getSource()->testAttribute('editable', true, $this->getNamespace())) {
             
-            $oNode = $oPrevious ? $oPrevious->getNode() : null;
+            $bResult = $this->getParser()->isValid(false);
+            if (!$this->keepValidate()) break;
             
-            $oNewInstance = $oChild->buildInstance($oInstance, $oNode); // TODO occurs
-            if ($oNewInstance && $oInstance->useMessages()) $oNewInstance->addMessage(xt('Ce champ doit être indiqué'), 'content', 'invalid');
-            
-            $oPrevious = $oNewInstance;
-            
-          } else if ($oInstance->useMessages()) {
-            
-            $oInstance->addMessage(xt('Le champ %s dans %s doit être indiqué',
-              $oChild->getName(), $this->getModel()->getName()), 'content', 'invalid');
+            if ($this->getParser()->useModel()) {
+              
+              $oNode = $oPrevious ? $oPrevious->getNode() : null;
+              
+              $oNewInstance = $oChild->buildInstance($oInstance, $oNode); // TODO occurs
+              
+              if ($oNewInstance && $oInstance->useMessages()) {
+                
+                $oNewInstance->setStatut('missing');
+                $oNewInstance->addMessage(xt('Ce champ doit être indiqué'), 'content', 'invalid');
+              }
+              
+              $oPrevious = $oNewInstance;
+            }
           }
-          
-          $bResult = false;
         }
       }
     }
@@ -1091,10 +1100,11 @@ class XSD_GroupReference extends XSD_Class {
       
     } else {
       
+      $bResult = false;
+      
       if ($this->useMessages()) $oInstance->addMessage(
         xt('Le groupe %s est manquant dans %s',
         new HTML_Strong($this->getClass()->getName()), view($this->getName())), 'content', 'invalid');
-      else $this->getParser()->isValid(false);
       
       if ($this->keepValidate()) $this->buildInstance($oInstance->getParent()); // DEBUG
     }
@@ -1195,32 +1205,21 @@ class XSD_BaseType {
     $bResult = false;
     $mValue = $oInstance->getValue();
     
-    if (!$mValue) $bResult = true;
-    else {
+    switch ($this->getName()) {
       
-      if (is_numeric($mValue)) {
+      case 'string' : $bResult = is_string($mValue) && !is_numeric($mValue); break;
+      case 'integer' : $bResult = is_integer($mValue) || ctype_digit($mValue); break;
+      case 'decimal' : $bResult = is_numeric($mValue) && !is_integer($mValue) && !ctype_digit($mValue); break;
+      case 'boolean' : $bResult = in_array($mValue, array('1', '0', 'true', 'false')); break;
+      case 'date' : $bResult = preg_match('/^\d{4}-\d{2}-\d{2}$/', $mValue); break; // dspf($mValue); dspf(preg_match('/^\d{4}-\d{2}-\d{2}$/', $mValue));
+      case 'time' : break; // TODO
+      default :
         
-        if (is_integer($mValue) || ctype_digit($mValue)) $sType = 'integer';
-        else $sType = 'decimal';
-        
-      } else $sType = 'string';
-      
-      switch ($this->getName()) { // xs:string, xs:decimal, xs:integer, xs:boolean, xs:date, xs:time
-        
-        case 'string' :
-        case 'integer' :
-        case 'decimal' :
-          
-          $bResult = $sType == $this->getName();
-          
-        break;
-        
-        case 'boolean' : $bResult = in_array($mValue, array('1', '0', 'true', 'false')); break;
-        case 'date' : break; // TODO pregmatch
-        case 'time' : break; // TODO pregmatch
-        default : dspm(xt('Le type %s n\'est pas reconnu', new HTML_Strong($this->getName())), 'xml/warning');
-      }
+        dspm(xt('Type %s inconnu dans l\'élément %s', view($oInstance->getNode())), 'xml/error');
     }
+    
+    if (!$bResult && $oInstance->useMessages())
+      $oInstance->addMessage(xt('Ce champ n\'est pas de type %s', new HTML_Strong($this->getName())), 'content');
     
     return $bResult;
   }
@@ -1292,12 +1291,11 @@ class XSD_Type extends XSD_Container { // complex or simple, but defined
         
         dspm(xt('L\'élément ne devrait pas être de type complex'), 'xml/error');
         
-      } else if (!$this->getBase()->validate($oInstance)) {
+      } else if (!$bResult = $this->getBase()->validate($oInstance)) {
         
         if ($this->useMessages()) $oInstance->addMessage(
           xt('Cette valeur n\'est pas du type %s',
           new HTML_Strong($this->getBase())), 'content', 'invalid');
-        else $this->getParser()->isValid(false);
         
       } else {
         
@@ -1308,6 +1306,7 @@ class XSD_Type extends XSD_Container { // complex or simple, but defined
           
           $aChoices = array('enumeration', 'pattern'); // must respect one of the values
           $bChoices = false;
+          $bResult = true;
           
           foreach ($this->getRestrictions() as $aRestriction) {
             
@@ -1366,6 +1365,7 @@ class XSD_Type extends XSD_Container { // complex or simple, but defined
             if (in_array($aRestriction[0], $aChoices)) { // OR restrictions
               
               if ($bSubResult) {
+                
                 $bResult = $bSubResult;
                 break;
               }
@@ -1379,8 +1379,8 @@ class XSD_Type extends XSD_Container { // complex or simple, but defined
           
           if (!$bResult) {
             
-            $oInstance->setStatut('invalid');
-            if ($bChoices) $oInstance->addMessage(xt('Cette valeur n\'est pas autorisée'), 'content', 'invalid');
+            if ($bChoices && $this->useMessages())
+              $oInstance->addMessage(xt('Cette valeur n\'est pas autorisée'), 'content', 'invalid');
           }
         }
       }
@@ -1392,8 +1392,10 @@ class XSD_Type extends XSD_Container { // complex or simple, but defined
         if ($this->keepValidate()) $oInstance->buildParticle();
       }
       
-      $this->getParticle()->validate($oInstance->getParticle());
+      $bResult = $this->getParticle()->validate($oInstance->getParticle());
     }
+    
+    return $bResult;
   }
   
   public function isBasic() {

@@ -40,7 +40,7 @@ class XML_Database {
     if ($oSession) {
       
       if ($bResult = $oSession->execute($sCommand)) $sResult = $oSession->result();
-      else dspm(xt('Commande %s invalide. (%s)', view($sCommand), new HTML_Tag('em', $oSession->info())), 'action/error');
+      else dspm(xt('Commande %s invalide. (%s)', view($sCommand), new HTML_Tag('em', $oSession->info())), 'action/warning');
     }
     
     //$oSession->close();
@@ -67,14 +67,14 @@ class XML_Database {
     return $this->run('xquery '.$sQuery);
   }
   
-  public function get($sQuery) {
+  public function get($sQuery, array $aNamespaces = array(), $bDocument = false) {
     
     $mResult = false;
     
-    if ($sResult = $this->query($sQuery)) {
+    if ($sResult = $this->query($sQuery, $aNamespaces)) {
       
       $mResult = new XML_Document($sResult);
-      $mResult = $mResult->getRoot();
+      if (!$bDocument) $mResult = $mResult->getRoot();
     }
     
     return $mResult;

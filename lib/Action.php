@@ -139,7 +139,12 @@ class XML_Action extends XML_Document {
     }
   }
   
-  private function setVariable($sKey, $mValue) {
+  public function setVariables(array $aVariables) {
+    
+    $this->aVariables = array_merge($this->aVariables, $aVariables);
+  }
+  
+  public function setVariable($sKey, $mValue) {
     
     $this->aVariables[$sKey] = $mValue;
     /*if ($mValue) 
@@ -714,11 +719,33 @@ class XML_Action extends XML_Document {
       
       case 'xquery' :
         
-        if (!$oArgument = $this->buildArgument($oElement->getFirst())) {
+        if (!$oElement->hasChildren()) {
           
-          dspm(xt('Argument %s invalide pour la création de requête'), 'action/error');
+          $this->dspm(xt('Aucun argument n\'est indiqué pour %s', view($oElement)), 'action/error');
           
-        } else $mResult = new XML_XQuery($oArgument);
+        } else {
+          
+          if ($oElement->countChildren() > 1) { // first are namespaces
+            
+            $aNamespaces = $this->buildArgument($oElement->getFirst());
+            $oElement->getFirst()->remove();
+            
+            if (!is_array($aNamespaces)) {
+              
+              $this->dspm(xt('Le second élément de la requête %s doit renvoyer un tableau d\'espaces de nom',
+                view($oElement), 'action/error'));
+            }
+            
+          } else $aNamespaces = array();
+          
+          // second or first come query
+          
+          if (!$oArgument = $this->buildArgument($oElement->getFirst())) {
+            
+            $this->dspm(xt('Un élément enfant doit contenir la requête dans %s', view($oElement)), 'action/error');
+            
+          } else $mResult = new XML_XQuery($oArgument, $aNamespaces);
+        }
         
       break;
       
@@ -982,7 +1009,7 @@ class XML_Action extends XML_Document {
   
   private function replaceVariables($sTest, $bReturn = false) {
     
-    $sValue = unxmlize($sTest);
+    // $sValue = unxmlize($sTest);
     $sValue = $sTest;
     preg_match_all('/\[\$([\w-]+)\]/', $sValue, $aResults, PREG_OFFSET_CAPTURE);
     
@@ -997,10 +1024,10 @@ class XML_Action extends XML_Document {
         
         $sValue = substr($sValue, 0, $aResult[1] + $iSeek - 2) . $sVarValue . substr($sValue, $aResult[1] + $iSeek - 2 + $iVarLength);
         
-        $iSeek = strlen($sVarValue) - $iVarLength;
+        $iSeek += strlen($sVarValue) - $iVarLength;
       }
       
-      return xmlize($sValue);
+      // return xmlize($sValue);
       return $sValue;
     }
     

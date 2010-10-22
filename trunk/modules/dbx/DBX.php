@@ -270,7 +270,7 @@ class DBX_Module extends Module {
           
         } else {
           
-          if (!$oModel = $oValues->getModel($this->getSchema(), (bool) $oRedirect->getDocument('post'))) {
+          if (!$oModel = $oValues->getModel($this->getSchema())) {
             
             dspm(xt('Impossible de charger l\'élément'), 'error');
             dspm(xt('Aucun modèle chargé pour %s', view($oValues)), 'action/error');
@@ -331,35 +331,59 @@ class DBX_Module extends Module {
       
       case 'list' :
         
-        $iStart = 0;
-        $iLength = 10;
+        $iPage = 1;
+        $iPageSize = 3;
         
-        $mResult = new XML_Document($this->getParentName());
-        
-        $sQuery = $this->getParent().'/'.$this->getFullPrefix().$this->getRootName();
-        
-        if (!($sResult = $this->query($sQuery)) || !($oResult = strtoxml($sResult))) {
-          
-          dspm(xt('Aucun résultat'), 'warning');
-          
-        } else $mResult->add($oResult);
+        $sParent = $this->getParentName();
+        $sOrder = $this->getFullPrefix().'date-debut';
         
         $oHeaders = $this->getHeaders();
-        $oFile = $oHeaders->saveTemp();
         
-        $oPath = new XML_Path($this->getDirectory().'/list', array(
-          'model' => $this->getEmpty()->getModel($this->getSchema(), false),
-          'datas' => $mResult,
-          'headers' => (string) $oFile->getSystemPath(),
-          'module' => (string) $this->getExtendDirectory()));
-        
-        $mResult = new XML_Action($oPath);
+        if ($oFile = $oHeaders->saveTemp()) {
+          
+          $oPath = new XML_Path($this->getDirectory().'/list', array(
+            'model' => $this->getEmpty()->getModel($this->getSchema(), false),
+            'xquery-headers' => $this->getNamespaces(),
+            'headers' => (string) $oFile->getSystemPath(),
+            'module' => (string) $this->getExtendDirectory()));
+          
+          $mResult = new XML_Action($oPath);
+          
+          $mResult->setVariables(array(
+            'page' => $iPage,
+            'page-size' => $iPageSize,
+            'parent' => $sParent,
+            'order' => $sOrder));
+        }
         
       break;
     }
     
     $this->switchDirectory();
     return $mResult;
+  }
+  
+  public function parseQuery(&$sQuery, XML_Document $oDocument) {
+    
+    preg_match_all('/\[\[([\w-]+)\]\]/', $sQuery, $aResults, PREG_OFFSET_CAPTURE);
+    
+    if ($aResults && $aResults[0]) {
+      
+      $iSeek = 0;
+      
+      foreach ($aResults[1] as $aResult) {
+        
+        $iVarLength = strlen($aResult[0]) + 3;
+        $sVarValue = $aResult[0];
+        
+        $sSubResult = $oDocument->read($sVarValue);
+        
+        $sValue = substr($sValue, 0, $aResult[1] + $iSeek - 2).
+          $sSubResult . substr($sValue, $aResult[1] + $iSeek - 2 + $iVarLength);
+        
+        $iSeek = strlen($sVarValue) - $iVarLength;
+      }
+    }
   }
   
   public function add(Redirect $oRedirect) {
@@ -432,6 +456,11 @@ class DBX_Module extends Module {
   public function getNamespaces($aNamespaces = array()) {
     
     return array_merge($this->getNS(), $aNamespaces);
+  }
+  
+  public function get($sQuery, array $aNamespaces = array(), $bDocument = false) {
+    
+    return $this->getDB()->get($sQuery, $this->getNamespaces($aNamespaces), $bDocument);
   }
   
   public function query($sQuery, array $aNamespaces = array()) {

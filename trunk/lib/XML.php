@@ -543,11 +543,13 @@ class XML_Fragment extends DOMDocumentFragment { }
 
 class XML_XQuery {
   
-  private $mQuery;
+  private $mQuery = null;
+  private $aNamespaces = array();
   
-  public function __construct($mQuery) {
+  public function __construct($mQuery, array $aNamespaces = array()) {
     
     $this->mQuery = $mQuery;
+    $this->aNamespaces = $aNamespaces;
   }
   
   private function getQuery() {
@@ -574,6 +576,11 @@ class XML_XQuery {
     return $sResult;
   }
   
+  public function getNamespaces() {
+    
+    return $this->aNamespaces;
+  }
+  
   public function parse() {
     
     return $this->read(true);
@@ -585,7 +592,7 @@ class XML_XQuery {
     
     $sQuery = $this->getQuery();
     
-    if ($sResult = $oDB->query($sQuery)) {
+    if ($sResult = $oDB->query($sQuery, $this->getNamespaces())) {
       
       if ($bXML) {
         

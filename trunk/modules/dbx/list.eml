@@ -3,9 +3,29 @@
   <le:settings>
     <le:name>Liste</le:name>
     <le:argument format="XML_Document" name="model"/>
-    <le:argument format="XML_Document" name="datas"/>
     <le:argument format="php-string" name="module"/>
     <le:argument format="php-string" name="headers"/>
+    <le:argument name="xquery-headers" format="php-array"/>
+    <le:document set-variable="datas">
+      <le:xquery>
+        <le:get-argument name="xquery-headers"/>
+        <le:argument le:parse-variables="true"><![CDATA[let $page := [$page]
+let $pageSize := [$page-size]
+let $start:=(($page*$pageSize) - $pageSize)
+
+let $result := (
+  for $el in /*/[$parent]/*
+    order by xs:date($el/[$order]) descending
+  return $el)
+
+let $pageTotal := ceiling((count($result) div $pageSize))
+
+return
+  <[$parent] total="{$pageTotal}" page="{$page}">
+    {subsequence($result, ($start + 1), ($start + $pageSize))}
+  </[$parent]>]]></le:argument>
+      </le:xquery>
+    </le:document>
   </le:settings>
   <table class="list">
     <le:get-argument name="model">
@@ -22,7 +42,7 @@
         </le:template>
       </li:parse>
     </le:get-argument>
-    <le:get-argument name="datas">
+    <le:get-variable name="datas">
       <li:parse>
         <le:template path="list.xsl">
           <li:set-parameter>
@@ -35,6 +55,6 @@
           </li:set-parameter>
         </le:template>
       </li:parse>
-    </le:get-argument>
+    </le:get-variable>
   </table>
 </le:action>

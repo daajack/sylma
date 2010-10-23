@@ -61,7 +61,7 @@ class DBX_Module extends Module {
   
   private function getParent() {
     
-    return $this->sParentPath.$this->getParentName();
+    return $this->sParentPath;//.$this->getParentName();
   }
   
   private function getPath() {
@@ -255,10 +255,14 @@ class DBX_Module extends Module {
     return $oResult;
   }
   
-  public function run(Redirect $oRedirect, $sAction, $sID = '') {
+  public function run(Redirect $oRedirect, $sAction, $aOptions = array()) {
     
     $mResult = null;
+    $sList = $this->getDirectory().'/admin/list';
+    
     $this->switchDirectory();
+    
+    $sID = array_val(0, $aOptions, '');
     
     switch ($sAction) {
       
@@ -277,11 +281,9 @@ class DBX_Module extends Module {
             
           } else {
             
-            $oTemplate = $this->getDocument('form.xsl', true);
-            $oTemplate->setParameter('action', $this->getPath()."/edit-do/$sID.redirect");//.redirect
-            
             $oPath = new XML_Path($this->getDirectory().'/form.eml', array(
-              'form' => $oModel->parseXSL($oTemplate)), true, false);
+              'model' => $oModel,
+              'action' => $this->getPath()."/edit-do/$sID.redirect"), true, false); //.redirect
             
             $mResult = new XML_Action($oPath);
           }
@@ -292,7 +294,7 @@ class DBX_Module extends Module {
       case 'edit-do' :
         
         if (!$this->edit($oRedirect, $sID)) $oRedirect->setPath($this->getPath().'/edit/'.$sID);
-        else $oRedirect->setPath($this->getExtendDirectory().'/admin/list');
+        else $oRedirect->setPath($sList);
         
         $mResult = $oRedirect;
         
@@ -309,11 +311,9 @@ class DBX_Module extends Module {
           
         } else {
           
-          $oTemplate = $this->getDocument('form.xsl', true);
-          $oTemplate->setParameter('action', $this->getPath().'/add-do.redirect'); //.redirect
-          
           $oPath = new XML_Path($this->getDirectory().'/form.eml', array(
-            'form' => $oModel->parseXSL($oTemplate)), true, false);
+            'model' => $oModel,
+            'action' => $this->getPath().'/add-do.redirect'), true, false); //.redirect
           
           $mResult = new XML_Action($oPath);
         }
@@ -323,7 +323,7 @@ class DBX_Module extends Module {
       case 'add-do' :
         
         if (!$this->add($oRedirect)) $oRedirect->setPath($this->getPath().'/add');
-        else $oRedirect->setPath($this->getExtendDirectory().'/admin/list');
+        else $oRedirect->setPath($sList);
         
         $mResult = $oRedirect;
         
@@ -331,59 +331,57 @@ class DBX_Module extends Module {
       
       case 'list' :
         
-        $iPage = 1;
-        $iPageSize = 3;
+        $iPage = array_val('page', $aOptions, 1);
+        $iPageSize = array_val('size', $aOptions, 3);
+        $sOrder = array_val('order', $aOptions, 'date-parution');
+        $sOrderDir = array_val('order-dir', $aOptions, 'a');
         
-        $sParent = $this->getParentName();
-        $sOrder = $this->getFullPrefix().'date-debut';
-        
-        $oHeaders = $this->getHeaders();
-        
-        if ($oFile = $oHeaders->saveTemp()) {
-          
-          $oPath = new XML_Path($this->getDirectory().'/list', array(
-            'model' => $this->getEmpty()->getModel($this->getSchema(), false),
-            'xquery-headers' => $this->getNamespaces(),
-            'headers' => (string) $oFile->getSystemPath(),
-            'module' => (string) $this->getExtendDirectory()));
-          
-          $mResult = new XML_Action($oPath);
-          
-          $mResult->setVariables(array(
-            'page' => $iPage,
-            'page-size' => $iPageSize,
-            'parent' => $sParent,
-            'order' => $sOrder));
-        }
+        $mResult = $this->getList($sList, $iPage, $iPageSize, $sOrder, $sOrderDir);
         
       break;
     }
     
     $this->switchDirectory();
+    
+    if (!$mResult instanceof Redirect && $sAction != 'list') {
+      
+      $mResult = new HTML_Div($mResult);
+      $mResult->shift(new HTML_A($sList, t('< Retour à la liste'), array('class' => 'dbx-link-list')));
+      
+      $mResult = $mResult->getChildren();
+    }
+    
     return $mResult;
   }
   
-  public function parseQuery(&$sQuery, XML_Document $oDocument) {
+  public function getList($sPath, $iPage, $iPageSize = 3, $sOrder = '', $sOrderDir = 'a', $sWhere = '') {
     
-    preg_match_all('/\[\[([\w-]+)\]\]/', $sQuery, $aResults, PREG_OFFSET_CAPTURE);
+    $mResult = null;
+    $oHeaders = $this->getHeaders();
+    $sOrderDir = $sOrderDir == 'a' ? 'ascending' : 'descending';
     
-    if ($aResults && $aResults[0]) {
+    if ($oFile = $oHeaders->saveTemp()) {
       
-      $iSeek = 0;
+      $oPath = new XML_Path($this->getDirectory().'/list', array(
+        'model' => $this->getEmpty()->getModel($this->getSchema(), false),
+        'xquery-headers' => $this->getNamespaces(),
+        'headers' => (string) $oFile->getSystemPath(),
+        'module' => (string) $this->getExtendDirectory()));
       
-      foreach ($aResults[1] as $aResult) {
-        
-        $iVarLength = strlen($aResult[0]) + 3;
-        $sVarValue = $aResult[0];
-        
-        $sSubResult = $oDocument->read($sVarValue);
-        
-        $sValue = substr($sValue, 0, $aResult[1] + $iSeek - 2).
-          $sSubResult . substr($sValue, $aResult[1] + $iSeek - 2 + $iVarLength);
-        
-        $iSeek = strlen($sVarValue) - $iVarLength;
-      }
+      $mResult = new XML_Action($oPath);
+      
+      $mResult->setVariables(array(
+        'page' => $iPage,
+        'page-size' => $iPageSize,
+        'parent-name' => $this->getParentName(),
+        'parent-path' => $this->getParent(),
+        'order' => $this->getFullPrefix().$sOrder,
+        'order-dir' => $sOrderDir,
+        'path-add' => $this->getExtendDirectory().'/admin/add',
+        'path-list' => $sPath));
     }
+    
+    return $mResult;
   }
   
   public function add(Redirect $oRedirect) {

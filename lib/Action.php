@@ -472,6 +472,13 @@ class XML_Action extends XML_Document {
         
       break;
       
+      case 'get-all-arguments' :
+        
+        $mResult = $this->getPath()->getAllArguments(true);
+        $bRun = true;
+        
+      break;
+      
       case 'get-argument' :
         
         $bKeep = $oElement->testAttribute('keep');
@@ -797,6 +804,7 @@ class XML_Action extends XML_Document {
           'security' => SYLMA_NS_SECURITY,
           'interface' => SYLMA_NS_INTERFACE,
           'message' => SYLMA_NS_MESSAGES,
+          'schemas' => SYLMA_NS_SCHEMAS,
           'xsd' => SYLMA_NS_XSD);
         
         if (!$sNamespace = $oElement->read()) {
@@ -1217,9 +1225,9 @@ class XML_Action extends XML_Document {
           
         } else if ($oChild->testAttribute('required') !== false) {
           
-          dspm(xt('L\'argument requis %s est absent dans %s',
+          $this->dspm(xt('L\'argument %s requis dans %s est absent',
             new HTML_Strong($oChild->getAttribute('name')),
-            $this->getPath()->parse()), 'action/warning');
+            view($oMethod)), 'action/warning');
           
           $bError = true;
         }
@@ -2190,9 +2198,16 @@ class XML_Path {
     else dspm(xt('Liste d\'argument invalide, ce n\'est pas un tableau'), 'action/error');
   }
   
-  public function getAllArguments() {
+  public function getAllArguments($bFlat = false) {
     
-    return $this->aArguments;
+    if ($bFlat) {
+      
+      $aResult = array();
+      foreach ($this->aArguments as $aArguments) $aResult = array_merge($aResult, $aArguments);
+      
+      return $aResult;
+      
+    } else return $this->aArguments;
   }
   
   public function getArgument($sArgument) {

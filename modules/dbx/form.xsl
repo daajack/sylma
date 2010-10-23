@@ -52,7 +52,8 @@
           </xsl:choose>
         </xsl:when>
         <xsl:when test="lc:is-date()">
-          <input type="text" name="{$name}" id="{$id}" value="{.}" class="{$input-class}"/>
+          <input type="hidden" value="{$id};;{$name};;{.}" class="{$input-class} field-input-date"/>
+          <span id="{$id}" class="field-input-date"></span>
         </xsl:when>
         <xsl:otherwise>
           <textarea id="{$id}" name="{$name}" class="{$input-class}">

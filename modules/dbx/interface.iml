@@ -7,10 +7,17 @@
     <argument format="XML_Document" name="schema"/>
     <argument format="XML_Document" name="options"/>
   </method-construct>
-  <method name="run" path="run" return-default="true" ls:owner="root" ls:group="users" ls:mode="710">
+  <method path="run" return-default="true" ls:owner="root" ls:group="users" ls:mode="710" name="run">
     <argument format="Redirect" name="redirect"/>
     <argument format="php-string" name="action"/>
-    <argument format="php-string" name="id" required="false"/>
+    <argument required="false" format="php-array" name="options"/>
+  </method>
+  <method return-default="true" ls:owner="root" ls:group="users" ls:mode="710" path="list" name="getList">
+    <argument format="Redirect" name="redirect"/>
+    <argument required="false" format="php-integer" name="page"/>
+    <argument required="false" format="php-string" name="order"/>
+    <argument required="false" format="php-integer" name="size"/>
+    <argument format="php-string" required="false" name="where"/>
   </method>
   <method name="add" path="add" ls:owner="root" ls:group="users" ls:mode="710">
     <argument format="Redirect" name="redirect"/>

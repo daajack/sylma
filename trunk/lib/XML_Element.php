@@ -704,30 +704,43 @@ class XML_Element extends DOMElement implements XML_Composante {
   
   /**
    * Return the list of children of the current element with {@link $childNodes}
-   * @return XML_NodeList The children :)
+   * @param string sNamespace if set, only children of this namespace will be returned,
+   *   by default calls are recursive so all children of children will be returned too
+   * @param integer iDepth if set, and namespace param too, childrens of children are returned on iDepth levels
+   * @param boolean bCleanComments if true, XML_Comment's will be removed from result
+   * @return XML_NodeList A list of children and/or XML_NodeList of children if namespace defined and iDepth != 0
    */
-  public function getChildren($sNamespace = null, $mDepth = null) {
+  public function getChildren($sNamespace = null, $iDepth = null, $bCleanComments = false) {
     
-    if ($sNamespace) {
+    $mResult = null;
+    
+    if ($sNamespace || $bCleanComments) {
       
-      $lResult = new XML_NodeList();
+      $mResult = new XML_NodeList();
       
       if ($this->isComplex()) {
         
         foreach ($this->getChildren() as $oChild) {
           
-          if ($oChild->useNamespace($sNamespace)) $lResult->add($oChild);
-          else if ($mDepth === null || $mDepth > 0) {
+          if ($sNamespace) {
             
-            if ($mDepth) $mDepth--;
-            $lResult->add($oChild->getChildren($sNamespace));
+            if ($oChild->useNamespace($sNamespace)) $mResult->add($oChild);
+            else if ($iDepth === null || $iDepth > 0) {
+              
+              if ($iDepth) $iDepth--;
+              $mResult->add($oChild->getChildren($sNamespace));
+            }
+            
+          } else { // only add other than comments
+            
+            if (!($oChild instanceof XML_Comment)) $mResult->add($oChild);
           }
         }
       }
       
-      return $lResult;
-      
-    } else return new XML_NodeList($this->childNodes);
+    } else $mResult = new XML_NodeList($this->childNodes);
+    
+    return $mResult;
   }
   
   /**

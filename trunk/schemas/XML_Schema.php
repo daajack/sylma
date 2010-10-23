@@ -771,7 +771,7 @@ class XSD_Particle extends XSD_Class {
     
     $aResult = array();
     
-    foreach ($this->getSource()->getChildren() as $oComponent) {
+    foreach ($this->getSource()->getChildren(null, null, true) as $oComponent) {
       
       $oResult = null;
       

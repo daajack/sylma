@@ -4,17 +4,23 @@
   <name>XSL_Document</name>
   <extends>XML_Document</extends>
   <method path="get-parameter" name="getParameter">
-    <argument required="true" format="php-string" name="local-name"/>
+    <argument format="php-string" name="local-name"/>
   </method>
   <method path="remove-parameter" name="removeParameter">
-    <argument required="true" format="php-string" name="local-name"/>
+    <argument format="php-string" name="local-name"/>
   </method>
   <method path="set-parameter" name="setParameter">
-    <argument required="true" format="php-string" name="name"/>
-    <argument required="true" name="value">
+    <argument format="php-string" name="name"/>
+    <argument name="value">
       <format>php-string</format>
       <format>php-integer</format>
     </argument>
+  </method>
+  <method path="include-element" name="includeElement">
+    <argument name="element" format="XML_Element"/>
+  </method>
+  <method path="include-external" name="includeExternal">
+    <argument name="template" format="XSL_Document"/>
   </method>
   <method path="include-externals" name="includeExternals"/>
 </class>

@@ -5,3 +5,26 @@
   margin-top: 1em;
   font-size: 1.2em;
 }
+
+.actions {
+  padding: 1em;
+}
+
+.actions a {
+  margin: 0 5px 0 5px;
+  padding: 3px 6px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  color: #888;
+}
+
+.actions a:hover,
+.actions a:focus {
+  border: 1px solid #ccc;
+  padding: 2px 5px;
+  border-top-color: #eee;
+  border-left-color: #eee;
+  text-decoration: none;
+  color: black;
+}

@@ -12,6 +12,7 @@
     <argument required="false" format="php-integer" name="depth"/>
   </method>
   <method return-default="true" name="getParent" path="get-parent"/>
+  <method return-default="true" name="getSystemPath" path="get-system-path" ls:owner="root" ls:group="users" ls:mode="711"/>
   <method return-default="true" path="parse" name="parseXML"/>
   <method return-default="true" path="get-directory" name="getDirectory">
     <argument name="name" format="php-string"/>

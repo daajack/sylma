@@ -769,7 +769,8 @@ class Controler {
         } else {
           
           $sValue = get_class($mArgument);
-          if (in_array($sValue, array('XML_Directory', 'XML_File'))) $sValue = stringResume($mArgument, 150);
+          //if (in_array($sValue, array('XML_Directory', 'XML_File'))) $sValue = stringResume($mArgument, 150);
+          if (method_exists($mArgument, '__toString')) $sValue .= ' : '.stringResume($mArgument, 150);
           
           $aValue = array($sValue, 'red');
         }
@@ -1010,7 +1011,7 @@ class Controler {
     if ($sTarget{0} == '/' || $sTarget{0} == '*') return $sTarget;
     else {
       
-      if ($mSource == '/') $mSource = '';
+      //if ($mSource == '/') $mSource = '';
       return $mSource.'/'.$sTarget;
     }
   }
@@ -1141,7 +1142,9 @@ class Controler {
     } else return self::$oDirectory;
   }
   
-  public static function getFile($sPath, $bDebug = false) {
+  public static function getFile($sPath, $mSource = null, $bDebug = false) {
+    
+    $sPath = self::getAbsolutePath($sPath, $mSource);
     
     $aPath = explode('/', $sPath);
     array_shift($aPath);

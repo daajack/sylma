@@ -13,6 +13,7 @@ class DBX_Module extends Module {
   private $oSelfDirectory = null;
   private $oExtendDirectory = null;
   private $oHeaders = null;
+  private $oOptions = null;
   
   public function __construct(XML_Directory $oDirectory, XML_Document $oSchema, XML_Document $oOptions) {
     
@@ -34,6 +35,8 @@ class DBX_Module extends Module {
     $this->oHeaders = new XML_Document($oOptions->getByName('headers', $this->getNamespace('dbx')));
     $sPrefix = $oOptions->readByName('prefix', $this->getNamespace('dbx'));
     
+    $this->oOptions = $oOptions;
+    
     $this->setNamespace($oSchema->getAttribute('targetNamespace'), $sPrefix);
     $this->setNamespace(SYLMA_NS_SCHEMAS, 'lc', false);
     
@@ -52,6 +55,11 @@ class DBX_Module extends Module {
   private function getParentName() {
     
     return $this->sParentName;
+  }
+  
+  private function getOptions() {
+    
+    return $this->oOptions;
   }
   
   private function getHeaders() {
@@ -255,6 +263,18 @@ class DBX_Module extends Module {
     return $oResult;
   }
   
+  private function getTemplateExtension() {
+    
+    $oTemplate = null;
+    
+    if ($oFormExtension = $this->getOptions()->getByName('form-extension', $this->getNamespace('dbx'))) {
+      
+      $oTemplate = $oFormExtension->getFirst();
+    }
+    
+    return $oTemplate;
+  }
+  
   public function run(Redirect $oRedirect, $sAction, $aOptions = array()) {
     
     $mResult = null;
@@ -283,7 +303,8 @@ class DBX_Module extends Module {
             
             $oPath = new XML_Path($this->getDirectory().'/form.eml', array(
               'model' => $oModel,
-              'action' => $this->getPath()."/edit-do/$sID.redirect"), true, false); //.redirect
+              'action' => $this->getPath()."/edit-do/$sID.redirect",
+              'template-extension' => $this->getTemplateExtension()), true, false); //.redirect
             
             $mResult = new XML_Action($oPath);
           }
@@ -313,7 +334,8 @@ class DBX_Module extends Module {
           
           $oPath = new XML_Path($this->getDirectory().'/form.eml', array(
             'model' => $oModel,
-            'action' => $this->getPath().'/add-do.redirect'), true, false); //.redirect
+            'action' => $this->getPath().'/add-do.redirect',
+            'template-extension' => $this->getTemplateExtension()), true, false); //.redirect
           
           $mResult = new XML_Action($oPath);
         }
@@ -332,7 +354,7 @@ class DBX_Module extends Module {
       case 'list' :
         
         $iPage = array_val('page', $aOptions, 1);
-        $iPageSize = array_val('size', $aOptions, 3);
+        $iPageSize = array_val('size', $aOptions, 10);
         $sOrder = array_val('order', $aOptions, 'date-parution');
         $sOrderDir = array_val('order-dir', $aOptions, 'a');
         

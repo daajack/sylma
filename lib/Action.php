@@ -285,7 +285,6 @@ class XML_Action extends XML_Document {
         
         // run method
         if ($aArgumentsPatch) $oResult = $this->runMethod($mObject, $sMethod, $aArgumentsPatch, $bStatic);
-        else dspm(xt('Arguments invalides pour la méthode "%s" dans "%s"', new HTML_Strong($oElement->getName(true)), $this->getPath()->parse()), 'action/notice');
         
         // check variable
         $this->setVariableElement($oElement, $oResult);
@@ -657,7 +656,9 @@ class XML_Action extends XML_Document {
             default : $mResult = new XML_Document; break;
           }
           
-          $mResult->set($this->buildArgument($oElement->getFirst()->remove()));
+          $mResult->set($this->buildArgument($oElement->getFirst()));
+          $oElement->getFirst()->remove();
+          
           $bRun = true;
           
         }/* else {
@@ -1494,12 +1495,10 @@ class XML_Action extends XML_Document {
       if (in_array($sActualFormat, $aFormats)) return true;
     }
     
-    dspm(xt('L\'argument %s / %s n\'est pas du type : %s dans %s : %s',
+    $this->dspm(xt('Argument invalide : L\'argument %s devrait être de type %s dans %s',
       
-      Controler::formatResource($mArgument),
-      new HTML_em($sActualFormat),
+      view($mArgument),
       new HTML_Strong(implode(', ', $aFormats)),
-      $this->getPath()->parse(),
       view($oElement)), 'action/warning');
     
     return false;
@@ -1719,7 +1718,7 @@ class XML_Action extends XML_Document {
     
     // Load stats
     
-    if (SYLMA_ACTION_STATS && Controler::getUser()->isMember(SYLMA_AUTHENTICATED)) {
+    if (SYLMA_ACTION_STATS && Controler::getUser()->isMember('0')) {
       
       $bStats = true;
       
@@ -1767,20 +1766,33 @@ class XML_Action extends XML_Document {
               
               if ($this->loadSettings($oDocument->getByName('settings', SYLMA_NS_EXECUTION))) {
                 
-                if ($this->getSettings()->getByName('return', SYLMA_NS_EXECUTION)) {
+                if ($oReturn = $this->getSettings()->getByName('return', SYLMA_NS_EXECUTION))
+                  $sReturn = $oReturn->getAttribute('format');
+                else $sReturn = '';
+                
+                switch ($sReturn) {
                   
-                  $oResult = $this->buildArgument($oDocument->getFirst());
-                  // TODO format check
+                  case 'XML_Document' :
+                    
+                    $oResult = new XML_Document($this->buildArgument($oDocument->getFirst()));
+                    
+                  break;
                   
-                } else {
+                  case 'mixed' :
+                    
+                    $oResult = $this->buildArgument($oDocument->getFirst());
+                    
+                  break;
                   
-                  $oResult = new XML_Document('temp');
-                  
-                  $oMethod = new XML_Element('li:add', $oDocument->getRoot()->getChildren(), null, SYLMA_NS_INTERFACE);
-                  $this->runInterfaceMethod($oResult, $oMethod, Action_Controler::getInterface($oResult, $this->getRedirect()));
-                  
-                  if (!$oResult->isEmpty()) $oResult = $oResult->getRoot()->getChildren();
-                  else dspm(xt('Aucune valeur retournée pour l\'action %s', $this->getPath()), 'action/warning');
+                  default :
+                    
+                    $oResult = new XML_Document('temp');
+                    
+                    $oMethod = new XML_Element('li:add', $oDocument->getRoot()->getChildren(), null, SYLMA_NS_INTERFACE);
+                    $this->runInterfaceMethod($oResult, $oMethod, Action_Controler::getInterface($oResult, $this->getRedirect()));
+                    
+                    if (!$oResult->isEmpty()) $oResult = $oResult->getRoot()->getChildren();
+                    else dspm(xt('Aucune valeur retournée pour l\'action %s', $this->getPath()), 'action/warning');
                 }
                 
               } else {

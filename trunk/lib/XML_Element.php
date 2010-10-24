@@ -363,7 +363,7 @@ class XML_Element extends DOMElement implements XML_Composante {
   public function addAttributes($mAttributes) {
     
     if (is_array($mAttributes)) foreach ($mAttributes as $sKey => $sValue) $this->setAttribute($sKey, $sValue);
-    else if (is_object($mAttributes)) foreach ($mAttributes as $oAttribute) $this->setAttribute($oAttribute->getName(), $oAttribute->getValue());
+    else if (is_object($mAttributes)) foreach ($mAttributes as $oAttribute) $this->setAttributeNode($oAttribute);
     return $mAttributes;
   }
   
@@ -428,8 +428,9 @@ class XML_Element extends DOMElement implements XML_Composante {
     foreach ($this->attributes as $oAttribute) $this->removeAttributeNode($oAttribute);
   }
   
-  // TODO : Priority
   public function cloneAttributes($oElement, $mAttribute = null) {
+    
+    // TODO : Priority
     
     if ($mAttribute) {
       
@@ -442,8 +443,7 @@ class XML_Element extends DOMElement implements XML_Composante {
       
     } else {
       
-      foreach ($oElement->getAttributes() as $oAttribute)
-        $this->setAttribute($oAttribute->getName(), $oAttribute->getValue());
+      foreach ($oElement->getAttributes() as $oAttribute) $this->setAttributeNode($oAttribute);
     }
   }
   
@@ -548,8 +548,6 @@ class XML_Element extends DOMElement implements XML_Composante {
         
         /* XML_Document */
         
-        // TODO : add XMLNS ?!
-        
         if ($mValue->getRoot()) $mValue = $this->insertChild($mValue->getRoot(), $oNext);
         else $mValue = null;
         
@@ -613,12 +611,12 @@ class XML_Element extends DOMElement implements XML_Composante {
     
     if ($oChild === $oReferer) $oReferer = null;
     
-    if (is_object($oChild) && ($oChild instanceof XML_Element || $oChild instanceof XML_Text || $oChild instanceof XML_CData || $oChild instanceof XML_Comment)) {
+    //if (is_object($oChild) && ($oChild instanceof XML_Element || $oChild instanceof XML_Text || $oChild instanceof XML_CData || $oChild instanceof XML_Comment)) {
+    if ($oChild) {
       
       if ($oChild->getDocument() && ($oChild->getDocument() !== $this->getDocument())) {
         
         $oChild = $this->getDocument()->importNode($oChild, 1);
-        
       }
       
       if ($bPrevious) {
@@ -1143,7 +1141,8 @@ class XML_Element extends DOMElement implements XML_Composante {
     
     if ($this->getParent() && $this->getPrefix() && !$this->getParent()->useNamespace($this->getNamespace())) { // TODO, bug ?
       
-      $oResult = new XML_Element($this->getName(false), null, $this->getAttributes(), $this->getNamespace());
+      $oResult = new XML_Element($this->getName(false), null, null, $this->getNamespace());
+      $oResult->cloneAttributes($this);
       if ($bDepth) $oResult->add($this->getChildren());
       
     } else $oResult = parent::cloneNode($bDepth);

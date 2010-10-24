@@ -81,7 +81,7 @@ class XML_Document extends DOMDocument {
       
       if (Controler::getUser() && !SYLMA_DISABLE_RIGHTS) {
         
-        $oNodes = $this->query('//*[@ls:owner or @ls:mode or @ls:group]', 'ls', SYLMA_NS_SECURITY);
+        $oNodes = $this->query('//*[@ls:owner]', 'ls', SYLMA_NS_SECURITY); // or @ls:mode or @ls:group
         
         if ($oNodes->length) {
           
@@ -139,52 +139,53 @@ class XML_Document extends DOMDocument {
     return !$this->getRoot();
   }
   
-  protected function includeExternals($sQuery, $aNS, &$aPaths = array(), $iLevel = 0) {
+  protected function buildExternal($oElement, &$aPaths = array()) {
     
-    $sPath = (string) $this->getFile();
+    $oResult = null;
+      
+    if ($sHref = $oElement->getAttribute('href')) {
+      
+      if ($this->getFile()) $sImportPath = Controler::getAbsolutePath($sHref, $this->getFile()->getParent());
+      else $sImportPath = Controler::getAbsolutePath($sHref, '/');
+      
+      if (!in_array($sImportPath, $aPaths)) $oResult = Controler::getFile($sImportPath);
+    }
+    
+    return $oResult;
+  }
+  
+  protected function includeExternals(&$aPaths = array(), $iLevel = 0) {
+    
     $iMaxLevel = SYLMA_MAX_INCLUDE_DEPTH;
     
     if ($iLevel > $iMaxLevel) {
       
-      Controler::addMessage(xt('Trop d\'imbrications ou redondances dans %s dans %s', new HTML_Strong(t('les importations')), $this->getFile()), 'warning');
-      return false;
-      
-    } else if ($sPath && in_array($sPath, $aPaths)) {
-      
-      // File ever imported
-      return false;
+      dspm(xt('Trop de redondance lors de l\'importation dans %s', $this->getFile()->parse()), 'xml/warning');
       
     } else {
       
-      $oExternals = $this->query($sQuery, $aNS);
+      $oExternals = $this->query('//xi:include', array('xi' => SYLMA_NS_XINCLUDE));
       
       if ($oExternals->length) {
         
         $aPaths[] = $sPath;
-        $aMarks = $this->query('le:mark', array('le' => SYLMA_NS_EXECUTION)); // mark elements source
         
         foreach ($oExternals as $oExternal) {
           
-          if ($sHref = $oExternal->getAttribute('href')) {
+          if ($oFile = $this->buildExternal($oExternal, $aPaths)) {
             
-            if ($this->getFile()) $sImportPath = Controler::getAbsolutePath($sHref, $this->getFile()->getParent());
-            else $sImportPath = Controler::getAbsolutePath($sHref, '/');
+            $oDocument = new XML_Document((string) $oFile, $this->getMode());
             
-            $oTemplate = new XSL_Document($sImportPath, $this->getMode());
-            
-            if (!$oTemplate->isEmpty() && $oTemplate->includeExternals($sQuery, $aNS, $aPaths, $iLevel + 1)) {
+            if (!$oDocument->isEmpty()) {
               
-              foreach ($aMarks as $eMark) {
-                
-                foreach ($oTemplate->query('//la:*', array('la' => $eMark->read())) as $eElement)
-                  $eElement->setAttribute('file-source', (string) $oTemplate->getFile());
-              }
+              $oDocument->includeExternals($aPaths, $iLevel + 1);
               
               switch ($oExternal->getName(true)) {
                 
-                case 'include' : $oExternal->replace($oTemplate->getChildren()); break;
-                case 'import' : $this->shift($oTemplate->getChildren()); break;
+                case 'include' : $oExternal->replace($oDocument->getChildren()); break;
+                case 'import' : $this->shift($oDocument->getChildren()); break;
               }
+              
             }
           }
           
@@ -196,6 +197,7 @@ class XML_Document extends DOMDocument {
     
     return true;
   }
+  
   /**
    * Method loadFile() alias
    */
@@ -235,7 +237,7 @@ class XML_Document extends DOMDocument {
             XML_Controler::addStat('file');
             $oFile->isFileSecured($this->appendLoadRights());
             
-            if ($this->useInclude()) $this->includeExternals('//xi:include', array('xi' => SYLMA_NS_XINCLUDE)); // include
+            // if ($this->useInclude()) $this->includeExternals(); // include
           }
           
         } else dspm (xt('Problème lors du chargement du fichier %s', new HTML_Strong($oFile)), 'file/error');
@@ -587,11 +589,11 @@ class XML_Document extends DOMDocument {
     
     if ($oChild) {
       
-      if ($oChild instanceof HTML_Tag) {
+      /*if ($oChild instanceof HTML_Tag) {
         
-        $oChild = clone $oChild;
+        $oChild = $oChild->cloneNode(true);
         $oChild->parse();
-      }
+      }*/
       
       return parent::importNode($oChild, $bDepth);
       
@@ -791,7 +793,7 @@ class XML_Document extends DOMDocument {
   
   public function __destruct() {
     
-    if ($this->bTemp && $this->getFile()) $this->getFile()->delete(false, false);
+    //if ($this->bTemp && $this->getFile()) $this->getFile()->delete(false, false);
   }
 }
 
@@ -843,10 +845,102 @@ class XSL_Document extends XML_Document {
     return $this->oProcessor;
   }
   
-  public function includeExternals($sQuery = '/*/xsl:include | /*/xsl:import', $aNS = array('xsl' => SYLMA_NS_XSLT), &$aPaths = array(), $iLevel = 0) {
+  /*public function includeExternals($sQuery = , $aNS = , $aAttributes = array('extension-element-prefixes'), &$aPaths = array(), $iLevel = 0) {
     
-    return parent::includeExternals($sQuery, $aNS, $aPaths, $iLevel);
+    return parent::includeExternals($sQuery, $aNS, $aAttributes, $aPaths, $iLevel);
     //dspf($this);
+  }*/
+  
+  public function includeElement(XML_Element $oElement, XML_Element $oExternal = null) {
+    
+    $sPrefixes = 'extension-element-prefixes';
+    
+    if ($sResult = $oElement->getAttribute($sPrefixes)) {
+      
+      if ($sTarget = $this->getAttribute($sPrefixes)) {
+        
+        $aTarget = explode(' ', $sTarget);
+        $aResult = $aPrefixes = array_diff(explode(' ', $sResult), $aTarget);
+        
+      } else {
+        
+        $aTarget = array();
+        $aResult = $aPrefixes = explode(' ', $sResult);
+      }
+      
+      foreach ($aPrefixes as $iPrefix => $sPrefix) {
+        
+        if (!$this->getNamespace($sPrefix)) {
+          
+          if ($sNamespace = $oElement->getNamespace($sPrefix)) {
+            
+            // TODO to add a namespace
+            $this->setAttribute($sPrefix.':ns', 'null', $sNamespace); 
+            // $this->setAttribute('xmlns:'.$sPrefix, $sNamespace);
+            
+          } else unset($aResult[$iPrefix]);
+        }
+      }
+      
+      $this->setAttribute($sPrefixes, implode(' ', array_merge($aResult, $aTarget)));
+    }
+    
+    if ($oExternal) {
+      
+      switch ($oExternal->getName(true)) {
+        
+        case 'include' : $oExternal->replace($oElement->getChildren()); break;
+        case 'import' : $this->add($oElement->getChildren()); break;
+      }
+      
+    } else $this->shift($oElement->getChildren());
+  }
+  
+  public function includeExternal(XSL_Document $oTemplate, XML_Element $oExternal = null, $aMarks = array(), &$aPaths = array(), $iLevel = 0) {
+    
+    if (!$oTemplate->isEmpty()) {
+      
+      $oTemplate->includeExternals($aPaths, $iLevel + 1);
+      
+      foreach ($aMarks as $eMark) { // mark elements with filename
+        
+        foreach ($oTemplate->query('//la:*', array('la' => $eMark->read())) as $eElement)
+          $eElement->setAttribute('file-source', (string) $oTemplate->getFile());
+      }
+      
+      $this->includeElement($oTemplate->getRoot(), $oExternal);
+    }
+  }
+  
+  public function includeExternals(&$aPaths = array(), $iLevel = 0) {
+    
+    $iMaxLevel = SYLMA_MAX_INCLUDE_DEPTH;
+    
+    if ($iLevel > $iMaxLevel) {
+      
+      dspm(xt('Trop de redondance lors de l\'importation dans %s', $this->getFile()->parse()), 'xml/warning');
+      
+    } else {
+      
+      $oExternals = $this->query('/*/xsl:include | /*/xsl:import', array('xsl' => SYLMA_NS_XSLT));
+      
+      if ($oExternals->length) {
+        
+        if ($this->getFile()) $aPaths[] = (string) $this->getFile();
+        $aMarks = $this->query('le:mark', array('le' => SYLMA_NS_EXECUTION)); // look for mark elements source
+        
+        foreach ($oExternals as $oExternal) {
+          
+          if ($oFile = $this->buildExternal($oExternal, $aPaths)) {
+            
+            $oTemplate = new XSL_Document((string) $oFile);
+            $this->includeExternal($oTemplate, $oExternal, $aMarks, $aPath, $iLevel);
+          }
+          
+          $oExternal->remove();
+        }
+      }
+    }
   }
   
   public function parseDocument(XML_Document $oDocument, $bXML = true) { // WARNING, XML_Document typed can cause crashes
@@ -856,6 +950,21 @@ class XSL_Document extends XML_Document {
     if ($oDocument && !$oDocument->isEmpty() && !$this->isEmpty()) {
       
       $this->includeExternals();
+      
+      // TODO protect document() in xpath
+      /*foreach ($this->query('//@select') as $oSelect) {
+        
+        $sSelect = $oSelect->read();
+        
+        if (preg_match('/document\(([^\)]+)/', $sSelect, $aResult)) {
+          
+          $sPath = Controler::getAbsolutePath($aResult[1], (string) $this->getFile()->getParent());
+          $oFile = Controler::getFile($sPath);
+          dspf($sPath);
+          dspf($oFile);
+        }
+      }*/
+      
       $this->getProcessor()->importStylesheet($this);
       
       $sResult = $this->getProcessor()->transformToXML($oDocument);

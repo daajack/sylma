@@ -57,7 +57,10 @@ form {
   background-color:#EEEEEE;
 }
 
-span.field-input-date { cursor: pointer; }
+span.field-input-date {
+  float: left;
+  cursor: pointer;
+}
 
 .calendar-eightysix.osx-dashboard {
   height: 145px;

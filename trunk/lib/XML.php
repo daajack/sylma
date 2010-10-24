@@ -54,7 +54,7 @@ interface XML_Composante {
   public function getParent();
   public function getPrevious();
   public function getNext();
-  public function messageParse();
+  //public function messageParse();
   //public function __toString();
 }
 
@@ -109,13 +109,33 @@ class XML_Helper extends XML_Document {
   }
 }
 
-class XML_Attribute extends DOMAttr {
+class XML_Attribute extends DOMAttr implements XML_Composante {
   
   public function __construct($sName, $sValue) {
     
     $sValue = checkEncoding($sValue);
     
     parent::__construct($sName, $sValue);
+  }
+  
+  public function isElement() {
+    
+    return false;
+  }
+  
+  public function isText() {
+    
+    return false;
+  }
+  
+  public function getPrevious() {
+    
+    return null;
+  }
+  
+  public function getNext() {
+    
+    return null;
   }
   
   public function getPrefix() {
@@ -127,6 +147,11 @@ class XML_Attribute extends DOMAttr {
     
     if ($bFull && $this->getPrefix()) return $this->getPrefix().':'.$this->name;
     else return $this->name;
+  }
+  
+  public function read() {
+    
+    return $this->getValue();
   }
   
   public function getValue() {

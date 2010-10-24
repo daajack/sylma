@@ -8,62 +8,78 @@
     <form method="{$method}" action="{$action}">
       <xsl:apply-templates select="lc:get-model(*[1])/lc:annotations/lc:message"/>
       <xsl:apply-templates select="*[1]/@*"/>
-      <xsl:apply-templates select="*[1]/*[not(@lc:editable = 'false')]"/>
+      <xsl:apply-templates select="*[1]/*[not(@lc:editable = 'false')]" mode="field"/>
       <div class="field-actions">
         <input type="submit" value="Enregistrer"/>
         <input type="button" value="Annuler" onclick="history.go(-1);"/>
       </div>
     </form>
   </xsl:template>
-  <xsl:template match="*">
+  <xsl:template match="*" mode="field">
     <xsl:variable name="name" select="lc:get-name()"/>
     <xsl:variable name="id" select="concat('field-', lc:get-name())"/>
     <xsl:variable name="statut" select="concat('field-statut-', lc:get-statut())"/>
-    <xsl:variable name="input-class" select="'field-input-element'"/>
+    <xsl:variable select="'field-input-element'" name="class"/>
     <div class="field clear-block {$statut}">
-      <label for="{$id}">
-        <xsl:value-of select="lx:first-case(lc:get-title())"/>
-        <xsl:text> :</xsl:text>
-      </label>
-      <xsl:choose>
-        <xsl:when test="not(lc:get-model())">
-          <textarea name="{$name}" id="{$id}" class="{$input-class}" style="background-color: #eee">
-            <xsl:value-of select="."/>
-          </textarea>
-        </xsl:when>
-        <xsl:when test="lc:is-string()">
-          <xsl:choose>
-            <xsl:when test="lc:is-enum()">
-              <select name="{$name}" id="{$id}" class="{$input-class}">
-                <option value="0">&lt; choisissez &gt;</option>
-                <xsl:apply-templates select="lc:get-schema()/lc:restriction/lc:enumeration">
-                  <xsl:with-param name="value" select="node()"/>
-                </xsl:apply-templates>
-              </select>
-            </xsl:when>
-            <xsl:when test="@lc:line-break">
-              <textarea id="{$id}" name="{$name}" class="{$input-class}">
-                <xsl:value-of select="."/>
-              </textarea>
-            </xsl:when>
-            <xsl:otherwise>
-              <input type="text" value="{.}" name="{$name}" id="{$id}" class="{$input-class}"/>
-            </xsl:otherwise>
-          </xsl:choose>
-        </xsl:when>
-        <xsl:when test="lc:is-date()">
-          <input type="hidden" value="{$id};;{$name};;{.}" class="{$input-class} field-input-date"/>
-          <span id="{$id}" class="field-input-date"></span>
-        </xsl:when>
-        <xsl:otherwise>
-          <textarea id="{$id}" name="{$name}" class="{$input-class}">
-            <xsl:value-of select="."/>
-          </textarea>
-        </xsl:otherwise>
-      </xsl:choose>
+      <xsl:apply-templates select="." mode="label">
+        <xsl:with-param name="id" select="$id"/>
+      </xsl:apply-templates>
+      <xsl:apply-templates select="." mode="input">
+        <xsl:with-param name="id" select="$id"/>
+        <xsl:with-param name="name" select="$name"/>
+        <xsl:with-param name="class" select="$class"/>
+      </xsl:apply-templates>
       <xsl:apply-templates select="@*"/>
       <xsl:apply-templates select="lc:get-model()/lc:annotations/lc:message"/>
     </div>
+  </xsl:template>
+  <xsl:template match="*" mode="label">
+    <xsl:param name="id"/>
+    <label for="{$id}">
+      <xsl:value-of select="lx:first-case(lc:get-title())"/>
+      <xsl:text> :</xsl:text>
+    </label>
+  </xsl:template>
+  <xsl:template match="*" mode="input">
+    <xsl:param name="id"/>
+    <xsl:param name="name"/>
+    <xsl:param name="class"/>
+    <xsl:choose>
+      <xsl:when test="not(lc:get-model())">
+        <textarea name="{$name}" id="{$id}" style="background-color: #eee" class="{$class}">
+          <xsl:value-of select="."/>
+        </textarea>
+      </xsl:when>
+      <xsl:when test="lc:is-string()">
+        <xsl:choose>
+          <xsl:when test="lc:is-enum()">
+            <select name="{$name}" id="{$id}" class="{$class}">
+              <option value="0">&lt; choisissez &gt;</option>
+              <xsl:apply-templates select="lc:get-schema()/lc:restriction/lc:enumeration">
+                <xsl:with-param name="value" select="node()"/>
+              </xsl:apply-templates>
+            </select>
+          </xsl:when>
+          <xsl:when test="@lc:line-break">
+            <textarea id="{$id}" name="{$name}" class="{$class}">
+              <xsl:value-of select="."/>
+            </textarea>
+          </xsl:when>
+          <xsl:otherwise>
+            <input type="text" value="{.}" name="{$name}" id="{$id}" class="{$class}"/>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
+      <xsl:when test="lc:is-date()">
+        <input type="hidden" value="{$id};;{$name};;{.}" class="{$class} field-input-date"/>
+        <span id="{$id}" class="field-input-date"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <textarea id="{$id}" name="{$name}" class="{$class}">
+          <xsl:value-of select="."/>
+        </textarea>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
   <xsl:template match="@*">
     <xsl:if test="namespace-uri() != 'http://www.sylma.org/schemas'">

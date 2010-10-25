@@ -928,21 +928,27 @@ class Controler {
   
   public static function importDatabase() {
     
-    $xDirectory = 'database/import';
+    $xDirectory = 'database/export';
+    $xName = $xDirectory.'/@name';
     
-    if (!$sPath = self::getSettings($xDirectory)) {
+    if ((!$sPath = self::getSettings($xDirectory)) || (!$sName = self::getSettings($xName))) {
       
       dspm(xt('Chemin %s inexistant ou invalide pour l\'importation dans le fichier root', new HTML_Strong($xDirectory)), 'warning');
       
-    } else if ($oFile = self::getFile($sPath, true)) {
+    } else {
       
-      $oDocument = $oFile->getDocument();
-      
-      if ($oDocument->isEmpty()) dspm(xt('Le document d\'importation %s est vide', new HTML_Strong), 'warning');
-      else {
+      if ($oFile = self::getFile($sPath.'/'.$sName, true)) {
         
-        self::getDatabase()->run('add '.$oFile->getSystemPath());
-        dspm(xt('Base de donnée importée depuis %s', $oDocument->getFile()->parse()), 'success');
+        $oDocument = $oFile->getDocument();
+        
+        if ($oDocument->isEmpty()) dspm(xt('Le document d\'importation %s est vide', new HTML_Strong), 'warning');
+        else {
+          
+          self::getDatabase()->run("delete $sName");
+          self::getDatabase()->run('add '.$oFile->getSystemPath());
+          
+          dspm(xt('Base de donnée importée depuis %s', $oDocument->getFile()->parse()), 'success');
+        }
       }
     }
     
@@ -960,13 +966,29 @@ class Controler {
       
     } else {
       
-      if ($sPath{0} != '/') $sPath = self::getDirectory()->getSystemPath().'/'.$sPath;
+      if ($sPath{0} != '/') $sResultPath = self::getDirectory()->getSystemPath().'/'.$sPath;
+      else $sResultPath = $sPath;
       
-      self::getDatabase()->run("export $sPath $sName");
-      dspm(xt('Données exportées dans %s', new HTML_Strong($sPath.'/'.$sName)), 'success');
+      self::getDatabase()->run("export $sResultPath $sName");
+      
+      self::cleanDocument($sPath.'/'.$sName);
+      
+      dspm(xt('Données exportées dans %s', new HTML_Strong($sResultPath.'/'.$sName)), 'success');
+      
+      
     }
     
     return '';
+  }
+  
+  public static function cleanDocument($sPath) {
+    
+    $oDocument = new XML_Document(self::getAbsolutePath($sPath));
+    $oDocument->updateAllNamespaces();
+    
+    $oDocument->save();
+    
+    dspm(xt('Document %s nettoyé !', view($oDocument)), 'success');
   }
   
   public static function setUser($oUser = null) {
@@ -1006,7 +1028,7 @@ class Controler {
     return self::$oUser;
   }
   
-  public static function getAbsolutePath($sTarget, $mSource) {
+  public static function getAbsolutePath($sTarget, $mSource = '') {
     
     if ($sTarget{0} == '/' || $sTarget{0} == '*') return $sTarget;
     else {

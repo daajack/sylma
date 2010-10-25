@@ -635,6 +635,11 @@ class XML_Document extends DOMDocument {
     return (string) $mValue;
   }
   
+  public function updateAllNamespaces() {
+    
+    $this->set($this->getRoot()->updateAllNamespaces());
+  }
+  
   public function updateNamespaces($mFrom = null, $mTo = null, $mPrefix = '', $oParent = null) {
     
     if ($this->getRoot()) return new XML_Document($this->getRoot()->updateNamespaces($mFrom, $mTo, $mPrefix, $oParent));

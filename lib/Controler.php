@@ -937,6 +937,8 @@ class Controler {
       
     } else {
       
+      self::cleanDocument($sPath.'/'.$sName);
+      
       if ($oFile = self::getFile($sPath.'/'.$sName, true)) {
         
         $oDocument = $oFile->getDocument();

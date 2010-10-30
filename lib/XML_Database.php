@@ -12,23 +12,42 @@ class XML_Database {
     
     try {
       
-      $oSession = new Session($aDB['host'], $aDB['port'], $aDB['user'], $aDB['password']);
-      
-      if (!$oSession->execute('OPEN '.$aDB['database'])) {
-        
-        dspm(xt('Impossible de se connecter à la base de donnée %s : %s', $aDB['database'], $oSession->info()), 'db/error');
-      }
+      $db = new eXist($aDB['user'], $aDB['password'], $aDB['host']);
+      if (!$db->connect()) dspm($db->getError(), 'db/error');
       
       //$this->sDatabase = $sDatabase;
-      $this->oSession = $oSession;
+      $this->oSession = $db;
       $this->sNamespace = $aDB['namespace'];
       
     } catch (Exception $e) {
       
-      //dspm(xt('Impossible de se connecter au serveur de base de donnée : %s', $e->getMessage()), 'db/error');
+      dspm(xt('Impossible de se connecter au serveur de base de donnée : %s', $e->getMessage()), 'db/error');
     }
   }
   
+  public function getError() {
+    
+    return $this->getSession() ? $this->getSession()->getError() : null;
+  }
+  
+  public function getSession() {
+    
+    return $this->oSession;
+  }
+  
+  public function getNamespace($sPrefix = '') {
+    
+    if ($sPrefix) return $this->aNamespaces[$sPrefix];
+    else return $this->sNamespace;
+  }
+  
+  public function setNamespace($sNamespace, $sPrefix = '') {
+    
+    if ($sPrefix) $this->aNamespaces[$sPrefix] = $sNamespace;
+    else $this->sNamespace = $sNamespace;
+  }
+  
+  /*
   public function run($sCommand) {
     
     $oSession = $this->oSession;
@@ -48,23 +67,60 @@ class XML_Database {
     
     return $sResult;
   }
-  
-  public function query($sQuery, array $aNamespaces = array()) {
+  */
+  public function query($sQuery, array $aNamespaces = array(), $bGetResult = true) {
     
-    $sDeclare = ''; // namespaces declarations
-    $aNamespaces = array_merge(array($this->sNamespace), $this->aNamespaces, $aNamespaces);
+    $sResult = null;
     
-    foreach ($aNamespaces as $sPrefix => $sNamespace) {
+    if (!$this->getSession()) dspm(t('Aucun base de données instanciées'), 'db/error');
+    else {
       
-      if ($sPrefix === 0) $sDeclare .= "declare default element namespace '{$sNamespace}';\n";
-      else if ($sPrefix) $sDeclare .= "declare namespace {$sPrefix}='{$sNamespace}';\n";
+      $sDeclare = ''; // namespaces declarations
+      $aNamespaces = array_merge(array($this->sNamespace), $this->aNamespaces, $aNamespaces);
+      
+      foreach ($aNamespaces as $sPrefix => $sNamespace) {
+        
+        if ($sPrefix === 0) $sDeclare .= "declare default element namespace '{$sNamespace}';\n";
+        else if ($sPrefix) $sDeclare .= "declare namespace {$sPrefix}='{$sNamespace}';\n";
+      }
+      
+      $sQuery = $sDeclare.$sQuery;
+      
+      if (SYLMA_DB_SHOW_QUERIES) dspm(xt('xquery [query] : %s', new HTML_Tag('pre', $sQuery)), 'db/notice');
+      
+      if (!$aResult = $this->getSession()->xquery($sQuery)) {
+        
+        if ($bGetResult) {
+          
+          dspm(array(
+            new HTML_Strong(t('Erreur dans la requête : ')),
+            $this->getError(),
+            new HTML_Hr,
+            new HTML_Tag('pre', $sQuery)), 'db/error');
+        }
+        
+      } else {
+        
+        $sResult = '';
+        
+        $hits = $aResult['HITS'];
+        $queryTime = $aResult['QUERY_TIME'];
+        $collections = $aResult['COLLECTIONS'];
+        
+        if (!empty($aResult['XML'])) {
+          
+          if (is_string($aResult['XML'])) $sResult = $aResult['XML'];
+          else {
+            
+            foreach ($aResult['XML'] as $sItem) $sResult .= $sItem;
+          }
+        }
+        
+        if (SYLMA_DB_SHOW_RESULTS) dspm(xt('xquery [result] : %s', new HTML_Tag('pre', $sResult)), 'db/notice');
+      }
     }
     
-    $sQuery = $sDeclare.$sQuery;
-    
-    if (SYLMA_DB_SHOW_QUERIES) dspm(xt('xquery [query] : %s', new HTML_Tag('pre', $sQuery)), 'db/notice');
-    
-    return $this->run('xquery '.$sQuery);
+    return $sResult;
   }
   
   public function get($sQuery, array $aNamespaces = array(), $bDocument = false) {
@@ -80,41 +136,31 @@ class XML_Database {
     return $mResult;
   }
   
-  public function load($sId) {
+  public function load($sID) {
     
-    if ($sResult = $this->query("id('$sId')")) return new XML_Document($sResult);
+    if ($sResult = $this->query("//id('$sID')")) return new XML_Document($sResult);
     return null;
   }
   
-  public function delete($sId) {
+  public function delete($sID, array $aNamespaces = array()) {
     
-    return $this->query("delete node id('$sId')");
+    return $this->query("update delete //id('$sID')", $aNamespaces, false);
   }
   
-  public function update($sId, XML_Document $oDocument, array $aNamespaces = array()) {
+  public function update($sID, XML_Document $oDocument, array $aNamespaces = array()) {
     
-    return $this->query("replace node id('$sId') with {$oDocument->display(true, false)}", $aNamespaces);
-  }
-  
-  public function getNamespace($sPrefix = '') {
-    
-    if ($sPrefix) return $this->aNamespaces[$sPrefix];
-    else return $this->sNamespace;
-  }
-  
-  public function setNamespace($sNamespace, $sPrefix = '') {
-    
-    if ($sPrefix) $this->aNamespaces[$sPrefix] = $sNamespace;
-    else $this->sNamespace = $sNamespace;
+    return $this->query("update replace //id('$sID') with {$oDocument->display(true, false)}", $aNamespaces, false);
   }
   
   public function insert($mElement, $sTarget, array $aNamespaces = array()) {
     
-    return $this->query("insert nodes $mElement into $sTarget", $aNamespaces);
+    return $this->query("update insert $mElement into $sTarget", $aNamespaces, false);
   }
   
   public function __destruct() {
     
-    if ($this->oSession) $this->oSession->close();
+    if ($this->oSession && !$this->getSession()->disconnect()) {
+      dspm(xt('Erreur pendant la déconnexion : %s', $this->getError()), 'db/error');
+    }
   }
 }

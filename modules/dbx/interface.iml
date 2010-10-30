@@ -28,7 +28,7 @@
   <method name="edit" path="edit" ls:owner="root" ls:group="users" ls:mode="710">
     <argument format="Redirect" name="redirect"/>
   </method>
-  <method name="load" path="load" ls:group="users" ls:owner="root" ls:mode="711">
+  <method name="load" path="load" return-default="true" ls:group="users" ls:owner="root" ls:mode="711">
     <argument format="php-string" name="id"/>
   </method>
   <method name="delete" path="delete" ls:owner="root" ls:mode="710" ls:group="users">

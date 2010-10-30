@@ -189,7 +189,7 @@ class DBX_Module extends Module {
           
           case 'gen-id' :
             
-            if ($bID) $oElement->setAttribute($sValue, uniqid());
+            if ($bID) $oElement->setAttribute('xml:id', uniqid('x')); //$sValue
             
           break;
           
@@ -219,8 +219,14 @@ class DBX_Module extends Module {
       
       if ($oValue->isElement()) {
         
-        if (substr($oValue->getName(), 0, 4) == 'attr') $oParent->setAttribute(substr($oValue->getName(), 5), $oValue->read());
-        else {
+        if (substr($oValue->getName(), 0, 4) == 'attr') {
+          
+          $sName = substr($oValue->getName(), 5);
+          
+          if ($sName == 'id') $oParent->setAttribute('xml:'.$sName, $oValue->read());
+          else $oParent->setAttribute($sName, $oValue->read());
+          
+        } else {
           
           $oChild = $oParent->addNode($this->getFullPrefix().$oValue->getName(), null, null, $this->getNamespace());
           
@@ -361,6 +367,38 @@ class DBX_Module extends Module {
         $mResult = $this->getList($sList, $iPage, $iPageSize, $sOrder, $sOrderDir);
         
       break;
+      
+      case 'delete' :
+        
+        $oPath = new XML_Path($this->getDirectory().'/delete.eml', array(
+          'id' => $sID,
+          'action' => $this->getPath()."/delete-do/$sID.redirect"), true, false); //.redirect
+        
+        $mResult = new XML_Action($oPath);
+        
+      break;
+      
+      case 'delete-do' :
+        
+        if (!$sID) {
+          
+          dspm(t('ID manquant'), 'action/error');
+          
+        } else {
+          
+          if ($this->delete($sID)) dspm(xt('Elément %s supprimé', $sID), 'success');
+          
+          $oRedirect->setPath($sList);
+          $mResult = $oRedirect;
+        }
+        
+      break;
+      
+      case 'import' :
+        
+        $this->import();
+        
+      break;
     }
     
     $this->switchDirectory();
@@ -423,7 +461,7 @@ class DBX_Module extends Module {
         $oValues = $oValues->updateNamespaces($this->getNamespace(), $this->getNamespace(), $this->getPrefix());
         
         // if ($oFile = $oValues->saveTemp()) $this->getDB()->run("add to {$this->getParent()} {$oFile->getSystemPath()}");
-        if ($this->insert($oValues->display(true, false), $this->getParent()) || 1) {
+        if ($this->insert($oValues->display(true, false), $this->getParent())) {
           
           dspm(t('Elément ajouté'), 'success');
           $bResult = true;
@@ -468,9 +506,36 @@ class DBX_Module extends Module {
     return $bResult;
   }
   
-  public function load($sId) {
+  public function load($sID) {
     
-    return $this->getDB()->load($sId);
+    return $this->getDB()->load($sID);
+  }
+  
+  public function import() {
+    
+    if (!$sFile = $this->getOptions()->read('dbx:file', $this->getNS())) {
+      
+      dspm(xt('Aucun fichier d\'importation défini dans les options'), 'warning');
+      
+    } else {
+      
+      if ($oFile = Controler::getFile($sFile)) {
+        
+        $oDoc = $oFile->getDocument();
+        
+        if (!$oDoc || $oDoc->isEmpty() || !$oDoc->getRoot()->hasChildren()) {
+          
+          dspm(xt('Document %s invalide', $oFile->parse()), 'warning');
+          
+        } else {
+          
+          foreach ($oDoc->getChildren() as $oItem) $this->insert($oItem, $this->getParent());
+          //if ($this->getDB()->run("add to {$this->getParent()} {$oFile->getSystemPath()}"))
+          
+          dspm(xt('Document %s importé dans %s', view($oFile->getDocument()), new HTML_Strong($this->getParent())), 'success');
+        }
+      }
+    }
   }
   
   public function getNamespaces($aNamespaces = array()) {
@@ -498,9 +563,9 @@ class DBX_Module extends Module {
     return $this->getDB()->insert($mElement, $sTarget, $this->getNamespaces($aNamespaces));
   }
   
-  public function delete($sId, array $aNamespaces = array()) {
+  public function delete($sID, array $aNamespaces = array()) {
     
-    return $this->getDB()->delete($sId, $this->getNamespaces($aNamespaces));
+    return $this->getDB()->delete($sID, $this->getNamespaces($aNamespaces));
   }
 }
 

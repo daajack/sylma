@@ -11,11 +11,12 @@
     </tbody>
   </xsl:template>
   <xsl:template match="*">
+    <xsl:variable name="id" select="@xml:id"/>
     <tr>
       <td class="tools">
-        <a href="{$module}/admin/edit/{@id}/{intitule-urlize}">E</a>
-        <a href="{$module}/admin/delete/{@id}/{intitule-urlize}">S</a>
-        <a href="{$module}/admin/view/{@id}/{intitule-urlize}">V</a>
+        <a href="{$module}/admin/edit/{$id}/{intitule-urlize}">E</a>
+        <a href="{$module}/admin/delete/{$id}/{intitule-urlize}">S</a>
+        <a href="{$module}/admin/view/{$id}/{intitule-urlize}">V</a>
       </td>
       <xsl:for-each select="*">
         <xsl:if test="$doc-headers/*/*[@name = local-name(current())]">

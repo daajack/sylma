@@ -298,8 +298,10 @@ class XML_Document extends DOMDocument {
       
       if (!@parent::loadXML($sContent)) {
         
-        Controler::addMessage(array(t('Chargement texte impossible, contenu invalide :'),
+        dspm(array(t('Chargement texte impossible, contenu invalide :'),
           new HTML_Hr, stringResume($sContent, 500)), 'xml/warning');
+          
+        dspm(new HTML_Tag('pre', $sContent));
         return false;
         //if (DEBUG) echo 'Chargement texte impossible : '.xmlize($sContent).new HTML_Br;
         
@@ -798,7 +800,7 @@ class XML_Document extends DOMDocument {
   
   public function __destruct() {
     
-    //if ($this->bTemp && $this->getFile()) $this->getFile()->delete(false, false);
+    if ($this->bTemp && $this->getFile()) $this->getFile()->delete(false, false);
   }
 }
 

@@ -1388,7 +1388,7 @@ class XML_Action extends XML_Document {
         
         if (!$this->validArgumentType($mArgument, $aFormats, $oChild)) {
           
-          dspm(xt('L\'argument "%s" est au mauvais format dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'error');
+          // dspm(xt('L\'argument "%s" est au mauvais format dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'error');
           $bResult = false;
           
         } else {

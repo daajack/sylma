@@ -2,18 +2,14 @@
 
 class DBX_Module extends Module {
   
-  private $oEmpty = null;
-  private $sPath = '';
-  private $sExtension = '';
-  private $sRootName = '';
-  private $sParentPath = '';
-  private $sParentName = '';
+  private $oModel = null;
   
   private $bSelfDirectory = true;
   private $oSelfDirectory = null;
   private $oExtendDirectory = null;
-  private $oHeaders = null;
+  
   private $oOptions = null;
+  private $aOptions = array(); // cache array
   
   public function __construct(XML_Directory $oDirectory, XML_Document $oSchema, XML_Document $oOptions) {
     
@@ -24,37 +20,51 @@ class DBX_Module extends Module {
     $this->switchDirectory();
     
     $this->oSchema = $oSchema;
-    
-    $this->setNamespace('http://www.sylma.org/modules/dbx', 'dbx', false);
-    
-    $this->sParentName = $oOptions->readByName('parent', $this->getNamespace('dbx'));
-    $this->sParentPath = $oOptions->readByName('parent-path', $this->getNamespace('dbx'));
-    $this->sRootName = $oOptions->readByName('name', $this->getNamespace('dbx'));
-    $this->sPath = $oOptions->readByName('path', $this->getNamespace('dbx'));
-    $this->sExtension = $oOptions->readByName('extension', $this->getNamespace('dbx'));
-    $this->oHeaders = new XML_Document($oOptions->getByName('headers', $this->getNamespace('dbx')));
-    $sPrefix = $oOptions->readByName('prefix', $this->getNamespace('dbx'));
-    
     $this->oOptions = $oOptions;
     
-    $this->setNamespace($oSchema->getAttribute('targetNamespace'), $sPrefix);
+    $this->setNamespace('http://www.sylma.org/modules/dbx', 'dbx', false);
+    $this->setNamespace($oSchema->getAttribute('targetNamespace'), $this->readOption('prefix'));
     $this->setNamespace(SYLMA_NS_SCHEMAS, 'lc', false);
     
-    // options
-    
-    // $this->oEmpty = new XML_Document($oOptions->getByName('empty', $this->getNamespace('dbx'))->getFirst());
-    
-    //dspf($oOptions->getByName('empty')->getFirst()->getNamespace());
+    $this->loadModel();
   }
   
-  private function getExtension() {
+  public function getOption($sPath, $bDebug = true) {
     
-    return $this->sExtension;
+    if (!array_key_exists($sPath, $this->aOptions)) {
+      
+      if ((!$this->aOptions[$sPath] = $this->getOptions()->getByName($sPath, $this->getNamespace('dbx'))) && $bDebug)
+        dspm(xt('Option %s introuvable dans %s', new HTML_Strong($sPath), view($this->getOptions())), 'action/warning');
+    }
+    
+    return $this->aOptions[$sPath];
   }
   
-  private function getParentName() {
+  public function getModel() {
     
-    return $this->sParentName;
+    return $this->oModel;
+  }
+  
+  public function loadModel() {
+    
+    $sFile = 'dbx-empty.xml';
+    $sDirectory = 'tmp';
+    
+    if (1 || (!$oFile = $this->getDirectory()->addDirectory($sDirectory)->getFile($sFile))) {
+      
+      $oModel = $this->getEmpty()->getModel($this->getSchema(), false);
+      
+      if ($oModel->isEmpty()) dspm(xt('Fichier modèle %s invalide', view($oModel)), 'action/error');
+      else $oFile = $oModel->save($this->getDirectory()->getDirectory($sDirectory).'/'.$sFile);
+    }
+    
+    $this->oModel = $oFile;
+  }
+  
+  public function readOption($sPath, $bDebug = true) {
+    
+    if ($oOption = $this->getOption($sPath, $bDebug)) return $oOption->read();
+    else return '';
   }
   
   private function getOptions() {
@@ -64,30 +74,29 @@ class DBX_Module extends Module {
   
   private function getHeaders() {
     
-    return $this->oHeaders;
+    return $this->getOption('headers');
   }
   
   private function getParent() {
     
-    return $this->sParentPath;//.$this->getParentName();
+    //return "doc('{$this->getDB()->getCollection()}/{$this->readOption('parent-path')}')";
+    $sParentPath = $this->readOption('parent-path', false);
+    $sParent = $sParentPath ? $sParentPath : $this->readOption('parent');
+    
+    return "doc('{$this->readOption('document')}')/$sParent";
   }
   
   private function getPath() {
     
-    return $this->sPath;
+    return $this->readOption('path');
   }
   
   private function getEmpty() {
     
     $oResult = new XML_Document();
-    $oResult->addNode($this->getFullPrefix().$this->getRootName(), null, null, $this->getNamespace());
+    $oResult->addNode($this->getFullPrefix().$this->readOption('name'), null, null, $this->getNamespace());
     
     return $oResult;
-  }
-  
-  private function getRootName() {
-    
-    return $this->sRootName;
   }
   
   private function getExtendDirectory() {
@@ -386,7 +395,8 @@ class DBX_Module extends Module {
           
         } else {
           
-          if ($this->delete($sID)) dspm(xt('Elément %s supprimé', $sID), 'success');
+          $this->delete($sID);
+          dspm(xt('Elément %s supprimé', $sID), 'success');
           
           $oRedirect->setPath($sList);
           $mResult = $oRedirect;
@@ -417,13 +427,13 @@ class DBX_Module extends Module {
   public function getList($sPath, $iPage, $iPageSize = 3, $sOrder = '', $sOrderDir = 'a', $sWhere = '') {
     
     $mResult = null;
-    $oHeaders = $this->getHeaders();
+    $oHeaders = new XML_Document($this->getHeaders());
     $sOrderDir = $sOrderDir == 'a' ? 'ascending' : 'descending';
-    
+    //dspf($oHeaders);
     if ($oFile = $oHeaders->saveTemp()) {
       
       $oPath = new XML_Path($this->getDirectory().'/list', array(
-        'model' => $this->getEmpty()->getModel($this->getSchema(), false),
+        'model' => $this->getModel()->getSystemPath(),
         'xquery-headers' => $this->getNamespaces(),
         'headers' => (string) $oFile->getSystemPath(),
         'module' => (string) $this->getExtendDirectory()));
@@ -433,20 +443,21 @@ class DBX_Module extends Module {
       $mResult->setVariables(array(
         'page' => $iPage,
         'page-size' => $iPageSize,
-        'parent-name' => $this->getParentName(),
+        'parent-name' => $this->readOption('parent'),
         'parent-path' => $this->getParent(),
-        'order' => $this->getFullPrefix().$sOrder,
+        'order' => $sOrder,
         'order-dir' => $sOrderDir,
         'path-add' => $this->getExtendDirectory().'/admin/add',
         'path-list' => $sPath));
     }
     
-    return $mResult;
+    return $mResult->parse(); // parse to keep files in process before __destruct()
   }
   
   public function add(Redirect $oRedirect) {
     
     $bResult = false;
+    
     
     if ($oValues = $this->getPost($oRedirect)) {
       
@@ -506,11 +517,6 @@ class DBX_Module extends Module {
     return $bResult;
   }
   
-  public function load($sID) {
-    
-    return $this->getDB()->load($sID);
-  }
-  
   public function import() {
     
     if (!$sFile = $this->getOptions()->read('dbx:file', $this->getNS())) {
@@ -541,6 +547,11 @@ class DBX_Module extends Module {
   public function getNamespaces($aNamespaces = array()) {
     
     return array_merge($this->getNS(), $aNamespaces);
+  }
+  
+  public function load($sID) {
+    
+    return $this->getDB()->load($sID);
   }
   
   public function get($sQuery, array $aNamespaces = array(), $bDocument = false) {

@@ -763,9 +763,9 @@ class XML_Action extends XML_Document {
         if (!isset($sClass)) $sClass = 'XML_Document';
         
         $this->replaceAttributesVariables($oElement);
-        
+        // TOCHECK remove is dangerous >
         if (!($mPath = $oElement->getAttribute('path')) &&
-          (!$oElement->hasChildren() || !($mPath = $this->buildArgument($oElement->getFirst()->remove())))) {
+          (!$oElement->hasChildren() || !($mPath = $this->buildArgument($oElement->getFirst()->remove())))) { 
           
           dspm(array(
             xt('Aucun chemin spécifié pour le fichier dans %s.', new HTML_Strong($this->getPath())),
@@ -773,16 +773,29 @@ class XML_Action extends XML_Document {
           
         } else {
           
-          $iMode = MODE_EXECUTION;
-          
-          if (($iTempMode = $oElement->getAttribute('mode')) && in_array($iTempMode, array(MODE_READ, MODE_WRITE, MODE_EXECUTION)))
-            $iMode = $iTempMode; // TODO is it r'lly good
-          
-          if (is_string($mPath)) $mPath = $this->getAbsolutePath($mPath);
-          
-          $mResult = new $sClass($mPath, $iMode);
-          
-          $bRun = true;
+          if ($oElement->getAttribute('output') == 'text') {
+            
+            if ($oFile = Controler::getFile((string) $mPath, $this->getDirectory(), true)) {
+              
+              $mResult = $oFile->read();
+              //dspf($mResult);
+              if ($oElement->testAttribute('parse-variables', false, SYLMA_NS_EXECUTION))
+                $mResult = $this->replaceVariables($mResult, true);
+            }
+            
+          } else {
+            
+            $iMode = MODE_EXECUTION;
+            
+            if (($iTempMode = $oElement->getAttribute('mode')) && in_array($iTempMode, array(MODE_READ, MODE_WRITE, MODE_EXECUTION)))
+              $iMode = $iTempMode; // TODO is it r'lly good
+            
+            if (is_string($mPath)) $mPath = $this->getAbsolutePath($mPath);
+            
+            $mResult = new $sClass($mPath, $iMode);
+            
+            $bRun = true;
+          }
         }
         
       break;

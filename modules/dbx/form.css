@@ -36,6 +36,14 @@ form {
   text-align: center;
 }
 
+.field-statut-optional {
+  opacity: 0.35;
+}
+
+.field-statut-optional:hover {
+  opacity: 1;
+}
+
 .field-statut-invalid label,
 .field-statut-missing label {
   color: red;
@@ -55,6 +63,10 @@ form {
   border:1px solid #CCCCCC;
   -moz-border-radius:0 10px 0 10px;
   background-color:#EEEEEE;
+}
+
+.field-input-boolean {
+  width:auto !important;
 }
 
 span.field-input-date {

@@ -2,28 +2,14 @@
 <le:action xmlns:le="http://www.sylma.org/execution" xmlns:li="http://www.sylma.org/interface" xmlns="http://www.w3.org/1999/xhtml">
   <le:settings>
     <le:name>Liste</le:name>
-    <le:argument format="XML_Document" name="model"/>
+    <le:argument name="model" format="php-string" set-variable="model"/>
     <le:argument format="php-string" name="module"/>
     <le:argument format="php-string" name="headers"/>
     <le:argument name="xquery-headers" format="php-array"/>
     <le:document set-variable="datas">
       <le:xquery>
         <le:get-argument name="xquery-headers"/>
-        <le:argument le:parse-variables="true"><![CDATA[let $page := [$page]
-let $pageSize := [$page-size]
-let $start:=(($page*$pageSize) - $pageSize)
-
-let $result := (
-  for $el in [$parent-path]/*
-    order by $el/[$order] [$order-dir]
-  return $el)
-
-let $pageTotal := ceiling((count($result) div $pageSize))
-
-return
-  <[$parent-name] total="{$pageTotal}" page="{$page}">
-    {subsequence($result, ($start + 1), ($start + $pageSize))}
-  </[$parent-name]>]]></le:argument>
+        <le:file path="list.xq" output="text" le:parse-variables="true"/>
       </le:xquery>
     </le:document>
     <le:window>
@@ -37,28 +23,6 @@ return
     <a href="[$path-add]">Créer</a>
   </div>
   <table class="list">
-    <le:get-argument name="model">
-      <li:parse>
-        <le:template path="headers.xsl">
-          <li:set-parameter>
-            <le:argument>module</le:argument>
-            <le:get-argument name="module"/>
-          </li:set-parameter>
-          <li:set-parameter>
-            <le:argument>headers</le:argument>
-            <le:get-argument name="headers"/>
-          </li:set-parameter>
-          <li:set-parameter>
-            <le:argument>order</le:argument>
-            <le:get-variable name="order"/>
-          </li:set-parameter>
-          <li:set-parameter>
-            <le:argument>order-dir</le:argument>
-            <le:get-variable name="order-dir"/>
-          </li:set-parameter>
-        </le:template>
-      </li:parse>
-    </le:get-argument>
     <le:get-variable name="datas">
       <li:parse>
         <le:template path="list.xsl">

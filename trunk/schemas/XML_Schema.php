@@ -175,7 +175,6 @@ class XSD_Parser extends Module {
   
   public function isValid($bValid = null) {
     
-    //dspm(array(view($this->bValid), ' = ', view($bValid)), 'error');
     if ($bValid !== null) $this->bValid = $bValid;
     return $this->bValid;
   }
@@ -225,9 +224,6 @@ class XSD_Parser extends Module {
 
 abstract class XSD_Basic {
   
-  private $iMax = 1;
-  private $iMin = 1;
-  
   protected $sPath = '';
   
   public function __construct(XML_Element $oSource, $oParent, $oNode = null, XSD_Parser $oParser = null) {
@@ -251,16 +247,6 @@ abstract class XSD_Basic {
   public function getNamespace() {
     
     return $this->getParser()->getNamespace();
-  }
-  
-  public function getMin() {
-    
-    return $this->iMin;
-  }
-  
-  public function getMax() {
-    
-    return $this->iMax;
   }
   
   public function useMessages() {
@@ -352,6 +338,9 @@ abstract class XSD_Node extends XSD_Container {
   private $oType = null;
   private $sID = '';
   
+  private $iMax = 1;
+  private $iMin = 1;
+  
   protected $aInstances = array(); // instanced particles derived from this particle
   
   abstract public function buildInstance(XSD_Instance $oParent);
@@ -360,9 +349,13 @@ abstract class XSD_Node extends XSD_Container {
     
     parent::__construct($oSource, $oParent, $oNode, $oParser);
     
+    // if parent sequence is not direct child of element, build parent name and get it
     if ($this->getParent() && $this->getParent()->getParent() instanceof XSD_Particle) $this->setID($this->getParser()->getID());
     
     $sType = $oSource->getAttribute('type');
+    
+    if ($oSource->hasAttribute('minOccurs')) $this->iMin = intval($oSource->getAttribute('minOccurs'));
+    if ($oSource->hasAttribute('maxOccurs')) $this->iMax = intval($oSource->getAttribute('maxOccurs'));
     
     if ($oSource->hasChildren()) {
       
@@ -395,6 +388,11 @@ abstract class XSD_Node extends XSD_Container {
     return $this->sID;
   }
   
+  public function isRequired() {
+    
+    return (bool) $this->iMin;
+  }
+  
   public function getInstances() {
     
     return $this->aInstances;
@@ -425,8 +423,16 @@ abstract class XSD_Class extends XSD_Basic {
   
   protected $aInstances = array(); // instanced particles derived from this particle
   
+  private $iMax = 1;
+  private $iMin = 1;
+  
   abstract public function getInstance($oParent);
   //abstract protected function buildInstance(XSD_Instance $oParent);
+  
+  public function isRequired() {
+    
+    return (bool) $this->iMin;
+  }
   
   public function getInstances() {
     
@@ -837,7 +843,7 @@ class XSD_Particle extends XSD_Class {
     list(,$oSubInstance) = each($aSubInstances);
     
     // TODO, if sequence
-    if ($this->getMin()) {
+    if ($this->isRequired()) {
       
       foreach ($this->getChildren() as $oChild) {
         
@@ -858,8 +864,11 @@ class XSD_Particle extends XSD_Class {
           
           if ($oChild->getSource()->testAttribute('editable', true, $this->getNamespace())) {
             
-            $bResult = $this->getParser()->isValid(false);
-            if (!$this->keepValidate()) break;
+            if ($oChild->isRequired()) { // if required validation fails
+              
+              $bResult = $this->getParser()->isValid(false);
+              if (!$this->keepValidate()) break;
+            }
             
             if ($this->getParser()->useModel()) {
               
@@ -867,7 +876,11 @@ class XSD_Particle extends XSD_Class {
               
               $oNewInstance = $oChild->buildInstance($oInstance, $oNode); // TODO occurs
               
-              if ($oNewInstance && $oInstance->useMessages()) {
+              if (!$oChild->isRequired()) { // if not required
+                
+                $oNewInstance->setStatut('optional');
+                
+              } else if ($oNewInstance && $oInstance->useMessages()) { // if required set message and statut
                 
                 $oNewInstance->setStatut('missing');
                 $oNewInstance->addMessage(xt('Ce champ doit être indiqué'), 'content', 'invalid');

@@ -940,7 +940,7 @@ class XSL_Document extends XML_Document {
           
           if ($oFile = $this->buildExternal($oExternal, $aPaths)) {
             
-            $oTemplate = new XSL_Document((string) $oFile);
+            $oTemplate = new XSL_Document((string) $oFile, MODE_EXECUTION);
             $this->includeExternal($oTemplate, $oExternal, $aMarks, $aPath, $iLevel);
           }
           

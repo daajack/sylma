@@ -60,7 +60,7 @@
               </xsl:apply-templates>
             </select>
           </xsl:when>
-          <xsl:when test="@lc:line-break">
+          <xsl:when test="@lc:line-break or @lc:wiki">
             <textarea id="{$id}" name="{$name}" class="{$class}">
               <xsl:value-of select="."/>
             </textarea>
@@ -73,6 +73,12 @@
       <xsl:when test="lc:is-date()">
         <input type="hidden" value="{$id};;{$name};;{.}" class="{$class} field-input-date"/>
         <span id="{$id}" class="field-input-date"/>
+      </xsl:when>
+      <xsl:when test="lc:is-keyref()">
+        <input type="text" class="{$class} field-input-keyref" id="{$id}" name="{$name}" value="{.}"/>
+      </xsl:when>
+      <xsl:when test="lc:is-boolean()">
+        <input type="checkbox" id="{$id}" class="{$class} field-input-boolean" name="{$name}"/>
       </xsl:when>
       <xsl:otherwise>
         <textarea id="{$id}" name="{$name}" class="{$class}">

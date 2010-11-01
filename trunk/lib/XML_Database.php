@@ -7,6 +7,7 @@ class XML_Database {
   
   private $aNamespaces = array();
   private $sNamespace = '';
+  private $sCollection = '';
   
   public function __construct($aDB) {
     
@@ -18,6 +19,7 @@ class XML_Database {
       //$this->sDatabase = $sDatabase;
       $this->oSession = $db;
       $this->sNamespace = $aDB['namespace'];
+      $this->sCollection = $aDB['collection'];
       
     } catch (Exception $e) {
       
@@ -86,7 +88,8 @@ class XML_Database {
       
       $sQuery = $sDeclare.$sQuery;
       
-      if (SYLMA_DB_SHOW_QUERIES) dspm(xt('xquery [query] : %s', new HTML_Tag('pre', $sQuery)), 'db/notice');
+      $hits = 0;
+      $queryTime = 0;
       
       if (!$aResult = $this->getSession()->xquery($sQuery)) {
         
@@ -97,7 +100,12 @@ class XML_Database {
             $this->getError(),
             new HTML_Hr,
             new HTML_Tag('pre', $sQuery)), 'db/error');
-        }
+            
+        } else if (($sError = $this->getSession()->getError()) && $sError != 'ERROR: No data found!') {
+          
+          dspm($sError, 'db/error');
+          
+        } else $sResult = 1;
         
       } else {
         
@@ -105,7 +113,7 @@ class XML_Database {
         
         $hits = $aResult['HITS'];
         $queryTime = $aResult['QUERY_TIME'];
-        $collections = $aResult['COLLECTIONS'];
+        // $collections = $aResult['COLLECTIONS'];
         
         if (!empty($aResult['XML'])) {
           
@@ -115,9 +123,14 @@ class XML_Database {
             foreach ($aResult['XML'] as $sItem) $sResult .= $sItem;
           }
         }
-        
-        if (SYLMA_DB_SHOW_RESULTS) dspm(xt('xquery [result] : %s', new HTML_Tag('pre', $sResult)), 'db/notice');
       }
+      
+      $oResults = xt('[ time : %s s] [ hits : %s ]',
+        new HTML_Strong('0.'.$queryTime),
+        new HTML_Strong($hits));
+      
+      if (SYLMA_DB_SHOW_QUERIES) dspm(array(t('xquery [query] '), $oResults, new HTML_Tag('pre', $sQuery)), 'db/notice');
+      if (SYLMA_DB_SHOW_RESULTS) dspm(array(t('xquery [result] '), $oResults, new HTML_Tag('pre', $sResult)), 'db/notice');
     }
     
     return $sResult;
@@ -136,20 +149,26 @@ class XML_Database {
     return $mResult;
   }
   
+  public function getCollection($bFormat = false) {
+    
+    if ($bFormat) return "collection('{$this->sCollection}')";
+    else return $this->sCollection;
+  }
+  
   public function load($sID) {
     
-    if ($sResult = $this->query("//id('$sID')")) return new XML_Document($sResult);
+    if ($sResult = $this->query("{$this->getCollection(true)}//id('$sID')")) return new XML_Document($sResult);
     return null;
   }
   
   public function delete($sID, array $aNamespaces = array()) {
     
-    return $this->query("update delete //id('$sID')", $aNamespaces, false);
+    return $this->query("update delete {$this->getCollection(true)}//id('$sID')", $aNamespaces, false);
   }
   
   public function update($sID, XML_Document $oDocument, array $aNamespaces = array()) {
     
-    return $this->query("update replace //id('$sID') with {$oDocument->display(true, false)}", $aNamespaces, false);
+    return $this->query("update replace {$this->getCollection(true)}//id('$sID') with {$oDocument->display(true, false)}", $aNamespaces, false);
   }
   
   public function insert($mElement, $sTarget, array $aNamespaces = array()) {

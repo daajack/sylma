@@ -765,6 +765,11 @@ class XML_File extends XML_Resource {
     return false;
   }
   
+  public function read() {
+    
+    return file_get_contents($this->getRealPath());
+  }
+  
   public function rename($sNewName) {
     
     $oResult = null;

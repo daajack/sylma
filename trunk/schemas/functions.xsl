@@ -77,10 +77,16 @@
   <func:function name="lc:is-string">
     <func:result select="boolean(lc:get-type() = 'xs:string')"/>
   </func:function>
+  <func:function name="lc:is-boolean">
+    <func:result select="boolean(lc:get-type() = 'xs:boolean')"/>
+  </func:function>
   <func:function name="lc:is-date">
     <func:result select="boolean(lc:get-type() = 'xs:date')"/>
   </func:function>
   <func:function name="lc:is-enum">
     <func:result select="lc:is-simple() and lc:get-schema() and lc:get-schema()/lc:restriction/lc:enumeration"/>
+  </func:function>
+  <func:function name="lc:is-keyref">
+    <func:result select="boolean(@lc:key-ref)"/>
   </func:function>
 </xsl:stylesheet>

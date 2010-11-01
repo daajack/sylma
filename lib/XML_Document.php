@@ -831,6 +831,11 @@ class XSL_Document extends XML_Document {
     return $bResult;
   }
   
+  public function setParameters($aParams, $sUri = '') {
+    
+    foreach ($aParams as $sName => $sValue) $this->setParameter($sName, $sValue, $sUri);
+  }
+  
   public function setParameter($sName, $sValue, $sUri = '') {
     
     $bResult = $this->getProcessor()->setParameter($sUri, $sName, (string) $sValue);

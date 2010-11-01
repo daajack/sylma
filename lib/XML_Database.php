@@ -126,7 +126,7 @@ class XML_Database {
       }
       
       $oResults = xt('[ time : %s s] [ hits : %s ]',
-        new HTML_Strong('0.'.$queryTime),
+        new HTML_Strong(floatval($queryTime / 1000)),
         new HTML_Strong($hits));
       
       if (SYLMA_DB_SHOW_QUERIES) dspm(array(t('xquery [query] '), $oResults, new HTML_Tag('pre', $sQuery)), 'db/notice');

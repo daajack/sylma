@@ -25,8 +25,6 @@ class DBX_Module extends Module {
     $this->setNamespace('http://www.sylma.org/modules/dbx', 'dbx', false);
     $this->setNamespace($oSchema->getAttribute('targetNamespace'), $this->readOption('prefix'));
     $this->setNamespace(SYLMA_NS_SCHEMAS, 'lc', false);
-    
-    $this->loadModel();
   }
   
   public function getOption($sPath, $bDebug = true) {
@@ -45,7 +43,7 @@ class DBX_Module extends Module {
     return $this->oModel;
   }
   
-  public function loadModel() {
+  /*public function loadModel() {
     
     $sFile = 'dbx-empty.xml';
     $sDirectory = 'tmp';
@@ -59,7 +57,7 @@ class DBX_Module extends Module {
     }
     
     $this->oModel = $oFile;
-  }
+  }*/
   
   public function readOption($sPath, $bDebug = true) {
     
@@ -369,7 +367,7 @@ class DBX_Module extends Module {
       case 'list' :
         
         $iPage = array_val('page', $aOptions, 1);
-        $iPageSize = array_val('size', $aOptions, 10);
+        $iPageSize = array_val('size', $aOptions, 30);
         $sOrder = array_val('order', $aOptions, 'date-parution');
         $sOrderDir = array_val('order-dir', $aOptions, 'a');
         
@@ -427,31 +425,53 @@ class DBX_Module extends Module {
   public function getList($sPath, $iPage, $iPageSize = 3, $sOrder = '', $sOrderDir = 'a', $sWhere = '') {
     
     $mResult = null;
-    $oHeaders = new XML_Document($this->getHeaders());
-    $sOrderDir = $sOrderDir == 'a' ? 'ascending' : 'descending';
-    //dspf($oHeaders);
-    if ($oFile = $oHeaders->saveTemp()) {
+    
+    $oModel = $this->getEmpty()->getModel($this->getSchema(), false);
+    
+    if ($oModel->isEmpty()) dspm(xt('Fichier modèle %s invalide', view($oModel)), 'action/error');
+    else {
       
-      $oPath = new XML_Path($this->getDirectory().'/list', array(
-        'model' => $this->getModel()->getSystemPath(),
-        'xquery-headers' => $this->getNamespaces(),
-        'headers' => (string) $oFile->getSystemPath(),
-        'module' => (string) $this->getExtendDirectory()));
+      $oModel->add($this->getHeaders());
+      $sOrderDir = $sOrderDir == 'a' ? 'ascending' : 'descending';
       
-      $mResult = new XML_Action($oPath);
+      $oTemplate = $this->getDocument('list-xq.xsl', true);
       
-      $mResult->setVariables(array(
+      $oTemplate->setParameters(array(
         'page' => $iPage,
         'page-size' => $iPageSize,
         'parent-name' => $this->readOption('parent'),
         'parent-path' => $this->getParent(),
         'order' => $sOrder,
-        'order-dir' => $sOrderDir,
-        'path-add' => $this->getExtendDirectory().'/admin/add',
-        'path-list' => $sPath));
+        'prefix' => $this->getFullPrefix(),
+        'order-dir' => $sOrderDir));
+      
+      $sQuery = $oModel->parseXSL($oTemplate, false);
+      
+      if ($oFile = $oModel->saveTemp()) {
+        
+        $oPath = new XML_Path($this->getDirectory().'/list', array(
+          'model' => $oFile->getSystemPath(),
+          'query' => $sQuery,
+          'xquery-headers' => $this->getNamespaces(),
+          'module' => (string) $this->getExtendDirectory()));
+        
+        $mResult = new XML_Action($oPath);
+        
+        $mResult->setVariables(array(
+          'page' => $iPage,
+          'page-size' => $iPageSize,
+          'parent-name' => $this->readOption('parent'),
+          'parent-path' => $this->getParent(),
+          'order' => $sOrder,
+          'order-dir' => $sOrderDir,
+          'path-add' => $this->getExtendDirectory().'/admin/add',
+          'path-list' => $sPath));
+      }
+      
+      $mResult = $mResult->parse(); // parse to keep files in process before __destruct()
     }
     
-    return $mResult->parse(); // parse to keep files in process before __destruct()
+    return $mResult;
   }
   
   public function add(Redirect $oRedirect) {

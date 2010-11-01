@@ -11,6 +11,7 @@ class XSD_Parser extends Module {
   private $aMessages = array();
   private $aTypes = array();
   private $aGroups = array();
+  private $aRefs = array();
   private $iID = 1;
   
   public function __construct(XML_Document $oSchema, XML_Document $oDatas = null, $bModel = true, $bMessages = true, $bMark = true) {
@@ -68,6 +69,7 @@ class XSD_Parser extends Module {
       if ($this->keepValidate()) {
         
         $oSchemas = new XML_Element('schemas', array(
+          $this->aRefs,
           $this->aTypes,
           $this->aGroups,
           $oModel), null, $this->getNamespace());
@@ -100,6 +102,19 @@ class XSD_Parser extends Module {
     $this->aGroups[$oElement->getNamespace()][$oGroup->getName()] = $oGroup;
     
     return $oGroup;
+  }
+  
+  public function addRef($oElement) {
+    
+    $oRef = new XML_Element('key-ref',
+      $oElement->getAttribute('lc:key-ref'),
+      array(
+        'name' => $oElement->getAttribute('name'),
+        'full-name' => $oElement->getAttribute('name')), $this->getNamespace());
+    
+    $oRef->cloneAttributes($oElement, array('key-constrain', 'key-view'), $this->getNamespace());
+    
+    $this->aRefs[] = $oRef;
   }
   
   public function getGroup($oElement, $oParent) {
@@ -356,6 +371,8 @@ abstract class XSD_Node extends XSD_Container {
     
     if ($oSource->hasAttribute('minOccurs')) $this->iMin = intval($oSource->getAttribute('minOccurs'));
     if ($oSource->hasAttribute('maxOccurs')) $this->iMax = intval($oSource->getAttribute('maxOccurs'));
+    
+    if ($oSource->getAttribute('key-ref', $this->getNamespace())) $this->getParser()->addRef($oSource);
     
     if ($oSource->hasChildren()) {
       

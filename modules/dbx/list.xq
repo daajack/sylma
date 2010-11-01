@@ -41,7 +41,7 @@ let $pageTotal := ceiling((count($result) div $pageSize))
 return
   element [$parent-name] {
     attribute total {$pageTotal}, attribute page {$page}, attribute lc:ns {'null'},
-    for $item in subsequence($result, ($start + 1), ($start + $pageSize))
+    for $item in subsequence($result, ($start + 1), $pageSize)
       return element {name($item)} {
         $item/@*,
         for $child in $item/* return local:build-value($child)

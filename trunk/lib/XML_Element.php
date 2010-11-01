@@ -273,6 +273,12 @@ class XML_Element extends DOMElement implements XML_Composante {
     }
   }
   
+  public function hasAttribute($sName, $sNamespace = '') {
+    
+    if ($sNamespace) return parent::getAttributeNS($sNamespace, $sName);
+    else return parent::hasAttribute($sName);
+  }
+  
   public function hasAttributes() {
     
     if (func_get_args()) {
@@ -428,7 +434,7 @@ class XML_Element extends DOMElement implements XML_Composante {
     foreach ($this->attributes as $oAttribute) $this->removeAttributeNode($oAttribute);
   }
   
-  public function cloneAttributes($oElement, $mAttribute = null) {
+  public function cloneAttributes($oElement, $mAttribute = null, $sNamespace = '') {
     
     // TODO : Priority
     
@@ -437,9 +443,10 @@ class XML_Element extends DOMElement implements XML_Composante {
       if (is_array($mAttribute)) {
         
         foreach ($mAttribute as $sAttribute)
-          if ($oElement->hasAttribute($sAttribute)) $this->cloneAttributes($oElement, $sAttribute);
+          if ($oElement->hasAttribute($sAttribute, $sNamespace)) $this->cloneAttributes($oElement, $sAttribute, $sNamespace);
         
-      } else if ($oAttribute = $oElement->getAttributeNode($mAttribute)) $this->setAttributeNode($oAttribute);
+      } else if ($sAttribute = $oElement->getAttribute($mAttribute, $sNamespace))
+        $this->setAttribute($mAttribute, $sAttribute, $sNamespace);
       
     } else {
       

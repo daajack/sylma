@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns="http://www.w3.org/1999/xhtml" xmlns:func="http://exslt.org/functions" xmlns:lx="http://ns.sylma.org/xslt" version="1.0" extension-element-prefixes="func">
   <xsl:param name="max-length">100</xsl:param>
-  <xsl:param name="headers"/>
+  <xsl:param name="model"/>
   <xsl:param name="module"/>
-  <xsl:variable name="doc-headers" select="document($headers)"/>
+  <xsl:variable name="headers" select="document($model)/*/*[3]"/>
   <xsl:import href="/sylma/xslt/string.xsl"/>
   <xsl:template match="/*">
     <tbody>
@@ -19,7 +19,7 @@
         <a href="{$module}/admin/view/{$id}/{intitule-urlize}">V</a>
       </td>
       <xsl:for-each select="*">
-        <xsl:if test="$doc-headers/*/*[@name = local-name(current())]">
+        <xsl:if test="$headers/*[@name = local-name(current())]">
           <xsl:call-template name="field"/>
         </xsl:if>
       </xsl:for-each>

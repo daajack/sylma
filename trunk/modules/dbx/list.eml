@@ -2,14 +2,14 @@
 <le:action xmlns:le="http://www.sylma.org/execution" xmlns:li="http://www.sylma.org/interface" xmlns="http://www.w3.org/1999/xhtml">
   <le:settings>
     <le:name>Liste</le:name>
-    <le:argument name="model" format="php-string" set-variable="model"/>
+    <le:argument format="php-string" name="model"/>
     <le:argument format="php-string" name="module"/>
-    <le:argument format="php-string" name="headers"/>
+    <le:argument format="php-string" name="query"/>
     <le:argument name="xquery-headers" format="php-array"/>
     <le:document set-variable="datas">
       <le:xquery>
         <le:get-argument name="xquery-headers"/>
-        <le:file path="list.xq" output="text" le:parse-variables="true"/>
+        <le:get-argument name="query" le:parse-variables="true"/>
       </le:xquery>
     </le:document>
     <le:window>
@@ -31,8 +31,8 @@
             <le:get-argument name="module"/>
           </li:set-parameter>
           <li:set-parameter>
-            <le:argument>headers</le:argument>
-            <le:get-argument name="headers"/>
+            <le:argument>model</le:argument>
+            <le:get-argument name="model"/>
           </li:set-parameter>
         </le:template>
       </li:parse>

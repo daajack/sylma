@@ -92,7 +92,7 @@ class Module {
     return $this->sPrefix;
   }
   
-  public function getDocument($sPath, $bXSL = true) {
+  public function getDocument($sPath, $bXSL = false) {
     
     if ($oFile = Controler::getFile(Controler::getAbsolutePath($sPath, $this->getDirectory()))) {
       

@@ -8,7 +8,7 @@
     <form method="{$method}" action="{$action}">
       <xsl:apply-templates select="lc:get-model(*[1])/lc:annotations/lc:message"/>
       <xsl:apply-templates select="*[1]/@*"/>
-      <xsl:apply-templates select="*[1]/*[not(@lc:editable = 'false')]" mode="field"/>
+      <xsl:apply-templates select="*[1]/*" mode="field"/>
       <div class="field-actions">
         <input type="submit" value="Enregistrer"/>
         <input type="button" value="Annuler" onclick="history.go(-1);"/>
@@ -21,9 +21,11 @@
     <xsl:variable name="statut" select="concat('field-statut-', lc:get-statut())"/>
     <xsl:variable select="'field-input-element'" name="class"/>
     <div class="field clear-block {$statut}">
-      <xsl:apply-templates select="." mode="label">
-        <xsl:with-param name="id" select="$id"/>
-      </xsl:apply-templates>
+      <xsl:if test="not(@lc:visible = 'false')">
+        <xsl:apply-templates select="." mode="label">
+          <xsl:with-param name="id" select="$id"/>
+        </xsl:apply-templates>
+      </xsl:if>
       <xsl:apply-templates select="." mode="input">
         <xsl:with-param name="id" select="$id"/>
         <xsl:with-param name="name" select="$name"/>
@@ -50,6 +52,14 @@
           <xsl:value-of select="."/>
         </textarea>
       </xsl:when>
+      <xsl:when test="@lc:visible = 'false' and not(@lc:editable = 'false')">
+        <input type="hidden" class="{$class}" name="{$name}" id="{$id}" value="{.}"/>
+      </xsl:when>
+      <xsl:when test="@lc:editable = 'false' and not(@lc:visible = 'false')">
+        <span class="{$class}" id="{$id}">
+          <xsl:value-of select="."/>
+        </span>
+      </xsl:when>
       <xsl:when test="lc:is-string()">
         <xsl:choose>
           <xsl:when test="lc:is-enum()">
@@ -75,10 +85,23 @@
         <span id="{$id}" class="field-input-date"/>
       </xsl:when>
       <xsl:when test="lc:is-keyref()">
-        <input type="text" class="{$class} field-input-keyref" id="{$id}" name="{$name}" value="{.}"/>
+        <select name="{$name}" id="{$id}" class="{$class}">
+          <option value="0">&lt; choisissez &gt;</option>
+          <xsl:variable name="self" select="."/>
+          <xsl:for-each select="lc:get-values()/*">
+            <xsl:sort select="."/>
+            <xsl:call-template name="enumeration">
+              <xsl:with-param name="value" select="$self"/>
+            </xsl:call-template>
+          </xsl:for-each>
+        </select>
       </xsl:when>
       <xsl:when test="lc:is-boolean()">
-        <input type="checkbox" id="{$id}" class="{$class} field-input-boolean" name="{$name}"/>
+        <input type="checkbox" id="{$id}" class="{$class} field-input-boolean" name="{$name}" value="1">
+          <xsl:if test=". = '1'">
+            <xsl:attribute name="checked">checked</xsl:attribute>
+          </xsl:if>
+        </input>
       </xsl:when>
       <xsl:otherwise>
         <textarea id="{$id}" name="{$name}" class="{$class}">
@@ -98,6 +121,30 @@
       <xsl:if test="$value = text()">
         <xsl:attribute name="selected">selected</xsl:attribute>
       </xsl:if>
+      <xsl:value-of select="."/>
+    </option>
+  </xsl:template>
+  <xsl:template name="enumeration">
+    <xsl:param name="value"/>
+    <option>
+      <xsl:choose>
+        <xsl:when test="@key">
+          <xsl:attribute name="value">
+            <xsl:value-of select="@key"/>
+          </xsl:attribute>
+          <xsl:if test="$value = @key">
+            <xsl:attribute name="selected">selected</xsl:attribute>
+          </xsl:if>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:attribute name="value">
+            <xsl:value-of select="position()"/>
+          </xsl:attribute>
+          <xsl:if test="$value = position()">
+            <xsl:attribute name="selected">selected</xsl:attribute>
+          </xsl:if>
+        </xsl:otherwise>
+      </xsl:choose>
       <xsl:value-of select="."/>
     </option>
   </xsl:template>

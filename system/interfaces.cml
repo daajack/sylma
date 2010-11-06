@@ -9,12 +9,12 @@
   <interface class="WindowAction">/sylma/interfaces/window_action.iml</interface>
   <interface class="XML_Action">/sylma/interfaces/xml_action.iml</interface>
   <interface class="ActionScript">/sylma/interfaces/xml_action_script.iml</interface>
+  <interface class="XML_Database">/sylma/interfaces/xml_database.iml</interface>
   <interface class="XML_Directory">/sylma/interfaces/xml_directory.iml</interface>
   <interface class="XML_Document">/sylma/interfaces/xml_document.iml</interface>
   <interface class="XML_Element">/sylma/interfaces/xml_element.iml</interface>
   <interface class="XML_File">/sylma/interfaces/xml_file.iml</interface>
   <interface class="XML_NodeList">/sylma/interfaces/xml_nodelist.iml</interface>
   <interface class="XML_Path">/sylma/interfaces/xml_path.iml</interface>
-  <interface class="XSD_Parser">/sylma/schemas/interface.iml</interface>
   <interface class="XSL_Document">/sylma/interfaces/xsl_document.iml</interface>
 </interfaces>

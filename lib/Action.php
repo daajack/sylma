@@ -753,6 +753,8 @@ class XML_Action extends XML_Document {
             $this->dspm(xt('Un élément enfant doit contenir la requête dans %s', view($oElement)), 'action/error');
             
           } else $mResult = new XML_XQuery($oArgument, $aNamespaces);
+          
+          // $bRun = true;
         }
         
       break;
@@ -833,6 +835,18 @@ class XML_Action extends XML_Document {
         
       break;
       
+      case 'ns' :
+        
+        $mResult = array();
+        
+        foreach (explode(',', $this->buildArgument($oElement->getChildren())) as $sPrefix) {
+          
+          if ($sNamespace = $oElement->getNamespace($sPrefix)) $mResult[$sPrefix] = $sNamespace;
+          else $this->dspm(xt('Aucun espace de nom pour le prefix %s dans %s',
+            new HTML_Strong($sPrefix), view($oElement)), 'action/warning');
+        }
+        
+      break;
       case 'php' :
       case 'special' : 
         
@@ -1508,7 +1522,7 @@ class XML_Action extends XML_Document {
       if (in_array($sActualFormat, $aFormats)) return true;
     }
     
-    $this->dspm(xt('Argument invalide : L\'argument %s devrait être de type %s dans %s',
+    $this->dspm(xt('Argument invalide : L\'argument %s devrait être de %s dans %s',
       
       view($mArgument),
       new HTML_Strong(implode(', ', $aFormats)),

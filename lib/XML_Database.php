@@ -8,6 +8,7 @@ class XML_Database {
   private $aNamespaces = array();
   private $sNamespace = '';
   private $sCollection = '';
+  private $iHits = 0; // temp value for result's hits count
   
   public function __construct($aDB) {
     
@@ -91,7 +92,7 @@ class XML_Database {
       $hits = 0;
       $queryTime = 0;
       
-      if (!$aResult = $this->getSession()->xquery($sQuery)) {
+      if (!$aResult = $this->getSession()->xquery($sQuery)) { // no result
         
         if ($bGetResult) {
           
@@ -107,7 +108,7 @@ class XML_Database {
           
         } else $sResult = 1;
         
-      } else {
+      } else { // has result
         
         $sResult = '';
         
@@ -142,8 +143,10 @@ class XML_Database {
     
     if ($sResult = $this->query($sQuery, $aNamespaces)) {
       
-      $mResult = new XML_Document($sResult);
-      if (!$bDocument) $mResult = $mResult->getRoot();
+      $mResult = strtoxml($sResult);
+      //dspf($sResult);
+      //$mResult = new XML_Document($sResult);
+      // if (!$bDocument) $mResult = $mResult->getRoot();
     }
     
     return $mResult;

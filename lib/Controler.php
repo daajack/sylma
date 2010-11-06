@@ -1032,7 +1032,7 @@ class Controler {
   
   public static function getAbsolutePath($sTarget, $mSource = '') {
     
-    if ($sTarget{0} == '/' || $sTarget{0} == '*') return $sTarget;
+    if (!$sTarget || $sTarget{0} == '/' || $sTarget{0} == '*') return $sTarget;
     else {
       
       //if ($mSource == '/') $mSource = '';
@@ -1122,10 +1122,8 @@ class Controler {
           }
         }
         
-        $oPath = new XML_Path(SYLMA_PATH_INTERFACES_INDEX, null, false);
-        
-        $oIndex->save($oPath);
-        dspm(xt('Interface d\'actions %s regénéré !', $oPath->parse()), 'success');
+        $oIndex->save(SYLMA_PATH_INTERFACES_INDEX);
+        dspm(xt('Interface d\'actions %s regénéré !', new HTML_Strong(SYLMA_PATH_INTERFACES_INDEX)), 'success');
       }
     }
   }

@@ -36,9 +36,11 @@
   </method>
   <method path="parse" name="parseXSL" return-default="true">
     <argument name="document" format="XML_Document"/>
+    <argument name="xml" format="php-boolean" required="false"/>
   </method>
   <method path="get-model" name="getModel" return-default="true">
     <argument name="schema" format="XML_Document"/>
+    <argument name="messages" format="php-boolean" required="false"/>
   </method>
   <method path="view" name="view" return-default="true">
     <argument name="inline" format="php-boolean" required="false"/>

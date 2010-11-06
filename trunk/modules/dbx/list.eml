@@ -2,8 +2,11 @@
 <le:action xmlns:le="http://www.sylma.org/execution" xmlns:li="http://www.sylma.org/interface" xmlns="http://www.w3.org/1999/xhtml">
   <le:settings>
     <le:name>Liste</le:name>
-    <le:argument format="php-string" name="model"/>
+    <le:argument format="php-string" name="s-model"/>
+    <le:argument format="XML_Document" name="o-model"/>
     <le:argument format="php-string" name="module"/>
+    <le:argument format="php-string" name="path-add" set-variable="path-add"/>
+    <le:argument format="php-string" name="path-list"/>
     <le:argument format="php-string" name="query"/>
     <le:argument name="xquery-headers" format="php-array"/>
     <le:document set-variable="datas">
@@ -23,6 +26,16 @@
     <a href="[$path-add]">Créer</a>
   </div>
   <table class="list">
+    <le:get-argument name="o-model">
+      <li:parse>
+        <le:template path="headers.xsl">
+          <li:set-parameter>
+            <le:argument>module</le:argument>
+            <le:get-argument name="module"/>
+          </li:set-parameter>
+        </le:template>
+      </li:parse>
+    </le:get-argument>
     <le:get-variable name="datas">
       <li:parse>
         <le:template path="list.xsl">
@@ -32,7 +45,7 @@
           </li:set-parameter>
           <li:set-parameter>
             <le:argument>model</le:argument>
-            <le:get-argument name="model"/>
+            <le:get-argument name="s-model"/>
           </li:set-parameter>
         </le:template>
       </li:parse>
@@ -43,7 +56,7 @@
       <le:template path="pager.xsl">
         <li:set-parameter>
           <le:argument>path</le:argument>
-          <le:get-variable name="path-list"/>
+          <le:get-argument name="path-list"/>
         </li:set-parameter>
       </le:template>
     </li:parse>

@@ -50,6 +50,15 @@ class XML_Document extends DOMDocument {
     $this->iMode = in_array($iMode, array(MODE_EXECUTION, MODE_WRITE, MODE_READ)) ? $iMode : MODE_READ;
   }
   
+  public function setPrefix($sPrefix, $sNamespace, $bDebug = true) {
+    
+    if ($this->getRoot()) {
+      
+      $this->getRoot()->setAttribute($sPrefix.':ns', 'null', $sNamespace);
+      
+    } else if($bDebug) dspm(xt('Impossible de spécifier un préfix dans un document vide'), 'xml/error');
+  }
+  
   private function extractMode($oNode) {
     
     $iMode = 7;
@@ -354,16 +363,19 @@ class XML_Document extends DOMDocument {
   public function save($sPath = null) {
     
     $oResult = null;
+    $oFile = null;
     
-    if ($sPath || ($sPath = (string) $this->getFile())) {
+    if ($sPath || ($oFile = $this->getFile())) {
       
       $sName = substr(strrchr($sPath, '/'), 1);
       $sDirectory = substr($sPath, 0, strlen($sPath) - strlen($sName) - 1);
       
       if ($oDirectory = Controler::getDirectory($sDirectory)) {
         
+        if ($sPath) $oFile = Controler::getFile($sPath);
+        
         $bSecurityFile = ($sName == SYLMA_SECURITY_FILE);
-        $bAccess = ($oFile = Controler::getFile($sPath)) ? $oFile->checkRights(MODE_WRITE) : $oDirectory->checkRights(MODE_WRITE);
+        $bAccess = ($oFile) ? $oFile->checkRights(MODE_WRITE) : $oDirectory->checkRights(MODE_WRITE);
         
         // TEMPORARY System fo avoiding erasing of protected files from not admin users. TODO
         
@@ -672,7 +684,7 @@ class XML_Document extends DOMDocument {
    */
   public function getModel(XML_Document $oSchema, $bMessages = true) {
     
-    $oParser = new XSD_Parser($oSchema, $this, true, $bMessages);
+    $oParser = new XSD_Parser($oSchema, $this, true, $bMessages, true, $bMessages);
     
     return $oParser->parse();
   }
@@ -798,6 +810,16 @@ class XML_Document extends DOMDocument {
     return $this->display();
   }
   
+  /*public function __sleep() {
+    
+    return (string) $this;
+  }
+  
+  public function __wakeup() {
+    
+    
+  }*/
+  
   public function __destruct() {
     
     if ($this->bTemp && $this->getFile()) $this->getFile()->delete(false, false);
@@ -906,6 +928,7 @@ class XSL_Document extends XML_Document {
       }
       
     } else $this->shift($oElement->getChildren());
+    
   }
   
   public function includeExternal(XSL_Document $oTemplate, XML_Element $oExternal = null, $aMarks = array(), &$aPaths = array(), $iLevel = 0) {
@@ -962,20 +985,6 @@ class XSL_Document extends XML_Document {
     if ($oDocument && !$oDocument->isEmpty() && !$this->isEmpty()) {
       
       $this->includeExternals();
-      
-      // TODO protect document() in xpath
-      /*foreach ($this->query('//@select') as $oSelect) {
-        
-        $sSelect = $oSelect->read();
-        
-        if (preg_match('/document\(([^\)]+)/', $sSelect, $aResult)) {
-          
-          $sPath = Controler::getAbsolutePath($aResult[1], (string) $this->getFile()->getParent());
-          $oFile = Controler::getFile($sPath);
-          dspf($sPath);
-          dspf($oFile);
-        }
-      }*/
       
       $this->getProcessor()->importStylesheet($this);
       

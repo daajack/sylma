@@ -5,6 +5,8 @@ class XSD_Parser extends Module {
   private $bModel = false; // if false, it will not build the model
   private $bMessages = false; // if false, validation and building will stop at first error
   private $bValid = true; // valid or not
+  private $bMark = true; // copy sylma schema namespaced attributes to elements
+  private $bLoadRefs = true; // load key-refs datas, require database
   
   private $oModel = null;
   
@@ -14,7 +16,8 @@ class XSD_Parser extends Module {
   private $aRefs = array();
   private $iID = 1;
   
-  public function __construct(XML_Document $oSchema, XML_Document $oDatas = null, $bModel = true, $bMessages = true, $bMark = true) {
+  public function __construct(XML_Document $oSchema, XML_Document $oDatas = null,
+    $bModel = true, $bMessages = true, $bMark = true, $bLoadRefs = false) {
     
     $this->setDirectory(__file__);
     
@@ -28,6 +31,7 @@ class XSD_Parser extends Module {
     $this->bMark = $bMark;
     $this->bModel = $bModel;
     $this->bMessages = $bMessages;
+    $this->bLoadRefs = $bLoadRefs;
     
     $this->oModel = $this->buildSchema($oDatas);
   }
@@ -106,13 +110,63 @@ class XSD_Parser extends Module {
   
   public function addRef($oElement) {
     
+    $mRef = $oElement->getAttribute('lc:key-ref');
+    
+    // replace document() calls
+    
+    if (preg_match_all("`document\('((db)://|(file)://)?([^']+)'\)`", $mRef, $aDocuments, PREG_OFFSET_CAPTURE)) {
+      
+      if (!$sPath = $aDocuments[4][0][0]) dspm(xt('Ouverture de document %s invalide', new HTML_Strong($sSelect)), 'warning');
+      else {
+        
+        if ($aDocuments[2][0][0] == 'db') { // call to database
+          
+          if (Controler::getDatabase()) {
+            
+            $sDocument = "document('".Controler::getDatabase()->getCollection()."/".$aDocuments[4][0][0]."')";
+            $sFullPath = substr_replace($mRef, $sDocument, $aDocuments[0][0][1], strlen($aDocuments[0][0][0])); 
+            
+            if ($this->bLoadRefs) { // replace ref with corresponding nodes
+              
+              if (preg_match_all('/(w+):[\w-_]+/', $sPath, $aPrefixes)) { // match prefixes
+                
+                dspf($aPrefixes); // TODO add prefixes
+              }
+              
+              if ($oRefResult = Controler::getDatabase()->get($sFullPath)) $mRef = $oRefResult;
+              else dspm(xt('La référence %s n\'est pas valide', new HTML_Strong($sPath)), 'warning');
+              
+            } else $mRef = $sFullPath; // just set real path
+          }
+          
+        } else if ($aDocuments[2][0][0] == 'file') {
+          
+          dspm('Chargement de document pas encore prêt', 'warning'); // TODO
+          $sPath = Controler::getAbsolutePath($sPath, (string) $this->getFile()->getParent());
+          
+          // dspf($sPath);
+          // dspm($this->getFile());
+          /*if (!$oFile = Controler::getFile($aDocuments[2][0]), $this->getFile()->getParent()) {
+            
+            dspm(xt('Ouverture de document %s invalide', new HTML_Strong($sView)), 'warning');
+          } else {
+          
+          }*/
+          //dspf($oFile);
+        } else {
+          
+          // no root
+        }
+      }
+    }
+    
     $oRef = new XML_Element('key-ref',
-      $oElement->getAttribute('lc:key-ref'),
+      $mRef,
       array(
         'name' => $oElement->getAttribute('name'),
         'full-name' => $oElement->getAttribute('name')), $this->getNamespace());
     
-    $oRef->cloneAttributes($oElement, array('key-constrain', 'key-view'), $this->getNamespace());
+    $oRef->cloneAttributes($oElement, array('ref-constrain', 'ref-view'), $this->getNamespace());
     
     $this->aRefs[] = $oRef;
   }
@@ -372,7 +426,11 @@ abstract class XSD_Node extends XSD_Container {
     if ($oSource->hasAttribute('minOccurs')) $this->iMin = intval($oSource->getAttribute('minOccurs'));
     if ($oSource->hasAttribute('maxOccurs')) $this->iMax = intval($oSource->getAttribute('maxOccurs'));
     
-    if ($oSource->getAttribute('key-ref', $this->getNamespace())) $this->getParser()->addRef($oSource);
+    if ($oSource->getAttribute('key-ref', $this->getNamespace())) {
+      
+      $oSource->setAttribute('lc:full-name', $this->getName()); // TODO : complete name from root
+      $this->getParser()->addRef($oSource);
+    }
     
     if ($oSource->hasChildren()) {
       

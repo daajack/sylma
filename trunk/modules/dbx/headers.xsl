@@ -4,21 +4,20 @@
   <xsl:import href="/sylma/xslt/string.xsl"/>
   <xsl:param name="model"/>
   <xsl:param name="module"/>
-  <xsl:param name="order"/>
-  <xsl:param name="order-dir"/>
   <xsl:variable name="doc-model" select="document($model)"/>
   <xsl:template match="/*">
     <thead>
       <tr>
         <th class="tools"> </th>
-        <xsl:variable name="order" select="lx:substring-after-last($order, ':')"/>
+        <xsl:variable name="n-order" select="*[3]/dbx:order"/>
+        <xsl:variable name="order" select="$n-order/."/>
         <xsl:variable name="order-dir">
           <xsl:choose>
-            <xsl:when test="$order-dir != 'ascending'">a</xsl:when>
+            <xsl:when test="*[3]/dbx:order/@dir != 'a'">a</xsl:when>
             <xsl:otherwise>d</xsl:otherwise>
           </xsl:choose>
         </xsl:variable>
-        <xsl:apply-templates select="dbx:element">
+        <xsl:apply-templates select="*[3]/dbx:element">
           <xsl:with-param name="order" select="$order"/>
           <xsl:with-param name="order-dir" select="$order-dir"/>
         </xsl:apply-templates>
@@ -28,24 +27,18 @@
   <xsl:template match="dbx:element">
     <xsl:param name="order"/>
     <xsl:param name="order-dir"/>
-    <xsl:variable name="element" select="$doc-model/*/*[local-name() = current()/@name]"/>
-    <xsl:if test="$element and not($element[@lc:editable = 'false'])">
-      <xsl:apply-templates select="$element"/>
-    </xsl:if>
-  </xsl:template>
-  <xsl:template match="*">
-    <xsl:param name="order"/>
-    <xsl:param name="order-dir"/>
-    <xsl:variable name="name" select="lc:get-name()"/>
+    <xsl:variable name="element" select="/*/*[1]/*[local-name() = current()/@name]"/>
     <th>
       <a>
         <xsl:attribute name="href">
-          <xsl:value-of select="concat($module, '/admin/list?order=', local-name())"/>
-          <xsl:if test="$order = local-name()">
+          <xsl:value-of select="concat($module, '/admin/list?order=', @name)"/>
+          <xsl:if test="$order = @name">
             <xsl:value-of select="concat('&amp;order-dir=', $order-dir)"/>
           </xsl:if>
         </xsl:attribute>
-        <xsl:value-of select="lx:first-case(lc:get-title())"/>
+        <xsl:if test="$element">
+          <xsl:value-of select="lx:first-case(lc:get-title($element))"/>
+        </xsl:if>
       </a>
     </th>
   </xsl:template>

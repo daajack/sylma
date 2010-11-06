@@ -24,8 +24,11 @@ class User {
   
   public function logout() {
     
-    unset($_SESSION['user']);
     $this->setReal(false);
+    
+    $_SESSION = array();
+    // if (isset($_COOKIE[session_name()])) setcookie(session_name(), '', time()-42000, '/');
+    // session_destroy();
     
     Controler::addMessage(t('Session détruite !'), 'report');
   }

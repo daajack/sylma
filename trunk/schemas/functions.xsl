@@ -28,20 +28,34 @@
     </xsl:if>
   </func:function>
   <func:function name="lc:get-title">
+    <xsl:param name="source" select="."/>
     <xsl:choose>
-      <xsl:when test="@lc:title">
-        <func:result select="@lc:title"/>
+      <xsl:when test="$source/@lc:title">
+        <func:result select="$source/@lc:title"/>
       </xsl:when>
-      <xsl:when test="boolean(lc:get-model())">
-        <func:result select="lc:get-model()/@name"/>
+      <xsl:when test="boolean(lc:get-model($source))">
+        <func:result select="lc:get-model($source)/@name"/>
       </xsl:when>
       <xsl:otherwise>
-        <func:result select="local-name()"/>
+        <func:result select="local-name($source)"/>
       </xsl:otherwise>
     </xsl:choose>
   </func:function>
   <func:function name="lc:get-statut">
     <func:result select="lc:get-model()/@statut"/>
+  </func:function>
+  <func:function name="lc:get-values">
+    <func:result select="/*/*[2]/lc:key-ref[@full-name = local-name(current())]"/>
+  </func:function>
+  <func:function name="lc:get-path">
+    <xsl:choose>
+      <xsl:when test="lc:get-model()/@full-name">
+        <func:result select="lc:get-model()/@full-name"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <func:result select="local-name()"/>
+      </xsl:otherwise>
+    </xsl:choose>
   </func:function>
   <func:function name="lc:get-name">
     <xsl:variable name="name" select="local-name()"/>
@@ -55,21 +69,23 @@
     </xsl:choose>
   </func:function>
   <func:function name="lc:is-complex">
-    <xsl:if test="lc:get-schema()">
-      <func:result select="boolean(lc:get-schema()/@complex = 'true')"/>
+    <xsl:param name="source" select="."/>
+    <xsl:if test="lc:get-schema($source)">
+      <func:result select="boolean(lc:get-schema($source)/@complex = 'true')"/>
     </xsl:if>
   </func:function>
   <func:function name="lc:is-simple">
     <func:result select="not(lc:is-complex())"/>
   </func:function>
   <func:function name="lc:get-type">
-    <xsl:if test="not(lc:is-complex())">
+    <xsl:param name="source" select="."/>
+    <xsl:if test="not(lc:is-complex($source))">
       <xsl:choose>
-        <xsl:when test="lc:get-schema()">
-          <func:result select="lc:get-schema()/@type"/>
+        <xsl:when test="lc:get-schema($source)">
+          <func:result select="lc:get-schema($source)/@type"/>
         </xsl:when>
         <xsl:otherwise>
-          <func:result select="lc:get-model()/@type"/>
+          <func:result select="lc:get-model($source)/@type"/>
         </xsl:otherwise>
       </xsl:choose>
     </xsl:if>

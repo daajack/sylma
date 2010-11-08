@@ -31,7 +31,7 @@
     <th>
       <a>
         <xsl:attribute name="href">
-          <xsl:value-of select="concat($module, '/admin/list?order=', @name)"/>
+          <xsl:value-of select="concat($module, '/admin/list?page=1&amp;order=', @name)"/>
           <xsl:if test="$order = @name">
             <xsl:value-of select="concat('&amp;order-dir=', $order-dir)"/>
           </xsl:if>

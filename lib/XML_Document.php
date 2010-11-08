@@ -682,9 +682,9 @@ class XML_Document extends DOMDocument {
   /** 
    * Build validity model with W3C XMLSchema
    */
-  public function getModel(XML_Document $oSchema, $bMessages = true) {
+  public function getModel(XML_Document $oSchema, $bMessages = true, $bLoadRefs = true) {
     
-    $oParser = new XSD_Parser($oSchema, $this, true, $bMessages, true, $bMessages);
+    $oParser = new XSD_Parser($oSchema, $this, true, $bMessages, true, $bLoadRefs);
     
     return $oParser->parse();
   }

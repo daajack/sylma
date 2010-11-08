@@ -60,6 +60,18 @@
           <xsl:value-of select="."/>
         </span>
       </xsl:when>
+      <xsl:when test="lc:is-keyref()">
+        <select name="{$name}" id="{$id}" class="{$class}">
+          <option value="0">&lt; choisissez &gt;</option>
+          <xsl:variable name="self" select="."/>
+          <xsl:for-each select="lc:get-values()/*">
+            <xsl:sort select="."/>
+            <xsl:call-template name="enumeration">
+              <xsl:with-param name="value" select="$self"/>
+            </xsl:call-template>
+          </xsl:for-each>
+        </select>
+      </xsl:when>
       <xsl:when test="lc:is-string()">
         <xsl:choose>
           <xsl:when test="lc:is-enum()">
@@ -83,18 +95,6 @@
       <xsl:when test="lc:is-date()">
         <input type="hidden" value="{$id};;{$name};;{.}" class="{$class} field-input-date"/>
         <span id="{$id}" class="field-input-date"/>
-      </xsl:when>
-      <xsl:when test="lc:is-keyref()">
-        <select name="{$name}" id="{$id}" class="{$class}">
-          <option value="0">&lt; choisissez &gt;</option>
-          <xsl:variable name="self" select="."/>
-          <xsl:for-each select="lc:get-values()/*">
-            <xsl:sort select="."/>
-            <xsl:call-template name="enumeration">
-              <xsl:with-param name="value" select="$self"/>
-            </xsl:call-template>
-          </xsl:for-each>
-        </select>
       </xsl:when>
       <xsl:when test="lc:is-boolean()">
         <input type="checkbox" id="{$id}" class="{$class} field-input-boolean" name="{$name}" value="1">

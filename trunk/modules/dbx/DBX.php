@@ -25,6 +25,7 @@ class DBX_Module extends Module {
     $this->oHeaders = new XML_Document($this->getOption('headers'));
     
     $this->setNamespace('http://www.sylma.org/modules/dbx', 'dbx', false);
+    $this->setNamespace(SYLMA_NS_XHTML, 'html', false);
     $this->setNamespace($oSchema->getAttribute('targetNamespace'), $this->readOption('prefix'));
     $this->setNamespace(SYLMA_NS_SCHEMAS, 'lc', false);
   }
@@ -49,10 +50,10 @@ class DBX_Module extends Module {
     $this->bSelfDirectory = !$this->bSelfDirectory;
   }
   
-  public function getModel() {
+  /*public function getModel() {
     
     return $this->oModel;
-  }
+  }*/
   
   private function getParent() {
     
@@ -101,13 +102,6 @@ class DBX_Module extends Module {
   }
   
   /*** Various ***/
-  
-  private function buildRefs(XML_Document $oModel, $bLoad = false) {
-    
-    // lc:key-ref @ name, full-name, key-contrain, key-view
-    foreach ($oModel->query('/*/*[2]/lc:key-ref', $this->getNS()) as $oRef) {
-    }
-  }
   
   private function getFile($sPath) {
     
@@ -179,6 +173,13 @@ class DBX_Module extends Module {
               switch ($sFunction) {
                 
                 case 'urlize' : $oNode->set(urlize($oElement->getValue())); break;
+                case 'wikize' : 
+                  
+                  $sValue = preg_replace('/\\n/', '<html:br/>', $oElement->read());
+                  //dspf($sValue);
+                  if ($sValue) $oNode->set(strtoxml($sValue, $this->getNS()));
+                  
+                break;
                 
                 default :
                   
@@ -393,7 +394,7 @@ class DBX_Module extends Module {
       
       case 'list' :
         
-        $sDocument = 'dbx-list-headers';
+        $sDocument = 'dbx-list-headers'.$this->getOption('name');
         
         if ($sHeaders = array_val($sDocument, $_SESSION)) $this->oHeaders = new XML_Document($sHeaders);
         
@@ -464,9 +465,9 @@ class DBX_Module extends Module {
     
     $mResult = null;
     
-    $oModel = $this->getEmpty()->getModel($this->getSchema(), false);
+    $oModel = $this->getEmpty()->getModel($this->getSchema(), false, false);
     
-    if ($oModel->isEmpty()) dspm(xt('Fichier modèle %s invalide', view($oModel)), 'action/error');
+    if (!$oModel || $oModel->isEmpty()) dspm(xt('Fichier modèle %s invalide', view($oModel)), 'action/error');
     else {
       
       // $this->buildRefs($oModel);

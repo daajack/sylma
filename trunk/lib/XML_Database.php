@@ -152,6 +152,11 @@ class XML_Database {
     return $mResult;
   }
   
+  public function escape($sValue) {
+    
+    return addQuote($sValue);
+  }
+  
   public function getCollection($bFormat = false) {
     
     if ($bFormat) return "collection('{$this->sCollection}')";

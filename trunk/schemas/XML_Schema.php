@@ -17,7 +17,7 @@ class XSD_Parser extends Module {
   private $iID = 1;
   
   public function __construct(XML_Document $oSchema, XML_Document $oDatas = null,
-    $bModel = true, $bMessages = true, $bMark = true, $bLoadRefs = false) {
+    $bModel = true, $bMessages = true, $bMark = true, $bLoadRefs = true) {
     
     $this->setDirectory(__file__);
     
@@ -716,7 +716,8 @@ class XSD_Model extends XSD_Instance { // XSD_ElementInstance
       
       if ($this->getClass()->getType()->isComplex()) { // complex type
         
-        $this->oParticle = $this->getClass()->getType()->getParticle()->getInstance($this);
+        if (!$this->getClass()->getType()->isMixed()) 
+          $this->oParticle = $this->getClass()->getType()->getParticle()->getInstance($this);
         
       } else { // simple type
         
@@ -724,7 +725,7 @@ class XSD_Model extends XSD_Instance { // XSD_ElementInstance
           
           if ($this->useMessages()) $this->addMessage(
             xt('L\'élément %s ne devrait pas contenir d\'autre éléments, le type %s est attendu',
-            view($this->getNode()), view($this->getSource())), 'content', 'badtype');
+            view($this->getNode()), view($this->getClass()->getSource())), 'content', 'badtype');
           else $this->getParser()->isValid(false);
         }
       } 
@@ -758,20 +759,23 @@ class XSD_Model extends XSD_Instance { // XSD_ElementInstance
   
   private function buildChildren() {
     
-    foreach ($this->getNode()->getChildren() as $oChild) {
+    if ($this->getParticle()) {
       
-      if ($oCurrent = $this->getClass()->getType()->getElement($oChild)) {
+      foreach ($this->getNode()->getChildren() as $oChild) {
         
-        $this->getParticle()->add($oChild, $oCurrent->getParents());
-        
-      } else {
-        
-        if ($this->useMessages()) $this->addMessage(
-          xt('L\'élément %s n\'est pas autorisé au sein de l\'élément %s',
-          view($oChild->getName()), view($this->getClass()->getName())), 'element', 'denied');
-        
-        // $this->getParticle()->add(); TODO
-        if (!$this->keepValidate()) break;
+        if (($oCurrent = $this->getClass()->getType()->getElement($oChild))) {
+          
+          $this->getParticle()->add($oChild, $oCurrent->getParents());
+          
+        } else {
+          
+          if ($this->useMessages()) $this->addMessage(
+            xt('L\'élément %s n\'est pas autorisé au sein de l\'élément %s',
+            view($oChild->getName()), view($this->getClass()->getName())), 'element', 'denied');
+          
+          // $this->getParticle()->add(); TODO
+          if (!$this->keepValidate()) break;
+        }
       }
     }
   }
@@ -1295,7 +1299,7 @@ class XSD_BaseType {
     
     switch ($this->getName()) {
       
-      case 'string' : $bResult = is_string($mValue) && !is_numeric($mValue); break;
+      case 'string' : $bResult = is_string($mValue); break; // && !is_numeric($mValue)
       case 'integer' : $bResult = is_integer($mValue) || ctype_digit($mValue); break;
       case 'decimal' : $bResult = is_numeric($mValue) && !is_integer($mValue) && !ctype_digit($mValue); break;
       case 'boolean' : $bResult = in_array($mValue, array('1', '0', 'true', 'false')); break;
@@ -1315,6 +1319,11 @@ class XSD_BaseType {
   public function isBasic() {
     
     return true;
+  }
+  
+  public function isComplex() {
+    
+    return false;
   }
   
   public function isSimple() {
@@ -1480,7 +1489,8 @@ class XSD_Type extends XSD_Container { // complex or simple, but defined
         if ($this->keepValidate()) $oInstance->buildParticle();
       }
       
-      $bResult = $this->getParticle()->validate($oInstance->getParticle());
+      if ($this->isMixed()) $bResult = true;
+      else $bResult = $this->getParticle()->validate($oInstance->getParticle());
     }
     
     return $bResult;
@@ -1499,6 +1509,11 @@ class XSD_Type extends XSD_Container { // complex or simple, but defined
   public function isSimple() {
     
     return (bool) $this->getBase();
+  }
+  
+  public function isMixed() {
+    
+    return $this->getSource()->testAttribute('mixed', false);
   }
   
   public function hasRestrictions() {

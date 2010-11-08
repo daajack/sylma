@@ -841,6 +841,8 @@ class XML_Action extends XML_Document {
         
         foreach (explode(',', $this->buildArgument($oElement->getChildren())) as $sPrefix) {
           
+          $sPrefix = trim($sPrefix);
+          
           if ($sNamespace = $oElement->getNamespace($sPrefix)) $mResult[$sPrefix] = $sNamespace;
           else $this->dspm(xt('Aucun espace de nom pour le prefix %s dans %s',
             new HTML_Strong($sPrefix), view($oElement)), 'action/warning');
@@ -1522,11 +1524,13 @@ class XML_Action extends XML_Document {
       if (in_array($sActualFormat, $aFormats)) return true;
     }
     
-    $this->dspm(xt('Argument invalide : L\'argument %s devrait être de %s dans %s',
+    $this->dspm(xt('Argument invalide : L\'argument %s devrait être de type %s dans %s',
       
       view($mArgument),
       new HTML_Strong(implode(', ', $aFormats)),
-      view($oElement)), 'action/warning');
+      view($oElement)), 'action/error');
+    
+    $this->setStatut('error');
     
     return false;
   }

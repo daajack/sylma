@@ -60,6 +60,7 @@
           <xsl:value-of select="."/>
         </span>
       </xsl:when>
+      <xsl:when test="@lc:editable = 'false' and @lc:visible = 'false'"/>
       <xsl:when test="lc:is-keyref()">
         <select name="{$name}" id="{$id}" class="{$class}">
           <option value="0">&lt; choisissez &gt;</option>

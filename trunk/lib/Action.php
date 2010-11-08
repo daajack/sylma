@@ -129,14 +129,15 @@ class XML_Action extends XML_Document {
     return $oResult;
   }
   
-  private function getVariable($sKey) {
+  private function getVariable($sKey, $bDebug = true) {
     
     if (array_key_exists($sKey, $this->aVariables)) return $this->aVariables[$sKey];
-    else {
+    else if ($bDebug) {
       
       dspm(xt('La variable "%s" n\'existe pas dans %s !', new HTML_Strong($sKey), $this->getPath()->parse()), 'action/error');
-      return null;
     }
+    
+    return null;
   }
   
   public function setVariables(array $aVariables) {
@@ -516,13 +517,13 @@ class XML_Action extends XML_Document {
       
       case 'get-variable' :
         
-        if (!$sVariable = $oElement->getAttribute('name')) {
+        if ((!$sVariable = $oElement->getAttribute('name'))) {
           
           $this->dspm(array(t('Nom de la variable indéfini !'), $oElement->messageParse()), 'action/warning');
           
         } else {
           
-          $mResult = $this->getVariable($sVariable);
+          $mResult = $this->getVariable($sVariable, $oElement->testAttribute('debug', true));
           
           $bRun = true;
         }
@@ -1249,7 +1250,7 @@ class XML_Action extends XML_Document {
           if ($oChild->hasChildren()) foreach ($oChild->getChildren() as $oFormat) $aFormats[] = $oFormat->read();
           else if ($sFormat = $oChild->getAttribute('format')) $aFormats[] = $sFormat;
           
-          $bError = !$this->validArgumentType($mArgument, $aFormats, $oMethod);
+          $bError = !$this->validArgumentType($mArgument, $aFormats, $oMethod, $oChild->testAttribute('allow-null', false));
           
           if (!$bError) $aResultArguments[] = $mArgument;
           
@@ -1495,9 +1496,10 @@ class XML_Action extends XML_Document {
     return array($bResult, $mArgument);
   }
   
-  private function validArgumentType(&$mArgument, $aFormats, $oElement) {
+  private function validArgumentType(&$mArgument, $aFormats, $oElement, $bNull = false) {
     
     if (!$aFormats) return true;
+    if ($mArgument === null && $bNull) return true;
     
     if (is_object($mArgument)) {
       

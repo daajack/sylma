@@ -7,7 +7,7 @@
     <argument format="XML_Document" name="schema"/>
     <argument format="XML_Document" name="options"/>
   </method-construct>
-  <method path="run" return-default="true" ls:owner="root" ls:group="users" ls:mode="710" name="run">
+  <method path="run" return-default="true" name="run">
     <argument format="Redirect" name="redirect"/>
     <argument format="php-string" name="action"/>
     <argument required="false" format="php-array" name="options"/>

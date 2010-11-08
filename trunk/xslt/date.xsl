@@ -4,7 +4,6 @@
     <xsl:param name="date"/>
     <xsl:param name="from" select="'default'"/>
     <xsl:param name="to" select="'default'"/>
-    <xsl:variable select="document('../../sylma/xslt/months.xml')" name="doc-months"/>
     <func:result>
       <xsl:choose>
         <xsl:when test="$from = 'drupal'">

@@ -583,7 +583,8 @@ class XML_Element extends DOMElement implements XML_Composante {
         $mResult = array();
         foreach ($mValue as $mSubValue) $mResult[] = $this->insert($mSubValue, $oNext);
         
-        $mValue = $mResult;
+        if ($mResult && count($mResult) == 1) $mValue = array_pop($mResult);
+        else $mValue = $mResult;
       }
       
     } else if ($mValue !== null) {
@@ -616,6 +617,8 @@ class XML_Element extends DOMElement implements XML_Composante {
    */
   public function insertChild($oChild, $oReferer = null, $bPrevious = false) {
     
+    $oResult = null;
+    
     if ($oChild === $oReferer) $oReferer = null;
     
     //if (is_object($oChild) && ($oChild instanceof XML_Element || $oChild instanceof XML_Text || $oChild instanceof XML_CData || $oChild instanceof XML_Comment)) {
@@ -628,19 +631,19 @@ class XML_Element extends DOMElement implements XML_Composante {
       
       if ($bPrevious) {
         
-        if ($oReferer && $oReferer->getNext()) parent::insertBefore($oChild, $oReferer->getNext());
-        else if ($oReferer) parent::appendChild($oChild);
-        else parent::insertBefore($oChild, $this->getFirst());
+        if ($oReferer && $oReferer->getNext()) $oResult = parent::insertBefore($oChild, $oReferer->getNext());
+        else if ($oReferer) $oResult = parent::appendChild($oChild);
+        else $oResult = parent::insertBefore($oChild, $this->getFirst());
         
       } else {
         
-        if ($oReferer) parent::insertBefore($oChild, $oReferer);
-        else parent::appendChild($oChild);
+        if ($oReferer) $oResult = parent::insertBefore($oChild, $oReferer);
+        else $oResult = parent::appendChild($oChild);
       
       }
-      return $oChild;
-      
-    } return null;
+    }
+    
+    return $oResult;
   }
   
   /**

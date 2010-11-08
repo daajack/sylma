@@ -20,6 +20,8 @@
     <argument name="path" format="php-string"/>
     <argument name="namespaces" format="php-array" required="false"/>
   </method>
+  <method path="get-first" name="getFirst" output="XML_Element"/>
+  <method path="get-last" name="getLast" output="XML_Element"/>
   <method path="read" name="read" output="php-string">
     <argument name="path" format="php-string"/>
     <argument name="namespaces" format="php-array" required="false"/>
@@ -51,6 +53,9 @@
     </argument>
   </method>
   <method path="move" name="move">
+    <argument format="XML_Element" name="target"/>
+  </method>
+  <method path="replace" name="replace">
     <argument format="XML_Element" name="target"/>
   </method>
   <method path="get-document" name="getDocument" return-default="true"/>

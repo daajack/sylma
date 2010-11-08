@@ -657,7 +657,8 @@ class XML_File extends XML_Resource {
   
   public function getActionPath() {
     
-    return substr($this->getFullPath(), 0, strlen($this->getFullPath()) - strlen($this->getExtension()) - 1);
+    $sPath = substr($this->getFullPath(), 0, strlen($this->getFullPath()) - strlen($this->getExtension()) - 1);
+    return $this->getName() == 'index.eml' ? substr($sPath, 0, -6) : $sPath;
   }
   
   public function getSimpleName() {

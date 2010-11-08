@@ -385,8 +385,10 @@ class DBX_Module extends Module {
       
       case 'add-do' :
         
+        if (!$sPath = $this->readOption('redirect')) $sPath = $sList;
+        
         if (!$this->add($oRedirect)) $oRedirect->setPath($this->getPath().'/add');
-        else $oRedirect->setPath($sList);
+        else $oRedirect->setPath($sPath);
         
         $mResult = $oRedirect;
         
@@ -450,7 +452,7 @@ class DBX_Module extends Module {
     
     $this->switchDirectory();
     
-    if (!$mResult instanceof Redirect && $sAction != 'list') {
+    if (!$mResult instanceof Redirect && $sAction != 'list' && !$this->getOption('no-action')) {
       
       $mResult = new HTML_Div($mResult);
       $mResult->shift(new HTML_A($sList, t('< Retour à la liste'), array('class' => 'dbx-link-list')));
@@ -498,7 +500,7 @@ class DBX_Module extends Module {
         $mResult = new XML_Action($oPath);
       }
       
-      $mResult = $mResult->parse(); // parse to keep files in process before __destruct()
+      if ($mResult) $mResult = $mResult->parse(); // parse to keep files in process before __destruct()
     }
     
     return $mResult;

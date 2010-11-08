@@ -8,6 +8,7 @@
   </method>
   <method name="getVariable" path="get-variable" return-default="true">
     <argument name="key" format="php-string"/>
+    <argument name="debug" format="php-boolean"/>
   </method>
   <method name="setVariable" path="set-variable">
     <argument name="key" format="php-string"/>

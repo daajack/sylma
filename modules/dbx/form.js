@@ -11,7 +11,7 @@ var sylmaCalendarOptions = {
   'hiddenInputFormat' : '%Y-%m-%d'
 };
 
-window.addEvent('domready', function() {
+addWindowLoad(function () {
   
   $$('form textarea').each(function(el) {
     
@@ -47,3 +47,5 @@ window.addEvent('domready', function() {
     // new Calendar({sID : 'D B Y'}, sylmaCalendarOptions);
   });
 });
+
+

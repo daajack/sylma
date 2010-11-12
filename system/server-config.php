@@ -21,6 +21,8 @@ define('SYLMA_DB_SHOW_RESULTS', false); // DEFAULT = false
 
 /* Global */ // Could be different for production or test server
 
+define('SYLMA_HOST_NAME', 'Undefined');
+
 define('PATH_SYLMA', 'protected/sylma');
 define('PATH_LIBS', PATH_SYLMA.'/lib');
 define('PATH_PHP', 'protected');

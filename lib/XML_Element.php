@@ -983,7 +983,7 @@ class XML_Element extends DOMElement implements XML_Composante {
   
   public function getNamespace($sPrefix = '') {
     
-    if ($sPrefix != '') return $this->lookupNamespaceURI($sPrefix);
+    if ($sPrefix !== '') return $this->lookupNamespaceURI($sPrefix);
     else return $this->namespaceURI;
   }
   

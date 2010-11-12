@@ -25,7 +25,7 @@ element <xsl:value-of select="$parent-name"/> {
   
   <xsl:template name="loop">
     <xsl:variable name="headers" select="*[3]"/>
-  for $self in <xsl:value-of select="$parent-path"/>/*
+  for $self in <xsl:value-of select="$parent-path"/>
     <xsl:apply-templates select="$headers/dbx:element" mode="prepare"/>
     <xsl:variable name="where">
       <xsl:apply-templates select="$headers/dbx:filter"/>
@@ -52,6 +52,9 @@ element <xsl:value-of select="$parent-name"/> {
         <xsl:when test="$ref/@key-constrain"><xsl:value-of select="$ref/@key-constrain"/></xsl:when>
         <xsl:otherwise>[@key = $self/<xsl:value-of select="concat($prefix, @name)"/>/text()]</xsl:otherwise>
       </xsl:choose>
+    </xsl:if>
+    <xsl:if test="@path">
+      let $sylma-<xsl:value-of select="concat(@name, ' := $self/', @path)"/>
     </xsl:if>
   </xsl:template>
   
@@ -135,6 +138,9 @@ element <xsl:value-of select="$parent-name"/> {
             element <xsl:value-of select="$name"/> {
               attribute lc:value {$self/<xsl:value-of select="$name"/>/text()},
               xs:string($sylma-<xsl:value-of select="concat(@name, dbx:get-view())"/>)}
+          </xsl:when>
+          <xsl:when test="@path">
+            element <xsl:value-of select="$name"/> { $sylma-<xsl:value-of select="@name"/> }
           </xsl:when>
           <xsl:otherwise>
             <xsl:value-of select="concat('$self/', $name)"/>

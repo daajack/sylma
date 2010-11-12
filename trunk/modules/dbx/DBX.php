@@ -59,7 +59,7 @@ class DBX_Module extends Module {
     
     //return "doc('{$this->getDB()->getCollection()}/{$this->readOption('parent-path')}')";
     $sParentPath = $this->readOption('parent-path', false);
-    $sParent = $sParentPath ? $sParentPath : $this->readOption('parent');
+    $sParent = $sParentPath ? $sParentPath : $this->readOption('parent').'/*';
     
     return "doc('{$this->getDB()->getCollection()}{$this->readOption('document')}')/$sParent";
   }

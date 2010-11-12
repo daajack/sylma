@@ -844,9 +844,18 @@ class XML_Action extends XML_Document {
           
           $sPrefix = trim($sPrefix);
           
-          if ($sNamespace = $oElement->getNamespace($sPrefix)) $mResult[$sPrefix] = $sNamespace;
-          else $this->dspm(xt('Aucun espace de nom pour le prefix %s dans %s',
-            new HTML_Strong($sPrefix), view($oElement)), 'action/warning');
+          if ($sPrefix{0} == '*') {
+            
+            if ($sNamespace = $oElement->getNamespace(null)) $mResult[substr($sPrefix, 1)] = $sNamespace;
+            else $this->dspm(xt('Aucun espace de nom par défaut défini pour le prefix %s dans %s',
+              new HTML_Strong($sPrefix), view($oElement)), 'action/warning');
+            
+          } else {
+            
+            if ($sNamespace = $oElement->getNamespace($sPrefix)) $mResult[$sPrefix] = $sNamespace;
+            else $this->dspm(xt('Aucun espace de nom pour le prefix %s dans %s',
+              new HTML_Strong($sPrefix), view($oElement)), 'action/warning');
+          }
         }
         
       break;

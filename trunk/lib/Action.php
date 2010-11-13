@@ -1127,14 +1127,28 @@ class XML_Action extends XML_Document {
           // 0..n child(ren) element
           
           $mResult = array();
+          $bNull = $oElement->testAttribute('use-null', true);
           
           foreach ($oElement->getChildren() as $oChild) {
             
-            $mArgument = $this->buildArgument($oChild);
-            
-            if ($sKey = $oChild->getAttribute('key', SYLMA_NS_EXECUTION)) $mResult[$sKey] = $mArgument;
-            else $mResult[] = $mArgument;
+            if (!$oChild->useNamespace(SYLMA_NS_INTERFACE)) {
+              
+              $mArgument = $this->buildArgument($oChild);
+              
+              if ($bNull || $mArgument !== null) {
+                
+                if ($sKey = $oChild->getAttribute('key', SYLMA_NS_EXECUTION)) $mResult[$sKey] = $mArgument;
+                else $mResult[] = $mArgument;
+              }
+              
+              $oChild->remove();
+            }
           }
+          
+          list($mSubResult, $bSubReturn) = $this->runInterfaceList($mResult, $oElement);
+          $this->setVariableElement($oElement, $mResult);
+          
+          if ($bSubReturn) $mResult = $mSubResult;
         }
         
       break;
@@ -1380,23 +1394,36 @@ class XML_Action extends XML_Document {
     return $this->oRedirect;
   }
   
-  private function validateArgument($oChild, $iArgument) {
+  private function validateArgument($oChild, $iArgument, $bPost = false) {
     
     $bRequired = ($oChild->testAttribute('required') !== false);
     $bAssoc = false;
     $bResult = true;
-    //$mResult = null;
+    $mArgument = null;
+    
+    // first load argument from name or index
     
     if ($mKey = $oChild->getAttribute('name')) {
       
       $bAssoc = true;
-      $mArgument = $this->getPath()->getAssoc($mKey, true);
+      
+      if ($oChild->testAttribute('use-post', $bPost)) {
+        
+        if ($oPost = $this->getRedirect()->getDocument('post')) $mArgument = $oPost->getByName($mKey)->read();
+        
+      } else $mArgument = $this->getPath()->getAssoc($mKey, true);
       
     } else {
       
-      if (!$mKey = $oChild->getAttribute('index')) $mKey = $iArgument;
-      $mArgument = $this->getPath()->getIndex($mKey, true);
+      if ($oChild->testAttribute('use-post')) dspm('Attribute %s manquant dans %s', new HTML_Strong('name'), view($oChild));
+      else {
+        
+        if (!$mKey = $oChild->getAttribute('index')) $mKey = $iArgument;
+        $mArgument = $this->getPath()->getIndex($mKey, true);
+      }
     }
+    
+    // then check if required
     
     if ($bRequired && $mArgument === null) { // TODO : check if && !$mArgument is required
       
@@ -1409,7 +1436,7 @@ class XML_Action extends XML_Document {
       
       // Argument is here
       
-      if ($mArgument !== null) {
+      if ($mArgument !== null && ($oChild->testAttribute('use-zero', true) || $mArgument !== 0)) {
         
         // Argument has value
         
@@ -2013,6 +2040,11 @@ class Action_Array {
   public function key() {
     
     return $this->iIndex;
+  }
+  
+  public function implode() {
+    
+    return implode(', ', $this->aArray);
   }
   
   public function current() {

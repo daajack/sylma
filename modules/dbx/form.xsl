@@ -9,6 +9,9 @@
       <xsl:apply-templates select="lc:get-model(*[1])/lc:annotations/lc:message"/>
       <xsl:apply-templates select="*[1]/@*"/>
       <xsl:apply-templates select="*[1]/*" mode="field"/>
+      <div class="field-notice">
+        Les champs marqués d'un <strong>*</strong> sont obligatoires
+      </div>
       <div class="field-actions">
         <input type="submit" value="Enregistrer"/>
         <input type="button" value="Annuler" onclick="history.go(-1);"/>
@@ -20,26 +23,46 @@
     <xsl:variable name="id" select="concat('field-', lc:get-name())"/>
     <xsl:variable name="statut" select="concat('field-statut-', lc:get-statut())"/>
     <xsl:variable select="'field-input-element'" name="class"/>
-    <div class="field clear-block {$statut}">
-      <xsl:if test="not(@lc:visible = 'false')">
-        <xsl:apply-templates select="." mode="label">
-          <xsl:with-param name="id" select="$id"/>
-        </xsl:apply-templates>
-      </xsl:if>
+    <xsl:variable name="content">
       <xsl:apply-templates select="." mode="input">
         <xsl:with-param name="id" select="$id"/>
         <xsl:with-param name="name" select="$name"/>
         <xsl:with-param name="class" select="$class"/>
       </xsl:apply-templates>
       <xsl:apply-templates select="@*"/>
-      <xsl:apply-templates select="lc:get-model()/lc:annotations/lc:message"/>
-    </div>
+    </xsl:variable>
+    <xsl:choose>
+      <xsl:when test="not(@lc:visible = 'false')">
+        <xsl:variable name="label">
+          <xsl:apply-templates select="." mode="label">
+            <xsl:with-param name="id" select="$id"/>
+          </xsl:apply-templates>
+        </xsl:variable>
+        <div class="field clear-block {$statut}" id="field-container-{$name}">
+          <xsl:choose>
+            <xsl:when test="lc:is-boolean()">
+              <xsl:copy-of select="$content"/>
+              <xsl:copy-of select="$label"/>
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:copy-of select="$label"/>
+              <xsl:copy-of select="$content"/>
+            </xsl:otherwise>
+          </xsl:choose>
+          <xsl:apply-templates select="lc:get-model()/lc:annotations/lc:message"/>
+        </div>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:copy-of select="$content"/>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
   <xsl:template match="*" mode="label">
     <xsl:param name="id"/>
     <label for="{$id}">
       <xsl:value-of select="lx:first-case(lc:get-title())"/>
-      <xsl:text> :</xsl:text>
+      <xsl:if test="not(lc:is-boolean())"><xsl:text> : </xsl:text></xsl:if>
+      <xsl:if test="not(lc:get-statut() = 'optional')"> *</xsl:if>
     </label>
   </xsl:template>
   <xsl:template match="*" mode="input">

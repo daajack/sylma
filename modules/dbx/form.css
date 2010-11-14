@@ -29,6 +29,18 @@ form {
   height: 100px;
 }
 
+.field-notice {
+  color: gray;
+  font-size: 1em;
+  font-style: italic;
+  text-align: right;
+}
+
+.field-notice strong {
+  color: black;
+  font-size: 1.2em;
+}
+
 .field-actions {
   border-top: 1px dotted #ddd;
   margin-top: 1em;
@@ -37,7 +49,7 @@ form {
 }
 
 .field-statut-optional {
-  opacity: 0.35;
+  opacity: 0.65;
 }
 
 .field-statut-optional:hover {

@@ -2,6 +2,7 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns="http://www.w3.org/1999/xhtml" xmlns:lc="http://www.sylma.org/schemas" xmlns:dbx="http://www.sylma.org/modules/dbx" version="1.0">
   <xsl:import href="build-query.xsl"/>
   <xsl:template match="/lc:sylma-schema">
+    <xsl:call-template name="functions"/>
     <xsl:variable name="headers" select="*[3]"/>
 let $page := <xsl:value-of select="$headers/dbx:page"/>
 let $pageSize := <xsl:value-of select="$headers/dbx:page-size"/>

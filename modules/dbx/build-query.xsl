@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns="http://www.w3.org/1999/xhtml" xmlns:lc="http://www.sylma.org/schemas" xmlns:dbx="http://www.sylma.org/modules/dbx" xmlns:func="http://exslt.org/functions"  extension-element-prefixes="func" version="1.0">
+  <xsl:param name="build-empty" select="boolean(false)"/>
   <xsl:output method="text"/>
   <xsl:import href="../../schemas/functions.xsl"/>
   
@@ -18,9 +19,19 @@
   </func:function>
   
   <xsl:template match="/*">
+    <xsl:call-template name="functions"/>
 element <xsl:value-of select="$parent-name"/> {
     <xsl:call-template name="loop"/>
 }
+  </xsl:template>
+  
+  <xsl:template name="functions">
+    declare function local:buildEmpty($el as element()?, $name as xs:string) as element() {
+      
+      if ($el)
+        then $el
+        else element {$name} {}
+    };
   </xsl:template>
   
   <xsl:template name="loop">
@@ -143,7 +154,10 @@ element <xsl:value-of select="$parent-name"/> {
             element <xsl:value-of select="$name"/> { $sylma-<xsl:value-of select="@name"/> }
           </xsl:when>
           <xsl:otherwise>
-            <xsl:value-of select="concat('$self/', $name)"/>
+            <xsl:choose>
+              <xsl:when test="$build-empty">local:buildEmpty(<xsl:value-of select="concat('$self/', $name, ', &quot;', $name, '&quot;')"/>)</xsl:when>
+              <xsl:otherwise><xsl:value-of select="concat('$self/', $name)"/></xsl:otherwise>
+            </xsl:choose>
           </xsl:otherwise>
         </xsl:choose>
       </xsl:otherwise>

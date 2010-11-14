@@ -1559,7 +1559,14 @@ class XML_Action extends XML_Document {
         
       } else $sActualFormat = 'php-'.strtolower(gettype($mArgument));
       
-      if (in_array($sActualFormat, $aFormats)) return true;
+      if (in_array($sActualFormat, $aFormats)) {
+        
+        if ($sActualFormat == 'php-string' && ($sEnum = $oElement->getAttribute('enum'))) {
+          
+          if (in_array($mArgument, explode(',', $sEnum))) return true;
+          
+        } else return true;
+      }
     }
     
     $this->dspm(xt('Argument invalide : L\'argument %s devrait être de type %s dans %s',
@@ -1850,7 +1857,7 @@ class XML_Action extends XML_Document {
                   case 'mixed' :
                     
                     $oResult = $this->buildArgument($oDocument->getFirst());
-                    
+                    if ($oDocument->countChildren() > 1) dspm(xt('Mode mixed'), 'warning');
                   break;
                   
                   default :

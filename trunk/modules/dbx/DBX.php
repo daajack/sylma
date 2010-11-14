@@ -26,7 +26,7 @@ class DBX_Module extends Module {
     
     $this->setNamespace('http://www.sylma.org/modules/dbx', 'dbx', false);
     $this->setNamespace(SYLMA_NS_XHTML, 'html', false);
-    $this->setNamespace($oSchema->getAttribute('targetNamespace'), $this->readOption('prefix'));
+    $this->setNamespace($oSchema->getAttribute('targetNamespace'), $this->readOption('database/prefix'));
     $this->setNamespace(SYLMA_NS_SCHEMAS, 'lc', false);
   }
   
@@ -55,13 +55,13 @@ class DBX_Module extends Module {
     return $this->oModel;
   }*/
   
-  private function getParent() {
+  private function getCollection($sPath = '') {
     
     //return "doc('{$this->getDB()->getCollection()}/{$this->readOption('parent-path')}')";
-    $sParentPath = $this->readOption('parent-path', false);
-    $sParent = $sParentPath ? $sParentPath : $this->readOption('parent').'/*';
+    // $sParentPath = $this->readOption('parent-path', false);
+    // $sParent = $sParentPath ? $sParentPath : $this->readOption('parent').'/*';
     
-    return "doc('{$this->getDB()->getCollection()}{$this->readOption('document')}')/$sParent";
+    return "doc('{$this->getDB()->getCollection()}{$this->readOption('database/document')}')".($sPath ? '/'.$sPath : '');
   }
   
   private function getPath() {
@@ -72,7 +72,7 @@ class DBX_Module extends Module {
   private function getEmpty() {
     
     $oResult = new XML_Document();
-    $oResult->addNode($this->getFullPrefix().$this->readOption('name'), null, null, $this->getNamespace());
+    $oResult->addNode($this->getFullPrefix().$this->readOption('database/name'), null, null, $this->getNamespace());
     
     return $oResult;
   }
@@ -88,7 +88,9 @@ class DBX_Module extends Module {
     
     if (!array_key_exists($sPath, $this->aOptions) || !$this->aOptions[$sPath]) {
       
-      if ((!$this->aOptions[$sPath] = $this->getOptions()->getByName($sPath, $this->getNamespace('dbx'))) && $bDebug)
+      $sRealPath = preg_replace('/([-\w]+)/', 'dbx:\1', $sPath);
+      
+      if ((!$this->aOptions[$sPath] = $this->getOptions()->get($sRealPath, $this->getNS())) && $bDebug)
         dspm(xt('Option %s introuvable dans %s', new HTML_Strong($sPath), view($this->getOptions())), 'action/warning');
     }
     
@@ -147,6 +149,8 @@ class DBX_Module extends Module {
     
     $oAttributes = $oElement->query("@*[namespace-uri()='{$this->getNamespace()}']");
     
+    foreach ($oElement->getChildren() as $oChild) if ($oChild->isElement()) $this->validateElement($oChild);
+    
     foreach ($oElement->getAttributes() as $oAttribute) {
       
       $sValue = $oAttribute->getValue();
@@ -194,9 +198,29 @@ class DBX_Module extends Module {
             if ($bID) $oElement->setAttribute('xml:id', uniqid('x')); //$sValue
             
           break;
-          
-          case 'wiki' :
-          
+            
+          case 'use-statut' :
+            
+            $sPublish = $oElement->readByName('date-publish', $this->getNamespace());
+            $sEnd = $oElement->readByName('date-end', $this->getNamespace());
+            
+            if (!$sPublish || !$sEnd) {
+              
+              dspm(xt('Impossible d\'indiquer l\'état de l\'élément %s', view($oElement)), 'action/warning');
+              
+            } else {
+              
+              $oToday = new DateTime();
+              $oPublish = new DateTime($sPublish);
+              $oEnd = new DateTime($sEnd);
+              
+              if ($oPublish > $oToday) $iStatut = 20;
+              else if ($oEnd < $oToday) $iStatut = 30;
+              else $iStatut = 10;
+              
+              $oElement->setAttribute('statut', $iStatut);
+            }
+            
           break;
           
           case 'model' :
@@ -209,8 +233,6 @@ class DBX_Module extends Module {
         $oAttribute->remove();
       }
     }
-    
-    foreach ($oElement->getChildren() as $oChild) if ($oChild->isElement()) $this->validateElement($oChild);
   }
   
   public function buildValues($oValues, XML_Element $oParent = null) {
@@ -371,11 +393,13 @@ class DBX_Module extends Module {
         } else {
           
           // $this->buildRefs($oModel, true);
+          $sPath = $this->readOption('add-do-path', false);
+          $sPath = $sPath ? $sPath : $this->getPath().'/add-do';
           
           // dspf($oModel);
           $oPath = new XML_Path($this->getDirectory().'/form.eml', array(
             'model' => $oModel,
-            'action' => $this->getPath().'/add-do.redirect',
+            'action' => $sPath.'.redirect',
             'template-extension' => $this->getTemplateExtension()), true, false); //.redirect
           
           $mResult = new XML_Action($oPath);
@@ -385,10 +409,18 @@ class DBX_Module extends Module {
       
       case 'add-do' :
         
-        if (!$sPath = $this->readOption('redirect')) $sPath = $sList;
-        
-        if (!$this->add($oRedirect)) $oRedirect->setPath($this->getPath().'/add');
-        else $oRedirect->setPath($sPath);
+        if (!$this->add($oRedirect)) {
+          
+          $sPath = $this->readOption('add-path', false);
+          $sPath = $sPath ? $sPath : $this->getPath().'/add';
+          
+          $oRedirect->setPath($sPath);
+          
+        } else {
+          
+          if (!$sPath = $this->readOption('redirect', false)) $sPath = $sList;
+          $oRedirect->setPath($sPath);
+        }
         
         $mResult = $oRedirect;
         
@@ -396,9 +428,9 @@ class DBX_Module extends Module {
       
       case 'list' :
         
-        $sDocument = 'dbx-list-headers'.$this->getOption('name');
+        $sDocument = 'dbx-list-headers'.$this->getOption('database/name');
         
-        if ($sHeaders = array_val($sDocument, $_SESSION)) $this->oHeaders = new XML_Document($sHeaders);
+        // if ($sHeaders = array_val($sDocument, $_SESSION)) $this->oHeaders = new XML_Document($sHeaders);
         
         $iPage = array_val('page', $aOptions);
         $iPageSize = array_val('size', $aOptions, 15);
@@ -452,7 +484,7 @@ class DBX_Module extends Module {
     
     $this->switchDirectory();
     
-    if (!$mResult instanceof Redirect && $sAction != 'list' && !$this->getOption('no-action')) {
+    if (!$mResult instanceof Redirect && $sAction != 'list' && !$this->getOption('no-action', false)) {
       
       $mResult = new HTML_Div($mResult);
       $mResult->shift(new HTML_A($sList, t('< Retour à la liste'), array('class' => 'dbx-link-list')));
@@ -479,9 +511,15 @@ class DBX_Module extends Module {
       // dspf($oModel);
       $oTemplate = $this->getDocument('list-xq.xsl', true);
       
+      $sChildren = $this->readOption('database/list-path', false);
+      $sChildren = $sChildren ? $sChildren : $this->readOption('database/parent').'/*';
+      
+      // $sParentPath = $this->readOption('parent-path', false);
+      // $sParent = $sParentPath ? $sParentPath : $this->readOption('parent').'/*';
       $oTemplate->setParameters(array(
-        'parent-name' => $this->readOption('parent'),
-        'parent-path' => $this->getParent(),
+        'parent-name' => $this->readOption('database/parent'),
+        'parent-path' => $this->getCollection($sChildren),
+        'build-empty' => 'true',
         'prefix' => $this->getFullPrefix()));
       
       $sQuery = $oModel->parseXSL($oTemplate, false);
@@ -510,7 +548,6 @@ class DBX_Module extends Module {
     
     $bResult = false;
     
-    
     if ($oValues = $this->getPost($oRedirect)) {
       
       if (!$oValues->validate($this->getSchema())) {
@@ -523,8 +560,10 @@ class DBX_Module extends Module {
         
         $oValues = $oValues->updateNamespaces($this->getNamespace(), $this->getNamespace(), $this->getPrefix());
         
+        $sParent = nonull_val($this->readOption('database/insert-path', false), $this->readOption('database/parent'));
+        
         // if ($oFile = $oValues->saveTemp()) $this->getDB()->run("add to {$this->getParent()} {$oFile->getSystemPath()}");
-        if ($this->insert($oValues->display(true, false), $this->getParent())) {
+        if ($this->insert($oValues->display(true, false), $this->getCollection($sParent))) {
           
           dspm(t('Elément ajouté'), 'success');
           $bResult = true;
@@ -587,7 +626,8 @@ class DBX_Module extends Module {
           
         } else {
           
-          foreach ($oDoc->getChildren() as $oItem) $this->insert($oItem, $this->getParent());
+          //foreach ($oDoc->getChildren() as $oItem) $this->insert($oItem, $this->getParent());
+          dspm('Refaire la fonction avec les doc de type database/datas');
           //if ($this->getDB()->run("add to {$this->getParent()} {$oFile->getSystemPath()}"))
           
           dspm(xt('Document %s importé dans %s', view($oFile->getDocument()), new HTML_Strong($this->getParent())), 'success');
@@ -603,7 +643,7 @@ class DBX_Module extends Module {
     return array_merge($this->getNS(), $aNamespaces);
   }
   
-  public function load($sID) {
+  public function load($sID) { // TOUSE ?
     
     return $this->getDB()->load($sID);
   }

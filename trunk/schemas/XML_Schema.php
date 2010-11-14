@@ -646,6 +646,12 @@ class XSD_Element extends XSD_Node {
         new XML_Element($this->getName(), null, null, $this->getType()->getNamespace(true)),
         $oPrevious, true);
       
+      if ($sDefault = $this->getSource()->getAttribute('default')) $oElement->set($sDefault);
+      else if ($sDefault = $this->getSource()->getAttribute('default-query', $this->getNamespace())) {
+        
+        $oElement->set(Controler::getDatabase()->query($sDefault));
+      }
+      
       $oInstance = $this->getInstance($oParent, $oElement);
       $oParent->insert($oInstance);
     }

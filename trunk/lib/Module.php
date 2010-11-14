@@ -87,6 +87,7 @@ class Module {
     
     return $this->getPrefix() ? $this->getPrefix().':' : '';
   }
+  
   public function getPrefix() {
     
     return $this->sPrefix;
@@ -96,7 +97,7 @@ class Module {
     
     if ($oFile = Controler::getFile(Controler::getAbsolutePath($sPath, $this->getDirectory()))) {
       
-      if ($bXSL) return new XSL_Document((string) $oFile);
+      if ($bXSL) return new XSL_Document((string) $oFile, MODE_EXECUTION);
       else return $oFile->getDocument();
       
     } else return null;

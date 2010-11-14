@@ -53,7 +53,7 @@ class User {
     $this->aGroups = $aGroups;
   }
   
-  public function getDirectory() {
+  public function getDirectory($sSubDirectory = '') {
     
     return Controler::getDirectory('/users/'.$this->getName());
   }

@@ -13,9 +13,9 @@
     <xsl:variable name="self" select="."/>
     <tr>
       <td class="tools">
-        <a href="{$module}/admin/edit/{$id}/{intitule-urlize}">E</a>
-        <a href="{$module}/admin/delete/{$id}/{intitule-urlize}">S</a>
-        <a href="{$module}/admin/view/{$id}/{intitule-urlize}">V</a>
+        <a href="{$module}/admin/edit/{$id}">E</a>
+        <a href="{$module}/admin/delete/{$id}">S</a>
+        <a href="{$module}/admin/view/{$id}">V</a>
       </td>
       <xsl:apply-templates select="*" mode="field"/>
     </tr>

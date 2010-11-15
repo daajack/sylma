@@ -5,7 +5,18 @@
   <xsl:import href="/sylma/xslt/string.xsl"/>
   <xsl:template match="/*">
     <tbody>
-      <xsl:apply-templates select="*" mode="root"/>
+      <xsl:choose>
+        <xsl:when test="*">
+          <xsl:apply-templates select="*" mode="root"/>
+        </xsl:when>
+        <xsl:otherwise>
+          <tr>
+            <td colspan="99">
+              <p class="no-result">Aucun résultat</p>
+            </td>
+          </tr>
+        </xsl:otherwise>
+      </xsl:choose>
     </tbody>
   </xsl:template>
   <xsl:template match="*" mode="root">

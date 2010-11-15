@@ -601,13 +601,21 @@ class XML_Action extends XML_Document {
           
         } else {
           
-          $mResult = $this->buildArgument($oElement->getChildren());
-          
           switch ($sName) {
             
-            case 'urlencode' : $mResult = urlencode($mResult); break;
-            case 'add-quote' : $mResult = addQuote($mResult); break;
-            case 'escape-path' : $mResult = '"'.xmlize($mResult).'"'; break;
+            case 'urlencode' : $mResult = urlencode($this->buildArgument($oElement->getChildren())); break;
+            case 'add-quote' : $mResult = addQuote($this->buildArgument($oElement->getChildren())); break;
+            case 'escape-path' : $mResult = '"'.xmlize($this->buildArgument($oElement->getChildren())).'"'; break;
+            case 'format-date' :
+              
+              $mResult = $this->buildArgument($oElement->getFirst());
+              $oElement->getFirst()->remove();
+              
+              if (!$sFormat = $oElement->getAttribute('format')) $sFormat = 'd.m.Y';
+              
+              $mResult = date($sFormat, strtotime($mResult));
+              
+            break;
             
             default:
               
@@ -1842,7 +1850,8 @@ class XML_Action extends XML_Document {
               
               if ($this->loadSettings($oDocument->getByName('settings', SYLMA_NS_EXECUTION))) {
                 
-                if ($oReturn = $this->getSettings()->getByName('return', SYLMA_NS_EXECUTION))
+                if ($this->getSettings() && !$this->getSettings()->isEmpty()
+                  && ($oReturn = $this->getSettings()->getByName('return', SYLMA_NS_EXECUTION)))
                   $sReturn = $oReturn->getAttribute('format');
                 else $sReturn = '';
                 

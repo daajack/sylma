@@ -93,6 +93,14 @@ class Module {
     return $this->sPrefix;
   }
   
+  public function runAction($sPath, $aArguments) {
+    
+    $sPath = Controler::getAbsolutePath($sPath, $this->getDirectory());
+    $oPath = new XML_Path($sPath, $aArguments, true, false);
+    
+    return new XML_Action($oPath);
+  }
+  
   public function getDocument($sPath, $bXSL = false) {
     
     if ($oFile = Controler::getFile(Controler::getAbsolutePath($sPath, $this->getDirectory()))) {

@@ -198,6 +198,13 @@ class DBX_Module extends Module {
             if ($bID) $oElement->setAttribute('xml:id', uniqid('x')); //$sValue
             
           break;
+          
+          case 'export' : 
+            
+            // $sPath = $this->readOption("file[@name='$sValue']");
+            
+            
+          break;
             
           case 'use-statut' :
             
@@ -361,13 +368,11 @@ class DBX_Module extends Module {
             
             // $this->buildRefs($oModel, true);
             
-            $oPath = new XML_Path($this->getDirectory().'/form.eml', array(
+            $mResult = $this->runAction('form', array(
               'model' => $oModel,
               'action' => $this->getPath()."/edit-do/$sID.redirect",
-              'template-extension' => $this->getTemplateExtension()), true, false); //.redirect
-            
-            $mResult = new XML_Action($oPath);
-          }
+              'template-extension' => $this->getTemplateExtension()));
+            }
         }
         
       break;

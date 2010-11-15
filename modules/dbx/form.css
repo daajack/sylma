@@ -78,7 +78,9 @@ form {
 }
 
 .field-input-boolean {
-  width:auto !important;
+  margin-left:30%;
+  margin-right:2%;
+  width: auto !important;
 }
 
 span.field-input-date {

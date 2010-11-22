@@ -2,7 +2,6 @@
 
 class XML_Database {
   
-  //private $sDatabase;
   private $oSession;
   
   private $aNamespaces = array();
@@ -44,33 +43,17 @@ class XML_Database {
     else return $this->sNamespace;
   }
   
-  public function setNamespace($sNamespace, $sPrefix = '') {
+  public function setNamespaces($aNamespace) {
     
-    if ($sPrefix) $this->aNamespaces[$sPrefix] = $sNamespace;
-    else $this->sNamespace = $sNamespace;
+    foreach ($aNamespaces as $sPrefix => $sNamespace) $this->setNamespace($sPrefix, $sNamespace);
   }
   
-  /*
-  public function run($sCommand) {
+  public function setNamespace($mNamespace, $sPrefix = '') {
     
-    $oSession = $this->oSession;
-    
-    $sResult = '';
-    $bResult = true;
-    //$sMessage = '';
-    
-    if ($oSession) {
-      
-      if ($bResult = $oSession->execute($sCommand)) $sResult = $oSession->result();
-      else dspm(xt('Commande %s invalide. (%s)', view($sCommand), new HTML_Tag('em', $oSession->info())), 'action/warning');
-    }
-    
-    //$oSession->close();
-    if (SYLMA_DB_SHOW_RESULTS) dspm(xt('xquery [result] : %s', new HTML_Tag('pre', ($bResult ? $sResult : '[error]'))), 'db/notice');
-    
-    return $sResult;
+    if ($sPrefix) $this->aNamespaces[$sPrefix] = $mNamespace;
+    else $this->sNamespace = $mNamespace;
   }
-  */
+  
   public function query($sQuery, array $aNamespaces = array(), $bGetResult = true) {
     
     $sResult = null;
@@ -155,6 +138,16 @@ class XML_Database {
   public function escape($sValue) {
     
     return addQuote($sValue);
+  }
+  
+  public function hasDocument($sDocument) {
+    
+    return 'xs:boolean('.$this->pathDocument($sDocument).')';
+  }
+  
+  public function pathDocument($sDocument) {
+    
+    return "doc('{$this->getCollection()}/$sDocument')";
   }
   
   public function getCollection($bFormat = false) {

@@ -925,7 +925,7 @@ class Controler {
     
     return self::$oDatabase;
   }
-  
+  /*
   public static function importDatabase() {
     
     $xDirectory = 'database/export';
@@ -982,7 +982,7 @@ class Controler {
     
     return '';
   }
-  
+  */
   public static function cleanDocument($sPath) {
     
     $oDocument = new XML_Document(self::getAbsolutePath($sPath));

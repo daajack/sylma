@@ -987,6 +987,11 @@ class XML_Element extends DOMElement implements XML_Composante {
     else return $this->namespaceURI;
   }
   
+  public function getNS($sPrefix) {
+    
+    return array($sPrefix => $this->getNamespace($sPrefix));
+  }
+  
   public function updateAllNamespaces($oParent = null) {
     
     if ($oParent) $oResult = $oParent->addNode($this->getName(false), null, $this->getAttributes(), $this->getNamespace());

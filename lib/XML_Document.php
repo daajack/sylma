@@ -800,7 +800,7 @@ class XML_Document extends DOMDocument {
       }
     }
     
-    if (!$bDeclaration) $sResult = substr($sResult, 39);
+    if (!$bDeclaration && ($iDec = strpos($sResult, '?>'))) $sResult = substr($sResult, $iDec + 2);
     
     return $sResult;
   }

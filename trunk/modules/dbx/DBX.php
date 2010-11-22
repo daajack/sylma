@@ -206,7 +206,7 @@ class DBX_Module extends Module {
             
           break;
             
-          case 'use-statut' :
+          /*case 'use-statut' :
             
             $sPublish = $oElement->readByName('date-publish', $this->getNamespace());
             $sEnd = $oElement->readByName('date-end', $this->getNamespace());
@@ -221,14 +221,14 @@ class DBX_Module extends Module {
               $oPublish = new DateTime($sPublish);
               $oEnd = new DateTime($sEnd);
               
-              if ($oPublish > $oToday) $iStatut = 20;
-              else if ($oEnd < $oToday) $iStatut = 30;
+              if ($oPublish > $oToday) $iStatut = 5;
+              else if ($oEnd < $oToday) $iStatut = 20;
               else $iStatut = 10;
               
               $oElement->setAttribute('statut', $iStatut);
             }
             
-          break;
+          break;*/
           
           case 'model' :
           default :

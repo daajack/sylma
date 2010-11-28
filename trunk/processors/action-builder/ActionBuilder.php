@@ -33,7 +33,7 @@ class ActionBuilder extends XML_Processor  {
     
     if (in_array($oElement->getName(true), array('layout', 'layer'))) {
       
-      if (!$sPath = $oElement->getAttribute('update-path')) $sPath = $this->getAction()->getPath()->getActionPath();
+      if (!$sPath = $oElement->getAttribute('sylma-update-path')) $sPath = $this->getAction()->getPath()->getActionPath();
       
       $oElement->addNode('property', $sPath, array('name' => 'sylma-update-path'), SYLMA_NS_ACTIONBUILDER);
     }

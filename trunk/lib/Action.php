@@ -1417,7 +1417,11 @@ class XML_Action extends XML_Document {
       
       if ($oChild->testAttribute('use-post', $bPost)) {
         
-        if ($oPost = $this->getRedirect()->getDocument('post')) $mArgument = $oPost->getByName($mKey)->read();
+        if ($oPost = $this->getRedirect()->getDocument('post')) {
+          
+          if ($mArgument = $oPost->getByName($mKey)) $mArgument = $mArgument->read();
+          $this->getPath()->setAssoc($mKey, $mArgument);
+        }
         
       } else $mArgument = $this->getPath()->getAssoc($mKey, true);
       
@@ -1460,40 +1464,76 @@ class XML_Action extends XML_Document {
           $aFormats = $oFormat->getChildren()->toArray();
         }
         
-        if (!$this->validArgumentType($mArgument, $aFormats, $oChild)) {
+        if ($oChild->testAttribute('use-mixed', false)) { // value are replaced instead of validated
           
-          // dspm(xt('L\'argument "%s" est au mauvais format dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'error');
-          $bResult = false;
-          
-        } else {
-          
-          // Argument is good format
-          
-          /* Validation */
-          
-          if (($oValidate = $oChild->getByName('validate', SYLMA_NS_EXECUTION)) && $oValidate->hasChildren()) {
+          if (count($aFormats) > 1) {
             
-            // pre-set argument result for variable
+            $this->dspm(xt('Only one format allowed with attribute %s in %s',
+              new HTML_Strong('use-mixed'),
+              view($oChild)), 'warning');
             
-            $this->setVariableElement($oChild, $mArgument);
+          } else {
             
-            if (!$mResult = $this->buildArgument($oValidate->getFirst())) {
+            $bResult = true;
+            $sFormat = array_pop($aFormats);
+            
+            switch ($sFormat) {
               
-              if ($oValidate->testAttribute('required', true)) {
+              case 'php-boolean' :
                 
-                dspm(xt('L\'argument "%s" est invalide dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'action/error');
-              }
-              
-              $bResult = false;
-              
-            } else {
-              
-              if ($oValidate->testAttribute('return')) $bReplace = true;
-              
-              if (Controler::useStatut('action/report')) {
+                if (is_string($mArgument)) $mResult = strtobool($mArgument);
+                else $mResult = (bool) $mArgument;
                 
-                $sArgumentType = $bAssoc ? 'assoc' : 'index';
-                dspm(xt('Argument : %s [%s]', Controler::formatResource($mArgument), new HTML_Em($sArgumentType)), 'action/report');
+              break;
+              
+              case 'php-string' : $mResult = (string) $mArgument; break;
+              case 'php-array' : $mResult = array($mArgument); break;
+              default :
+                
+                $this->dspm(xt('The format %s is not basetype in %s', new HTML_Strong($sFormat), view($oChild)), 'warning');
+                $bResult = false;
+            }
+            
+            $bReplace = true;
+          }
+          
+        } else { // values are validated
+          
+          if (!$this->validArgumentType($mArgument, $aFormats, $oChild)) {
+            
+            // dspm(xt('L\'argument "%s" est au mauvais format dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'error');
+            $bResult = false;
+            
+          } else {
+            
+            // Argument is good format
+            
+            /* Validation */
+            
+            if (($oValidate = $oChild->getByName('validate', SYLMA_NS_EXECUTION)) && $oValidate->hasChildren()) {
+              
+              // pre-set argument result for variable
+              
+              $this->setVariableElement($oChild, $mArgument);
+              
+              if (!$mResult = $this->buildArgument($oValidate->getFirst())) {
+                
+                if ($oValidate->testAttribute('required', true)) {
+                  
+                  dspm(xt('L\'argument "%s" est invalide dans %s !', new HTML_Strong($mKey), $this->getPath()->parse()), 'action/error');
+                }
+                
+                $bResult = false;
+                
+              } else {
+                
+                if ($oValidate->testAttribute('return')) $bReplace = true;
+                
+                if (Controler::useStatut('action/report')) {
+                  
+                  $sArgumentType = $bAssoc ? 'assoc' : 'index';
+                  dspm(xt('Argument : %s [%s]', Controler::formatResource($mArgument), new HTML_Em($sArgumentType)), 'action/report');
+                }
               }
             }
           }
@@ -1542,50 +1582,57 @@ class XML_Action extends XML_Document {
   
   private function validArgumentType(&$mArgument, $aFormats, $oElement, $bNull = false) {
     
-    if (!$aFormats) return true;
-    if ($mArgument === null && $bNull) return true;
-    
-    if (is_object($mArgument)) {
+    // if no format 
+    if (!$aFormats || ($mArgument === null && $bNull)) $bResult = true;
+    else {
       
-      $sActualFormat = get_class($mArgument);
-      foreach ($aFormats as $sFormat) if ($mArgument instanceof $sFormat) return true;
+      $bResult = false;
       
-    } else {
-      
-      if (is_numeric($mArgument)) {
+      if (is_object($mArgument)) {
         
-        if (is_integer($mArgument) || ctype_digit($mArgument)) {
+        $sActualFormat = get_class($mArgument);
+        foreach ($aFormats as $sFormat) if ($mArgument instanceof $sFormat) {
           
-          $sActualFormat = 'php-integer';
-          $mArgument = intval($mArgument);
-          
-        } else {
-          
-          $sActualFormat = 'php-float';
-          $mArgument = floatval($mArgument);
+          $bResult = true;
+          break;
         }
         
-      } else $sActualFormat = 'php-'.strtolower(gettype($mArgument));
-      
-      if (in_array($sActualFormat, $aFormats)) {
+      } else {
         
-        if ($sActualFormat == 'php-string' && ($sEnum = $oElement->getAttribute('enum'))) {
+        if (is_numeric($mArgument)) {
           
-          if (in_array($mArgument, explode(',', $sEnum))) return true;
+          if (is_integer($mArgument) || ctype_digit($mArgument)) {
+            
+            $sActualFormat = 'php-integer';
+            $mArgument = intval($mArgument);
+            
+          } else {
+            
+            $sActualFormat = 'php-float';
+            $mArgument = floatval($mArgument);
+          }
           
-        } else return true;
+        } else $sActualFormat = 'php-'.strtolower(gettype($mArgument));
+        
+        if (in_array($sActualFormat, $aFormats)) {
+          
+          $bResult = true;
+          
+          if ($sActualFormat == 'php-string') {
+            
+            if (($sEnum = $oElement->getAttribute('enum')) && !in_array($mArgument, explode(',', $sEnum))) $bResult = false;
+          }
+        }
       }
     }
     
-    $this->dspm(xt('Argument invalide : L\'argument %s devrait être de type %s dans %s',
+    if (!$bResult) {
       
-      view($mArgument),
-      new HTML_Strong(implode(', ', $aFormats)),
-      view($oElement)), 'action/error');
+      $this->dspm(xt('Argument %s invalide pour %s', view($mArgument), view($oElement)), 'action/error');
+      $this->setStatut('error');
+    }
     
-    $this->setStatut('error');
-    
-    return false;
+    return $bResult;
   }
   
   public function getSettings() {

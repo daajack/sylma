@@ -2,7 +2,7 @@
 <le:action xmlns:le="http://www.sylma.org/execution" xmlns:li="http://www.sylma.org/interface" xmlns:la="/sylma/processors/action-builder/schema" xmlns="http://www.w3.org/1999/xhtml">
   <le:settings>
     <le:name>Mozaic</le:name>
-    <le:argument required="false" format="php-string" name="path">
+    <le:argument required="false" format="php-string" name="path" allow-empty="true">
       <le:validate return="true">
         <le:controler>
           <li:get-directory>
@@ -33,17 +33,23 @@
       </le:string>
     </la:property>
     <div class="clear-block">
+      <la:event name="click" limit="self"><![CDATA[%ref-object%.rootObject.tools.hide();
+return true;]]></la:event>
       <div>
         <a href="#">
-          <la:event name="click"><![CDATA[$('explorer-messages').getChildren().fade('in').setStyle('height', 'auto');]]></la:event>
+          <la:event name="click"><![CDATA[$('explorer-messages').getChildren().fade('in').setStyle('height', 'auto');
+return false;]]></la:event>
           <span>SM</span>
         </a>
         <a href="#">
           <la:event name="click"><![CDATA[var layer = %ref-object%;
 
 sylma.explorer.tools.reset();
+var path = layer.parentDirectory ? layer.parentDirectory : '/';
 
-return layer.update({'path' : layer.parentDirectory});
+layer.update({'path' : path});
+
+return false;
 
 ]]></la:event>
           <img src="[$directory]/directory-up.png"/>
@@ -61,12 +67,18 @@ return layer.update({'path' : layer.parentDirectory});
           <le:integer>1</le:integer>
           <li:get-document>
             <li:parse>
-              <le:document>
+              <le:document class="xsl">
                 <la:replace-events>
                   <le:template path="index.xsl">
                     <li:include-externals/>
                   </le:template>
                 </la:replace-events>
+                <li:set-parameter>
+                  <le:argument>directory</le:argument>
+                  <le:string>
+                    <le:parent-directory/>
+                  </le:string>
+                </li:set-parameter>
               </le:document>
             </li:parse>
           </li:get-document>

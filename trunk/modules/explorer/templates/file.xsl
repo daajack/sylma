@@ -17,11 +17,29 @@
       <la:property name="mode">
         <xsl:value-of select="@mode"/>
       </la:property>
-      <la:property name="sylma-update-origin">interface</la:property>
-      <la:property name="sylma-update-path">/update-file</la:property>
+      <la:property name="sylma-update-path">
+        <xsl:value-of select="$directory"/>
+        <xsl:text>/resource</xsl:text>
+      </la:property>
       <div class="resource {name()}">
-        <la:event name="mouseenter"><![CDATA[return sylma.explorer.tools.show(this);]]></la:event>
-        <la:event name="mouseleave"><![CDATA[return sylma.explorer.tools.hide();]]></la:event>
+        <la:event name="mouseenter"><![CDATA[var tools = %ref-object%.rootObject.tools;
+
+if (!tools.isLocked()) return tools.show(this);
+else return false;]]></la:event>
+        <la:event name="mouseleave"><![CDATA[var tools = %ref-object%.rootObject.tools;
+
+if (!tools.isLocked()) return tools.hide();
+return false;]]></la:event>
+        <la:event name="click" limit="self,$.preview,$&gt;span"><![CDATA[var tools = %ref-object%.rootObject.tools;
+
+if (tools.isLocked()) {
+  
+  tools.hide(true);
+  tools.show(this);
+}
+
+return true;
+]]></la:event>
         <div class="preview">
           <input type="hidden"/>
         </div>

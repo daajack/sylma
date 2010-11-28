@@ -4,7 +4,8 @@
     <le:name>Outils des droits</le:name>
   </le:settings>
   <la:object class="menu" name="rights">
-    <div class="tools" id="resource-tools-rights">
+    <form class="tools" id="resource-tools-rights">
+      <la:event name="submit"><![CDATA[return %ref-object%.parentObject.updateRights();]]></la:event>
       <div class="clear-block">
         <label for="resource-owner">Owner :</label>
         <input type="text" name="resource-owner" id="resource-owner"/>
@@ -82,6 +83,12 @@
           </tr>
         </tbody>
       </table>
-    </div>
+      <div class="center">
+        <input type="submit" value="Ok"/>
+        <input type="button" value="Annuler">
+          <la:event name="click"><![CDATA[return %ref-object%.hide();]]></la:event>
+        </input>
+      </div>
+    </form>
   </la:object>
 </le:action>

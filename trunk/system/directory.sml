@@ -14,4 +14,11 @@
       <ls:mode>755</ls:mode>
     </ls:security>
   </file>
+  <file name="allowed-messages-all.xml">
+    <ls:security>
+      <ls:owner>root</ls:owner>
+      <ls:group>0</ls:group>
+      <ls:mode>755</ls:mode>
+    </ls:security>
+  </file>
 </directory>

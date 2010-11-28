@@ -58,7 +58,7 @@
             <le:get-argument name="window-action"/>
           </div>
         </div>
-        <div id="footer">Copyright © 2010 - <a href="[$webmaster-href]"><le:get-settings>infos/webmaster</le:get-settings></a></div>
+        <div id="footer"><a href="http://www.sylma.org">Sylma</a> XML Framework</div>
       </div>
     </body>
   </html>

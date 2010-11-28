@@ -19,14 +19,6 @@
         <le:argument>/explorer.css</le:argument>
       </le:string>
     </li:add-css>
-    <li:add-js>
-      <le:null/>
-      <le:string>
-        <le:argument>SYLMA_EXPLORER_PATH = '</le:argument>
-        <le:directory/>
-        <le:argument>';</le:argument>
-      </le:string>
-    </li:add-js>
   </le:window>
   <la:layer name="explorer" extend-base="sylma.explorer-classes">
     <la:property name="pathInterface">

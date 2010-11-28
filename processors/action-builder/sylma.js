@@ -16,6 +16,11 @@ var sylma = {
     return parseInt(sValue) === 1 ? true : false;
   },
   
+  booltostring : function(bValue) {
+    
+    return bValue ? 'true' : 'false';
+  },
+  
   importNodes : function(mElements) {
     
     if ($type(mElements) == 'array') {
@@ -213,6 +218,7 @@ var sylma = {
                 //sylma.dsp(sPath + ' (' + oParent['sylma-path'] + ') / ' + sMethod);
                 eNode.store('ref-object', oParent); // store parent object in node
                 //sylma.dsp(method['path-node'] + ' :: ' + method['id-node']);
+                
                 if (method.limit) {
                   
                   eNode.addEvent(method.name, this.limitFunc.create({
@@ -264,8 +270,9 @@ var sylma = {
   delayFunc : function(e, sMethod, sTimer, iDelay, oParent) {
     
     if (!oParent.timer) oParent.timer = [];
-    
     oParent.timer[sTimer] = sylma.methods[sMethod].delay(iDelay, this, e);
+    
+    return true;
   },
   
   limitFunc : function(e, sMethod, sTargets) {
@@ -276,26 +283,43 @@ var sylma = {
     
     for (var i = 0; i < aTargets.length; i++) {
       //alert(sTarget);
-      switch (aTargets[i].replace(/^\s+/g,'').replace(/\s+$/g,'')) {
-        
-        case 'self' : oTarget = this; break;
-        case 'first' : oTarget = this.getFirst(); break;
-      }
+      var sPath = aTargets[i].replace(/^\s+/g,'').replace(/\s+$/g,'');
       
-      if (e.target === oTarget) {
+      if (sPath[0] == '$') {
+        //sylma.dsp(new Date())
         
-        bResult = true;
-        break;
+        if (sPath[1] == '>') var aChildren = this.getChildren(sPath.substring(2));
+        else var aChildren = this.getElements(sPath.substring(1));
+        
+        aChildren.each(function(eNode) {
+          
+          if (!bResult && eNode === e.target) bResult = true;
+        });
+        
+        if (bResult) break;
+        
+      } else {
+        
+        switch (sPath) {
+          
+          case 'self' : oTarget = this; break;
+          case 'first' : oTarget = this.getFirst(); break;
+        }
+        
+        if (e.target === oTarget) {
+          
+          bResult = true;
+          break;
+        }
       }
     }
     
     if (bResult) {
       
       var oBounded = sylma.methods[sMethod].bind(this, e);
-      oBounded();
-    }
-    
-    return true;
+      return oBounded();
+      
+    } else return true;
   },
 
   createXML : function(xml, parent) {
@@ -670,12 +694,21 @@ sylma.classes.layer = new Class({
   update : function(oArguments, oOptions) {
     
     if (!oOptions) oOptions = {};
+    
     oOptions = $extend({
       'path' : this.getPath(),
       'arguments' : oArguments
     }, oOptions);
     
     return this.replace(oOptions);
+  },
+  
+  remove : function() {
+    
+    var oElement = this.node;
+    
+    oElement.fade('out').get('tween').chain(function() { oElement.dispose(); });
+    eval('delete(this.parentObject.' + this['sylma-path'] + ')');
   },
   
   'clearTimer' : function(sName) {
@@ -721,6 +754,7 @@ sylma.classes.layer = new Class({
 sylma.classes.menu = new Class({
   
   Extends : sylma.classes.layer,
+  isOpen : false,
   
   valueOf : function() {
     

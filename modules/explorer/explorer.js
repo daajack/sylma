@@ -10,7 +10,10 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
     
     replace : function(sPath) {
       
-      this.parent(this.getPath(), 'resources[\'' + sPath + '\']', {'resource' : sPath});
+      this.parent({
+        'path' : this.getPath(),
+        'method' : 'post',
+        'arguments' : {'resource' : sPath, 'directory' : sylma.booltostring(this.isDirectory())}});
     },
     
     update : function() {
@@ -38,10 +41,23 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
     
     'hide' : function(bQuick) {
       
-      this.updateRights();
+      // this.updateRights();
       this.clearSub(bQuick);
       
       return this.parent(bQuick);
+    },
+    
+    'isLocked' : function() {
+      
+      for (var i in this.sub) {
+        
+        if (this.sub[i].isOpen) {
+          //sylma.dsp(i);
+          return true;
+        }
+      }
+      
+      return false;
     },
     
     clearSub : function(bQuick) {
@@ -82,7 +98,9 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
     
     updateRights : function() {
       
-      if (this.sub.rights.isOpen) {
+      if (this.resource) {
+        
+        this.hide();
         
         var oResource = this.resource;
         
@@ -124,11 +142,9 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
             'data' : oArguments,
             'onSuccess' : function(sResult, oResult) {
               
-              oCaller.onUpdateRights(this.parseAction(oResult), oCaller.resource, oArguments);
+              oCaller.onUpdateRights(this.parseAction(oResult), oResource, oArguments);
             }
-          });
-          
-          return oRequest.send();;
+          }).send();
         }
       }
       
@@ -141,10 +157,11 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
       
       if (bResult) {
         
+        this.hide();
+        
         oResource.owner = oArguments.owner;
         oResource.group = oArguments.group;
         oResource.mode = oArguments.mode;
-        
         //this.resetParent();
       }
     },
@@ -207,10 +224,16 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
       
       var sPath = mResult.get('text');
       
-      if (sPath) oResource.replace(sPath);
+      if (sPath) {
+        
+        this.hide();
+        oResource.replace(sPath);
+      }
     },
     
     deleteResource : function() {
+      
+      var oResource = this.resource;
       
       var oArguments = {
         'resource' : this.resource.path,
@@ -220,7 +243,7 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
       var oCaller = this;
       var oRequest = new sylma.classes.request({
         
-        'url' : sylma.explorer.pathInterface + oCaller.pathDelete + '.action',
+        'url' : oCaller.rootObject.pathInterface + oCaller.pathDelete + '.action',
         'data' : oArguments,
         'onSuccess' : function(sResult, oResult) {
           
@@ -234,7 +257,11 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
     
     onDeleteResource : function(mResult, oResource) {
       
-      if (strtobool(mResult.get('text'))) oResource.remove();
+      if (sylma.inttobool(mResult.get('text'))) {
+        
+        this.hide();
+        oResource.remove();
+      }
     }
     
   })
@@ -246,6 +273,7 @@ $extend(oExplorerClasses, {
     
     Extends: oExplorerClasses.resource,
     isDirectory : function() { return 0; }
+    
   }),
   
   'directory' : new Class({

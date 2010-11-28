@@ -180,7 +180,7 @@ class XML_Database {
   public function __destruct() {
     
     if ($this->oSession && !$this->getSession()->disconnect()) {
-      dspm(xt('Erreur pendant la déconnexion : %s', $this->getError()), 'db/error');
+      //dspm(xt('Erreur pendant la déconnexion : %s', $this->getError()), 'db/error');
     }
   }
 }

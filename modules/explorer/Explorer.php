@@ -2,16 +2,6 @@
   
 class Explorer {
   
-  public function updateFile() {
-    
-    $sPath = array_val('resource', $_POST);
-    
-    $oAction = new XML_Action(extractDirectory(__file__).'/resource.eml');
-    $oAction->getPath()->pushIndex(Controler::getFile($sPath));
-    
-    return $oAction;
-  }
-  
   public function addDirectory() {
     
     $mResult = null;

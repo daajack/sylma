@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<le:action xmlns:le="http://www.sylma.org/execution" xmlns:li="http://www.sylma.org/interface" xmlns:la="/sylma/processors/action-builder/schema" xmlns="http://www.w3.org/1999/xhtml">
+<le:action xmlns:le="http://www.sylma.org/execution" xmlns:li="http://www.sylma.org/interface" xmlns:la="http://www.sylma.org/processors/action-builder" xmlns="http://www.w3.org/1999/xhtml">
   <le:settings>
     <le:name>Mozaic</le:name>
     <le:argument required="false" format="php-string" name="path" allow-empty="true">
@@ -16,14 +16,14 @@
         </le:user>
       </le:default>
     </le:argument>
-    <le:processor path="/sylma/processors/action-builder" namespace="/sylma/processors/action-builder/schema"/>
+    <le:processor path="/sylma/processors/action-builder" namespace="http://www.sylma.org/processors/action-builder"/>
     <le:path run="true">
       <li:get-directory>
         <li:get-parent set-variable="directory"/>
       </li:get-directory>
     </le:path>
   </le:settings>
-  <la:layer name="mozaic" extend-base="sylma.explorer-classes">
+  <la:layer name="mozaic" extend-base="sylma.explorer-classes" class="mozaic">
     <la:property name="sylma-send-method">get</la:property>
     <la:property name="parentDirectory">
       <le:string>

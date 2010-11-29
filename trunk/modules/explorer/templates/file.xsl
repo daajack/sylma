@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:la="/sylma/processors/action-builder/schema" xmlns="http://www.w3.org/1999/xhtml" version="1.0">
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:la="http://www.sylma.org/processors/action-builder" xmlns="http://www.w3.org/1999/xhtml" version="1.0">
   <xsl:template name="file">
     <la:layer key="{@full-path}" class="file">
       <la:property name="path">
@@ -36,13 +36,24 @@ if (tools.isLocked()) {
   
   tools.hide(true);
   tools.show(this);
+  
+  return false;
 }
 
-return true;
-]]></la:event>
-        <div class="preview">
-          <input type="hidden"/>
-        </div>
+return true;]]></la:event>
+        <xsl:choose>
+          <xsl:when test="contains('jpg,jpeg,gif,png', @extension)">
+            <la:property name="isImage">true</la:property>
+            <a rel="lightbox[group]" href="{@full-path}" class="preview clear-block">
+              <img src="{@full-path}?width=96&amp;height=50"/>
+            </a>
+          </xsl:when>
+          <xsl:otherwise>
+            <div class="preview">
+              <input type="hidden"/>
+            </div>
+          </xsl:otherwise>
+        </xsl:choose>
         <span>
           <xsl:value-of select="@name"/>
         </span>

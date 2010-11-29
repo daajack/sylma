@@ -14,4 +14,18 @@
       <ls:mode>744</ls:mode>
     </ls:security>
   </file>
+  <file name="list.css">
+    <ls:security xmlns:ls="http://www.sylma.org/security">
+      <ls:owner>root</ls:owner>
+      <ls:group>users</ls:group>
+      <ls:mode>740</ls:mode>
+    </ls:security>
+  </file>
+  <file name="list.js">
+    <ls:security xmlns:ls="http://www.sylma.org/security">
+      <ls:owner>root</ls:owner>
+      <ls:group>users</ls:group>
+      <ls:mode>740</ls:mode>
+    </ls:security>
+  </file>
 </directory>

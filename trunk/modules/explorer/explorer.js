@@ -4,23 +4,107 @@ var sExplorerClasses = 'explorer-classes';
 
 var oExplorerClasses = sylma[sExplorerClasses] = {
   
-  'resource' : new Class({
+  'explorer' : new Class({
+    
+    Extends : sylma.classes.layer,
+    bUploader : false,
+    
+    show : function() {
+      
+      this.mozaic.show();
+      this.parent();
+    },
+    
+    hide : function() {
+      
+      this.mozaic.hide();
+      this.parent();
+    },
+    
+    addDirectory : function(oForm) {
+      
+      var oArguments = {
+        'directory' : this.mozaic.currentDirectory,
+        'name' : oForm.getElement('input[name=resource-name]').get('value')
+      };
+      
+      var self = this;
+      var oRequest = new sylma.classes.request({
+        
+        'url' : self.pathInterface + '/add-directory.action',
+        'data' : oArguments,
+        'onSuccess' : function(sResult, oResult) {
+          
+          this.parseAction(oResult)
+          self.mozaic.update();
+        }
+        
+      }).send();
+      
+      return false;
+    },
+    
+    toggleUploader : function() {
+      
+      if (!this.bUploader) {
+        
+        //var iWidth = 600;
+        var iWidth = this.node.getSize().x - 20;
+        var iHeight = 250;
+        
+        sylma.load({
+          'path' : '/modules/jumploader',
+          'method' : 'get',
+          'arguments' : 'path=' + this.mozaic.currentDirectory + '&' + iWidth + '&' + iHeight,
+          'html' : this.node,
+          'onSuccess' : function(oResult) {
+            
+            var myFx = new Fx.Scroll(window).toElement(oResult);
+          }
+        });
+        
+        $('jumploader-caller').set('html', 'Fermer le chargeur');
+        
+        this.bUploader = true;
+        
+      } else {
+        
+        $('jumploader-caller').set('html', 'Ajouter des fichiers');
+        $('jumploader').slide('out').get('slide').chain(function() { $('jumploader').dispose(); });
+        
+        this.bUploader = false;
+      }
+    }
+  }),
+  
+  'mozaic' : new Class({
     
     Extends : sylma.classes.layer,
     
-    replace : function(sPath) {
+    'initialize' : function(oArgs) {
       
-      this.parent({
-        'path' : this.getPath(),
-        'method' : 'post',
-        'arguments' : {'resource' : sPath, 'directory' : sylma.booltostring(this.isDirectory())}});
+      this.parent(oArgs);
+      //Slimbox.scanPage();
+      this.node.getElements('a').filter(function(el) {
+        return el.rel && el.rel.test(/^lightbox/i);
+      }).slimbox({}, null, function(el) {
+        return (this == el) || ((this.rel.length > 8) && (this.rel == el.rel));
+      });
     },
     
-    update : function() {
+    update : function(oArguments) {
       
-      this.parent({'resource' : this.path});
+      var self = this;
+      
+      oArguments = $extend({path : this.currentDirectory}, oArguments);
+      
+      this.parent(oArguments, {
+        'onLoad' : function() {
+          
+          Slimbox.scanPage();
+          self.parentObject.center();
+        }});
     }
-    
   }),
   
   'tools' : new Class({
@@ -264,6 +348,43 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
       }
     }
     
+  }),
+  
+  'resource' : new Class({
+    
+    Extends : sylma.classes.layer,
+    
+    replace : function(sPath) {
+      
+      var options = {
+        'path' : this.getPath(),
+        'method' : 'post',
+        'arguments' : {
+          'resource' : sPath,
+          'directory' : sylma.booltostring(this.isDirectory())
+        }
+      }
+      
+      if (this.isImage) {
+        
+        options['onSuccess'] = function(node) {
+          
+          node.getElements('a').filter(function(el) {
+            return el.rel && el.rel.test(/^lightbox/i);
+          }).slimbox({}, null, function(el) {
+            return (this == el) || ((this.rel.length > 8) && (this.rel == el.rel));
+          });
+        };
+      }
+      
+      return this.parent(options);
+    },
+    
+    update : function() {
+      
+      return this.parent({'resource' : this.path});
+    }
+    
   })
 };
 
@@ -271,9 +392,13 @@ $extend(oExplorerClasses, {
   
   'file' : new Class({
     
-    Extends: oExplorerClasses.resource,
-    isDirectory : function() { return 0; }
+    Extends : oExplorerClasses.resource,
+    isImage : false,
     
+    isDirectory : function() {
+      
+      return 0;
+    },
   }),
   
   'directory' : new Class({

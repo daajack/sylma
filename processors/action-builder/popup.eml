@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<le:action xmlns:le="http://www.sylma.org/execution" xmlns:li="http://www.sylma.org/interface" xmlns="http://www.w3.org/1999/xhtml" xmlns:la="/sylma/processors/action-builder/schema">
+<le:action xmlns:le="http://www.sylma.org/execution" xmlns:li="http://www.sylma.org/interface" xmlns="http://www.w3.org/1999/xhtml" xmlns:la="http://www.sylma.org/processors/action-builder">
   <le:settings>
     <le:name>Popup AJAX</le:name>
-    <le:processor path="/sylma/processors/action-builder" namespace="/sylma/processors/action-builder/schema"/>
+    <le:processor path="/sylma/processors/action-builder" namespace="http://www.sylma.org/processors/action-builder"/>
   </le:settings>
   <div class="sylma-window-head">
     <h4>

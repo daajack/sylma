@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns="http://www.w3.org/1999/xhtml" xmlns:func="http://exslt.org/functions" xmlns:lc="http://www.sylma.org/schemas" xmlns:lx="http://ns.sylma.org/xslt" xmlns:dbx="http://www.sylma.org/modules/dbx" version="1.0" extension-element-prefixes="func lx">
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns="http://www.w3.org/1999/xhtml" xmlns:func="http://exslt.org/functions" xmlns:lc="http://www.sylma.org/schemas" xmlns:lx="http://ns.sylma.org/xslt" xmlns:dbx="http://www.sylma.org/modules/dbx" xmlns:la="http://www.sylma.org/processors/action-builder" version="1.0" extension-element-prefixes="func lx">
   <xsl:import href="../../schemas/functions.xsl"/>
   <xsl:import href="/sylma/xslt/string.xsl"/>
   <xsl:param name="model"/>
@@ -29,17 +29,20 @@
     <xsl:param name="order-dir"/>
     <xsl:variable name="element" select="/*/*[1]/*[local-name() = current()/@name]"/>
     <th>
-      <a>
-        <xsl:attribute name="href">
-          <xsl:value-of select="concat($module, '/admin/list?page=1&amp;order=', @name)"/>
+      <la:layer key="{@name}">
+        <la:property name="element">
+          <xsl:value-of select="@name"/>
+        </la:property>
+        <a href="#">
           <xsl:if test="$order = @name">
-            <xsl:value-of select="concat('&amp;order-dir=', $order-dir)"/>
+            <xsl:attribute name="class">current</xsl:attribute>
           </xsl:if>
-        </xsl:attribute>
-        <xsl:if test="$element">
-          <xsl:value-of select="lx:first-case(lc:get-title($element))"/>
-        </xsl:if>
-      </a>
+          <la:event name="click"><![CDATA[return %ref-object%.rootObject.updateOrder(%ref-object%.element);]]></la:event>
+          <xsl:if test="$element">
+            <xsl:value-of select="lx:first-case(lc:get-title($element))"/>
+          </xsl:if>
+        </a>
+      </la:layer>
     </th>
   </xsl:template>
 </xsl:stylesheet>

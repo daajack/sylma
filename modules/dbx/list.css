@@ -1,11 +1,5 @@
 /* Document CSS */
 
-.pager {
-  text-align: center;
-  margin-top: 1em;
-  font-size: 1.2em;
-}
-
 .actions {
   padding: 1em;
 }
@@ -27,4 +21,47 @@
   border-left-color: #eee;
   text-decoration: none;
   color: black;
+}
+
+.list th a.current {
+  color: #ec008c;
+}
+
+.pager {
+  text-align: center;
+  margin: 0.5em 0 0.5em;
+  /*font-size: 1.2em;*/
+}
+
+.pager > div {
+  width: 135px;
+  margin: auto;
+}
+
+.button {
+  color: white;
+  background-color: #a6c6cb;
+}
+
+.button a {
+  color: white;
+}
+
+.button a:hover { color: #ec008c; }
+
+.pager-current,
+.pager-total {
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+span.button {
+  opacity: 0.5;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+a.button:hover {
+  color: white !important;
+  background-color: #ec008c;
 }

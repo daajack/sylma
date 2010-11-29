@@ -998,7 +998,8 @@ class XSL_Document extends XML_Document {
       
       if ($bXML) {
         
-        $mResult = new XML_Document($sResult);
+        $mResult = strtoxml(substr($sResult, 22), array(), true); //, array(), true
+        if ($mResult && $mResult->length == 1) $mResult = new XML_Document($mResult);
         
         //if ($mResult->isEmpty()) Controler::addMessage(array(t('Un problème est survenu lors de la transformation XSL !'),new HTML_Hr,$sResult), 'xml/warning');
         

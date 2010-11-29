@@ -127,9 +127,7 @@ class XML_Database {
     if ($sResult = $this->query($sQuery, $aNamespaces)) {
       
       $mResult = strtoxml($sResult);
-      //dspf($sResult);
-      //$mResult = new XML_Document($sResult);
-      // if (!$bDocument) $mResult = $mResult->getRoot();
+      if ($bDocument) $mResult = new XML_Document($mResult);
     }
     
     return $mResult;

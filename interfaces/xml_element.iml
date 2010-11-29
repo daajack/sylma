@@ -16,14 +16,14 @@
   <method path="view" name="view" return-default="true"/>
   <method path="get-children" name="getChildren" return-default="true"/>
   <method return-default="true" path="has-children" name="hasChildren"/>
-  <method path="get" name="get" output="XML_Element">
+  <method path="get" name="get" output="XML_Element" return-default="true">
     <argument name="path" format="php-string"/>
     <argument name="namespaces" format="php-array" required="false"/>
   </method>
   <method path="get-first" name="getFirst" output="XML_Element"/>
   <method path="get-last" name="getLast" output="XML_Element"/>
-  <method path="read" name="read" output="php-string">
-    <argument name="path" format="php-string"/>
+  <method path="read" name="read" output="php-string" return-default="true">
+    <argument name="path" format="php-string" required="false"/>
     <argument name="namespaces" format="php-array" required="false"/>
   </method>
   <method path="query" name="query" output="XML_NodeList">

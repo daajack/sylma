@@ -1,7 +1,7 @@
 <?php
 
 define('SYLMA_PATH_ACTIONBUILDER', '/sylma/processors/action-builder');
-define('SYLMA_NS_ACTIONBUILDER', SYLMA_PATH_ACTIONBUILDER.'/schema');
+define('SYLMA_NS_ACTIONBUILDER', 'http://www.sylma.org/processors/action-builder');
 
 class ActionBuilder extends XML_Processor  {
   
@@ -33,9 +33,11 @@ class ActionBuilder extends XML_Processor  {
     
     if (in_array($oElement->getName(true), array('layout', 'layer'))) {
       
-      if (!$sPath = $oElement->getAttribute('sylma-update-path')) $sPath = $this->getAction()->getPath()->getActionPath();
-      
-      $oElement->addNode('property', $sPath, array('name' => 'sylma-update-path'), SYLMA_NS_ACTIONBUILDER);
+      if (!$oElement->get("la:property[@name='sylma-update-path']", $this->aNS)) {
+        
+        $sPath = $this->getAction()->getPath()->getActionPath();
+        $oElement->addNode('property', $sPath, array('name' => 'sylma-update-path'), SYLMA_NS_ACTIONBUILDER);
+      }
     }
     
     // not root objects

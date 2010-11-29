@@ -343,7 +343,8 @@ class DBX_Module extends Module {
   public function run(Redirect $oRedirect, $sAction, $aOptions = array()) {
     
     $mResult = null;
-    $sList = $this->getDirectory().'/admin/list';
+    $sAdmin = $this->getDirectory().'/admin';
+    $sList = $sAdmin.'/list';
     
     $this->switchDirectory();
     
@@ -431,25 +432,17 @@ class DBX_Module extends Module {
         
       break;
       
+      case 'simple-list' :
+        
+        $this->loadView($oRedirect, $aOptions);
+        $mResult = $this->getList($sAdmin.'/simple-list', 'simple-list');
+        
+      break;
+      
       case 'list' :
         
-        $sDocument = 'dbx-list-headers'.$this->getOption('database/name');
-        
-        // if ($sHeaders = array_val($sDocument, $_SESSION)) $this->oHeaders = new XML_Document($sHeaders);
-        
-        $iPage = array_val('page', $aOptions);
-        $iPageSize = array_val('size', $aOptions, 15);
-        $sOrder = array_val('order', $aOptions); //, $this->getFullPrefix().'date-publish'
-        $sOrderDir = array_val('order-dir', $aOptions, 'a');
-        
-        $this->setHeader('page', ($iPage ? $iPage : 1), (bool) $iPage);
-        $this->setHeader('page-size', $iPageSize);
-        if ($oOrder = $this->setHeader('order', $sOrder, true)) $oOrder->setAttribute('dir', $sOrderDir);
-        // $this->setHeader('where', $sWhere);
-        
-        $_SESSION[$sDocument] = (string) $this->getHeaders();
-        
-        $mResult = $this->getList($sList, $iPage, $iPageSize, $sOrder, $sOrderDir);
+        $this->loadView($oRedirect, $aOptions);
+        $mResult = $this->getList($sAdmin.'/simple-list');
         
       break;
       
@@ -489,18 +482,37 @@ class DBX_Module extends Module {
     
     $this->switchDirectory();
     
-    if (!$mResult instanceof Redirect && $sAction != 'list' && !$this->getOption('no-action', false)) {
+    /*if (!$mResult instanceof Redirect && $sAction != 'list' && !$this->getOption('no-action', false)) {
       
       $mResult = new HTML_Div($mResult);
       $mResult->shift(new HTML_A($sList, t('< Retour à la liste'), array('class' => 'dbx-link-list')));
       
       $mResult = $mResult->getChildren();
-    }
+    }*/
     
     return $mResult;
   }
   
-  public function getList($sPath) {
+  function loadView(Redirect $oRedirect, array $aOptions) {
+    
+    $sDocument = 'dbx-list-headers'.$this->getOption('database/name');
+    
+    // if ($sHeaders = array_val($sDocument, $_SESSION)) $this->oHeaders = new XML_Document($sHeaders);
+    
+    $iPage = array_val('page', $aOptions);
+    $iPageSize = array_val('size', $aOptions, 15);
+    $sOrder = array_val('order', $aOptions); //, $this->getFullPrefix().'date-publish'
+    $sOrderDir = array_val('order-dir', $aOptions, 'a');
+    
+    $this->setHeader('page', ($iPage ? $iPage : 1), (bool) $iPage);
+    $this->setHeader('page-size', $iPageSize);
+    if ($oOrder = $this->setHeader('order', $sOrder, true)) $oOrder->setAttribute('dir', $sOrderDir);
+    // $this->setHeader('where', $sWhere);
+    
+    $_SESSION[$sDocument] = (string) $this->getHeaders();
+  }
+  
+  public function getList($sPath, $sAction = 'list') {
     
     $mResult = null;
     
@@ -528,20 +540,15 @@ class DBX_Module extends Module {
         'prefix' => $this->getFullPrefix()));
       
       $sQuery = $oModel->parseXSL($oTemplate, false);
+    
+      $oPath = new XML_Path($this->getDirectory().'/'.$sAction, array(
+        'o-model' => $oModel,
+        'datas' => $this->get($sQuery, true),
+        'path-add' => $this->getExtendDirectory().'/admin/add',
+        'path-list' => $sPath,
+        'module' => (string) $this->getExtendDirectory()));
       
-      if ($oFile = $oModel->saveTemp()) {
-        
-        $oPath = new XML_Path($this->getDirectory().'/list', array(
-          'o-model' => $oModel,
-          's-model' => $oFile->getSystemPath(),
-          'query' => $sQuery,
-          'xquery-headers' => $this->getNamespaces(),
-          'path-add' => $this->getExtendDirectory().'/admin/add',
-          'path-list' => $sPath,
-          'module' => (string) $this->getExtendDirectory()));
-        
-        $mResult = new XML_Action($oPath);
-      }
+      $mResult = new XML_Action($oPath);
       
       if ($mResult) $mResult = $mResult->parse(); // parse to keep files in process before __destruct()
     }
@@ -645,7 +652,8 @@ class DBX_Module extends Module {
   
   public function getNamespaces($aNamespaces = array()) {
     
-    return array_merge($this->getNS(), $aNamespaces);
+    if ($aNamespaces) return array_merge($this->getNS(), $aNamespaces);
+    else return $this->getNS();
   }
   
   public function load($sID) { // TOUSE ?
@@ -653,7 +661,7 @@ class DBX_Module extends Module {
     return $this->getDB()->load($sID);
   }
   
-  public function get($sQuery, array $aNamespaces = array(), $bDocument = false) {
+  public function get($sQuery, $bDocument = false, array $aNamespaces = array()) {
     
     return $this->getDB()->get($sQuery, $this->getNamespaces($aNamespaces), $bDocument);
   }

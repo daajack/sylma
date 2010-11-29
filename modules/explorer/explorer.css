@@ -8,6 +8,10 @@
   overflow: scroll;
 }
 
+a img {
+  border: 0;
+}
+
 /* Resources */
 
 .resource {
@@ -35,6 +39,17 @@
 
 .resource.file .preview { background: url(file.png) no-repeat 50%; }
 
+.resource.file a.preview {
+  
+  border: 1px solid #ddd;
+  padding: 2px;
+  width: 96px;
+  height:50px;
+  margin-bottom:4px;
+  -moz-border-radius: 5px;
+  text-decoration: none;
+}
+
 /*.resource .tools { left: 30%; top: -60px; width: 0; }*/
 .resource > span {
   margin: 0 auto 0 auto;
@@ -57,6 +72,7 @@
   border: 1px solid gray;
   -moz-border-radius: 2px;
   cursor: pointer;
+  background-color: white;
 }
 
 #resource-tools > .button:hover { color: orange; border-color: #aaa; }
@@ -70,8 +86,10 @@
   clear: none;
   cursor: default;
   text-align: center;
+  margin: 3px;
 }
 
+/*
 #explorer .tools {
   display: inline;
   padding: 5px;
@@ -88,6 +106,24 @@
   position: absolute;
   left: 18px;
   margin-top:-1px;
+}
+*/
+
+.sylma-tools {
+  position: absolute;
+  left: 18px;
+  display: inline;
+  padding: 5px;
+  margin-top: -1px;
+  border: 1px solid gray;
+  visibility: hidden;
+  opacity: 0.01;
+  color: black;
+  cursor: default;
+  -moz-border-radius: 5px;
+  background-color: #FFE9AF;
+  -moz-box-shadow: 0 4px 7px rgba(0, 0, 0, 0.2);
+  z-index: 10;
 }
 
 #explorer input[type=submit] {
@@ -122,16 +158,6 @@
 /*#resource-tools-name input[type=text] { width: 80px; }
 #resource-tools-name input[type=submit] { float: right; }*/
 
-/* Delete */
-
-#resource-tools-delete {
-  width: 200px;
-}
-
-#resource-tools div.center {
-  margin-top: 5px;
-}
-
 /* Rights */
 
 #resource-tools-rights input[type="text"] {
@@ -148,3 +174,41 @@
 #resource-tools-rights > div { margin-bottom: 2px; }
 #resource-tools-rights th:hover { cursor: pointer; color: #bbb; }
 
+/* Delete */
+
+#resource-tools-delete {
+  width: 140px;
+}
+
+#resource-tools div.center {
+  margin-top: 5px;
+}
+
+/* Add */
+
+#resource-tools-add {
+  
+  padding: 10px;
+  padding-top: 15px;
+  text-align: center;
+}
+
+#resource-tools-add .sylma-tools {
+  left: 5em;
+  margin-top: -50px;
+}
+
+#resource-tools-add > a {
+  
+  padding: 5px;
+  margin-right: 1em;
+  border: 1px solid gray;
+  -moz-border-radius: 5px;
+  background-color: #eee;
+  text-decoration: none;
+}
+
+#resource-tools-add > a:hover {
+  background-color: #ddd;
+  color: black;
+}

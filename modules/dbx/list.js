@@ -8,7 +8,7 @@ sylma['dbx-classes'] = {
     
     updateOrder : function(sOrder) {
       
-      var options = {'order' : sOrder};
+      var options = {'order' : sOrder, 'page' : 1};
       
       if (sOrder == this.order) {
         

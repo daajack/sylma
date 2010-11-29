@@ -493,11 +493,11 @@ class DBX_Module extends Module {
     return $mResult;
   }
   
-  function loadView(Redirect $oRedirect, array $aOptions) {
+  private function loadView(Redirect $oRedirect, array $aOptions) {
     
     $sDocument = 'dbx-list-headers'.$this->getOption('database/name');
     
-    // if ($sHeaders = array_val($sDocument, $_SESSION)) $this->oHeaders = new XML_Document($sHeaders);
+    if ($sHeaders = array_val($sDocument, $_SESSION)) $this->oHeaders = new XML_Document($sHeaders);
     
     $iPage = array_val('page', $aOptions);
     $iPageSize = array_val('size', $aOptions, 15);

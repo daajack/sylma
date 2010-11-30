@@ -540,13 +540,17 @@ class DBX_Module extends Module {
         'prefix' => $this->getFullPrefix()));
       
       $sQuery = $oModel->parseXSL($oTemplate, false);
-    
+      
+      $oTemplateExt = $this->getOption('template-list', false);
+      if ($oTemplateExt) $oTemplateExt = $oTemplateExt->getFirst();
+      
       $oPath = new XML_Path($this->getDirectory().'/'.$sAction, array(
         'o-model' => $oModel,
         'datas' => $this->get($sQuery, true),
         'path-add' => $this->getExtendDirectory().'/admin/add',
         'path-list' => $sPath,
-        'module' => (string) $this->getExtendDirectory()));
+        'module' => (string) $this->getExtendDirectory(),
+        'template-extension' => $oTemplateExt));
       
       $mResult = new XML_Action($oPath);
       

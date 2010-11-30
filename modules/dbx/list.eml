@@ -7,6 +7,7 @@
     <le:argument format="php-string" name="path-add" set-variable="path-add"/>
     <le:argument format="php-string" name="path-list"/>
     <le:argument format="XML_Document" name="datas"/>
+    <le:argument name="template-extension" required="false"/>
     <le:get-argument name="o-model">
       <li:get set-variable="order">
         <le:argument>*[3]/dbx:order</le:argument>
@@ -62,6 +63,7 @@
         <le:get-argument le:name="datas" name="datas"/>
         <le:get-argument le:name="module" name="module"/>
         <le:get-argument le:name="path-list" name="path-list"/>
+        <le:get-argument le:name="template-extension" name="template-extension"/>
       </le:action>
     </table>
   </la:layer>

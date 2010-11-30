@@ -21,4 +21,11 @@
       <ls:mode>755</ls:mode>
     </ls:security>
   </file>
+  <file name="firefox.jpg">
+    <ls:security xmlns:ls="http://www.sylma.org/security">
+      <ls:owner>root</ls:owner>
+      <ls:group>0</ls:group>
+      <ls:mode>744</ls:mode>
+    </ls:security>
+  </file>
 </directory>

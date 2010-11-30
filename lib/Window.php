@@ -563,9 +563,15 @@ class Xml extends XML_Document implements Main {
       $oView->formatOutput();
       
       return $oView->display(true);
+      
+    } else if ($this->sMode == 'htm') {
+      
+      return $this->display(true, false);
+      
+    } else {
+      
+      return parent::__toString();
     }
-    
-    else return parent::__toString();
   }
 }
 

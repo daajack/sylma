@@ -11,6 +11,7 @@
     <argument format="Redirect" name="redirect"/>
     <argument format="php-string" name="action"/>
     <argument required="false" format="php-array" name="options"/>
+    <argument required="false" format="XML_Element" name="o-options"/>
   </method>
   <method return-default="true" ls:owner="root" ls:group="users" ls:mode="710" path="list" name="getList">
     <argument format="Redirect" name="redirect"/>

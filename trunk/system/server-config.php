@@ -32,6 +32,7 @@ define('ERROR_LEVEL', E_ALL); // or E_ALL ^ E_WARNING ^ E_NOTICE
 define('SYLMA_PATH_SETTINGS',   '/config/root.xml');
 
 define('SYLMA_ADMIN_EXTENSION',   '.sylma');
+define('SYLMA_FORM_REDIRECT_EXTENSION',   '.redirect');
 
 define('SYLMA_RESULT_LIFETIME', 30); // seconds, JS results stored in the $_SESSION, read in AJAX
 define('SYLMA_ENCODING_CHECK', true);

@@ -340,11 +340,13 @@ class DBX_Module extends Module {
   
   /*** Actions ***/
   
-  public function run(Redirect $oRedirect, $sAction, $aOptions = array()) {
+  public function run(Redirect $oRedirect, $sAction, $aOptions = array(), XML_Element $oOptions = null) {
     
     $mResult = null;
     $sAdmin = $this->getDirectory().'/admin';
     $sList = $sAdmin.'/list';
+    
+    if ($oOptions) $this->getHeaders()->shift($oOptions->getChildren());
     
     $this->switchDirectory();
     
@@ -366,12 +368,12 @@ class DBX_Module extends Module {
             dspm(xt('Aucun modèle chargé pour %s', view($oValues)), 'action/error');
             
           } else {
-            
+            // dspf($oModel);
             // $this->buildRefs($oModel, true);
             
             $mResult = $this->runAction('form', array(
               'model' => $oModel,
-              'action' => $this->getPath()."/edit-do/$sID.redirect",
+              'action' => $this->getPath()."/edit-do/$sID".SYLMA_FORM_REDIRECT_EXTENSION,
               'template-extension' => $this->getTemplateExtension()));
             }
         }
@@ -405,7 +407,7 @@ class DBX_Module extends Module {
           // dspf($oModel);
           $oPath = new XML_Path($this->getDirectory().'/form.eml', array(
             'model' => $oModel,
-            'action' => $sPath.'.redirect',
+            'action' => $sPath.SYLMA_FORM_REDIRECT_EXTENSION,
             'template-extension' => $this->getTemplateExtension()), true, false); //.redirect
           
           $mResult = new XML_Action($oPath);

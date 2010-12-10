@@ -47,7 +47,7 @@ class XML_Document extends DOMDocument {
   
   private function setMode($iMode) {
     
-    $this->iMode = in_array($iMode, array(MODE_EXECUTION, MODE_WRITE, MODE_READ)) ? $iMode : MODE_READ;
+    $this->iMode = $iMode && in_array($iMode, array(MODE_EXECUTION, MODE_WRITE, MODE_READ)) ? $iMode : MODE_READ;
   }
   
   public function setPrefix($sPrefix, $sNamespace, $bDebug = true) {

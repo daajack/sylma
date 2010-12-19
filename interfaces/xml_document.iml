@@ -43,6 +43,7 @@
     <argument name="messages" format="php-boolean" required="false"/>
     <argument name="load-refs" format="php-boolean" required="false"/>
   </method>
+  <method path="include-externals" name="includeExternals"/>
   <method path="view" name="view" return-default="true">
     <argument name="inline" format="php-boolean" required="false"/>
   </method>

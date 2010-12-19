@@ -22,5 +22,4 @@
   <method path="include-external" name="includeExternal">
     <argument name="template" format="XSL_Document"/>
   </method>
-  <method path="include-externals" name="includeExternals"/>
 </class>

@@ -249,7 +249,8 @@ class XML_Action extends XML_Document {
       
     } else if (!$oMethod = $oInterface->get("ns:method[@path='$sActionMethod']")) {
       
-      dspm(array(xt('Méthode "%s" inexistante dans l\'interface "%s"', new HTML_Strong($oElement->getName(true)), new HTML_Strong($oInterface->read('ns:name'))), $oElement->messageParse()), 'action/warning');
+      $this->dspm(xt('Méthode %s inexistante dans l\'interface %s',
+        view($oElement), $oInterface->getFile()->parse()), 'action/warning');
       
     } else {
       

@@ -581,6 +581,7 @@ class DBX_Module extends Module {
         $sParent = nonull_val($this->readOption('database/insert-path', false), $this->readOption('database/parent'));
         
         // if ($oFile = $oValues->saveTemp()) $this->getDB()->run("add to {$this->getParent()} {$oFile->getSystemPath()}");
+        
         if ($this->insert($oValues->display(true, false), $this->getCollection($sParent))) {
           
           dspm(t('Elément ajouté'), 'success');

@@ -17,7 +17,7 @@ class XSD_Parser extends Module {
   private $iID = 1;
   
   public function __construct(XML_Document $oSchema, XML_Document $oDatas = null,
-    $bModel = true, $bMessages = true, $bMark = true, $bLoadRefs = true) {
+    $bModel = true, $bMessages = true, $bMark = true, $bLoadRefs = false) {
     
     $this->setDirectory(__file__);
     
@@ -116,7 +116,7 @@ class XSD_Parser extends Module {
     
     if (preg_match_all("`document\('((db)://|(file)://)?([^']+)'\)`", $mRef, $aDocuments, PREG_OFFSET_CAPTURE)) {
       
-      if (!$sPath = $aDocuments[4][0][0]) dspm(xt('Ouverture de document %s invalide', new HTML_Strong($sSelect)), 'warning');
+      if (!$sPath = $aDocuments[4][0][0]) $this->dspm(xt('Ouverture de document %s invalide', new HTML_Strong($sSelect)), 'xml/warning');
       else {
         
         if ($aDocuments[2][0][0] == 'db') { // call to database
@@ -134,21 +134,21 @@ class XSD_Parser extends Module {
               }
               
               if ($oRefResult = Controler::getDatabase()->get($sFullPath)) $mRef = $oRefResult;
-              else dspm(xt('La référence %s n\'est pas valide', new HTML_Strong($sPath)), 'warning');
+              else $this->dspm(xt('La référence %s n\'est pas valide', new HTML_Strong($sPath)), 'xml/warning');
               
             } else $mRef = $sFullPath; // just set real path
           }
           
         } else if ($aDocuments[2][0][0] == 'file') {
           
-          dspm('Chargement de document pas encore prêt', 'warning'); // TODO
+          $this->dspm('Chargement de document pas encore prêt', 'xml/warning'); // TODO
           $sPath = Controler::getAbsolutePath($sPath, (string) $this->getFile()->getParent());
           
           // dspf($sPath);
-          // dspm($this->getFile());
+          // $this->dspm($this->getFile());
           /*if (!$oFile = Controler::getFile($aDocuments[2][0]), $this->getFile()->getParent()) {
             
-            dspm(xt('Ouverture de document %s invalide', new HTML_Strong($sView)), 'warning');
+            $this->dspm(xt('Ouverture de document %s invalide', new HTML_Strong($sView)), 'warning');
           } else {
           
           }*/
@@ -181,7 +181,7 @@ class XSD_Parser extends Module {
       if (array_key_exists($sName, $this->aGroups)) $mResult = $this->aGroups[$sName]; // ever indexed
       else if (!$oDefElement = $this->getSchema()->get("/*/xs:group[@name='$sName']")) {
         
-        dspm(xt('Groupe %s introuvable dans le schéma', new HTML_Strong($sName), view($this->getSchema())), 'xml/error');
+        $this->dspm(xt('Groupe %s introuvable dans le schéma', new HTML_Strong($sName), view($this->getSchema())), 'xml/error');
         
       } else { // group found
         
@@ -195,7 +195,7 @@ class XSD_Parser extends Module {
       $oParent->cleanChildren();
       $oParent->setAttribute('ref', $mResult->getName());
       
-    } else dspm(xt('Elément %s invalide dans %s', view($oElement), view($this->getSchema())), 'xml/error');
+    } else $this->dspm(xt('Elément %s invalide dans %s', view($oElement), view($this->getSchema())), 'xml/error');
     
     return $mResult;
   }
@@ -229,7 +229,7 @@ class XSD_Parser extends Module {
         $sTypes = "/*/xs:complexType[@name='$sType'] | /*/xs:simpleType[@name='$sType']";
         if (!$oElement = $this->getSchema()->get($sTypes, $this->getNS())) {
           
-          dspm(xt('Type %s introuvable dans %s', new HTML_Strong($sType), view($this->getSchema())), 'xml/error');
+          $this->dspm(xt('Type %s introuvable dans %s', new HTML_Strong($sType), view($this->getSchema())), 'xml/error');
           
         } else {
           
@@ -347,7 +347,14 @@ abstract class XSD_Basic {
   public function getPath() { // Extends : [container : [type], [group]] / Classes : particle, groupRef
     
     if ($this->getParent()) return $this->getParent()->getPath();
-    else dspm(xt('Aucun chemin parent valide pour l\'objet %s %s', view($this), view($this->getSource())), 'xml/error');
+    else $this->dspm(xt('Aucun chemin parent valide pour l\'objet %s %s', view($this), view($this->getSource())), 'xml/error');
+  }
+  
+  protected function dspm($mMessage, $sStatut = SYLMA_MESSAGES_DEFAULT_STAT) {
+    
+    $sPath = $this->getParser()->getSchema()->getFile()->parse();
+    
+    return dspm(array($sPath, new HTML_Tag('hr'), $mMessage), $sStatut);
   }
 }
 
@@ -419,7 +426,7 @@ abstract class XSD_Node extends XSD_Container {
     parent::__construct($oSource, $oParent, $oNode, $oParser);
     
     // if parent sequence is not direct child of element, build parent name and get it
-    if ($this->getParent() && $this->getParent()->getParent() instanceof XSD_Particle) $this->setID($this->getParser()->getID());
+    if ($this->getParent() && $this->getParent()->getParent() instanceof XSD_Particle) $this->sID = $this->getParser()->getID();
     
     $sType = $oSource->getAttribute('type');
     
@@ -434,7 +441,7 @@ abstract class XSD_Node extends XSD_Container {
     
     if ($oSource->hasChildren()) {
       
-      if ($sType) dspm(xt('Attribut %s interdit dans %s mais le processus continue',
+      if ($sType) $this->dspm(xt('Attribut %s interdit dans %s mais le processus continue',
         new HTML_Strong('type'), view($oSource)), 'xml/error');
       
       if ($sRef = $oSource->getAttribute('ref')) {
@@ -443,7 +450,7 @@ abstract class XSD_Node extends XSD_Container {
         
       } else {
         
-        if (!$oFirst = $oSource->getFirst()) dspm(xt('Type indéfini pour le composant %s', view($oSource)), 'xml/error');
+        if (!$oFirst = $oSource->getFirst()) $this->dspm(xt('Type indéfini pour le composant %s', view($oSource)), 'xml/error');
         else {
           
           $this->oType = new XSD_Type($oFirst, $this);
@@ -454,7 +461,7 @@ abstract class XSD_Node extends XSD_Container {
     } else {
       
       if ($sType) $this->oType = $this->getParser()->getType($sType, $oSource);
-      else dspm(xt('Aucun type défini pour %s', view($oSource)), 'xml/warning');
+      else $this->dspm(xt('Aucun type défini pour %s', view($oSource)), 'xml/warning');
     }
   }
   
@@ -648,7 +655,7 @@ class XSD_Element extends XSD_Node {
       
       if ($sDefault = $this->getSource()->getAttribute('default')) $oElement->set($sDefault);
       else if ($sDefault = $this->getSource()->getAttribute('default-query', $this->getNamespace())) {
-        
+        // dspf('test', 'error');
         $oElement->set(Controler::getDatabase()->query($sDefault));
       }
       
@@ -717,13 +724,18 @@ class XSD_Model extends XSD_Instance { // XSD_ElementInstance
   
   public function buildParticle() {
     
-    if (!$this->getClass()) dspm(xt('Aucun élément classe défini pour %s', view($this)), 'xml/error');
+    if (!$this->getClass()) $this->dspm(xt('Aucun élément classe défini pour %s', view($this)), 'xml/error');
     else {
       
       if ($this->getClass()->getType()->isComplex()) { // complex type
         
-        if (!$this->getClass()->getType()->isMixed()) 
-          $this->oParticle = $this->getClass()->getType()->getParticle()->getInstance($this);
+        if (!$this->getClass()->getType()->getParticle())
+          $this->dspm(xt('Impossible de construire l\'élément %s, particule manquante', view($this->getNode())), 'xml/warning');
+        else {
+          
+          if (!$this->getClass()->getType()->isMixed()) 
+            $this->oParticle = $this->getClass()->getType()->getParticle()->getInstance($this);
+        }
         
       } else { // simple type
         
@@ -887,7 +899,7 @@ class XSD_Particle extends XSD_Class {
           
           $sName = $oComponent->hasAttribute('name') ? $oComponent->getAttribute('name') : $oComponent->getAttribute('ref');
           
-          if (!$sName) dspm(xt('Aucun nom ou référence défini pour %s', view($oComponent)), 'xml/error');
+          if (!$sName) $this->dspm(xt('Aucun nom ou référence défini pour %s', view($oComponent)), 'xml/error');
           else {
             
             $oResult = new XSD_Element($oComponent, $this);
@@ -918,6 +930,12 @@ class XSD_Particle extends XSD_Class {
   }
   
   public function validate(XSD_Instance $oInstance) {
+    
+    if (!$oInstance) { // temp ?
+      
+      $this->dspm(xt('Aucun instance reçue pour valider l\'élément %s', view($this->getSource())), 'xml/error');
+      return false;
+    }
     
     $bResult = true;
     $oPrevious = null;
@@ -1074,7 +1092,7 @@ class XSD_ParticleInstance extends XSD_Instance {
         }
       }
       
-      if (!$oResult) dspm(xt('Erreur, particule %s introuvable dans le type', view($oParent)), 'xml/warning'); // shouldn't happend
+      if (!$oResult) $this->dspm(xt('Erreur, particule %s introuvable dans le type', view($oParent)), 'xml/warning'); // shouldn't happend
       else $oResult->add($oElement, $aParents);
       
     } else { // this one
@@ -1148,7 +1166,7 @@ class XSD_Group extends XSD_Container {
     
     if (!$oFirst = $this->getSource()->getFirst()) {
       
-      dspm(xt('Impossible de construire le groupe %s, car il ne possède aucun enfant', view($this->getSource())), 'xml/error');
+      $this->dspm(xt('Impossible de construire le groupe %s, car il ne possède aucun enfant', view($this->getSource())), 'xml/error');
       
     } else {
       
@@ -1313,7 +1331,7 @@ class XSD_BaseType {
       case 'time' : break; // TODO
       default :
         
-        dspm(xt('Type %s inconnu dans l\'élément %s', view($oInstance->getNode())), 'xml/error');
+        $this->dspm(xt('Type %s inconnu dans l\'élément %s', view($oInstance->getNode())), 'xml/error');
     }
     
     if (!$bResult && $oInstance->useMessages())
@@ -1392,7 +1410,7 @@ class XSD_Type extends XSD_Container { // complex or simple, but defined
       
       if ($oInstance->getNode()->isComplex()) {
         
-        dspm(xt('L\'élément ne devrait pas être de type complex'), 'xml/error');
+        $this->dspm(xt('L\'élément ne devrait pas être de type complex'), 'xml/error');
         
       } else if (!$bResult = $this->getBase()->validate($oInstance)) {
         
@@ -1404,7 +1422,7 @@ class XSD_Type extends XSD_Container { // complex or simple, but defined
         
         if ($this->hasRestrictions()) {
           
-          // if ($oInstance->getName() == 'type_contrat') dspm('yo', 'error');
+          // if ($oInstance->getName() == 'type_contrat') $this->dspm('yo', 'error');
           $mValue = $this->buildValue($oInstance->getValue(), $this->getBase()->getName());
           
           $aChoices = array('enumeration', 'pattern'); // must respect one of the values
@@ -1495,8 +1513,12 @@ class XSD_Type extends XSD_Container { // complex or simple, but defined
         if ($this->keepValidate()) $oInstance->buildParticle();
       }
       
-      if ($this->isMixed()) $bResult = true;
-      else $bResult = $this->getParticle()->validate($oInstance->getParticle());
+      if ($this->isMixed()) $bResult = true; // TODO better validation
+      else if (!$this->getParticle()) {
+        
+        $this->dspm(xt('Impossible de valider l\'élément %s, particule inexistante', view($this->getSource())), 'xml/warning');
+        
+      } else $bResult = $this->getParticle()->validate($oInstance->getParticle());
     }
     
     return $bResult;
@@ -1555,7 +1577,7 @@ class XSD_Type extends XSD_Container { // complex or simple, but defined
     $bComplexType = $oComponent->getName() != 'simpleType'; // WARNING : no name check for simpleType
     
     // WARNING : no check if text type node
-    if (!$oComponent->hasChildren()) dspm(xt('Elément enfants requis dans le type %s', view($oComponent)), 'xml/error');
+    if (!$oComponent->hasChildren()) $this->dspm(xt('Elément enfants requis dans le type %s', view($oComponent)), 'xml/error');
     else {
       
       $bComplexContent = $bSimpleContent = false;
@@ -1571,25 +1593,45 @@ class XSD_Type extends XSD_Container { // complex or simple, but defined
         
         if (!$oExtend = $oFirst->getFirst()) {
           
-          dspm(xt('Elément enfants (restriction|extension) requis dans %s', view($oComponent)), 'xml/error');
+          $this->dspm(xt('Elément enfants (restriction|extension) requis dans %s', view($oComponent)), 'xml/error');
           
         } else if (!$sBase = $oExtend->getAttribute('base')) {
           
-          dspm(xt('Aucune base désigné pour l\'extension du composant %s', view($oComponent)), 'xml/error');
+          $this->dspm(xt('Aucune base désigné pour l\'extension du composant %s', view($oComponent)), 'xml/error');
           
         } else { // valid
           
           $oType = $this->getParser()->getType($sBase, $oComponent);
-          $this->oBase = $oType;
           
           if ($bComplexType && $bComplexContent) { // complexContent
             
+            // simple extension add to the end
             
+            if ($oExtend->getFirst()) {
+              
+              if (!$oType->getSource()) {
+                
+                $this->dspm(xt('Le type %s ne peut pas étendre le type %s qui est invalide',
+                  view($oComponent), view($oType->getSource())), 'xml/error');
+                
+              } else if ($oType->getSource()->getFirst()->getName() != $oExtend->getFirst()->getName()) {
+                
+                $this->dspm(xt('La particule de %s doit être identique à la particule de %s',
+                  view($oType->getSource()), view($oExtend)), 'xml/error');
+                
+              } else {
+                
+                $oExtend->getFirst()->shift($oType->getSource()->getFirst()->getChildren());
+                $this->setParticle(new XSD_Particle($oExtend->getFirst(), $this));
+              }
+            }
             // $mResult = new XML_Element($oComponent->getName(), null, null, $this->getNamespace());
             
             // TODO $mResult->add($oType->getChildren(), $this->buildElement());
             
           } else { // simpleType & simpleContent
+            
+            $this->oBase = $oType;
             
             if ($oType->hasRestrictions()) { // if not empty type
               
@@ -1601,6 +1643,7 @@ class XSD_Type extends XSD_Container { // complex or simple, but defined
               } else { // extension
                 
                 // what TODO ?
+                $this->dspm('TODO', 'xml/error');
               }
             }
             

@@ -177,7 +177,7 @@ class XML_Document extends DOMDocument {
       
       if ($oExternals->length) {
         
-        $aPaths[] = $sPath;
+        $aPaths[] = (string) $this->getFile();
         
         foreach ($oExternals as $oExternal) {
           
@@ -991,8 +991,14 @@ class XSL_Document extends XML_Document {
       $sResult = $this->getProcessor()->transformToXML($oDocument);
       
       if (Controler::isAdmin() && libxml_get_errors()) { // TODO, nice view
+        
         foreach (libxml_get_errors() as $oError) {
-          dspm(xt('%s : %s', new HTML_Strong('Libxml'), xmlize($oError->message)), 'warning');
+          //dspf(get_object_vars($oError));
+          if ($oError->file) $sFile = '';
+          else if ($this->getFile()) $sFile = $this->getFile()->parse();
+          else $sFile = new HTML_Tag('em', 'Fichier inconnu !');
+          
+          dspm(xt('%s : %s - %s', new HTML_Strong('Libxml'), xmlize($oError->message), $sFile), 'warning');
         }
       }
       

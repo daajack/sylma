@@ -9,14 +9,17 @@
       <xsl:apply-templates select="lc:get-model(*[1])/lc:annotations/lc:message"/>
       <xsl:apply-templates select="*[1]/@*"/>
       <xsl:apply-templates select="*[1]/*" mode="field"/>
-      <div class="field-notice">
-        Les champs marqués d'un <strong>*</strong> sont obligatoires
-      </div>
+      <xsl:apply-templates select="*[1]" mode="notice"/>
       <div class="field-actions">
         <input type="submit" value="Enregistrer"/>
         <input type="button" value="Annuler" onclick="history.go(-1);"/>
       </div>
     </form>
+  </xsl:template>
+  <xsl:template match="*" mode="notice">
+    <div class="field-notice">
+      Les champs marqués d'un <strong>*</strong> sont obligatoires
+    </div>
   </xsl:template>
   <xsl:template match="*" mode="field">
     <xsl:variable name="name" select="lc:get-name()"/>

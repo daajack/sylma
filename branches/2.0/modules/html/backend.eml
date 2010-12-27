@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<le:action xmlns:le="http://www.sylma.org/execution" xmlns:li="http://www.sylma.org/interface" xmlns="http://www.w3.org/1999/xhtml" xmlns:ls="http://www.sylma.org/security">
+  <le:settings>
+    <le:name>Template HTML Admin</le:name>
+    <le:action path="/modules/tree-menu" set-variable="menu">
+      <le:get-argument name="window-action"/>
+    </le:action>
+    <le:get-settings run="true" set-variable="language">infos/language</le:get-settings>
+    <le:get-settings run="true" set-variable="icone">infos/icone</le:get-settings>
+    <le:get-settings run="true" set-variable="webmaster-href">infos/webmaster/@href</le:get-settings>
+  </le:settings>
+  <html>
+    <head>
+      <title>
+        <le:get-settings>infos/name</le:get-settings>
+        <le:argument> - </le:argument>
+        <le:get-variable name="menu">
+          <li:get-title/>
+        </le:get-variable>
+      </title>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+      <meta http-equiv="content-language" content="[$language]"/>
+      <link rel="icon" href="[$icone]" type="image/x-icon"/>
+      <link rel="stylesheet" type="text/css" media="all" href="/sylma/css/global.css"/>
+      <link rel="stylesheet" type="text/css" media="all" href="/sylma/css/messages.css"/>
+      <link rel="stylesheet" type="text/css" media="all" href="/sylma/modules/html/global.css"/>
+      <link rel="stylesheet" type="text/css" media="all" href="/sylma/modules/html/backend.css"/>
+    </head>
+    <body>
+      <a id="user-login" ls:mode="710" ls:group="famous" href="/sylma/modules/users/login" ls:owner="root">connexion</a>
+      <div id="container">
+        <div id="header">
+          <h1>
+            <a lang="en" id="header-title" class="notranslate" href="/">Sylma</a>
+          </h1>
+        </div>
+        <div id="center" class="clear-block">
+          <div id="menus">
+            <le:get-variable name="menu">
+              <li:get-group>
+                <le:argument>admin</le:argument>
+                <li:parse>
+                  <le:template path="/modules/tree-menu/simple.xsl">
+                    <li:set-parameter>
+                      <le:argument>extension</le:argument>
+                      <le:controler>
+                        <li:get-path>
+                          <li:get-extension/>
+                        </li:get-path>
+                      </le:controler>
+                    </li:set-parameter>
+                  </le:template>
+                </li:parse>
+              </li:get-group>
+            </le:get-variable>
+          </div>
+          <div id="content">
+            <le:get-argument name="window-action"/>
+          </div>
+        </div>
+        <div id="footer"><a href="http://www.sylma.org">Sylma</a> XML Framework</div>
+      </div>
+    </body>
+  </html>
+</le:action>

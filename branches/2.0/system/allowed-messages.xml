@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<messages xmlns:ls="http://www.sylma.org/security">
+  <action ls:owner="root" ls:group="0" ls:mode="770">
+    <error/>
+    <warning/>
+    <notice/>
+  </action>
+  <xml ls:owner="root" ls:group="0" ls:mode="770">
+    <error/>
+    <warning/>
+    <notice/>
+  </xml>
+  <file ls:owner="root" ls:group="0" ls:mode="770">
+    <error/>
+    <warning/>
+    <notice/>
+  </file>
+  <db ls:owner="root" ls:group="0" ls:mode="770">
+    <error/>
+    <warning/>
+    <notice/>
+  </db>
+  <form>
+    <error/>
+    <warning/>
+    <notice/>
+    <report/>
+  </form>
+  <error ls:owner="root" ls:mode="770" ls:group="users"/>
+  <report ls:owner="root" ls:mode="770" ls:group="users"/>
+  <warning/>
+  <notice ls:owner="root" ls:mode="770" ls:group="users"/>
+  <success ls:owner="root" ls:mode="770" ls:group="users"/>
+</messages>

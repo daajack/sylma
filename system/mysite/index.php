@@ -10,7 +10,7 @@ if (!defined("PATH_SEPARATOR")) {
   else define("PATH_SEPARATOR", ":");
 }
 
-require('protected/sylma/system/server-config.php'); // no directory yet included
+require('server-config.php'); // no directory yet included
 require('system/config.php'); // now default directory inclusion is sylma main directory
 
 if (DEBUG) error_reporting(E_ALL);
@@ -24,8 +24,11 @@ require('modules/dbx/DBX.php');
 
 // DB
 
-require(PATH_LIBS.'/BaseXClient.php');
-if (SYLMA_USE_DB) require(PATH_LIBS.'/XML_Database.php');
+if (SYLMA_USE_DB) {
+  
+  require(PATH_LIBS.'/eXist.php');
+  require(PATH_LIBS.'/XML_Database.php');
+}
 
 ini_set('session.gc_maxlifetime', SESSION_MAX_LIFETIME); 
 session_start();

@@ -32,6 +32,11 @@
         </le:get-argument>
       </le:string>
     </la:property>
+    <la:property name="currentDirectory">
+      <le:string>
+        <le:get-argument name="path"/>
+      </le:string>
+    </la:property>
     <div class="clear-block">
       <la:event name="click" limit="self"><![CDATA[%ref-object%.rootObject.tools.hide();
 return true;]]></la:event>

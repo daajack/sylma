@@ -32,7 +32,6 @@ define('SYLMA_NS_FORM_SCHEMA', 'http://schemas.sylma.org/form-schema');
 //define('SYLMA_HTML_TAGS', "//html:*[local-name() != 'link']");
 define('SYLMA_HTML_TAGS', '//html:div | //html:span | //html:a | //html:ul | //html:h2 | //html:iframe | //html:textarea | //html:script | //html:table | //html:strong');
 define('SYLMA_FIELD_PREFIX', 'field-');
-define('SYLMA_USE_DB', true);
 
 define('SYLMA_SECURITY_FILE', 'directory.sml');
 define('SYLMA_DEFAULT_MODE', 0770);

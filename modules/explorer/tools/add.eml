@@ -10,24 +10,25 @@
         <la:event name="click"><![CDATA[%ref-object%.rootObject.toggleUploader();
 return false;]]></la:event>
       </a>
-      <a href="#">
+      <div href="#">
         <span>Créer un répertoire</span>
-        <la:event name="click"><![CDATA[%ref-object%.directory.show();
-%ref-object%.directory.node.getElement('input[type=text]').set('value', '').focus();
-return false;]]></la:event>
-      </a>
-      <la:object class="/sylma.classes.menu" hidden="true" name="directory">
-        <form class="sylma-tools">
-          <la:event name="submit"><![CDATA[%ref-object%.hide();
+        <la:object class="/sylma.classes.menu" hidden="true" name="directory">
+          <form class="sylma-tools">
+            <la:event name="submit"><![CDATA[%ref-object%.hide();
 %ref-object%.rootObject.addDirectory(this);
 return false;]]></la:event>
-          <input type="text" name="resource-name"/>
-          <input type="submit" value="Créer"/>
-          <input type="button" value="Annuler">
-            <la:event name="click"><![CDATA[return %ref-object%.hide();]]></la:event>
-          </input>
-        </form>
-      </la:object>
+            <input type="text" name="resource-name"/>
+            <input type="submit" value="Créer"/>
+            <input type="button" value="Annuler">
+              <la:event name="click"><![CDATA[return %ref-object%.hide();]]></la:event>
+            </input>
+          </form>
+        </la:object>
+        <la:event name="click" limit="self,first"><![CDATA[%ref-object%.directory.hide(true);
+%ref-object%.directory.show();
+%ref-object%.directory.node.getElement('input[type=text]').set('value', '').focus();
+return false;]]></la:event>
+      </div>
     </div>
   </la:layer>
 </le:action>

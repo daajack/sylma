@@ -41,12 +41,11 @@ define('SYLMA_ACTION_STATS', true); // infos
 define('SYLMA_ACTION_ERROR_REDIRECT', false);
 
 $aDB = array(
-  'host' => 'localhost',
-  'user' => 'admin',
-  'password' => 'admin',
-  'database' => 'example',
-  'namespace' => 'http://www.example.com',
-  'port' => 1984);
+  'host' => 'http://localhost:8080/exist/services/Query?wsdl',
+  'user' => 'username',
+  'password' => 'password',
+  'collection' => '/mysite',
+  'namespace' => 'http://www.example.com');
 
 
 set_include_path(get_include_path() . PATH_SEPARATOR . PATH_SYLMA . PATH_SEPARATOR . PATH_PHP);

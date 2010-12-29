@@ -187,28 +187,30 @@ a img {
 /* Add */
 
 #resource-tools-add {
-  
   padding: 10px;
   padding-top: 15px;
   text-align: center;
 }
 
 #resource-tools-add .sylma-tools {
-  left: 5em;
-  margin-top: -50px;
+  left: auto;
+  visibility: hidden;
+  margin-left: -15em;
+  margin-top: -3em;
 }
 
-#resource-tools-add > a {
-  
+#resource-tools-add > * {
+  display: inline;
   padding: 5px;
   margin-right: 1em;
   border: 1px solid gray;
   -moz-border-radius: 5px;
   background-color: #eee;
   text-decoration: none;
+  cursor: pointer;
 }
 
-#resource-tools-add > a:hover {
+#resource-tools-add > *:hover {
   background-color: #ddd;
   color: black;
 }

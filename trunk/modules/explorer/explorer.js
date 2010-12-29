@@ -24,7 +24,7 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
     addDirectory : function(oForm) {
       
       var oArguments = {
-        'directory' : this.mozaic.currentDirectory,
+        'directory' : this.mozaic.getCurrent(),
         'name' : oForm.getElement('input[name=resource-name]').get('value')
       };
       
@@ -80,6 +80,7 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
   'mozaic' : new Class({
     
     Extends : sylma.classes.layer,
+    currentDirectory : '',
     
     'initialize' : function(oArgs) {
       
@@ -92,12 +93,18 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
       });
     },
     
+    getCurrent : function() {
+      
+      return this.currentDirectory;
+    },
+    
     update : function(oArguments) {
       
       var self = this;
       
       oArguments = $extend({path : this.currentDirectory}, oArguments);
-      
+      this.currentDirectory = oArguments.path;
+      //alert(this.currentDirectory);
       this.parent(oArguments, {
         'onLoad' : function() {
           
@@ -387,6 +394,19 @@ var oExplorerClasses = sylma[sExplorerClasses] = {
     
   })
 };
+
+function uploaderStatusChanged(uploader) {
+  
+  var sStatut;
+  
+  if (uploader.isReady()) {
+    
+    sylma.explorer.mozaic.update();
+    //oExplorer.toogleUploader();
+    
+    //return window.close();
+  }
+}
 
 $extend(oExplorerClasses, {
   

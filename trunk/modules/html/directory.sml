@@ -49,4 +49,11 @@
       <ls:mode>774</ls:mode>
     </ls:security>
   </file>
+  <file name="backend.css">
+    <ls:security xmlns:ls="http://www.sylma.org/security">
+      <ls:owner>root</ls:owner>
+      <ls:group>users</ls:group>
+      <ls:mode>775</ls:mode>
+    </ls:security>
+  </file>
 </directory>

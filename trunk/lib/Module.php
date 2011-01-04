@@ -4,9 +4,10 @@ class Module {
   
   protected $oDirectory = null;
   
-  private $oSettings = null;  
+  private $oSettings = null;  // global module settings
+  private $oOptions = null;  // contextual settings
+  
   protected $oSchema = null;  
-  private $sSchema = '';
   private $sName = '';
   
   private $aNamespaces = array();
@@ -28,16 +29,37 @@ class Module {
     if ($sPath && $this->oSettings) return $this->oSettings->read($sPath);
     else return $this->oSettings;
   }
-  
-  public function getSchema() {
+  /*
+  protected function getOptions() {
     
-    if ($this->sSchema) {
+    return $this->oOptions;
+  }
+  
+  protected function getOption($sName, $bDebug = true) {
+    
+    $oResult = null;
+    
+    if (!$this->getOptions()) $this->dspm(xt('Aucune option disponible pour le module'), 'action/warning');
+    else {
       
-      $this->oSchema = $this->getDocument($sPath);
-      $this->sSchema = '';
+      $oResult = $this->getOptions()->getByName($sName);
+      
+      if ($bDebug && !$oResult)
+        $this->dspm(xt('Option %s introuvable dans %s', new HTML_Strong($sPath), view($this->getOptions())), 'action/warning');
     }
     
-    return $this->oSchema;
+    return $oResult;
+  }
+  
+  protected function readOption($sPath, $bDebug = true) {
+    
+    if ($oOption = $this->getOption($sPath, $bDebug)) return $oOption->read();
+    else return '';
+  }
+  */
+  protected function setName($sName) {
+    
+    $this->sName = $sName;
   }
   
   public function getName() {
@@ -45,14 +67,14 @@ class Module {
     return $this->sName;
   }
   
-  public function setName($sName) {
+  protected function setSchema($oSchema) {
     
-    $this->sName = $sName;
+    $this->oSchema = $oSchema;
   }
   
-  public function setSchema($sPath) {
+  public function getSchema() {
     
-    $this->sSchema = $sPath;
+    return $this->oSchema;
   }
   
   public function getDirectory() {
@@ -60,7 +82,7 @@ class Module {
     return $this->oDirectory;
   }
   
-  public function setNamespace($sUri, $sPrefix = '', $bDefault = true) {
+  protected function setNamespace($sUri, $sPrefix = '', $bDefault = true) {
     
     $this->aNamespaces[$sPrefix] = $sUri;
     
@@ -109,6 +131,13 @@ class Module {
       else return $oFile->getDocument();
       
     } else return null;
+  }
+  
+  private function dspm($mMessage, $sStatut) {
+    
+    $sPath = xt('Module %s -&gt; %s', view($this->getName()), view($this->getDirectory()));
+    
+    return dspm(array($sPath, new HTML_Tag('hr'), $mMessage), $sStatut);
   }
 }
 

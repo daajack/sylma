@@ -2,11 +2,12 @@
 
 class XSD_Parser extends Module {
   
-  private $bModel = false; // if false, it will not build the model
-  private $bMessages = false; // if false, validation and building will stop at first error
-  private $bValid = true; // valid or not
-  private $bMark = true; // copy sylma schema namespaced attributes to elements
-  private $bLoadRefs = true; // load key-refs datas, require database
+  private $aOptions = array(
+    'model' => false, // if false, it will not build the model
+    'messages' => true, // if false, validation and building will stop at first error
+    'is-valid' => true, // valid or not
+    'mark' => true, // copy sylma schema namespaced attributes to elements
+    'load-refs' => false); // load key-refs datas, require database
   
   private $oModel = null;
   
@@ -16,24 +17,23 @@ class XSD_Parser extends Module {
   private $aRefs = array();
   private $iID = 1;
   
-  public function __construct(XML_Document $oSchema, XML_Document $oDatas = null,
-    $bModel = true, $bMessages = true, $bMark = true, $bLoadRefs = false) {
+  public function __construct(XML_Document $oSchema, XML_Document $oDatas = null, $aOptions = array()) {
     
     $this->setDirectory(__file__);
     
     $this->setNamespace(SYLMA_NS_SCHEMAS, 'lc');
     $this->setNamespace(SYLMA_NS_XSD, 'xs', false);
     
-    $this->iMoreDepth = null;
+    if ($aOptions) $this->aOptions = array_merge($this->aOptions, $aOptions);
     
     $this->oSchema = $oSchema;
-    
-    $this->bMark = $bMark;
-    $this->bModel = $bModel;
-    $this->bMessages = $bMessages;
-    $this->bLoadRefs = $bLoadRefs;
-    
     $this->oModel = $this->buildSchema($oDatas);
+  }
+  
+  private function getOption($sKey) {
+    
+    if (array_key_exists($sKey, $this->aOptions)) return $this->aOptions[$sKey];
+    else return null;
   }
   
   public function getSchema() {
@@ -126,7 +126,7 @@ class XSD_Parser extends Module {
             $sDocument = "document('".Controler::getDatabase()->getCollection()."/".$aDocuments[4][0][0]."')";
             $sFullPath = substr_replace($mRef, $sDocument, $aDocuments[0][0][1], strlen($aDocuments[0][0][0])); 
             
-            if ($this->bLoadRefs) { // replace ref with corresponding nodes
+            if ($this->getOption('load-refs')) { // replace ref with corresponding nodes
               
               if (preg_match_all('/(w+):[\w-_]+/', $sPath, $aPrefixes)) { // match prefixes
                 
@@ -244,8 +244,8 @@ class XSD_Parser extends Module {
   
   public function isValid($bValid = null) {
     
-    if ($bValid !== null) $this->bValid = $bValid;
-    return $this->bValid;
+    if ($bValid !== null) $this->aOptions['is-valid'] = $bValid;
+    return $this->getOption('is-valid');
   }
   
   public function keepValidate() {
@@ -255,19 +255,19 @@ class XSD_Parser extends Module {
   
   public function useMark() {
     
-    return $this->bMark;
+    return $this->getOption('mark');
   }
   
   public function useModel() {
     
-    return $this->bModel;
+    return $this->getOption('model');
   }
   
   /*** Messages ***/
   
   public function useMessages() {
     
-    return $this->bMessages;
+    return $this->getOption('messages');
   }
   
   public function getMessages() {
@@ -352,7 +352,7 @@ abstract class XSD_Basic {
   
   protected function dspm($mMessage, $sStatut = SYLMA_MESSAGES_DEFAULT_STAT) {
     
-    $sPath = $this->getParser()->getSchema()->getFile()->parse();
+    $sPath = xt('Schema : %s', $this->getParser()->getSchema()->getFile()->parse());
     
     return dspm(array($sPath, new HTML_Tag('hr'), $mMessage), $sStatut);
   }
@@ -655,8 +655,8 @@ class XSD_Element extends XSD_Node {
       
       if ($sDefault = $this->getSource()->getAttribute('default')) $oElement->set($sDefault);
       else if ($sDefault = $this->getSource()->getAttribute('default-query', $this->getNamespace())) {
-        // dspf('test', 'error');
-        $oElement->set(Controler::getDatabase()->query($sDefault));
+        if (!SYLMA_USE_DB) $this->dspm('Impossible de déterminer la valeur par défaut. XQuery est nécessaire', 'xml/warning');
+        else $oElement->set(Controler::getDatabase()->query($sDefault));
       }
       
       $oInstance = $this->getInstance($oParent, $oElement);

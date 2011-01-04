@@ -674,7 +674,9 @@ class XML_Document extends DOMDocument {
    */
   public function validate(XML_Document $oSchema, $bMessages = false) {
     
-    $oParser = new XSD_Parser($oSchema, $this, false, $bMessages);
+    $oParser = new XSD_Parser($oSchema, $this, array(
+      'model' => false,
+      'messages' => $bMessages));
     
     return $oParser->isValid();
   }
@@ -684,7 +686,11 @@ class XML_Document extends DOMDocument {
    */
   public function getModel(XML_Document $oSchema, $bMessages = true, $bLoadRefs = true) {
     
-    $oParser = new XSD_Parser($oSchema, $this, true, $bMessages, true, $bLoadRefs);
+    $oParser = new XSD_Parser($oSchema, $this, array(
+      'model' => true,
+      'messages' => $bMessages,
+      'mark' => true,
+      'load-refs' => $bLoadRefs));
     
     return $oParser->parse();
   }

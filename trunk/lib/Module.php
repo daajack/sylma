@@ -133,7 +133,7 @@ class Module {
     } else return null;
   }
   
-  private function dspm($mMessage, $sStatut) {
+  protected function dspm($mMessage, $sStatut) {
     
     $sPath = xt('Module %s -&gt; %s', view($this->getName()), view($this->getDirectory()));
     

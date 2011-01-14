@@ -22,9 +22,9 @@
     <xsl:variable name="self" select="."/>
     <tr>
       <td class="tools">
-        <a href="{$module}/admin/edit/{$id}" title="Editer">E</a>
-        <a href="{$module}/admin/delete/{$id}" ls:mode="710" ls:group="famous" ls:owner="root">S</a>
-        <a href="{$module}/admin/view/{$id}" title="Voir (pas implémenté)">V</a>
+        <a title="Editer" href="{$module}/edit/{$id}">E</a>
+        <a ls:mode="710" ls:group="famous" ls:owner="root" href="{$module}/delete/{$id}">S</a>
+        <a title="Voir (pas implémenté)" href="{$module}/view/{$id}">V</a>
       </td>
       <xsl:apply-templates select="*" mode="field"/>
     </tr>

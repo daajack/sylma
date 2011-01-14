@@ -67,6 +67,9 @@ element <xsl:value-of select="$parent-name"/> {
     <xsl:if test="@path">
       let $sylma-<xsl:value-of select="concat(@name, ' := $self/', @path)"/>
     </xsl:if>
+    <xsl:if test="@transform">
+      let $sylma-<xsl:value-of select="concat(@name, ' := ', @transform)"/>
+    </xsl:if>
   </xsl:template>
   
   <func:function name="dbx:get-op">
@@ -150,7 +153,7 @@ element <xsl:value-of select="$parent-name"/> {
               attribute lc:value {$self/<xsl:value-of select="$name"/>/text()},
               xs:string($sylma-<xsl:value-of select="concat(@name, dbx:get-view())"/>)}
           </xsl:when>
-          <xsl:when test="@path">
+          <xsl:when test="@path or @transform">
             element <xsl:value-of select="$name"/> { $sylma-<xsl:value-of select="@name"/> }
           </xsl:when>
           <xsl:otherwise>

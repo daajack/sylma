@@ -314,6 +314,12 @@ class DBX_Module extends Module {
   
   /*** Headers ***/
   
+  private function getAdmin() {
+    
+    if (!$sPath = $this->readOption('path', false)) $sPath = $this->getExtendDirectory().'/admin';
+    return $sPath;
+  }
+  
   private function getHeaders() {
     
     return $this->oHeaders;
@@ -343,8 +349,7 @@ class DBX_Module extends Module {
   public function run(Redirect $oRedirect, $sAction, $aOptions = array(), XML_Element $oOptions = null) {
     
     $mResult = null;
-    $sAdmin = $this->getDirectory().'/admin';
-    $sList = $sAdmin.'/list';
+    $sList = $this->getAdmin().'/list';
     
     if ($oOptions) $this->getHeaders()->shift($oOptions->getChildren());
     
@@ -437,14 +442,14 @@ class DBX_Module extends Module {
       case 'simple-list' :
         
         $this->loadView($oRedirect, $aOptions);
-        $mResult = $this->getList($sAdmin.'/simple-list', 'simple-list');
+        $mResult = $this->getList($this->getAdmin().'/simple-list', 'simple-list');
         
       break;
       
       case 'list' :
         
         $this->loadView($oRedirect, $aOptions);
-        $mResult = $this->getList($sAdmin.'/simple-list');
+        $mResult = $this->getList($this->getAdmin().'/simple-list');
         
       break;
       
@@ -549,9 +554,9 @@ class DBX_Module extends Module {
       $oPath = new XML_Path($this->getDirectory().'/'.$sAction, array(
         'o-model' => $oModel,
         'datas' => $this->get($sQuery, true),
-        'path-add' => $this->getExtendDirectory().'/admin/add',
+        'path-add' => $this->getAdmin().'/add',
         'path-list' => $sPath,
-        'module' => (string) $this->getExtendDirectory(),
+        'module' => (string) $this->getAdmin(),
         'template-extension' => $oTemplateExt));
       
       $mResult = new XML_Action($oPath);

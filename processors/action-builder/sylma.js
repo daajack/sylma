@@ -666,6 +666,7 @@ sylma.classes.layer = new Class({
     oOptions = $extend({
       'html': this.node,
       'parent' : this,
+      'root' : this.rootObject,
       'name' : 'images',
       'path' : this.getPath()
       

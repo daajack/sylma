@@ -604,7 +604,7 @@ sylma.classes.request = new Class({
     var oContent = $(oResult).getElement('content');
     var oInfos = $(oResult).getElement('infos');
     
-    oContainer.adopt(sylma.importNodes(oInfos.getFirst()), 'top');
+    if (oContainer) oContainer.adopt(sylma.importNodes(oInfos.getFirst()), 'top');
     
     if (!sMessages) sMessages = sylma.defaultMessagesId;
     if (!oTarget) oTarget = sylma.defaultMessagesContainer;

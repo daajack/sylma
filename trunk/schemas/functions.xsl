@@ -99,6 +99,9 @@
   <func:function name="lc:is-date">
     <func:result select="boolean(lc:get-type() = 'xs:date')"/>
   </func:function>
+  <func:function name="lc:is-integer">
+    <func:result select="boolean(lc:get-type() = 'xs:integer')"/>
+  </func:function>
   <func:function name="lc:is-enum">
     <func:result select="lc:is-simple() and lc:get-schema() and lc:get-schema()/lc:restriction/lc:enumeration"/>
   </func:function>

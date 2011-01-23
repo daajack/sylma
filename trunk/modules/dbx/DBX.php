@@ -26,7 +26,10 @@ class DBX_Module extends Module {
     
     $this->setNamespace('http://www.sylma.org/modules/dbx', 'dbx', false);
     $this->setNamespace(SYLMA_NS_XHTML, 'html', false);
-    $this->setNamespace($oSchema->getAttribute('targetNamespace'), $this->readOption('database/prefix'));
+    
+    if (!$oSchema) $this->dspm(xt('Aucun schéma défini'), 'action/warning');
+    else $this->setNamespace($oSchema->getAttribute('targetNamespace'), $this->readOption('database/prefix'));
+    
     $this->setNamespace(SYLMA_NS_SCHEMAS, 'lc', false);
   }
   
@@ -69,7 +72,7 @@ class DBX_Module extends Module {
     return $this->readOption('path');
   }
   
-  private function getEmpty() {
+  protected function getEmpty() {
     
     $oResult = new XML_Document();
     $oResult->addNode($this->getFullPrefix().$this->readOption('database/name'), null, null, $this->getNamespace());
@@ -86,15 +89,21 @@ class DBX_Module extends Module {
   
   public function getOption($sPath, $bDebug = true) {
     
-    if (!array_key_exists($sPath, $this->aOptions) || !$this->aOptions[$sPath]) {
+    if (!$this->getOptions()) $this->dspm(xt('Aucune option définie'), 'action/warning');
+    else {
       
-      $sRealPath = preg_replace('/([-\w]+)/', 'dbx:\1', $sPath);
+      if (!array_key_exists($sPath, $this->aOptions) || !$this->aOptions[$sPath]) {
+        
+        $sRealPath = preg_replace('/([-\w]+)/', 'dbx:\1', $sPath);
+        
+        if ((!$this->aOptions[$sPath] = $this->getOptions()->get($sRealPath, $this->getNS())) && $bDebug)
+          dspm(xt('Option %s introuvable dans %s', new HTML_Strong($sPath), view($this->getOptions())), 'action/warning');
+      }
       
-      if ((!$this->aOptions[$sPath] = $this->getOptions()->get($sRealPath, $this->getNS())) && $bDebug)
-        dspm(xt('Option %s introuvable dans %s', new HTML_Strong($sPath), view($this->getOptions())), 'action/warning');
+      return $this->aOptions[$sPath];
     }
     
-    return $this->aOptions[$sPath];
+    return null;
   }
   
   public function readOption($sPath, $bDebug = true) {
@@ -304,7 +313,7 @@ class DBX_Module extends Module {
     
     $oTemplate = null;
     
-    if ($oFormExtension = $this->getOptions()->getByName('form-extension', $this->getNamespace('dbx'))) {
+    if ($oFormExtension = $this->getOptions()->getByName('template-form', $this->getNamespace('dbx'))) {
       
       $oTemplate = $oFormExtension->getFirst();
     }
@@ -353,7 +362,7 @@ class DBX_Module extends Module {
     
     if ($oOptions) $this->getHeaders()->shift($oOptions->getChildren());
     
-    $this->switchDirectory();
+    // $this->switchDirectory();
     
     $sID = array_val(0, $aOptions, '');
     
@@ -409,6 +418,8 @@ class DBX_Module extends Module {
           $sPath = $this->readOption('add-do-path', false);
           $sPath = $sPath ? $sPath : $this->getPath().'/add-do';
           
+          if (!$oForm = Controler::getFile('form.eml', $this->getDirectory())) $this->switchDirectory();
+          
           // dspf($oModel);
           $oPath = new XML_Path($this->getDirectory().'/form.eml', array(
             'model' => $oModel,
@@ -447,6 +458,8 @@ class DBX_Module extends Module {
       break;
       
       case 'list' :
+        
+        $this->switchDirectory();
         
         $this->loadView($oRedirect, $aOptions);
         $mResult = $this->getList($this->getAdmin().'/simple-list');

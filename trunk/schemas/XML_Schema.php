@@ -26,8 +26,7 @@ class XSD_Parser extends Module {
     
     if ($aOptions) $this->aOptions = array_merge($this->aOptions, $aOptions);
     
-    $this->oSchema = $oSchema;
-    $this->oModel = $this->buildSchema($oDatas);
+    if ($this->oSchema = $oSchema) $this->oModel = $this->buildSchema($oDatas);
   }
   
   private function getOption($sKey) {

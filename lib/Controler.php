@@ -22,7 +22,7 @@ class Controler {
   private static $aPaths = array(); // Liste des précédents chemins redirigés, ajoutés dans oRedirect
   private static $sAction = '';     // Chemin de l'action. Ex: /utilisateur/edit
   public static $aResults = array();     // Pile of results of the same action in different mime type (typically html + json)
-  public static $hasResult = false;
+  public static $iResults = 0;
   private static $aQueries = array();
   private static $bUseMessages = false;
   private static $sSystemPath = '';
@@ -57,7 +57,7 @@ class Controler {
     
     // Set Controler ready
     self::useMessages(true);
-    
+
     if (SYLMA_USE_DB) self::setDatabase(new XML_Database($aDB));
     
     // Load Redirect session var, if present means it has been redirected - $_SESSION['redirect'], $_POST in 'document'
@@ -87,7 +87,6 @@ class Controler {
       if ($mResult = self::getResult()) {
         
         // Pre-recorded result
-        
         $oResult = self::getWindow()->loadAction($mResult); // TODO : make XML_Action
         
       } else {
@@ -127,7 +126,11 @@ class Controler {
         //if (self::isWindowType('html') || self::isWindowType('redirection')) self::doHTTPRedirect($oResult);
         //else self::doAJAXRedirect($oResult);
       }
+    } else {
+      
+      dspm(xt('Problème lors de l\'initialisation de la fenêtre'), 'action/warning');
     }
+    
     
     return self::getWindow();
   }
@@ -237,10 +240,10 @@ class Controler {
   }
   
   public static function loadResults() {
-    
+    // $_SESSION['results'] = array();
     if (!array_key_exists('results', $_SESSION)) $_SESSION['results'] = array();
     self::$aResults = $_SESSION['results'];
-    
+    /*
     foreach (self::$aResults as $sKey => $aAction) {
       
       if (!array_key_exists('result-time', $aAction)) $fTime = 0;
@@ -249,8 +252,7 @@ class Controler {
       if ((microtime(true) - $fTime) > SYLMA_RESULT_LIFETIME) unset(self::$aResults[$sKey]);
     }
     
-    self::updateResults();
-    // return self::$aResults;
+    self::updateResults();*/
   }
   
   public static function updateResults() {
@@ -258,12 +260,12 @@ class Controler {
     $_SESSION['results'] = self::$aResults;
   }
   
-  public static function hasResult() {
+  public static function countResults() {
     
-    return self::$hasResult;
+    return self::$iResults;
   }
   
-  public static function addResult($mResult, $sWindow) {
+  /*public static function addResult($mResult, $sWindow) {
     
     $sPath = self::getPath()->getSimplePath();
     
@@ -282,6 +284,8 @@ class Controler {
   
   private static function getResult() {
     
+    $mResult = null;
+    
     $sPath = self::getPath()->getSimplePath();
     $sWindow = self::getPath()->getExtension();
     
@@ -293,10 +297,38 @@ class Controler {
       if (!count(self::$aResults[$sPath])) unset(self::$aResults[$sPath]);
       
       self::updateResults();
+    }
+    
+    return $mResult;
+  }*/
+  
+  public static function getResults() {
+    
+    return self::$aResults;
+  }
+  
+  private static function getResult() {
+    
+    $mResult = null;
+    
+    if (($sID = self::getPath()->getAssoc('sylma-result-id')) &&
+      array_key_exists($sID, self::$aResults)) {
       
-      return $mResult;
-      
-    } else return null;
+      $mResult = self::$aResults[$sID];
+      unset(self::$aResults[$sID]);
+    }
+    
+    return $mResult;
+  }
+  
+  public static function addResult($mResult, $sID) {
+    
+    self::$aResults[$sID] = $mResult;
+    self::updateResults();
+    
+    self::$iResults++;
+    
+    return $mResult;
   }
   
   private static function loadRedirect() {
@@ -338,13 +370,7 @@ class Controler {
         //$oValues = new XML_Document(new XML_Element('post', null, null, SYLMA_NS_XHTML));
         $oValues = new XML_Document('post');
         
-        foreach ($_POST as $sKey => $mValue) {
-          
-          //if (is_string($mValue)) $oTest = $oValues->addNode($sKey, $mValue, null, SYLMA_NS_XHTML);
-          if (is_string($mValue)) $oTest = $oValues->addNode($sKey, $mValue);
-          
-          //else if (is_array($mValue))
-        }
+        self::loadPost($_POST, $oValues->getRoot());
         
         $oRedirect->setDocument('post', $oValues);
       }
@@ -353,6 +379,18 @@ class Controler {
     self::$oRedirect = $oRedirect;
     
     return $oRedirect;
+  }
+  
+  private static function loadPost($mValues, XML_Element $oNode) {
+    
+    foreach ($mValues as $mKey => $mValue) {
+      
+      if (!is_numeric($mKey) && substr($mKey, 0, 8) !== 'sylma-id') $oResult = $oNode->addNode($mKey);
+      else $oResult = $oNode;
+      
+      if (is_array($mValue)) self::loadPost($mValue, $oResult);
+      else $oResult->set($mValue);
+    }
   }
   
   private static function getRedirect() {

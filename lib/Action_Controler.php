@@ -38,17 +38,29 @@ class Action_Controler {
       
     } else if ($sClass || ($sClass = $oInterface->read('ns:name'))) {
       
-      if ($sExtends = $oInterface->readByName('extends')) {
+      if ($oExtends = $oInterface->getByName('extends')) {
         
         // Extends another class
-        
-        if (!$oSubInterface = self::loadInterface($sExtends)) {
+        if ($sExtends = $oExtends->read()) {
           
-          dspm(xt('Extension de la classe "%s" impossible, interface de classe "%s" introuvable !',
-            new HTML_Strong($sClass),
-            new HTML_Strong($sExtends)), 'action/warning');
+          if (!$oParentInterface = self::loadInterface($sExtends)) {
+            
+            // if ($sPath = $oExtends->getAttribute('path')) {
+            dspm(xt('Extension de la classe "%s" impossible, interface de classe "%s" introuvable !',
+              new HTML_Strong($sClass),
+              new HTML_Strong($sExtends)), 'action/warning');
+            
+          } else $oInterface->add($oParentInterface->query('ns:method'));
           
-        } else $oInterface->add($oSubInterface->query('ns:method'));
+        } else if ($sPath = $oExtends->getAttribute('path')) {
+          
+          $oDocument = new XML_Document(Controler::getAbsolutePath($sPath, $oInterface->getDocument()->getFile()));
+          //echo Controler::getAbsolutePath($sPath, $oInterface->getDocument()->getFile());
+          $oParentInterface = self::buildInterface($oDocument);
+          
+          $oInterface->add($oParentInterface->query('*'));
+          
+        } else dspm(xt('Extension de classe %s invalide', view($oExtends)), 'action/warning');
       }
       
       self::$aInterfaces[$sClass] = $oInterface;

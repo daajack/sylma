@@ -133,11 +133,11 @@ class Module {
     } else return null;
   }
   
-  protected function dspm($mMessage, $sStatut) {
+  protected function dspm($mMessage, $sStatut = SYLMA_MESSAGES_DEFAULT_STAT) {
     
-    $sPath = xt('Module %s -&gt; %s', view($this->getName()), view($this->getDirectory()));
-    
-    return dspm(array($sPath, new HTML_Tag('hr'), $mMessage), $sStatut);
+    $oPath = new HTML_Div(xt('Module %s -&gt; %s', view($this->getName()), new HTML_Strong($this->getDirectory())),
+      array('style' => 'font-weight: bold; padding: 5px 0 5px;'));
+    return dspm(array($oPath, $mMessage, new HTML_Tag('hr')), $sStatut);
   }
 }
 

@@ -73,7 +73,7 @@ class XML_Element extends DOMElement implements XML_Composante {
       
       while ($oSibling = $oSibling->getPrevious()) {
         
-        if (!$oSibling->useNamespace($sNamespace)) {
+        if ($oSibling->isElement() && !$oSibling->useNamespace($sNamespace)) {
           
           $iPrevious += $oSibling->getChildren($sNamespace, null)->length;
           
@@ -1158,7 +1158,10 @@ class XML_Element extends DOMElement implements XML_Composante {
     $oResult = clone $this;
     $oResult->formatOutput();
     
-    echo new HTML_Tag('pre', htmlspecialchars($oResult));
+    if ($bHTML) $sResult = xmlize($oResult);
+    else $sResult = $oResult;
+    
+    echo new HTML_Tag('pre', unxmlize($sResult));
   }
   
   public function messageParse() {

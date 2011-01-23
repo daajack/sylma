@@ -6,13 +6,13 @@
     <le:action path="/modules/tree-menu" set-variable="menu" run="true">
       <le:get-argument name="window-action"/>
     </le:action>
-    <le:get-settings run="true" set-variable="keywords">window/html/keywords</le:get-settings>
-    <le:get-settings run="true" set-variable="description">window/html/description</le:get-settings>
-    <le:get-settings run="true" set-variable="webmaster-href">window/html/webmaster/@href</le:get-settings>
-    <le:get-settings run="true" set-variable="language">window/html/language</le:get-settings>
-    <le:get-settings run="true" set-variable="icone">window/html/icone</le:get-settings>
-    <le:get-settings run="true" set-variable="logo">window/html/logo</le:get-settings>
-    <le:get-settings run="true" set-variable="site-name">window/html/name</le:get-settings>
+    <le:get-settings run="true" set-variable="keywords">infos/keywords</le:get-settings>
+    <le:get-settings run="true" set-variable="description">infos/description</le:get-settings>
+    <le:get-settings run="true" set-variable="webmaster-href">infos/webmaster/@href</le:get-settings>
+    <le:get-settings run="true" set-variable="language">infos/language</le:get-settings>
+    <le:get-settings run="true" set-variable="icone">infos/icone</le:get-settings>
+    <le:get-settings run="true" set-variable="logo">infos/logo</le:get-settings>
+    <le:get-settings run="true" set-variable="site-name">infos/name</le:get-settings>
   </le:settings>
   <html>
     <head>
@@ -83,7 +83,7 @@
             </le:get-variable>
           </div>
         </div>
-        <div id="footer">Copyright © 2010 - <a href="[$webmaster-href]"><le:get-settings>window/html/webmaster</le:get-settings></a></div>
+        <div id="footer">Copyright © 2010 - <a href="[$webmaster-href]"><le:get-settings>infos/webmaster</le:get-settings></a></div>
       </div>
     </body>
   </html>

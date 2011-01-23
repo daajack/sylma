@@ -20,6 +20,8 @@
     <argument name="element" format="XML_Element"/>
   </method>
   <method path="include-external" name="includeExternal">
-    <argument name="template" format="XSL_Document"/>
+    <argument name="template" format="XSL_Document" allow-null="true"/>
+    <argument name="element" format="XML_Element" required="false"/>
+    <argument name="marks" format="php-array" required="false"/>
   </method>
 </class>

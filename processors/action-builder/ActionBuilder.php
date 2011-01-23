@@ -352,13 +352,15 @@ class ActionBuilder extends XML_Processor  {
     // Parse as JSON xml => array() then add the result in Controler
     
     $oTemplate = new XSL_Document(SYLMA_PATH_ACTIONBUILDER.'/index.xsl', MODE_EXECUTION);
-    //dspf($oScript);
+    // dspf($oScript);
     if ($oResult = $oTemplate->parseDocument($oScript)) {
-      //dspf($oResult);
+      // dspf($oResult);
       //dspm(get_class(Controler::getWindow()));
       list(, $aResult) = $oResult->toArray();
       
-      Controler::addResult(json_encode($aResult), 'txt');
+      $sID = uniqid();
+      
+      Controler::addResult(json_encode($aResult), $sID);
       
       // Add methods in JS element
       
@@ -366,11 +368,11 @@ class ActionBuilder extends XML_Processor  {
         
         // add tree build call
         
-        $sPath = addQuote(Controler::getPath()->getSimplePath().'.txt');
+        // $sPath = addQuote(Controler::getPath()->getSimplePath().'.txt');
         $aKeys = array_keys($aResult);
         $sRootKey = addQuote($aKeys[0]);
         
-        if (Controler::hasResult()) Controler::getWindow()->addOnLoad("sylma.loadTree($sRootKey, $sPath)");
+        if (Controler::countResults()) Controler::getWindow()->addOnLoad("sylma.loadTree($sRootKey, '$sID')");
         // $oTemplate->setParameter('node-id', $sRoot);
         
         $oTemplate = new XSL_Document(SYLMA_PATH_ACTIONBUILDER.'/methods.xsl', MODE_EXECUTION);
@@ -378,7 +380,8 @@ class ActionBuilder extends XML_Processor  {
         
         //dspm(new HTML_Tag('pre', $sMethods));
         if (Controler::getWindowSettings()->testAttribute('javascript', true)) Controler::getWindow()->addJS('', $sMethods);
-        else Controler::addResult($sMethods, 'txt');
+        else Controler::addResult($sMethods, uniqid());
+        
       }
       
     } else dspm('Action-Builder : Aucune balises récupérées !', 'action/warning');

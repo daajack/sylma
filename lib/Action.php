@@ -250,7 +250,7 @@ class XML_Action extends XML_Document {
     } else if (!$oMethod = $oInterface->get("ns:method[@path='$sActionMethod']")) {
       
       $this->dspm(xt('Méthode %s inexistante dans l\'interface %s',
-        view($oElement), $oInterface->getFile()->parse()), 'action/warning');
+        view($oElement), ($oFile = $oInterface->getDocument()->getFile()) ? $oFile->parse() : view(null)), 'action/warning');
       
     } else {
       
@@ -2069,7 +2069,10 @@ class XML_Action extends XML_Document {
   
   public function dspm($mMessage, $sStatut = SYLMA_MESSAGES_DEFAULT_STAT) {
     
-    return dspm(array($this->getPath(), new HTML_Tag('hr'), $mMessage), $sStatut);
+    $oTitle = new HTML_Div(array(new HTML_Strong('Action :'), $this->getPath()),
+      array('style' => 'font-weight: bold; padding: 5px 0 5px;'));
+    
+    return dspm(array($oTitle, $mMessage, new HTML_Tag('hr')), $sStatut);
   }
 }
 

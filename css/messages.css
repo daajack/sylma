@@ -63,12 +63,12 @@
   font-weight: bold;
   content: 'XML : ';
 }
-
+/*
 .messages-action li:before { 
   font-weight: bold;
   content: 'Action : ';
 }
-
+*/
 .messages-file li:before { 
   font-weight: bold;
   content: 'Fichier : ';

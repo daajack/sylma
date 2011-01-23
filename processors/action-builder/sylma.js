@@ -41,11 +41,11 @@ var sylma = {
     }
   },
   
-  loadTree : function(sName, sPath, oSuccess) {
+  loadTree : function(sName, sID, oSuccess) {
     
     var oResult = new Request.JSON({
       
-      'url' : sPath, 
+      'url' : '/index.txt?sylma-result-id=' + sID, 
       'onSuccess' : function(oResult) {
         
         //sylma.dsp(' - DEBUT - ');
@@ -131,7 +131,9 @@ var sylma = {
     }
     
     if (bResult) {
-    
+      
+      if (sClassBase) oResult['sylma-classbase'] = sClassBase;
+      
       if (object['properties'] && object['properties'].length != 0) {
         
         var sType;
@@ -416,22 +418,26 @@ var sylma = {
         // TODO kill old layer
         //layer.node.destroy(); 
         
-        if (oContentContainer.getProperty('recall') == 'true') {
+        var sRecall = oContentContainer.getProperty('recall');
+        
+        if (sRecall) {
           
           // get new object
           
-          if (oContentContainer.getProperty('methods') == 'true') {
+          var sMethods = oContentContainer.getProperty('methods');
+          
+          if (sMethods) {
             
             // has methods, first load em
             
             var oMethods = new Request.JSON({
               
-              'url' : sPath + '.txt',
+              'url' : '/index.txt?sylma-result-id=' + sMethods,
               //'evalResponse' : true,
               'onSuccess' : function(oResponse, sResponse) {
                 //alert(sResponse);
                 eval(sResponse);
-                self.replace(sPath, hOptions, oContent);
+                self.replace(sRecall, hOptions, oContent);
                 
                 oContent.setStyle('opacity', iOpacity);
                 
@@ -441,7 +447,7 @@ var sylma = {
             
             // no methods
             
-            self.replace(sPath, hOptions);
+            self.replace(sRecall, hOptions);
             oContent.setStyle('opacity', iOpacity);
             
             if (hOptions.has('onSuccess')) hOptions.get('onSuccess')(oContent);
@@ -461,13 +467,13 @@ var sylma = {
     return true;
   },
   
-  replace : function(sPath, hOptions, oResult) {
+  replace : function(sID, hOptions, oResult) {
     
     var self = this;
     
     var oJSON = new Request.JSON({
       
-      'url' : sPath + '.txt', 
+      'url' : '/index.txt?sylma-result-id=' + sID, 
       'onSuccess' : function(oResponse) {
         
         if (!hOptions.get('parent')) hOptions.set('parent', sylma);
@@ -498,9 +504,9 @@ var sylma = {
       eMessages = new Element('div', {'id' : sTargetId, 'class' : 'sylma-messages'});
       
       var oContent = $('content');
+      if (!oContent) oContent = $(document.body);
       
-      if (!oContent) alert('Contenu introuvable !');
-      else $('content').grab(eMessages, 'bottom');
+      oContent.grab(eMessages, 'bottom');
     }
     
     eMessages.grab(mContent, 'top');
@@ -574,7 +580,7 @@ sylma.classes.Base = new Class({
         this.node =  eNode;
         eNode.store('ref-object', this);
         
-      } else sylma.dsp("Erreur : Element '" + eNode + "' lié à l'objet introuvable !");
+      } else sylma.dsp("Erreur : Element lié à l'objet '" + oArgs['object']['init']['id-node'] + "' introuvable !");
     }
     
     //sylma.dsp(oArgs['path'] + ' : ' + oArgs['parent']['sylma-path']);
@@ -593,7 +599,7 @@ sylma.classes.request = new Class({
   'parseAction' : function(oResult, sMessages, oTarget) {
     
     var oContainer = $('msg-admin');
-    
+    // sylma.dsp(oResult.childNodes[0].tagName);
     var oMessages = $(oResult).getElement('messages');
     var oContent = $(oResult).getElement('content');
     var oInfos = $(oResult).getElement('infos');
@@ -653,6 +659,19 @@ sylma.classes.layer = new Class({
     }
     
     return sPath;
+  },
+  
+  insert : function(oOptions) {
+    
+    oOptions = $extend({
+      'html': this.node,
+      'parent' : this,
+      'name' : 'images',
+      'path' : this.getPath()
+      
+    }, oOptions);
+    
+    return sylma.load(oOptions);
   },
   
   center : function() {

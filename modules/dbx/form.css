@@ -21,7 +21,7 @@ form {
   padding: 2px;
 }
 
-.field input, .field textarea {
+.field input[type=text], .field textarea {
   width: 50%;
 }
 

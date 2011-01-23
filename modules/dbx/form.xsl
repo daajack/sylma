@@ -5,7 +5,7 @@
   <xsl:param name="action"/>
   <xsl:param name="method" select="'POST'"/>
   <xsl:template match="/*">
-    <form method="{$method}" action="{$action}">
+    <form method="{$method}" action="{$action}" enctype="multipart/form-data">
       <xsl:apply-templates select="lc:get-model(*[1])/lc:annotations/lc:message"/>
       <xsl:apply-templates select="*[1]/@*"/>
       <xsl:apply-templates select="*[1]/*" mode="field"/>
@@ -64,7 +64,9 @@
     <xsl:param name="id"/>
     <label for="{$id}">
       <xsl:value-of select="lx:first-case(lc:get-title())"/>
-      <xsl:if test="not(lc:is-boolean())"><xsl:text> : </xsl:text></xsl:if>
+      <xsl:if test="not(lc:is-boolean())">
+        <xsl:text> : </xsl:text>
+      </xsl:if>
       <xsl:if test="not(lc:get-statut() = 'optional')"> *</xsl:if>
     </label>
   </xsl:template>
@@ -124,11 +126,13 @@
         <span id="{$id}" class="field-input-date"/>
       </xsl:when>
       <xsl:when test="lc:is-boolean()">
-        <input type="checkbox" id="{$id}" class="{$class} field-input-boolean" name="{$name}" value="1">
-          <xsl:if test=". = '1'">
-            <xsl:attribute name="checked">checked</xsl:attribute>
-          </xsl:if>
-        </input>
+        <input type="checkbox" id="{$id}" class="{$class} field-input-boolean" name="{$name}" value="1"/>
+        <xsl:if test=". = '1'">
+          <xsl:attribute name="checked">checked</xsl:attribute>
+        </xsl:if>
+      </xsl:when>
+      <xsl:when test="lc:is-integer()">
+        <input type="text" class="{$class} field-input-integer" id="{$id}" name="{$name}" value="{.}"/>
       </xsl:when>
       <xsl:otherwise>
         <textarea id="{$id}" name="{$name}" class="{$class}">

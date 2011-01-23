@@ -468,6 +468,8 @@ class DBX_Module extends Module {
       
       case 'delete' :
         
+        $this->switchDirectory();
+        
         $oPath = new XML_Path($this->getDirectory().'/delete.eml', array(
           'id' => $sID,
           'action' => $this->getPath()."/delete-do/$sID.redirect"), true, false); //.redirect

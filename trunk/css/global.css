@@ -84,8 +84,7 @@ table.list .tools {
 }
 
 .msg-infos {
-  left: 10px;
-  top: 10px;
+  position: relative;
   width: 5px;
   height: 5px;
   padding: 8px;
@@ -103,7 +102,11 @@ table.list .tools {
   height: 0px;
 }
 
-.msg-infos:hover { width: auto; min-width: 550px; height: auto; }
+.msg-infos:hover {
+  width: auto;
+  min-width: 550px;
+  height: auto;
+}
 
 .msg-infos > * { display: none; }
 .msg-infos:hover > * { display: block; }

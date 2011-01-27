@@ -366,7 +366,61 @@ class DBX_Module extends Module {
     
     $sID = array_val(0, $aOptions, '');
     
+    $this->switchDirectory(); // to dbx directory
+    
     switch ($sAction) {
+      
+      case 'view' :
+        
+        if (!$oModel = $this->getEmpty()->getModel($this->getSchema(), false, false)) {
+          
+          $this->dspm(xt('Impossible de charger l\'élément'), 'error');
+          $this->dspm(xt('Modèle de base invalide pour %s', view($oValues)), 'action/error');
+          
+        } else {
+          
+          // load extended datas
+          
+          
+          $oTemplate = $this->getDocument('view-xq.xsl', 'xsl');
+          
+          $oTemplate->setParameters(array(
+            'path' => $this->getCollection()."//id('$sID')",
+            'prefix' => $this->getFullPrefix()));
+          
+          $oModel->add($oModel->parseXSL($this->getDocument('build-headers.xsl')));
+          
+          $oQuery = new XML_XQuery($oModel->parseXSL($oTemplate, false), $this->getNS());
+          $oItem = new XML_Document($oQuery);
+          
+          if ($oItem->isEmpty()) {
+            
+            $this->dspm(xt('Impossible de charger l\'élément'), 'error');
+            $this->dspm(xt('Document vide'), 'action/error');
+            
+          } else {
+            
+            if (!$oModel = $oItem->getModel($this->getSchema(), false, false)) {
+              
+              $this->dspm(xt('Impossible de charger l\'élément'), 'error');
+              $this->dspm(xt('Aucun modèle chargé pour %s', view($oItem)), 'action/error');
+              
+            } else {
+              
+              // run action
+              
+              $aArguments = array('model' => $oModel);
+              
+              if ($oFormExtension = $this->getOptions()->getByName('template-view', $this->getNamespace('dbx'))) {
+                
+                $aArguments['template-extension'] = $oFormExtension->getFirst();
+              }
+              $mResult = $this->runAction('view', $aArguments);
+            }
+          }
+        }
+        
+      break;
       
       case 'edit' :
         
@@ -418,9 +472,10 @@ class DBX_Module extends Module {
           $sPath = $this->readOption('add-do-path', false);
           $sPath = $sPath ? $sPath : $this->getPath().'/add-do';
           
+          $this->switchDirectory();
+          
           if (!$oForm = Controler::getFile('form.eml', $this->getDirectory())) $this->switchDirectory();
           
-          // dspf($oModel);
           $oPath = new XML_Path($this->getDirectory().'/form.eml', array(
             'model' => $oModel,
             'action' => $sPath.SYLMA_FORM_REDIRECT_EXTENSION,
@@ -459,16 +514,12 @@ class DBX_Module extends Module {
       
       case 'list' :
         
-        $this->switchDirectory();
-        
         $this->loadView($oRedirect, $aOptions);
         $mResult = $this->getList($this->getAdmin().'/simple-list');
         
       break;
       
       case 'delete' :
-        
-        $this->switchDirectory();
         
         $oPath = new XML_Path($this->getDirectory().'/delete.eml', array(
           'id' => $sID,
@@ -517,7 +568,7 @@ class DBX_Module extends Module {
   
   private function loadView(Redirect $oRedirect, array $aOptions) {
     
-    $sDocument = 'dbx-list-headers'.$this->getOption('database/name');
+    $sDocument = 'dbx-list-headers'.$this->getOption('database/document');
     
     if ($sHeaders = array_val($sDocument, $_SESSION)) $this->oHeaders = new XML_Document($sHeaders);
     

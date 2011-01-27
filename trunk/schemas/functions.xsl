@@ -75,7 +75,8 @@
     </xsl:if>
   </func:function>
   <func:function name="lc:is-simple">
-    <func:result select="not(lc:is-complex())"/>
+    <xsl:param name="source" select="."/>
+    <func:result select="not(lc:is-complex($source))"/>
   </func:function>
   <func:function name="lc:get-type">
     <xsl:param name="source" select="."/>
@@ -91,21 +92,27 @@
     </xsl:if>
   </func:function>
   <func:function name="lc:is-string">
-    <func:result select="boolean(lc:get-type() = 'xs:string')"/>
+    <xsl:param name="source" select="."/>
+    <func:result select="boolean(lc:get-type($source) = 'xs:string')"/>
   </func:function>
   <func:function name="lc:is-boolean">
-    <func:result select="boolean(lc:get-type() = 'xs:boolean')"/>
+    <xsl:param name="source" select="."/>
+    <func:result select="boolean(lc:get-type($source) = 'xs:boolean')"/>
   </func:function>
   <func:function name="lc:is-date">
-    <func:result select="boolean(lc:get-type() = 'xs:date')"/>
+    <xsl:param name="source" select="."/>
+    <func:result select="boolean(lc:get-type($source) = 'xs:date')"/>
   </func:function>
   <func:function name="lc:is-integer">
-    <func:result select="boolean(lc:get-type() = 'xs:integer')"/>
+    <xsl:param name="source" select="."/>
+    <func:result select="boolean(lc:get-type($source) = 'xs:integer')"/>
   </func:function>
   <func:function name="lc:is-enum">
-    <func:result select="lc:is-simple() and lc:get-schema() and lc:get-schema()/lc:restriction/lc:enumeration"/>
+    <xsl:param name="source" select="."/>
+    <func:result select="lc:is-simple($source) and lc:get-schema($source) and lc:get-schema($source)/lc:restriction/lc:enumeration"/>
   </func:function>
   <func:function name="lc:is-keyref">
-    <func:result select="boolean(@lc:key-ref)"/>
+    <xsl:param name="source" select="."/>
+    <func:result select="boolean($source/@lc:key-ref)"/>
   </func:function>
 </xsl:stylesheet>

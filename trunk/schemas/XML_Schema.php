@@ -85,6 +85,7 @@ class XSD_Parser extends Module {
       
       foreach ($this->getSchema()->query("/*/xs:element", $this->getNS()) as $oElement) {
         
+        $this->dspm('no root', 'action/error');
         // TODO, no valid root element or not at all
       }
     }

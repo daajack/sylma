@@ -400,7 +400,7 @@ class DBX_Module extends Module {
             
           } else {
             
-            if (!$oModel = $oItem->getModel($this->getSchema(), false, false)) {
+            if (!$oModel = $oItem->getModel($this->getSchema(), false, false, false)) {
               
               $this->dspm(xt('Impossible de charger l\'élément'), 'error');
               $this->dspm(xt('Aucun modèle chargé pour %s', view($oItem)), 'action/error');

@@ -70,7 +70,7 @@
             <xsl:when test="lc:is-boolean()">
               <xsl:variable name="icone">
                 <xsl:choose>
-                  <xsl:when test=". = '0' or . = ''">delete</xsl:when>
+                  <xsl:when test=". = '0' or . = '' or . = 'false'">delete</xsl:when>
                   <xsl:otherwise>ok</xsl:otherwise>
                 </xsl:choose>
               </xsl:variable>

@@ -126,10 +126,11 @@
         <span id="{$id}" class="field-input-date"/>
       </xsl:when>
       <xsl:when test="lc:is-boolean()">
-        <input type="checkbox" id="{$id}" class="{$class} field-input-boolean" name="{$name}" value="1"/>
-        <xsl:if test=". = '1'">
-          <xsl:attribute name="checked">checked</xsl:attribute>
-        </xsl:if>
+        <input type="checkbox" id="{$id}" class="{$class} field-input-boolean" name="{$name}" value="1">
+          <xsl:if test=". = '1' or . = 'true'">
+            <xsl:attribute name="checked">checked</xsl:attribute>
+          </xsl:if>
+        </input>
       </xsl:when>
       <xsl:when test="lc:is-integer()">
         <input type="text" class="{$class} field-input-integer" id="{$id}" name="{$name}" value="{.}"/>

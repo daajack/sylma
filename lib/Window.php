@@ -459,7 +459,7 @@ class HTML_Action extends XML_Action {
       
       // infos
       
-      if (Controler::getUser()->isMember(SYLMA_AUTHENTICATED)) {
+      if (Controler::isAdmin()) {
         
         $oInfos = new XML_Element('div', Controler::getInfos(), array('id' => 'msg-admin'));
         

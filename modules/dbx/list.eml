@@ -60,6 +60,7 @@
         </le:get-argument>
       </la:group>
       <le:action path="simple-list">
+        <le:get-argument le:name="o-model" name="o-model"/>
         <le:get-argument le:name="datas" name="datas"/>
         <le:get-argument le:name="module" name="module"/>
         <le:get-argument le:name="path-list" name="path-list"/>

@@ -65,3 +65,23 @@ a.button:hover {
   color: white !important;
   background-color: #ec008c;
 }
+
+.tools {
+  width: 90px !important;
+}
+
+.tools a {
+  border: 1px solid white;
+  display: block;
+  float: left;
+  line-height: 0;
+  opacity: 0.65;
+  padding: 2px;
+}
+
+.tools a:hover {
+  -moz-border-radius: 4px;
+  /*-moz-box-shadow: 0 0 4px #AAAAAA;*/
+  border: 1px solid #AAAAAA;
+  opacity: 1;
+}  

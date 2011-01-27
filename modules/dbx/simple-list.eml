@@ -2,6 +2,7 @@
 <le:action xmlns:le="http://www.sylma.org/execution" xmlns:li="http://www.sylma.org/interface" xmlns="http://www.w3.org/1999/xhtml" xmlns:la="http://www.sylma.org/processors/action-builder">
   <le:settings>
     <le:name>Simple Liste</le:name>
+    <le:argument format="XML_Document" name="o-model"/>
     <le:argument format="php-string" name="module"/>
     <le:argument format="php-string" name="path-list"/>
     <le:argument format="XML_Document" name="datas"/>
@@ -9,6 +10,10 @@
       <li:set-parameter>
         <le:argument>module</le:argument>
         <le:get-argument name="module"/>
+      </li:set-parameter>
+      <li:set-parameter>
+        <le:argument>directory</le:argument>
+        <le:string><le:directory/></le:string>
       </li:set-parameter>
     </le:template>
     <le:argument name="template-extension" required="false" format="XML_Element">
@@ -37,11 +42,15 @@
       <le:get-argument name="path-list"/>
     </la:property>
     <tbody>
-      <le:get-argument name="datas">
+      <le:document>
+        <le:get-argument name="o-model"/>
+        <li:add>
+          <le:get-argument name="datas"/>
+        </li:add>
         <li:parse>
           <le:get-variable name="template"/>
         </li:parse>
-      </le:get-argument>
+      </le:document>
       <tr>
         <td colspan="99">
           <le:get-argument name="datas">

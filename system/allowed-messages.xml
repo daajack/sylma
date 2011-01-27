@@ -26,8 +26,8 @@
     <notice/>
     <report/>
   </form>
-  <error ls:owner="root" ls:mode="770" ls:group="users"/>
-  <report ls:owner="root" ls:mode="770" ls:group="users"/>
+  <error/>
+  <report ls:owner="root" ls:mode="770" ls:group="0"/>
   <warning/>
   <notice ls:owner="root" ls:mode="770" ls:group="users"/>
   <success ls:owner="root" ls:mode="770" ls:group="users"/>

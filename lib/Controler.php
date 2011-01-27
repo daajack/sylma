@@ -128,7 +128,7 @@ class Controler {
       }
     } else {
       
-      dspm(xt('Problème lors de l\'initialisation de la fenêtre'), 'action/warning');
+      dspm(xt('Extension inconnue'), 'action/warning');
     }
     
     

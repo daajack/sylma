@@ -382,13 +382,13 @@ class DBX_Module extends Module {
           // load extended datas
           
           
-          $oTemplate = $this->getDocument('view-xq.xsl', 'xsl');
+          $oTemplate = $this->getDocument('view-xq.xsl', true);
           
           $oTemplate->setParameters(array(
             'path' => $this->getCollection()."//id('$sID')",
             'prefix' => $this->getFullPrefix()));
           
-          $oModel->add($oModel->parseXSL($this->getDocument('build-headers.xsl')));
+          $oModel->add($oModel->parseXSL($this->getDocument('build-headers.xsl', true)));
           
           $oQuery = new XML_XQuery($oModel->parseXSL($oTemplate, false), $this->getNS());
           $oItem = new XML_Document($oQuery);

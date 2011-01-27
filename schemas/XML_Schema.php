@@ -669,6 +669,7 @@ class XSD_Element extends XSD_Node {
   public function getInstance($oParent, $oNode) {
     
     $oModel = new XSD_Model($this, $oNode, $oParent);
+    if (!$this->isRequired()) $oModel->setStatut('optional');
     
     return $this->addInstance($oModel);
   }

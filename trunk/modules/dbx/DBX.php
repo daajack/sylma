@@ -551,6 +551,18 @@ class DBX_Module extends Module {
         $this->import();
         
       break;
+      
+      case 'archive' :
+        
+        $this->archive();
+        
+      break;
+      
+      default : 
+        
+        $this->dspm(xt('Commande %s inconnue', new HTML_Strong($sAction)), 'error');
+        
+      break;
     }
     
     $this->switchDirectory();
@@ -724,6 +736,36 @@ class DBX_Module extends Module {
         }
       }
     }
+  }
+  
+  public function archive() {
+    
+    $sDuration = 'P15D';
+    $sPrefix = $this->getPrefix();
+    
+    $sDocumentName = $this->readOption('database/document');
+    $sArchive = $this->getDB()->pathDocument($sDocumentName.'-archives');
+    $sDocument = $this->getDB()->pathDocument($sDocumentName);
+    
+    $sName = $this->readOption('database/name');
+    $sAll = $sDocument."//$sPrefix:$sName";
+    
+    $sItem = $sDocument.'//id($item/@xml:id)';
+    
+    $sEnd = "xs:date(\$item/$sPrefix:dbx-insert)";
+    $sCurrent = 'fn:current-date()';
+    $sWhere = "$sEnd < $sCurrent - xs:dayTimeDuration('$sDuration')";
+    
+    if ($sCondition = $this->readOption('archive/condition')) $sWhere = "($sWhere) and ($sCondition)";
+    
+    $sQuery = "for \$item in $sAll
+      return if ($sWhere)
+        then
+          (update insert \$item into $sArchive/*,
+          update delete $sItem)
+        else ()";
+    
+    $this->query($sQuery);
   }
   
   /*** Update ***/

@@ -3,6 +3,8 @@
   margin-bottom: 5px;
   border-top: 1px dashed #ccc;
   padding-top: 5px;
+  float: left;
+  width: 100%;
 }
 
 .field label {

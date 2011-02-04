@@ -14,7 +14,7 @@ class DBX_Module extends XDB_Module {
   
   public function __construct(XML_Directory $oDirectory, XML_Document $oSchema, XML_Document $oOptions) {
     
-    $this->setName('DBX');
+    $this->setName('dbx');
     
     $this->setDirectory(__file__);
     $this->oSelfDirectory = $this->getDirectory();
@@ -519,10 +519,13 @@ class DBX_Module extends XDB_Module {
     
     $this->switchDirectory();
     
-    $oView = $this->run($oRedirect, 'view', array($sID));
+    $oView = new HTML_Div($this->run($oRedirect, 'view', array($sID)));
     
     $this->switchDirectory();
     
+    $sHref = 'http://'.$_SERVER['HTTP_HOST'].$this->readOption('mailer/view').'/'.$sID;
+    
+    $oView->shift(new HTML_A($sHref, t('Voir sur le site')));
     $oView->shift(new HTML_Style(null, $this->getDirectory()->getFile('view.css')->read()));
     
     $sHeaders = "From: $sFrom\r\n";
@@ -531,7 +534,7 @@ class DBX_Module extends XDB_Module {
     if ($sType == 'html') $sHeaders .= 'Content-type: text/html; charset= utf-8\n';
     else $sHeaders .= 'Content-type: text/plain; charset=utf-8'; // text
     
-    mail($sTo, $sSubject, $oView, $sHeaders);
+    mail($sTo, $sSubject, (string) $oView, $sHeaders);
   }
   
   private function loadView(Redirect $oRedirect, array $aOptions) {
@@ -626,7 +629,7 @@ class DBX_Module extends XDB_Module {
           dspm(t('Elément ajouté'), 'success');
           
           $sID = $oValues->getAttribute('xml:id');
-          if ($this->getOption('mailer')) $this->sendMail($sID, $oRedirect);
+          if ($this->getOption('mailer', false)) $this->sendMail($sID, $oRedirect);
           
           $bResult = true;
         }

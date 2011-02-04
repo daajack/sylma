@@ -19,8 +19,6 @@ else error_reporting(0);
 libxml_use_internal_errors(true);
 
 require('Sylma.php');
-require(PATH_LIBS.'/Form.php');
-require('modules/dbx/DBX.php');
 
 // DB
 
@@ -29,6 +27,11 @@ if (SYLMA_USE_DB) {
   require(PATH_LIBS.'/eXist.php');
   require(PATH_LIBS.'/XML_Database.php');
 }
+
+// others
+
+require(PATH_LIBS.'/Form.php');
+require('modules/dbx/DBX.php');
 
 ini_set('session.gc_maxlifetime', SESSION_MAX_LIFETIME); 
 session_start();

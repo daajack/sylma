@@ -62,9 +62,10 @@ class XSD_Parser extends Module {
     $oRoot = $oDatas ? $oDatas->getRoot() : null;
     $oResult = null;
     
-    if ($oRoot && ($oElement = $this->getSchema()->get("/*/xs:element[@name='".$oRoot->getName()."']", $this->getNS()))) {
+    if ($oRoot && ($oSource = $this->getSchema()->get("/*/xs:element[@name='".$oRoot->getName()."']", $this->getNS()))) {
       
-      $oElement = new XSD_Element($oElement, null, null, $this);
+      $oElement = new XSD_Element($oSource, null, null, $this);
+      
       $oModel = $oElement->getInstance(null, $oRoot);
       
       $this->isValid($oElement->validate($oModel));

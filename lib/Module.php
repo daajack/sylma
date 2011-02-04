@@ -11,7 +11,7 @@ class Module {
   private $sName = '';
   
   private $aNamespaces = array();
-  private $sNamespace = SYLMA_NS_XHTML;
+  private $sNamespace = '';
   private $sPrefix = '';
   
   public function setDirectory($sPath) {
@@ -67,7 +67,16 @@ class Module {
     return $this->sName;
   }
   
-  protected function setSchema($oSchema) {
+  protected function setSchema($oSchema, $bNamespace = false, $sPrefix = '') {
+    
+    if ($bNamespace && !$this->getNamespace() && $oSchema && !$oSchema->isEmpty()) {
+      
+      if ($sNamespace = $oSchema->getAttribute('targetNamespace')) {
+        
+        if (!$sPrefix) $sPrefix = $this->getPrefix();
+        $this->setNamespace($sNamespace, $sPrefix, true);
+      }
+    }
     
     $this->oSchema = $oSchema;
   }

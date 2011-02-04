@@ -72,9 +72,12 @@ var sylma = {
   
   buildObject: function(object, sPath, parentLayer, rootObject, iDepth) {
     
-    var sKey, sName, oSub, bRoot, eNode;
+    var sKey, sName, oSub, bRoot, eNode, isRoot;
     var oResult = {};
     var bResult = true;
+    
+    if (!rootObject) isRoot = true;
+    else isRoot = false;
     
     if (object['init']) {
       
@@ -132,6 +135,8 @@ var sylma = {
     
     if (bResult) {
       
+      // if (isRoot && oResult.node) oResult.node.setStyle('opacity', 0.25);
+      // if (isRoot) alert(oResult.node);
       if (sClassBase) oResult['sylma-classbase'] = sClassBase;
       
       if (object['properties'] && object['properties'].length != 0) {
@@ -180,6 +185,8 @@ var sylma = {
       }
       //sylma.dsp(sPath);
       if (object['methods']) this.buildMethods(object, oResult);
+      
+      if (isRoot  && oResult.node) oResult.node.removeClass('sylma-loading');
       
       return oResult;
       
@@ -235,6 +242,15 @@ var sylma = {
                   eNode.addEvent(method.name, this.delayFunc.create({
                     
                     arguments : [sMethod, method.timer, parseInt(method.delay), oParent],
+                    event : true,
+                    bind : eNode
+                  }));
+                  
+                } else if (method.name == 'keydown' && method.key) {
+                  
+                  eNode.addEvent(method.name, this.keyDownFunc.create({
+                    
+                    arguments : [sMethod, method.key],
                     event : true,
                     bind : eNode
                   }));
@@ -323,7 +339,33 @@ var sylma = {
       
     } else return true;
   },
-
+  
+  keyDownFunc : function(e, sMethod, sKeys) {
+    
+    var aKeys = sKeys.split(',');
+    var aResults = new Array();
+    // sylma.dsp(e.code);
+    for (var i = 0; i < aKeys.length; i++) {
+      // alert(aKeys[i]);
+      switch (aKeys[i]) {
+        
+        case 'Enter' : iKey = 13; break;
+        case 'Esc' : iKey = 27; break;
+        case 'Tab' : iKey = 9; break;
+        default : iKey = aKeys[i];
+      }
+      
+      aResults.push(iKey);
+    }
+    //sylma.dsp(e.code + ' - ' + aResults.contains(e.code));
+    if (e.code && aResults.contains(e.code)) {
+      
+      var oBounded = sylma.methods[sMethod].bind(this, e);
+      return oBounded();
+      
+    } else return true;
+  },
+  
   createXML : function(xml, parent) {
     
     switch (xml.nodeType) {
@@ -588,13 +630,43 @@ sylma.classes.Base = new Class({
     this.parentObject = oArgs['parent']; // Attach parent object
     this['sylma-path'] = oArgs['path']; // Attach parent object ref
     this.rootObject = oArgs['root']; // Attach root object (layout)
-  }
+  },
   
+  getName : function() {
+    
+    return this['sylma-path'];
+  },
+  
+  clearTimer : function(sName) {
+    
+    if (this.timer) {
+      
+      $clear(this.timer[sName]);
+      this.timer[sName] = undefined;
+    }
+  }
 });
 
 sylma.classes.request = new Class({
   
   Extends : Request,
+  
+  cleanStack : function(oContainer, iMaxLength) {
+    
+    var oKilled;
+    if (!iMaxLength) var iMaxLength = 5;
+    
+    var iLength = oContainer.getChildren().length;
+    
+    while (iLength > iMaxLength) {
+      
+      oKilled = oContainer.getFirst().getNext();
+      oKilled.set('tween', {onComplete : function() { oKilled.destroy(); }});
+      oKilled.tween('opacity', 0);
+      
+      iLength--;
+    }
+  },
   
   'parseAction' : function(oResult, sMessages, oTarget) {
     
@@ -604,10 +676,10 @@ sylma.classes.request = new Class({
     var oContent = $(oResult).getElement('content');
     var oInfos = $(oResult).getElement('infos');
     
-    if (oContainer) oContainer.adopt(sylma.importNodes(oInfos.getFirst()), 'top');
+    if (oContainer && oInfos) oContainer.adopt(sylma.importNodes(oInfos.getFirst()), 'top');
     
     if (!sMessages) sMessages = sylma.defaultMessagesId;
-    if (!oTarget) oTarget = sylma.defaultMessagesContainer;
+    // if (!oTarget) oTarget = sylma.defaultMessagesContainer;
     
     if (oMessages && oMessages.getChildren().length) {
       
@@ -628,6 +700,8 @@ sylma.classes.request = new Class({
         //oMessagesContent.fade('in').;
       }
     }
+    
+    this.cleanStack(oContainer, 8);
     
     return oContent;
   }
@@ -729,15 +803,6 @@ sylma.classes.layer = new Class({
     
     oElement.fade('out').get('tween').chain(function() { oElement.dispose(); });
     eval('delete(this.parentObject.' + this['sylma-path'] + ')');
-  },
-  
-  'clearTimer' : function(sName) {
-    
-    if (this.timer) {
-      
-      $clear(this.timer[sName]);
-      this.timer[sName] = undefined;
-    }
   },
   
   'show' : function() {

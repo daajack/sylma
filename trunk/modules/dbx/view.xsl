@@ -2,7 +2,6 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns="http://www.w3.org/1999/xhtml" xmlns:func="http://exslt.org/functions" xmlns:lc="http://www.sylma.org/schemas" xmlns:lx="http://ns.sylma.org/xslt" version="1.0" extension-element-prefixes="func lx">
   <xsl:import href="../../schemas/functions.xsl"/>
   <xsl:import href="/sylma/xslt/string.xsl"/>
-  <xsl:variable select="document('../../xslt/months.xml')" name="doc-months"/>
   <xsl:import href="/sylma/xslt/date.xsl"/>
   <xsl:template match="/*">
     <div>

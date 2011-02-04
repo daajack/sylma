@@ -525,8 +525,10 @@ class DBX_Module extends XDB_Module {
     
     $sHref = 'http://'.$_SERVER['HTTP_HOST'].$this->readOption('mailer/view').'/'.$sID;
     
-    $oView->shift(new HTML_A($sHref, t('Voir sur le site')));
-    $oView->shift(new HTML_Style(null, $this->getDirectory()->getFile('view.css')->read()));
+    $oView->shift(
+      new HTML_Style(null, $this->getDirectory()->getFile('view.css')->read()),
+      new HTML_A($sHref, t('Voir sur le site')),
+      new HTML_Br);
     
     $sHeaders = "From: $sFrom\r\n";
     

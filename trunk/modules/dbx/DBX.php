@@ -14,16 +14,19 @@ class DBX_Module extends XDB_Module {
   
   public function __construct(XML_Directory $oDirectory, XML_Document $oSchema, XML_Document $oOptions) {
     
+    $this->setName('DBX');
+    
     $this->setDirectory(__file__);
     $this->oSelfDirectory = $this->getDirectory();
     $this->oExtendDirectory = $oDirectory;
     
     $this->switchDirectory();
     
+    $this->oOptions = $oOptions;
+    
     if (!$oSchema) $this->dspm(xt('Aucun schéma défini'), 'action/warning');
     else $this->setSchema($oSchema, true, $this->readOption('database/prefix'));
     
-    $this->oOptions = $oOptions;
     $this->oHeaders = new XML_Document($this->getOption('headers'));
     
     $this->setNamespace('http://www.sylma.org/modules/dbx', 'dbx', false);
@@ -46,10 +49,10 @@ class DBX_Module extends XDB_Module {
     $this->bSelfDirectory = !$this->bSelfDirectory;
   }
   
-  /*public function getModel() {
+  protected function getCollection($sPath = '') {
     
-    return $this->oModel;
-  }*/
+    return parent::getCollection($this->readOption('database/document')).($sPath ? '/'.$sPath : '');
+  }
   
   private function getPath() {
     
@@ -341,6 +344,7 @@ class DBX_Module extends XDB_Module {
                 
                 $aArguments['template-extension'] = $oFormExtension->getFirst();
               }
+              
               $mResult = $this->runAction('view', $aArguments);
             }
           }
@@ -504,6 +508,32 @@ class DBX_Module extends XDB_Module {
     return $mResult;
   }
   
+  protected function sendMail($sID, $oRedirect) {
+    
+    $sFrom = nonull_val($this->readOption('mailer/from', false), $this->getSettings('mailer/from'));
+    $sTo = nonull_val($this->readOption('mailer/to', false), $this->getSettings('mailer/to'));
+    $sType = nonull_val($this->readOption('mailer/type', false), $this->getSettings('mailer/type'), 'html');
+    
+    $sSubject = $this->getSettings('mailer/prefix');
+    $sSubject .= nonull_val($this->readOption('mailer/subject', false), t('Nouvelle entrée sur le site'));
+    
+    $this->switchDirectory();
+    
+    $oView = $this->run($oRedirect, 'view', array($sID));
+    
+    $this->switchDirectory();
+    
+    $oView->shift(new HTML_Style(null, $this->getDirectory()->getFile('view.css')->read()));
+    
+    $sHeaders = "From: $sFrom\r\n";
+    
+    //$sHeaders .= 'Mime-Version: 1.0'."\r\n";
+    if ($sType == 'html') $sHeaders .= 'Content-type: text/html; charset= utf-8\n';
+    else $sHeaders .= 'Content-type: text/plain; charset=utf-8'; // text
+    
+    mail($sTo, $sSubject, $oView, $sHeaders);
+  }
+  
   private function loadView(Redirect $oRedirect, array $aOptions) {
     
     $sDocument = 'dbx-list-headers'.$this->getOption('database/document');
@@ -594,6 +624,10 @@ class DBX_Module extends XDB_Module {
         if ($this->insert($oValues, $this->getCollection($sParent))) {
           
           dspm(t('Elément ajouté'), 'success');
+          
+          $sID = $oValues->getAttribute('xml:id');
+          if ($this->getOption('mailer')) $this->sendMail($sID, $oRedirect);
+          
           $bResult = true;
         }
       }

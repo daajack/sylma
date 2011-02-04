@@ -267,7 +267,7 @@ class HTML_Style extends HTML_Tag {
       
       $this->setAttribute('rel', 'stylesheet');
       $this->setAttribute('href', $sHref);
-      $this->setAttribute('media', 'screen, projection');
+      $this->setAttribute('media', 'all');
       
     } else {
       

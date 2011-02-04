@@ -240,7 +240,7 @@ class XDB_Module extends Module {
       if ($bMessage) {
         
         dspm(t('Une erreur s\'est produite. Impossible de continuer. Modifications perdues'), 'error');
-        dspm(t('Aucune données dans $_POST'), 'action/error');
+        dspm(t('Aucune données dans $_POST'), 'action/warning');
       }
       
     } else {
@@ -295,3 +295,7 @@ class XDB_Module extends Module {
     return $this->getDB()->delete($sID, $this->mergeNamespaces($aNamespaces));
   }
 }
+
+
+
+

@@ -124,7 +124,7 @@ class Module {
     return $this->sPrefix;
   }
   
-  public function runAction($sPath, $aArguments) {
+  public function runAction($sPath, $aArguments = array()) {
     
     $sPath = Controler::getAbsolutePath($sPath, $this->getDirectory());
     $oPath = new XML_Path($sPath, $aArguments, true, false);

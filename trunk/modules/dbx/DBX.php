@@ -1,6 +1,6 @@
 <?php
 
-class DBX_Module extends Module {
+class DBX_Module extends XDB_Module {
   
   private $oModel = null;
   
@@ -20,25 +20,18 @@ class DBX_Module extends Module {
     
     $this->switchDirectory();
     
-    $this->oSchema = $oSchema;
+    if (!$oSchema) $this->dspm(xt('Aucun schéma défini'), 'action/warning');
+    else $this->setSchema($oSchema, true, $this->readOption('database/prefix'));
+    
     $this->oOptions = $oOptions;
     $this->oHeaders = new XML_Document($this->getOption('headers'));
     
     $this->setNamespace('http://www.sylma.org/modules/dbx', 'dbx', false);
     $this->setNamespace(SYLMA_NS_XHTML, 'html', false);
-    
-    if (!$oSchema) $this->dspm(xt('Aucun schéma défini'), 'action/warning');
-    else $this->setNamespace($oSchema->getAttribute('targetNamespace'), $this->readOption('database/prefix'));
-    
     $this->setNamespace(SYLMA_NS_SCHEMAS, 'lc', false);
   }
   
   /*** Module Extension ***/
-  
-  protected function getDB() {
-    
-    return Controler::getDatabase();
-  }
   
   private function getExtendDirectory() {
     
@@ -57,15 +50,6 @@ class DBX_Module extends Module {
     
     return $this->oModel;
   }*/
-  
-  private function getCollection($sPath = '') {
-    
-    //return "doc('{$this->getDB()->getCollection()}/{$this->readOption('parent-path')}')";
-    // $sParentPath = $this->readOption('parent-path', false);
-    // $sParent = $sParentPath ? $sParentPath : $this->readOption('parent').'/*';
-    
-    return "doc('{$this->getDB()->getCollection()}{$this->readOption('database/document')}')".($sPath ? '/'.$sPath : '');
-  }
   
   private function getPath() {
     
@@ -249,64 +233,6 @@ class DBX_Module extends Module {
         $oAttribute->remove();
       }
     }
-  }
-  
-  public function buildValues($oValues, XML_Element $oParent = null) {
-    
-    if (!$oParent) $oParent = new XML_Document($this->getEmpty());
-    // dspf($this->getEmpty());
-    foreach ($oValues->getChildren() as $oValue) {
-      
-      if ($oValue->isElement()) {
-        
-        if (substr($oValue->getName(), 0, 4) == 'attr') {
-          
-          $sName = substr($oValue->getName(), 5);
-          
-          if ($sName == 'id') $oParent->setAttribute('xml:'.$sName, $oValue->read());
-          else $oParent->setAttribute($sName, $oValue->read());
-          
-        } else {
-          
-          $oChild = $oParent->addNode($this->getFullPrefix().$oValue->getName(), null, null, $this->getNamespace());
-          
-          if ($oValue->isComplex()) $oChild->add($this->buildValues($oValue, $oChild));
-          else $oChild->add($oValue->read());
-          
-          if (!trim($oChild->read())) $oChild->remove();
-        }
-      }// else dspf($oValue);
-    }
-    
-    return $oParent;
-  }
-  
-  public function getPost(Redirect $oRedirect, $bMessage = true) {
-    
-    $oResult = null;
-    
-    if (!$oPost = $oRedirect->getDocument('post')) {
-      
-      if ($bMessage) {
-        
-        dspm(t('Une erreur s\'est produite. Impossible de continuer. Modifications perdues'), 'error');
-        dspm(t('Aucune données dans $_POST'), 'action/error');
-      }
-      
-    } else {
-      
-      if (!$oValues = $this->buildValues($oPost)) {
-        
-        if ($bMessage) {
-          
-          dspm(t('Impossible de lire les valeurs envoyés par le formulaire'), 'error');
-          dspm(xt('Erreur dans la conversion des valeurs %s dans $_POST', view($oPost)), 'action/error');
-        }
-        
-      } else $oResult = $oValues;
-    }
-    
-    return $oResult;
   }
   
   private function getTemplateExtension() {
@@ -665,7 +591,7 @@ class DBX_Module extends Module {
         
         // if ($oFile = $oValues->saveTemp()) $this->getDB()->run("add to {$this->getParent()} {$oFile->getSystemPath()}");
         
-        if ($this->insert($oValues->display(true, false), $this->getCollection($sParent))) {
+        if ($this->insert($oValues, $this->getCollection($sParent))) {
           
           dspm(t('Elément ajouté'), 'success');
           $bResult = true;
@@ -768,43 +694,6 @@ class DBX_Module extends Module {
     $this->query($sQuery);
   }
   
-  /*** Update ***/
-  
-  public function getNamespaces($aNamespaces = array()) {
-    
-    if ($aNamespaces) return array_merge($this->getNS(), $aNamespaces);
-    else return $this->getNS();
-  }
-  
-  public function load($sID) { // TOUSE ?
-    
-    return $this->getDB()->load($sID);
-  }
-  
-  public function get($sQuery, $bDocument = false, array $aNamespaces = array()) {
-    
-    return $this->getDB()->get($sQuery, $this->getNamespaces($aNamespaces), $bDocument);
-  }
-  
-  public function query($sQuery, array $aNamespaces = array()) {
-    
-    return $this->getDB()->query($sQuery, $this->getNamespaces($aNamespaces));
-  }
-  
-  public function update($sID, XML_Document $oDocument, array $aNamespaces = array()) {
-    
-    return $this->getDB()->update($sID, $oDocument, $this->getNamespaces($aNamespaces));
-  }
-  
-  public function insert($mElement, $sTarget, array $aNamespaces = array()) {
-    
-    return $this->getDB()->insert($mElement, $sTarget, $this->getNamespaces($aNamespaces));
-  }
-  
-  public function delete($sID, array $aNamespaces = array()) {
-    
-    return $this->getDB()->delete($sID, $this->getNamespaces($aNamespaces));
-  }
 }
 
 

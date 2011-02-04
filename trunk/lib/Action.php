@@ -1282,15 +1282,16 @@ class XML_Action extends XML_Document {
           if ($oChild->hasChildren()) foreach ($oChild->getChildren() as $oFormat) $aFormats[] = $oFormat->read();
           else if ($sFormat = $oChild->getAttribute('format')) $aFormats[] = $sFormat;
           
-          $bError = !$this->validArgumentType($mArgument, $aFormats, $oMethod, $oChild->testAttribute('allow-null', false));
+          $bSubError = !$this->validArgumentType($mArgument, $aFormats, $oMethod, $oChild->testAttribute('allow-null', false));
           
-          if (!$bError) $aResultArguments[] = $mArgument;
+          if (!$bSubError) $aResultArguments[] = $mArgument;
+          if (!$bError) $bError = $bSubError;
           
         } else if ($oChild->testAttribute('required') !== false) {
           
           $this->dspm(xt('L\'argument %s requis dans %s est absent',
             new HTML_Strong($oChild->getAttribute('name')),
-            view($oMethod)), 'action/warning');
+            view($oMethod)), 'action/error');
           
           $bError = true;
         }
@@ -1310,7 +1311,6 @@ class XML_Action extends XML_Document {
         'string' => $sArguments,
         'arguments' => $aResultArguments,
       );
-      
     }
     
     return false;

@@ -22,7 +22,7 @@
             <xsl:value-of select="@name"/>
           </name>
           <xsl:call-template name="attributes-to-nodes">
-            <xsl:with-param name="attributes" select="@delay | @timer | @limit"/>
+            <xsl:with-param name="attributes" select="@delay | @timer | @limit | @key"/>
           </xsl:call-template>
           <xsl:if test="@event">
             <event>true</event>

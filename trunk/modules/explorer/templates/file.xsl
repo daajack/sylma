@@ -44,7 +44,7 @@ return true;]]></la:event>
         <xsl:choose>
           <xsl:when test="contains('jpg,jpeg,gif,png', @extension)">
             <la:property name="isImage">true</la:property>
-            <a rel="lightbox[group]" href="{@full-path}" class="preview clear-block">
+            <a rel="lightbox[group]" class="preview clear-block" href="{@full-path}?width=800&amp;height=650">
               <img src="{@full-path}?width=96&amp;height=50"/>
             </a>
           </xsl:when>

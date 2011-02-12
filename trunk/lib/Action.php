@@ -783,7 +783,7 @@ class XML_Action extends XML_Document {
             xt('Aucun chemin spécifié pour le fichier dans %s.', new HTML_Strong($this->getPath())),
             new HTML_Tag('p', new HTML_Em($oElement->viewResume()))), 'action/warning');
           
-        } else {
+        } else { // file found
           
           if ($oElement->getAttribute('output') == 'text') {
             
@@ -805,6 +805,14 @@ class XML_Action extends XML_Document {
             if (is_string($mPath)) $mPath = $this->getAbsolutePath($mPath);
             
             $mResult = new $sClass($mPath, $iMode);
+            
+            if ($sClass == 'XSL_Document') { // auto variables
+              
+              $mResult->setParameters(array(
+                'sylma-directory' => $this->getDirectory(),
+                'sylma-lang' => $this->getSettings('infos/lang'),
+              ));
+            }
             
             $bRun = true;
           }
@@ -1252,6 +1260,7 @@ class XML_Action extends XML_Document {
       // Normal arguments (defined number)
       
       $aMethodArguments = array();
+      $bUseAssoc = false;
       
       foreach($oChildren as $iArgument => $oChild) {
         
@@ -1261,7 +1270,7 @@ class XML_Action extends XML_Document {
         if ($sName && array_key_exists($sName, $aArguments)) {
           
           $mArgument = $aArguments[$sName];
-          $bAssoc = $bExist = true;
+          $bUseAssoc = $bAssoc = $bExist = true;
           
         } else if (array_key_exists($iArgument, $aArguments)) {
           
@@ -1294,6 +1303,10 @@ class XML_Action extends XML_Document {
             view($oMethod)), 'action/error');
           
           $bError = true;
+          
+        } else if ($bUseAssoc && !$oChild->isLast()) {
+          
+          $aResultArguments[] = null;
         }
       }
     }

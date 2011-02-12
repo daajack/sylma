@@ -140,18 +140,26 @@ class XML_Database {
   
   public function hasDocument($sDocument) {
     
-    return 'xs:boolean('.$this->pathDocument($sDocument).')';
+    return 'xs:boolean('.$this->getPath($sDocument).')';
   }
   
-  public function pathDocument($sDocument) {
+  public function getPath($sDocument) {
     
-    return "doc('{$this->getCollection()}/$sDocument')";
+    if (!$sDocument) dspm('Aucun nom pour le document', 'db/warning');
+    else if ($sDocument[0] != '/') $sDocument = '/'.$sDocument;
+    
+    return "doc('{$this->getCollection()}$sDocument')";
   }
   
   public function getCollection($bFormat = false) {
     
     if ($bFormat) return "collection('{$this->sCollection}')";
     else return $this->sCollection;
+  }
+  
+  public function check($sPath) {
+    
+    return $this->query("if ($sPath) then 1 else ''");
   }
   
   public function load($sID) {
@@ -165,14 +173,14 @@ class XML_Database {
     return $this->query("update delete {$this->getCollection(true)}//id('$sID')", $aNamespaces, false);
   }
   
-  public function update($sID, XML_Document $oDocument, array $aNamespaces = array()) {
+  public function update($sPath, XML_Document $oDocument, array $aNamespaces = array()) {
     
-    return $this->query("update replace {$this->getCollection(true)}//id('$sID') with {$oDocument->display(true, false)}", $aNamespaces, false);
+    return $this->query("update replace $sPath with {$oDocument->display(true, false)}", $aNamespaces, false);
   }
   
-  public function insert(XML_Document $oDocument, $sTarget, array $aNamespaces = array()) {
+  public function insert(XML_Document $oDocument, $sPath, array $aNamespaces = array()) {
     
-    return $this->query("update insert {$oDocument->display(true, false)} into $sTarget", $aNamespaces, false);
+    return $this->query("update insert {$oDocument->display(true, false)} into $sPath", $aNamespaces, false);
   }
   
   public function __destruct() {
@@ -190,73 +198,21 @@ class XDB_Module extends Module {
     return Controler::getDatabase();
   }
   
-  protected function getCollection($sDocument = '') {
+  protected function setDocument($sDocument) {
     
-    //return "doc('{$this->getDB()->getCollection()}/{$this->readOption('parent-path')}')";
-    // $sParentPath = $this->readOption('parent-path', false);
-    // $sParent = $sParentPath ? $sParentPath : $this->readOption('parent').'/*';
-    
-    if ($sDocument) $sDocument = '/'.$sDocument;
-    
-    return "doc('{$this->getDB()->getCollection()}$sDocument')";
+    $this->sDocument = $sDocument;
   }
   
-  protected function buildValues($oValues, XML_Element $oParent = null) {
+  protected function getCollection($bFormat = true) {
     
-    if (!$oParent) $oParent = new XML_Document($this->getEmpty());
-    // dspf($this->getEmpty());
-    foreach ($oValues->getChildren() as $oValue) {
-      
-      if ($oValue->isElement()) {
-        
-        if (substr($oValue->getName(), 0, 4) == 'attr') {
-          
-          $sName = substr($oValue->getName(), 5);
-          
-          if ($sName == 'id') $oParent->setAttribute('xml:'.$sName, $oValue->read());
-          else $oParent->setAttribute($sName, $oValue->read());
-          
-        } else {
-          
-          $oChild = $oParent->addNode($this->getFullPrefix().$oValue->getName(), null, null, $this->getNamespace());
-          
-          if ($oValue->isComplex()) $oChild->add($this->buildValues($oValue, $oChild));
-          else $oChild->add($oValue->read());
-          
-          if (!trim($oChild->read())) $oChild->remove();
-        }
-      }// else dspf($oValue);
-    }
-    
-    return $oParent;
+    return $this->getDB()->getCollection($bFormat);
   }
   
-  protected function getPost(Redirect $oRedirect, $bMessage = true) {
+  protected function getPath($sPath = '', $sDocument = null) {
     
-    $oResult = null;
+    if (!$sDocument) $sDocument = $this->sDocument;
     
-    if (!$oPost = $oRedirect->getDocument('post')) {
-      
-      if ($bMessage) {
-        
-        dspm(t('Une erreur s\'est produite. Impossible de continuer. Modifications perdues'), 'error');
-        dspm(t('Aucune données dans $_POST'), 'action/warning');
-      }
-      
-    } else {
-      
-      if (!$oValues = $this->buildValues($oPost)) {
-        
-        if ($bMessage) {
-          
-          dspm(t('Impossible de lire les valeurs envoyés par le formulaire'), 'error');
-          dspm(xt('Erreur dans la conversion des valeurs %s dans $_POST', view($oPost)), 'action/error');
-        }
-        
-      } else $oResult = $oValues;
-    }
-    
-    return $oResult;
+    return $this->getDB()->getPath($sDocument).$sPath;
   }
   
   public function mergeNamespaces($aNamespaces = array()) {
@@ -265,7 +221,12 @@ class XDB_Module extends Module {
     else return $this->getNS();
   }
   
-  public function load($sID) { // TOUSE ?
+  public function check($sID) {
+    
+   return $this->getDB()->check($this->getPath("//id('$sID')"));
+  }
+  
+  public function load($sID) {
     
    return $this->getDB()->load($sID);
   }
@@ -275,22 +236,27 @@ class XDB_Module extends Module {
     return $this->getDB()->get($sQuery, $this->mergeNamespaces($aNamespaces), $bDocument);
   }
   
-  public function query($sQuery, array $aNamespaces = array(), $bGetResult = true) {
+  protected function query($sQuery, array $aNamespaces = array(), $bGetResult = true) {
     
     return $this->getDB()->query($sQuery, $this->mergeNamespaces($aNamespaces), $bGetResult);
   }
   
-  public function update($sID, XML_Document $oDocument, array $aNamespaces = array()) {
+  protected function replace($sPath, XML_Document $oDocument, array $aNamespaces = array()) {
     
-    return $this->getDB()->update($sID, $oDocument, $this->mergeNamespaces($aNamespaces));
+    return $this->getDB()->update($sPath, $oDocument, $this->mergeNamespaces($aNamespaces));
   }
   
-  public function insert(XML_Document $mElement, $sTarget, array $aNamespaces = array()) {
+  protected function update($sID, XML_Document $oDocument, array $aNamespaces = array()) {
+    
+    return $this->getDB()->update($this->getPath("//id('$sID')"), $oDocument, $this->mergeNamespaces($aNamespaces));
+  }
+  
+  protected function insert(XML_Document $mElement, $sTarget, array $aNamespaces = array()) {
     
     return $this->getDB()->insert($mElement, $sTarget, $this->mergeNamespaces($aNamespaces));
   }
   
-  public function delete($sID, array $aNamespaces = array()) {
+  protected function delete($sID, array $aNamespaces = array()) {
     
     return $this->getDB()->delete($sID, $this->mergeNamespaces($aNamespaces));
   }

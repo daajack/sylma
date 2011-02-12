@@ -672,11 +672,13 @@ class XML_Document extends DOMDocument {
   /** 
    * Check validity against W3C XMLSchema
    */
-  public function validate(XML_Document $oSchema, $bMessages = false) {
+  public function validate(XML_Document $oSchema, array $aOptions = array()) {
     
-    $oParser = new XSD_Parser($oSchema, $this, array(
+    $aOptions = array_merge(array(
       'model' => false,
-      'messages' => $bMessages));
+      'messages' => false), $aOptions);
+      
+    $oParser = new XSD_Parser($oSchema, $this, $aOptions);
     
     return $oParser->isValid();
   }
@@ -684,13 +686,15 @@ class XML_Document extends DOMDocument {
   /** 
    * Build validity model with W3C XMLSchema
    */
-  public function getModel(XML_Document $oSchema, $bMessages = true, $bLoadRefs = true, $bModel = true) {
+  public function getModel(XML_Document $oSchema, array $aOptions = array()) {
     
-    $oParser = new XSD_Parser($oSchema, $this, array(
-      'model' => $bModel,
-      'messages' => $bMessages,
+    $aOptions = array_merge(array(
+      'model' => true,
+      'messages' => true,
       'mark' => true,
-      'load-refs' => $bLoadRefs));
+      'load-refs' => true), $aOptions);
+    
+    $oParser = new XSD_Parser($oSchema, $this, $aOptions);
     
     return $oParser->parse();
   }
@@ -1004,8 +1008,10 @@ class XSL_Document extends XML_Document {
           else if ($this->getFile()) $sFile = $this->getFile()->parse();
           else $sFile = new HTML_Tag('em', 'Fichier inconnu !');
           
-          dspm(xt('%s : %s - %s', new HTML_Strong('Libxml'), xmlize($oError->message), $sFile), 'warning');
+          dspm(xt('%s : %s - %s dans %s', new HTML_Strong('Libxml'), xmlize($oError->message), view($this), $sFile), 'warning');
         }
+        
+        libxml_clear_errors();
       }
       
       if ($bXML) {

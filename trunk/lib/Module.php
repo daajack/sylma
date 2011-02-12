@@ -142,7 +142,7 @@ class Module {
     } else return null;
   }
   
-  protected function dspm($mMessage, $sStatut = SYLMA_MESSAGES_DEFAULT_STAT) {
+  public function dspm($mMessage, $sStatut = SYLMA_MESSAGES_DEFAULT_STAT) {
     
     $oPath = new HTML_Div(xt('Module %s -&gt; %s', view($this->getName()), new HTML_Strong($this->getDirectory())),
       array('style' => 'font-weight: bold; padding: 5px 0 5px;'));

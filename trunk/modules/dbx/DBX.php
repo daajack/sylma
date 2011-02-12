@@ -29,6 +29,8 @@ class DBX_Module extends XDB_Module {
     
     $this->oHeaders = new XML_Document($this->getOption('headers'));
     
+    $this->setDocument($this->readOption('database/document'));
+    
     $this->setNamespace('http://www.sylma.org/modules/dbx', 'dbx', false);
     $this->setNamespace(SYLMA_NS_XHTML, 'html', false);
     $this->setNamespace(SYLMA_NS_SCHEMAS, 'lc', false);
@@ -49,22 +51,26 @@ class DBX_Module extends XDB_Module {
     $this->bSelfDirectory = !$this->bSelfDirectory;
   }
   
-  protected function getCollection($sPath = '') {
-    
-    return parent::getCollection($this->readOption('database/document')).($sPath ? '/'.$sPath : '');
-  }
-  
-  private function getPath() {
+  private function getAdminPath() {
     
     return $this->readOption('path');
   }
   
-  protected function getEmpty() {
+  protected function getEmpty($sName = '') {
+    
+    if (!$sName) $sName = $this->readOption('database/name');
     
     $oResult = new XML_Document();
-    $oResult->addNode($this->getFullPrefix().$this->readOption('database/name'), null, null, $this->getNamespace());
+    $oResult->addNode($this->getFullPrefix().$sName, null, null, $this->getNamespace());
     
     return $oResult;
+  }
+  
+  private function parsePath($sPath, $sPrefix = '') {
+    
+    if (!$sPrefix) $sPrefix = $this->getPrefix();
+    
+    return preg_replace('/([-\w]+)/', $sPrefix.':\1', $sPath);
   }
   
   /*** Options ***/
@@ -81,7 +87,7 @@ class DBX_Module extends XDB_Module {
       
       if (!array_key_exists($sPath, $this->aOptions) || !$this->aOptions[$sPath]) {
         
-        $sRealPath = preg_replace('/([-\w]+)/', 'dbx:\1', $sPath);
+        $sRealPath = $this->parsePath($sPath, 'dbx');
         
         if ((!$this->aOptions[$sPath] = $this->getOptions()->get($sRealPath, $this->getNS())) && $bDebug)
           dspm(xt('Option %s introuvable dans %s', new HTML_Strong($sPath), view($this->getOptions())), 'action/warning');
@@ -282,6 +288,66 @@ class DBX_Module extends XDB_Module {
     }
   }
   
+  /*** Values ***/
+  
+  protected function buildValues($oValues, XML_Document $oParent = null) {
+    
+    if (!$oParent) $oParent = new XML_Document($this->getEmpty());
+    
+    foreach ($oValues->getChildren() as $oValue) {
+      
+      if ($oValue->isElement()) {
+        
+        if (substr($oValue->getName(), 0, 4) == 'attr') {
+          
+          $sName = substr($oValue->getName(), 5);
+          
+          if ($sName == 'id') $oParent->setAttribute('xml:'.$sName, $oValue->read());
+          else $oParent->setAttribute($sName, $oValue->read());
+          
+        } else {
+          
+          $oChild = $oParent->addNode($this->getFullPrefix().$oValue->getName(), null, null, $this->getNamespace());
+          
+          if ($oValue->isComplex()) $this->buildValues($oValue, $oChild);
+          else $oChild->add($oValue->read());
+          
+          if (!trim($oChild->read())) $oChild->remove();
+        }
+      }// else dspf($oValue);
+    }
+    
+    return $oParent;
+  }
+  
+  protected function getPost(Redirect $oRedirect, $bMessage = true, $oParent = null) {
+    
+    $oResult = null;
+    
+    if (!$oPost = $oRedirect->getDocument('post')) {
+      
+      if ($bMessage) {
+        
+        dspm(t('Une erreur s\'est produite. Impossible de continuer. Modifications perdues'), 'error');
+        dspm(t('Aucune données dans $_POST'), 'action/warning');
+      }
+      
+    } else {
+      
+      if (!$oValues = $this->buildValues($oPost, $oParent)) {
+        
+        if ($bMessage) {
+          
+          dspm(t('Impossible de lire les valeurs envoyés par le formulaire'), 'error');
+          dspm(xt('Erreur dans la conversion des valeurs %s dans $_POST', view($oPost)), 'action/error');
+        }
+        
+      } else $oResult = $oValues;
+    }
+    
+    return $oResult;
+  }
+
   /*** Actions ***/
   
   public function run(Redirect $oRedirect, $sAction, $aOptions = array(), XML_Element $oOptions = null) {
@@ -301,7 +367,9 @@ class DBX_Module extends XDB_Module {
       
       case 'view' :
         
-        if (!$oModel = $this->getEmpty()->getModel($this->getSchema(), false, false)) {
+        $aOptions = array('messages' => false, 'load-refs' => false);
+        
+        if (!$oModel = $this->getEmpty()->getModel($this->getSchema(), $aOptions)) {
           
           $this->dspm(xt('Impossible de charger l\'élément'), 'error');
           $this->dspm(xt('Modèle de base invalide pour %s', view($oValues)), 'action/error');
@@ -314,7 +382,7 @@ class DBX_Module extends XDB_Module {
           $oTemplate = $this->getDocument('view-xq.xsl', true);
           
           $oTemplate->setParameters(array(
-            'path' => $this->getCollection()."//id('$sID')",
+            'path' => $this->getPath("//id('$sID')"),
             'prefix' => $this->getFullPrefix()));
           
           $oModel->add($oModel->parseXSL($this->getDocument('build-headers.xsl', true)));
@@ -329,7 +397,7 @@ class DBX_Module extends XDB_Module {
             
           } else {
             
-            if (!$oModel = $oItem->getModel($this->getSchema(), false, false)) {
+            if (!$oModel = $oItem->getModel($this->getSchema(), $aOptions)) {
               
               $this->dspm(xt('Impossible de charger l\'élément'), 'error');
               $this->dspm(xt('Aucun modèle chargé pour %s', view($oItem)), 'action/error');
@@ -354,24 +422,42 @@ class DBX_Module extends XDB_Module {
       
       case 'edit' :
         
-        if ((!$oValues = $this->getPost($oRedirect, false)) && (!$oValues = $this->load($sID))) {
+        $sPath = $this->readOption('use-child', false);
+        
+        if (!$oValues = $this->getPost($oRedirect, false)) {
+          
+          if ($sPath) $oValues = $this->get($this->getPath("//id('$sID')/".$this->parsePath($sPath)), true);
+          else $oValues = $this->load($sID);
+        }
+        
+        if (!$oValues) {
           
           dspm(xt('L\'élément identifié par %s n\'existe pas', new HTML_Strong($sID)), 'warning');
           
         } else {
           
-          if (!$oModel = $oValues->getModel($this->getSchema())) {
+          $aOptions = array();
+          if ($sPath) $aOptions['path'] = $this->readOption('database/name').'/'.$sPath;
+          
+          if (!$oModel = $oValues->getModel($this->getSchema(), $aOptions)) {
             
             dspm(xt('Impossible de charger l\'élément'), 'error');
             dspm(xt('Aucun modèle chargé pour %s', view($oValues)), 'action/error');
             
           } else {
-            // dspf($oModel);
+            
             // $this->buildRefs($oModel, true);
             
-            $mResult = $this->runAction('form', array(
+            $sForm = $this->readOption('ajax') == 'true' ? 'form-ajax' : 'form';
+            
+            $this->switchDirectory();
+            
+            // first, look for corresponding file in targetDirectory
+            if (!$oForm = Controler::getFile($sForm.'.eml', $this->getDirectory())) $this->switchDirectory();
+            
+            $mResult = $this->runAction($sForm, array(
               'model' => $oModel,
-              'action' => $this->getPath()."/edit-do/$sID".SYLMA_FORM_REDIRECT_EXTENSION,
+              'action' => $this->getAdminPath()."/edit-do/$sID".SYLMA_FORM_REDIRECT_EXTENSION,
               'template-extension' => $this->getTemplateExtension()));
             }
         }
@@ -380,7 +466,7 @@ class DBX_Module extends XDB_Module {
       
       case 'edit-do' :
         
-        if (!$this->edit($oRedirect, $sID)) $oRedirect->setPath($this->getPath().'/edit/'.$sID);
+        if (!$this->edit($oRedirect, $sID)) $oRedirect->setPath($this->getAdminPath().'/edit/'.$sID);
         else $oRedirect->setPath($sList);
         
         $mResult = $oRedirect;
@@ -391,27 +477,29 @@ class DBX_Module extends XDB_Module {
         
         if (!$oValues = $this->getPost($oRedirect, false)) $oValues = $this->getEmpty();
         
-        if (!$oModel = $oValues->getModel($this->getSchema(), (bool) $oRedirect->getDocument('post'))) {
+        if (!$oModel = $oValues->getModel($this->getSchema(), array('messages' => (bool) $oRedirect->getDocument('post')))) {
           
           dspm(xt('Impossible de charger l\'élément'), 'error');
           dspm(xt('Aucun modèle chargé pour %s', view($oValues)), 'action/error');
           
         } else {
           
+          // dspf($oModel);
           // $this->buildRefs($oModel, true);
           $sPath = $this->readOption('add-do-path', false);
-          $sPath = $sPath ? $sPath : $this->getPath().'/add-do';
+          $sPath = $sPath ? $sPath : $this->getAdminPath().'/add-do';
+          
+          $sForm = $this->readOption('ajax') == 'true' ? 'form-ajax' : 'form';
           
           $this->switchDirectory();
           
-          if (!$oForm = Controler::getFile('form.eml', $this->getDirectory())) $this->switchDirectory();
+          // first, look for corresponding file in targetDirectory
+          if (!$oForm = Controler::getFile($sForm.'.eml', $this->getDirectory())) $this->switchDirectory();
           
-          $oPath = new XML_Path($this->getDirectory().'/form.eml', array(
+          $mResult = $this->runAction($sForm, array(
             'model' => $oModel,
             'action' => $sPath.SYLMA_FORM_REDIRECT_EXTENSION,
-            'template-extension' => $this->getTemplateExtension()), true, false); //.redirect
-          
-          $mResult = new XML_Action($oPath);
+            'template-extension' => $this->getTemplateExtension())); //.redirect
         }
         
       break;
@@ -421,7 +509,7 @@ class DBX_Module extends XDB_Module {
         if (!$this->add($oRedirect)) {
           
           $sPath = $this->readOption('add-path', false);
-          $sPath = $sPath ? $sPath : $this->getPath().'/add';
+          $sPath = $sPath ? $sPath : $this->getAdminPath().'/add';
           
           $oRedirect->setPath($sPath);
           
@@ -453,7 +541,7 @@ class DBX_Module extends XDB_Module {
         
         $oPath = new XML_Path($this->getDirectory().'/delete.eml', array(
           'id' => $sID,
-          'action' => $this->getPath()."/delete-do/$sID.redirect"), true, false); //.redirect
+          'action' => $this->getAdminPath()."/delete-do/$sID.redirect"), true, false); //.redirect
         
         $mResult = new XML_Action($oPath);
         
@@ -543,7 +631,7 @@ class DBX_Module extends XDB_Module {
     
     $sDocument = 'dbx-list-headers'.$this->getOption('database/document');
     
-    if ($sHeaders = array_val($sDocument, $_SESSION)) $this->oHeaders = new XML_Document($sHeaders);
+    // if ($sHeaders = array_val($sDocument, $_SESSION)) $this->oHeaders = new XML_Document($sHeaders);
     
     $iPage = array_val('page', $aOptions);
     $iPageSize = array_val('size', $aOptions, 15);
@@ -561,8 +649,9 @@ class DBX_Module extends XDB_Module {
   public function getList($sPath, $sAction = 'list') {
     
     $mResult = null;
+    $aOptions = array('messages' => false, 'load-refs' => false);
     
-    $oModel = $this->getEmpty()->getModel($this->getSchema(), false, false);
+    $oModel = $this->getEmpty()->getModel($this->getSchema(), $aOptions);
     
     if (!$oModel || $oModel->isEmpty()) dspm(xt('Fichier modèle %s invalide', view($oModel)), 'action/error');
     else {
@@ -570,18 +659,18 @@ class DBX_Module extends XDB_Module {
       // $this->buildRefs($oModel);
       
       $oModel->add($this->getHeaders());
-      //$sOrderDir = $sOrderDir == 'a' ? 'ascending' : 'descending';
+      
       // dspf($oModel);
+      
       $oTemplate = $this->getDocument('list-xq.xsl', true);
       
       $sChildren = $this->readOption('database/list-path', false);
-      $sChildren = $sChildren ? $sChildren : $this->readOption('database/parent').'/*';
+      $sName = $this->getFullPrefix().$this->readOption('database/name');
+      $sChildren = $sChildren ? $sChildren : $this->readOption('database/parent').'/'.$sName;
       
-      // $sParentPath = $this->readOption('parent-path', false);
-      // $sParent = $sParentPath ? $sParentPath : $this->readOption('parent').'/*';
       $oTemplate->setParameters(array(
         'parent-name' => $this->readOption('database/parent'),
-        'parent-path' => $this->getCollection($sChildren),
+        'parent-path' => $this->getPath('/'.$sChildren),
         'build-empty' => 'true',
         'prefix' => $this->getFullPrefix()));
       
@@ -625,8 +714,9 @@ class DBX_Module extends XDB_Module {
         $sParent = nonull_val($this->readOption('database/insert-path', false), $this->readOption('database/parent'));
         
         // if ($oFile = $oValues->saveTemp()) $this->getDB()->run("add to {$this->getParent()} {$oFile->getSystemPath()}");
+        $sPath = $this->getPath('/'.$sParent);
         
-        if ($this->insert($oValues, $this->getCollection($sParent))) {
+        if ($this->query($sPath, array(), false) && $this->insert($oValues, $sPath)) {
           
           dspm(t('Elément ajouté'), 'success');
           
@@ -644,10 +734,19 @@ class DBX_Module extends XDB_Module {
   public function edit(Redirect $oRedirect, $sID) {
     
     $bResult = false;
+    $oParent = null;
+    $aOptions = array();
     
-    if ($oValues = $this->getPost($oRedirect)) {
+    if ($sPath = $this->readOption('use-child')) {
       
-      if (!$oValues->validate($this->getSchema())) {
+      $aPath = explode('/', $sPath);
+      $oParent = new XML_Element(array_last($aPath), null, null, $this->getNamespace());
+      $aOptions['path'] = $this->readOption('database/name').'/'.$sPath;
+    }
+    
+    if ($oValues = $this->getPost($oRedirect, true, $oParent->getDocument())) {
+      //dspf($oValues);
+      if (!$oValues->validate($this->getSchema(), $aOptions)) {
         
         dspm(t('Un ou plusieurs champs ne sont pas corrects, ceux-ci sont indiqués en rouge'), 'warning');
         
@@ -663,11 +762,10 @@ class DBX_Module extends XDB_Module {
           
         } else {
           
-          if ($this->update($sID, $oValues) || 1) {
-            
-            dspm(t('Elément mis-à-jour'), 'success');
-            $bResult = true;
-          }
+          if ($sPath) $bResult = $this->replace($this->getPath("//id('$sID')/".$this->parsePath($sPath)), $oValues);
+          else $bResult = $this->update($sID, $oValues);
+          
+          if ($bResult) dspm(t('Elément mis-à-jour'), 'success');
         }
       }
     }
@@ -709,8 +807,8 @@ class DBX_Module extends XDB_Module {
     $sPrefix = $this->getPrefix();
     
     $sDocumentName = $this->readOption('database/document');
-    $sArchive = $this->getDB()->pathDocument($sDocumentName.'-archives');
-    $sDocument = $this->getDB()->pathDocument($sDocumentName);
+    $sArchive = parent::getPath('/*', $sDocumentName.'-archives');
+    $sDocument = parent::getPath('', $sDocumentName);
     
     $sName = $this->readOption('database/name');
     $sAll = $sDocument."//$sPrefix:$sName";
@@ -726,7 +824,7 @@ class DBX_Module extends XDB_Module {
     $sQuery = "for \$item in $sAll
       return if ($sWhere)
         then
-          (update insert \$item into $sArchive/*,
+          (update insert \$item into $sArchive,
           update delete $sItem)
         else ()";
     

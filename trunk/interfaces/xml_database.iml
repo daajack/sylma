@@ -4,6 +4,9 @@
   <method path="get-collection" name="getCollection" return-default="true">
     <argument format="php-boolean" name="format" required="false"/>
   </method>
+  <method path="get-path" name="getPath" return-default="true">
+    <argument format="php-string" name="document" required="true"/>
+  </method>
   <method path="escape" name="escape" return-default="true">
     <argument name="value" format="php-string"/>
   </method>

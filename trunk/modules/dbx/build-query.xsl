@@ -56,20 +56,34 @@ element <xsl:value-of select="$parent-name"/> {
   </xsl:template>
   
   <xsl:template match="dbx:element" mode="prepare">
-    <xsl:variable name="ref" select="dbx:get-ref()"/>
-    <xsl:if test="$ref">
-      let $sylma-<xsl:value-of select="concat(@name, ' := ', $ref/.)"/>
-      <xsl:choose>
-        <xsl:when test="$ref/@key-constrain"><xsl:value-of select="$ref/@key-constrain"/></xsl:when>
-        <xsl:otherwise>[@key = $self/<xsl:value-of select="concat($prefix, @name)"/>/text()]</xsl:otherwise>
-      </xsl:choose>
-    </xsl:if>
-    <xsl:if test="@path">
-      let $sylma-<xsl:value-of select="concat(@name, ' := $self/', @path)"/>
-    </xsl:if>
-    <xsl:if test="@transform">
-      let $sylma-<xsl:value-of select="concat(@name, ' := ', @transform)"/>
-    </xsl:if>
+    <xsl:param name="parent" select="''"/>
+    <xsl:variable name="name" select="concat($prefix, @name)"/>
+    <xsl:choose>
+      <xsl:when test="dbx:element">
+        <xsl:apply-templates select="dbx:element" mode="prepare">
+          <xsl:with-param name="parent" select="concat($parent, '/', $name)"/>
+        </xsl:apply-templates>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:variable name="ref" select="dbx:get-ref()"/>
+        <xsl:if test="$ref">
+          let $sylma-<xsl:value-of select="concat(@name, ' := ', $ref/.)"/>
+          <xsl:choose>
+            <xsl:when test="$ref/@key-constrain"><xsl:value-of select="$ref/@key-constrain"/></xsl:when>
+            <xsl:otherwise>[@key = $self/<xsl:value-of select="concat($prefix, @name)"/>/text()]</xsl:otherwise>
+          </xsl:choose>
+        </xsl:if>
+        <xsl:if test="@path">
+          let $sylma-<xsl:value-of select="concat(@name, ' := $self/', @path)"/>
+        </xsl:if>
+        <xsl:if test="@transform">
+          let $sylma-<xsl:value-of select="concat(@name, ' := ', @transform)"/>
+        </xsl:if>
+        <xsl:if test="$parent != ''">
+          let $sylma-<xsl:value-of select="concat(@name, ' := $self', $parent, '/', $name, '/text()')"/>
+        </xsl:if>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
   
   <func:function name="dbx:get-op">
@@ -133,8 +147,9 @@ element <xsl:value-of select="$parent-name"/> {
   </xsl:template>
   
   <xsl:template match="dbx:element" mode="result">
-    <xsl:variable name="ref" select="dbx:get-ref()"/>
+    <xsl:param name="parent" select="''"/>
     <xsl:variable name="name" select="concat($prefix, @name)"/>
+    <xsl:variable name="ref" select="dbx:get-ref()"/>
     <xsl:choose>
       <xsl:when test="@copy-node = 'true'">
         element <xsl:value-of select="$name"/> {
@@ -153,8 +168,15 @@ element <xsl:value-of select="$parent-name"/> {
               attribute lc:value {$self/<xsl:value-of select="$name"/>/text()},
               xs:string($sylma-<xsl:value-of select="concat(@name, dbx:get-view())"/>)}
           </xsl:when>
-          <xsl:when test="@path or @transform">
+          <xsl:when test="@path or @transform or $parent">
             element <xsl:value-of select="$name"/> { $sylma-<xsl:value-of select="@name"/> }
+          </xsl:when>
+          <xsl:when test="dbx:element">
+            element <xsl:value-of select="$name"/> { 
+              <xsl:apply-templates select="dbx:element" mode="result">
+                <xsl:with-param name="parent" select="concat($parent, '/', $name)"/>
+              </xsl:apply-templates>
+            }
           </xsl:when>
           <xsl:otherwise>
             <xsl:choose>

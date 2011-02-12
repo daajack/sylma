@@ -526,14 +526,14 @@ class DBX_Module extends XDB_Module {
       case 'simple-list' :
         
         $this->loadView($oRedirect, $aOptions);
-        $mResult = $this->getList($this->getAdmin().'/simple-list', 'simple-list');
+        $mResult = $this->getList($this->getAdminPath().'/simple-list', 'simple-list');
         
       break;
       
       case 'list' :
         
         $this->loadView($oRedirect, $aOptions);
-        $mResult = $this->getList($this->getAdmin().'/simple-list');
+        $mResult = $this->getList($this->getAdminPath().'/simple-list');
         
       break;
       
@@ -631,7 +631,7 @@ class DBX_Module extends XDB_Module {
     
     $sDocument = 'dbx-list-headers'.$this->getOption('database/document');
     
-    // if ($sHeaders = array_val($sDocument, $_SESSION)) $this->oHeaders = new XML_Document($sHeaders);
+    if ($sHeaders = array_val($sDocument, $_SESSION)) $this->oHeaders = new XML_Document($sHeaders);
     
     $iPage = array_val('page', $aOptions);
     $iPageSize = array_val('size', $aOptions, 15);

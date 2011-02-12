@@ -1272,7 +1272,7 @@ class XML_Action extends XML_Document {
           $mArgument = $aArguments[$sName];
           $bUseAssoc = $bAssoc = $bExist = true;
           
-        } else if (array_key_exists($iArgument, $aArguments)) {
+        } else if (!$bUseAssoc && array_key_exists($iArgument, $aArguments)) {
           
           $mArgument = $aArguments[$iArgument];
           $bExist = true;

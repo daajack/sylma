@@ -12,7 +12,7 @@ class XSD_Parser extends Module {
   private $oModel = null;
   
   private $aMessages = array();
-  private $aTypes = array();
+  public $aTypes = array();
   public $aTypesUsed = array(); // stack of types to avoid recursive calls
   private $aGroups = array();
   private $aRefs = array();
@@ -791,7 +791,7 @@ class XSD_Model extends XSD_Instance { // XSD_ElementInstance
         
         if (!$this->getClass()->getType()->getParticle()) { // node is complex but type is simple
           
-          $this->dspm(xt('Impossible de construire l\'élément %s, particule manquante', view($this->getNode())), 'xml/warning');
+          $this->getParser()->dspm(xt('Impossible de construire l\'élément %s, particule manquante', view($this->getNode())), 'xml/warning');
           
         } else {
           
@@ -1592,24 +1592,26 @@ class XSD_Type extends XSD_Container { // complex or simple, but defined
       
     } else {
       
-      if (!$oInstance->getParticle()) { // simple type should be complex
+      if (!$this->getParser()->useType($this->getName())) { // avoid recursion
         
-        if ($this->keepValidate()) $oInstance->buildParticle();
-      }
-      
-      if ($this->isMixed()) $bResult = true; // TODO better validation
-      else if (!$this->getParticle()) {
+        $this->getParser()->pushType($this->getName());
         
-        $this->dspm(xt('Impossible de valider l\'élément %s, particule inexistante', view($this->getSource())), 'xml/warning');
-        
-      } else { // ok, continue
-        
-        if (!$this->getParser()->useType($this->getName())) { // avoid recursion
+        if (!$oInstance->getParticle()) { // simple type should be complex
           
-          $this->getParser()->pushType($this->getName());
-          $bResult = $this->getParticle()->validate($oInstance->getParticle(), $aPath);
-          $this->getParser()->popType();
+          if ($this->keepValidate()) $oInstance->buildParticle();
         }
+        
+        if ($this->isMixed()) $bResult = true; // TODO better validation
+        else if (!$this->getParticle()) {
+          
+          $this->dspm(xt('Impossible de valider l\'élément %s, particule inexistante', view($this->getSource())), 'xml/warning');
+          
+        } else { // ok, continue
+            
+            $bResult = $this->getParticle()->validate($oInstance->getParticle(), $aPath);
+        }
+        
+        $this->getParser()->popType();
       }
     }
     
@@ -1749,7 +1751,12 @@ class XSD_Type extends XSD_Container { // complex or simple, but defined
         
         // WARNING : no check if valid children, if not group
         if ($oFirst->getName() == 'group') $this->setParticle(new XSD_Group($oFirst, $this));
-        else $this->setParticle(new XSD_Particle($oFirst, $this, $aPath));
+        else if (!$this->getParser()->useType($this->getName())) { // avoid recursion
+          
+          $this->getParser()->pushType($this->getName());
+          $this->setParticle(new XSD_Particle($oFirst, $this, $aPath));
+          $this->getParser()->popType();
+        }
       }
     }
   }

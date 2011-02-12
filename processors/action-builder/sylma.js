@@ -23,7 +23,7 @@ var sylma = {
   
   importNodes : function(mElements) {
     
-    if ($type(mElements) == 'array') {
+    if (typeOf(mElements) == 'array') {
       
       var aResults = new Array;
       
@@ -146,7 +146,7 @@ var sylma = {
         for (sKey in object['properties']) {
           
           oSub = object['properties'][sKey];
-          sType = $type(oSub);
+          sType = typeOf(oSub);
           
           if (sType == 'object') { // JS Object
             
@@ -223,7 +223,7 @@ var sylma = {
                 
               } else eNode = $(method['id-node']);
               //sPath = method['path-node'] ? method['path-node'] : '#' + method['id-node']
-              if ($type(eNode) == 'element') {
+              if (typeOf(eNode) == 'element') {
                 //sylma.dsp(sPath + ' (' + oParent['sylma-path'] + ') / ' + sMethod);
                 eNode.store('ref-object', oParent); // store parent object in node
                 //sylma.dsp(method['path-node'] + ' :: ' + method['id-node']);
@@ -248,12 +248,10 @@ var sylma = {
                   
                 } else if (method.name == 'keydown' && method.key) {
                   
-                  eNode.addEvent(method.name, this.keyDownFunc.create({
-                    
-                    arguments : [sMethod, method.key],
-                    event : true,
-                    bind : eNode
-                  }));
+                  eNode.addEvent(method.name, function(e) {
+                    var oBound = sylma.keyDownFunc.bind(eNode);
+                    oBound(e, sMethod, method.key);
+                  });
                   
                 } else eNode.addEvent(method.name, sylma.methods[sMethod]); // add event
                 
@@ -409,24 +407,22 @@ var sylma = {
   
   load : function(oOptions) {
     
-    var hOptions = $H(oOptions);
+    if (!oOptions.method) oOptions.method = 'post';
     
-    if (!hOptions.has('method')) hOptions.set('method', 'post');
-    
-    var sPath = hOptions.get('path');
+    var sPath = oOptions.path;
     var self = this;
     
-    var sWindow = hOptions.has('window') ? hOptions.get('window') : 'action';
+    var sWindow = oOptions.window ? oOptions.window : 'action';
     
     this.request = new this.classes.request({
       
       'url' : sPath + '.' + sWindow,
-      'data' : hOptions.get('arguments'),
-      'method' : hOptions.get('method'),
+      'data' : oOptions.arguments,
+      'method' : oOptions.method,
       //'async ' : true,
       'onSuccess' : function(sResult, oXML) {
         
-        if (Browser.Engine.trident) {
+        if (Browser.ie) {
           
           //oXML = { documentElement: self.createXML(oXML.documentElement) }; // not working yet
           oXML = self.createXML(oXML.documentElement); // not working yet
@@ -438,16 +434,16 @@ var sylma = {
         
         oContent.setStyle('opacity', 0.2);
         
-        if (hOptions.get('replace')) oContent.replaces(hOptions.get('html'));
+        if (oOptions.replace) oContent.replaces(oOptions.html);
         else {
           
-          if (hOptions.has('html-position')) oContent.inject(hOptions.get('html'), hOptions.get('html-position'));
-          else hOptions.get('html').grab(oContent);
+          if (oOptions['html-position']) oContent.inject(oOptions.html, oOptions['html-position']);
+          else oOptions.html.grab(oContent);
         }
         
-        if (hOptions.has('onLoad')) hOptions.get('onLoad')();
+        if (oOptions.onLoad) oOptions.onLoad();
         
-        if (hOptions.get('position') == 'center') {
+        if (oOptions.position == 'center') {
           
           var iLeft = (window.getSize().x - oContent.getSize().x) / 2;
           var iTop = ($(window).getSize().y - oContent.getSize().y) / 2;
@@ -455,7 +451,7 @@ var sylma = {
           oContent.setStyles({'left' : iLeft, 'top' : iTop});
         }
         
-        var iOpacity = hOptions.has('opacity') ? hOptions.get('opacity') : 1;
+        var iOpacity = oOptions.opacity ? oOptions.opacity : 1;
         
         // TODO kill old layer
         //layer.node.destroy(); 
@@ -472,14 +468,20 @@ var sylma = {
             
             // has methods, first load em
             
-            var oMethods = new Request.JSON({
+            var oMethods = new Request({
               
               'url' : '/index.txt?sylma-result-id=' + sMethods,
               //'evalResponse' : true,
-              'onSuccess' : function(oResponse, sResponse) {
+              onFailure : function() {
+                
+                sylma.dsp('failure');
+              },
+              
+              'onSuccess' : function(sResponse) {
+                
                 //alert(sResponse);
                 eval(sResponse);
-                self.replace(sRecall, hOptions, oContent);
+                self.replace(sRecall, oOptions, oContent);
                 
                 oContent.setStyle('opacity', iOpacity);
                 
@@ -489,10 +491,10 @@ var sylma = {
             
             // no methods
             
-            self.replace(sRecall, hOptions);
+            self.replace(sRecall, oOptions);
             oContent.setStyle('opacity', iOpacity);
             
-            if (hOptions.has('onSuccess')) hOptions.get('onSuccess')(oContent);
+            if (oOptions.onSuccess) oOptions.onSuccess(oContent);
           }
           
         } else {
@@ -500,7 +502,7 @@ var sylma = {
           // only change content node
           oContent.setStyle('opacity', iOpacity);
           
-          if (hOptions.has('onSuccess')) hOptions.get('onSuccess')(oContent);
+          if (oOptions.onSuccess) oOptions.onSuccess(oContent);
           //oCaller.node = oContent;
         }
       }
@@ -509,7 +511,7 @@ var sylma = {
     return true;
   },
   
-  replace : function(sID, hOptions, oResult) {
+  replace : function(sID, oOptions, oResult) {
     
     var self = this;
     
@@ -518,17 +520,19 @@ var sylma = {
       'url' : '/index.txt?sylma-result-id=' + sID, 
       'onSuccess' : function(oResponse) {
         
-        if (!hOptions.get('parent')) hOptions.set('parent', sylma);
+        if (!oOptions.parent) oOptions.parent = sylma;
         
-        var oNewObject = self.buildRoot(oResponse, hOptions.get('name'), hOptions.get('parent'), hOptions.get('root'));
+        var oNewObject = self.buildRoot(oResponse, oOptions.name, oOptions.parent, oOptions.root);
         
-        if (hOptions.has('position')) oNewObject['sylma-position'] = hOptions.get('position');
+        if (oOptions.position) oNewObject['sylma-position'] = oOptions.position;
+        // sylma.dsp(oOptions.parent['sylma-path'] + ' / ' + oOptions.name);
+        if (oOptions['old-name']) eval('delete(oOptions.parent.' + oOptions['old-name'] + ')'); // delete old object
+        if (oNewObject) eval('oOptions.parent.' + oOptions.name + ' = oNewObject'); // insert new object
         
-        if (hOptions.has('old-name')) eval('delete(hOptions.get(\'parent\').' + hOptions.get('old-name') + ')'); // delete old object
-        if (oNewObject) eval('hOptions.get(\'parent\').' + hOptions.get('name') + ' = oNewObject'); // insert new object
+        oOptions.resultObject = oNewObject;
         
         // at last : onSuccess function
-        if (hOptions.has('onSuccess')) hOptions.get('onSuccess')(oResult);
+        if (oOptions.onSuccess) oOptions.onSuccess(oResult);
         
     }}).get();
   },
@@ -541,7 +545,7 @@ var sylma = {
     
     var eMessages = $(sTargetId);
     
-    if (!($type(eMessages) == 'element')) {
+    if (!(typeOf(eMessages) == 'element')) {
       
       eMessages = new Element('div', {'id' : sTargetId, 'class' : 'sylma-messages'});
       
@@ -653,22 +657,21 @@ sylma.classes.request = new Class({
   
   cleanStack : function(oContainer, iMaxLength) {
     
-    var oKilled;
+    var self = this;
+    
     if (!iMaxLength) var iMaxLength = 5;
     
     var iLength = oContainer.getChildren().length;
+    var oKilled = oContainer.getFirst().getNext();
     
-    while (iLength > iMaxLength) {
+    if (iLength > iMaxLength) {
       
-      oKilled = oContainer.getFirst().getNext();
-      oKilled.set('tween', {onComplete : function() { oKilled.destroy(); }});
+      oKilled.set('tween', {onComplete : function() { oKilled.destroy(); self.cleanStack(oContainer, iMaxLength); }});
       oKilled.tween('opacity', 0);
-      
-      iLength--;
     }
   },
   
-  'parseAction' : function(oResult, sMessages, oTarget) {
+  'parseAction' : function(oResult, bText) {
     
     var oContainer = $('msg-admin');
     // sylma.dsp(oResult.childNodes[0].tagName);
@@ -678,7 +681,7 @@ sylma.classes.request = new Class({
     
     if (oContainer && oInfos) oContainer.adopt(sylma.importNodes(oInfos.getFirst()), 'top');
     
-    if (!sMessages) sMessages = sylma.defaultMessagesId;
+    var sMessages = sylma.defaultMessagesId;
     // if (!oTarget) oTarget = sylma.defaultMessagesContainer;
     
     if (oMessages && oMessages.getChildren().length) {
@@ -703,7 +706,8 @@ sylma.classes.request = new Class({
     
     this.cleanStack(oContainer, 8);
     
-    return oContent;
+    if (bText && oContent) return oContent.get('text');
+    else return oContent;
   }
 });
 
@@ -737,7 +741,7 @@ sylma.classes.layer = new Class({
   
   insert : function(oOptions) {
     
-    oOptions = $extend({
+    oOptions = Object.append({
       'html': this.node,
       'parent' : this,
       'root' : this.rootObject,
@@ -769,7 +773,7 @@ sylma.classes.layer = new Class({
     
     this.node.setStyle('opacity', 0.2);
     
-    oOptions = $extend({
+    oOptions = Object.append({
       
       'html' : this.node,
       'old-name' : this['sylma-path'], // optional
@@ -789,7 +793,7 @@ sylma.classes.layer = new Class({
     
     if (!oOptions) oOptions = {};
     
-    oOptions = $extend({
+    oOptions = Object.append({
       'path' : this.getPath(),
       'arguments' : oArguments
     }, oOptions);

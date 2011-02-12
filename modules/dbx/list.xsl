@@ -5,7 +5,6 @@
   <xsl:param name="directory"/>
   <xsl:import href="../../schemas/functions.xsl"/>
   <xsl:import href="/sylma/xslt/string.xsl"/>
-  <xsl:variable select="document('../../xslt/months.xml')" name="doc-months"/>
   <xsl:import href="/sylma/xslt/date.xsl"/>
   <xsl:template match="/*">
     <xsl:choose>
@@ -35,30 +34,40 @@
     </tr>
   </xsl:template>
   <xsl:template match="*" mode="field">
+    <xsl:param name="parent"/>
     <xsl:variable name="local" select="local-name()"/>
     <xsl:variable name="element" select="/*/*[1]/*[local-name() = $local]"/>
-    <td>
-      <xsl:choose>
-        <xsl:when test="lc:is-boolean($element)">
-          <xsl:variable name="icone">
-            <xsl:choose>
-              <xsl:when test=". = '0' or . = ''">delete</xsl:when>
-              <xsl:otherwise>ok</xsl:otherwise>
-            </xsl:choose>
-          </xsl:variable>
-          <img src="{$directory}/images/{$icone}.png"/>
-        </xsl:when>
-        <xsl:when test=".">
+    <xsl:choose>
+      <xsl:when test="*">
+        <xsl:apply-templates select="*" mode="field">
+          <xsl:with-param name="parent" select="$element"/>
+        </xsl:apply-templates>
+      </xsl:when>
+      <xsl:otherwise>
+        <td>
           <xsl:choose>
-            <xsl:when test="lc:is-date($element)">
-              <xsl:value-of select="lx:format-date(., '', 'simple')"/>
+            <xsl:when test="lc:is-boolean($element)">
+              <xsl:variable name="icone">
+                <xsl:choose>
+                  <xsl:when test=". = '0' or . = ''">delete</xsl:when>
+                  <xsl:otherwise>ok</xsl:otherwise>
+                </xsl:choose>
+              </xsl:variable>
+              <img src="{$directory}/images/{$icone}.png"/>
             </xsl:when>
-            <xsl:otherwise>
-              <xsl:value-of select="lx:string-resume(., $max-length)"/>
-            </xsl:otherwise>
+            <xsl:when test=".">
+              <xsl:choose>
+                <xsl:when test="lc:is-date($element)">
+                  <xsl:value-of select="lx:format-date(., '', 'simple')"/>
+                </xsl:when>
+                <xsl:otherwise>
+                  <xsl:value-of select="lx:string-resume(., $max-length)"/>
+                </xsl:otherwise>
+              </xsl:choose>
+            </xsl:when>
           </xsl:choose>
-        </xsl:when>
-      </xsl:choose>
-    </td>
+        </td>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 </xsl:stylesheet>

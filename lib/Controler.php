@@ -126,11 +126,7 @@ class Controler {
         //if (self::isWindowType('html') || self::isWindowType('redirection')) self::doHTTPRedirect($oResult);
         //else self::doAJAXRedirect($oResult);
       }
-    } else {
-      
-      dspm(xt('Extension inconnue'), 'action/warning');
     }
-    
     
     return self::getWindow();
   }

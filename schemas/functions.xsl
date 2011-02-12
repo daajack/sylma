@@ -71,7 +71,7 @@
   <func:function name="lc:is-complex">
     <xsl:param name="source" select="."/>
     <xsl:if test="lc:get-schema($source)">
-      <func:result select="boolean(lc:get-schema($source)/@complex = 'true')"/>
+      <func:result select="boolean(lc:get-schema($source)/@complex)"/>
     </xsl:if>
   </func:function>
   <func:function name="lc:is-simple">
@@ -90,6 +90,11 @@
         </xsl:otherwise>
       </xsl:choose>
     </xsl:if>
+  </func:function>
+  <func:function name="lc:is-required">
+    <xsl:param name="source" select="."/>
+    <xsl:variable name="model" select="lc:get-model()"/>
+    <func:result select="boolean($model/@required or not($model/@minOccurs) or ($model/@minOccurs and $model/@minOccurs &gt; 0))"/>
   </func:function>
   <func:function name="lc:is-string">
     <xsl:param name="source" select="."/>

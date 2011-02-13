@@ -54,7 +54,7 @@ class XML_Database {
     else $this->sNamespace = $mNamespace;
   }
   
-  public function query($sQuery, array $aNamespaces = array(), $bGetResult = true) {
+  public function query($sQuery, array $aNamespaces = array(), $bGetResult = true, $bMessages = true) {
     
     $sResult = null;
     
@@ -77,7 +77,7 @@ class XML_Database {
       
       if (!$aResult = $this->getSession()->xquery($sQuery)) { // no result
         
-        if ($bGetResult) {
+        if ($bGetResult && $bMessages) {
           
           dspm(array(
             new HTML_Strong(t('Erreur dans la requête : ')),
@@ -89,7 +89,7 @@ class XML_Database {
           
           dspm($sError, 'db/error');
           
-        } else $sResult = 1;
+        } else $sResult = '';
         
       } else { // has result
         
@@ -120,11 +120,11 @@ class XML_Database {
     return $sResult;
   }
   
-  public function get($sQuery, array $aNamespaces = array(), $bDocument = false) {
+  public function get($sQuery, array $aNamespaces = array(), $bDocument = false, $bGetResult = true, $bMessages = true) {
     
     $mResult = false;
     
-    if ($sResult = $this->query($sQuery, $aNamespaces)) {
+    if ($sResult = $this->query($sQuery, $aNamespaces, $bGetResult, $bMessages)) {
       
       $mResult = strtoxml($sResult);
       if ($bDocument) $mResult = new XML_Document($mResult);
@@ -173,9 +173,9 @@ class XML_Database {
     return $this->query("update delete {$this->getCollection(true)}//id('$sID')", $aNamespaces, false);
   }
   
-  public function update($sPath, XML_Document $oDocument, array $aNamespaces = array()) {
+  public function replace($sPath, XML_Document $oDocument, array $aNamespaces = array()) {
     
-    return $this->query("update replace $sPath with {$oDocument->display(true, false)}", $aNamespaces, false);
+    return $this->query("update replace $sPath with {$oDocument->display(true, false)}", $aNamespaces, false, false);
   }
   
   public function insert(XML_Document $oDocument, $sPath, array $aNamespaces = array()) {
@@ -193,6 +193,8 @@ class XML_Database {
 
 class XDB_Module extends Module {
   
+  /* Global */
+  
   protected function getDB() {
     
     return Controler::getDatabase();
@@ -208,6 +210,16 @@ class XDB_Module extends Module {
     return $this->getDB()->getCollection($bFormat);
   }
   
+  protected function getPathID($sID, $sPath = null) {
+    
+    if ($sPath) {
+      
+      if ($sPath === true) $sPath = '';
+      return $this->getPath($this->getPathID($sID).$sPath);
+      
+    } else return "//id('$sID')";
+  }
+  
   protected function getPath($sPath = '', $sDocument = null) {
     
     if (!$sDocument) $sDocument = $this->sDocument;
@@ -215,11 +227,14 @@ class XDB_Module extends Module {
     return $this->getDB()->getPath($sDocument).$sPath;
   }
   
-  public function mergeNamespaces($aNamespaces = array()) {
+  /* Various */
+  
+  public function getCurrentDate() {
     
-    if ($aNamespaces) return array_merge($this->getNS(), $aNamespaces);
-    else return $this->getNS();
+    return date('Y-m-d\TH:i:sP'); // 2011-02-11T16:20:53.921+01:00
   }
+  
+  /* XQuery */
   
   public function check($sID) {
     
@@ -231,24 +246,35 @@ class XDB_Module extends Module {
    return $this->getDB()->load($sID);
   }
   
-  public function get($sQuery, $bDocument = false, array $aNamespaces = array()) {
+  public function mergeNamespaces($aNamespaces = array()) {
     
-    return $this->getDB()->get($sQuery, $this->mergeNamespaces($aNamespaces), $bDocument);
+    if ($aNamespaces) return array_merge($this->getNS(), $aNamespaces);
+    else return $this->getNS();
   }
   
-  protected function query($sQuery, array $aNamespaces = array(), $bGetResult = true) {
+  public function get($sQuery, $bDocument = false, array $aNamespaces = array()) {
     
-    return $this->getDB()->query($sQuery, $this->mergeNamespaces($aNamespaces), $bGetResult);
+    return $this->getDB()->get($sQuery, $this->mergeNamespaces($aNamespaces), $bDocument, true, false);
+  }
+  
+  protected function query($sQuery, array $aNamespaces = array(), $bGetResult = true, $bGetMessages = true) {
+    
+    return $this->getDB()->query($sQuery, $this->mergeNamespaces($aNamespaces), $bGetResult, $bGetMessages);
+  }
+  
+  protected function update($sQuery, array $aNamespaces = array()) {
+    
+    return $this->getDB()->query($sQuery, $this->mergeNamespaces($aNamespaces), false, false);
+  }
+  
+  protected function replaceID($sID, XML_Document $oDocument, array $aNamespaces = array()) {
+    
+    return $this->replace($this->getPath($this->getPathID($sID)), $oDocument, $aNamespaces);
   }
   
   protected function replace($sPath, XML_Document $oDocument, array $aNamespaces = array()) {
     
-    return $this->getDB()->update($sPath, $oDocument, $this->mergeNamespaces($aNamespaces));
-  }
-  
-  protected function update($sID, XML_Document $oDocument, array $aNamespaces = array()) {
-    
-    return $this->getDB()->update($this->getPath("//id('$sID')"), $oDocument, $this->mergeNamespaces($aNamespaces));
+    return $this->getDB()->replace($sPath, $oDocument, $this->mergeNamespaces($aNamespaces));
   }
   
   protected function insert(XML_Document $mElement, $sTarget, array $aNamespaces = array()) {

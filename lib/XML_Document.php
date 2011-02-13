@@ -548,7 +548,7 @@ class XML_Document extends DOMDocument {
     return new XML_Element($sName, $oContent, $aAttributes, $sUri, $this);
   }
   
-  public function addNode($sName, $oContent = '', $aAttributes = null, $sUri = '') {
+  public function addNode($sName, $oContent = '', $aAttributes = null, $sUri = null) {
     
     if ($this->getRoot()) return $this->getRoot()->addNode($sName, $oContent, $aAttributes, $sUri);
     else return $this->setChild($this->createNode($sName, $oContent, $aAttributes, $sUri));

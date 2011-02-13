@@ -185,6 +185,7 @@ var sylma = {
       }
       //sylma.dsp(sPath);
       if (object['methods']) this.buildMethods(object, oResult);
+      if (oResult.onBuilt) oResult.onBuilt();
       
       if (isRoot  && oResult.node) oResult.node.removeClass('sylma-loading');
       
@@ -407,7 +408,7 @@ var sylma = {
   
   load : function(oOptions) {
     
-    if (!oOptions.method) oOptions.method = 'post';
+    if (!oOptions.method) oOptions.method = 'get';
     
     var sPath = oOptions.path;
     var self = this;
@@ -539,6 +540,69 @@ var sylma = {
   
   'methods' : {},
   
+  /* Window */
+  
+  center : function(node) {
+    
+    var iLeft = (window.getSize().x - node.getSize().x) / 2;
+    var iTop = ($(window).getSize().y - node.getSize().y) / 2;
+    
+    iTop = iTop >= 0 ? iTop : 0;
+    
+    node.setStyles({'left' : iLeft, 'top' : iTop});
+  },
+  
+  sendConfirm : function(sMessage, callback, caller) {
+    
+    var oMessage = new Element('div', {
+      'class' : 'sylma-message sylma-message-confirm',
+      html : '<div>' + sMessage + '</div>',
+      styles : {
+        opacity : '0'
+      }
+    });
+    
+    oMessage.adopt(
+      new Element('input', {
+        type: 'button',
+        value: 'Oui',
+        events : {
+          'click' : function() {
+            
+            oMessage.fade('out').get('tween').chain(function() { oMessage.dispose(); });
+            
+            if (callback) {
+              
+              var bound = callback.bind(caller);
+              bound();
+            }
+          }}
+      }),
+      new Element('input', {
+        type: 'button',
+        value: 'Non',
+        events : {
+          'click' : function() {
+            
+            oMessage.fade('out').get('tween').chain(function() { oMessage.dispose(); });
+          }}
+      }));
+    
+    document.body.grab(oMessage);
+    this.center(oMessage);
+    
+    oMessage.fade('in');
+    
+    return false;
+  },
+  
+  removeElement : function(el) {
+    
+    el.fade('out').get('tween').chain(function() { el.dispose(); });
+  },
+  
+  /* Utils */
+  
   dsp_message : function(mContent, sTargetId) {
     
     if (!sTargetId) sTargetId = 'sylma-messages-default';
@@ -641,11 +705,19 @@ sylma.classes.Base = new Class({
     return this['sylma-path'];
   },
   
+  setTimer : function(sName, callback, iTime, el) {
+    
+    if (el) var bound = callback.bind(el);
+    else bound = callback;
+    
+    this.timer[sName] = window.setInterval(bound, iTime);
+  },
+  
   clearTimer : function(sName) {
     
     if (this.timer) {
       
-      $clear(this.timer[sName]);
+      window.clearInterval(this.timer[sName]);
       this.timer[sName] = undefined;
     }
   }
@@ -745,7 +817,6 @@ sylma.classes.layer = new Class({
       'html': this.node,
       'parent' : this,
       'root' : this.rootObject,
-      'name' : 'images',
       'path' : this.getPath()
       
     }, oOptions);

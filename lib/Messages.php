@@ -24,7 +24,7 @@ class Messages extends XML_Document {
       
       // TODO: foreach ($oMessage->aArguments as $oArgument) $this->setArgument('fields'][ += $oMessage[]
       
-      $sPath = $oMessage->read('path');
+      $sPath = $oMessage->readByName('path');
       
       if ($oCategory = $this->get($sPath)) {
         
@@ -149,9 +149,9 @@ class Message extends XML_Element {
     
     if (!$sPath) $sPath = '/';
     
-    $this->addNode('content', $mMessage);
-    $this->addNode('path', $sPath);
-    $this->addNode('arguments')->addArray($aArgs);
+    $this->addNode('content', $mMessage, null, '');
+    $this->addNode('path', $sPath, null, '');
+    $this->addNode('arguments', null, null, '')->addArray($aArgs);
   }
 }
 

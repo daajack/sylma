@@ -809,8 +809,9 @@ class XML_Action extends XML_Document {
             if ($sClass == 'XSL_Document') { // auto variables
               
               $mResult->setParameters(array(
-                'sylma-directory' => $this->getDirectory(),
-                'sylma-lang' => $this->getSettings('infos/lang'),
+                'sylma-user' => Controler::getUser()->getName(),
+                'sylma-directory' => (string) $this->getDirectory(),
+                'sylma-lang' => (string) Controler::getSettings('infos/lang'),
               ));
             }
             
@@ -1301,7 +1302,7 @@ class XML_Action extends XML_Document {
           $this->dspm(xt('L\'argument %s requis dans %s est absent',
             new HTML_Strong($oChild->getAttribute('name')),
             view($oMethod)), 'action/error');
-          
+            
           $bError = true;
           
         } else if ($bUseAssoc && !$oChild->isLast()) {
@@ -1915,6 +1916,14 @@ class XML_Action extends XML_Document {
                   && ($oReturn = $this->getSettings()->getByName('return', SYLMA_NS_EXECUTION)))
                   $sReturn = $oReturn->getAttribute('format');
                 else $sReturn = '';
+                
+                // set default variables
+                
+                $this->setVariables(array(
+                  'sylma-user' => Controler::getUser()->getName(),
+                  'sylma-directory' => (string) $this->getDirectory(),
+                  'sylma-lang' => (string) Controler::getSettings('infos/lang'),
+                ));
                 
                 switch ($sReturn) {
                   

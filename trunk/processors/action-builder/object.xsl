@@ -15,6 +15,9 @@
         <xsl:if test="(local-name() = 'layout') or (local-name() = 'layer')">
           <xsl:call-template name="containers"/>
         </xsl:if>
+        <xsl:if test="local-name() = 'object' and not(@extend-class)">
+          <extend-class>/sylma.classes.Base</extend-class>
+        </xsl:if>
       </init>
       <properties>
         <xsl:apply-templates select="la:property"/>

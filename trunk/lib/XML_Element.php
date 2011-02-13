@@ -212,7 +212,7 @@ class XML_Element extends DOMElement implements XML_Composante {
     } else {
       
       // if ($this->isEmpty()) Controler::addMessage(xt('Element->query(%s) : Requête impossible, élément vide !', new HTML_Strong($sQuery)), 'xml/warning');
-      if (Controler::useStatut('warning')) Controler::addMessage('Element : Requête vide ou invalide !', 'xml/warning');
+      dspm('Element : Requête vide ou invalide !', 'xml/warning'); // TODO possible recursive bug with messages
     }
     
     return new XML_NodeList;
@@ -427,7 +427,7 @@ class XML_Element extends DOMElement implements XML_Composante {
   }
   
   /**
-   * Remove all the attributes of the element
+   * Remove all the attributes of the element, except xml:id (?)
    */
   public function cleanAttributes() {
     
@@ -792,6 +792,8 @@ class XML_Element extends DOMElement implements XML_Composante {
   public function addNode($sName, $oContent = '', $aAttributes = null, $sUri = null) {
     
     // Node : Automatically created Element based on strings and arrays
+    
+    if ($sUri === null) $sUri = $this->getNamespace();
     
     return $this->insertChild($this->getDocument()->createNode($sName, $oContent, $aAttributes, $sUri));
   }

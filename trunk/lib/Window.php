@@ -342,37 +342,27 @@ class WindowAction extends XML_Document implements Main {
     $oRoot = $this->set(new XML_Element('action', null, null, SYLMA_NS_XHTML));
     $oContent = $oRoot->addNode('content', null, null, SYLMA_NS_XHTML);
     
-    if ($oAction instanceof XML_Action) {
+    if ($oAction instanceof XML_Action) { // action
       
       $oResult = $oAction->parse();
-      
-      /*if (Controler::getPath()->getExtension() == 'popup') {
-        
-        $oPath = new XML_Path(Controler::getWindowSettings()->read('popup'), array('result' => $oResult));
-        $oAction = new XML_Action($oPath);
-        
-        $oResult = $oAction->parse();
-      }*/
-      
       $oContent->add($oResult);
       
-    } else if ($oAction instanceof XML_File) {
+    } else if ($oAction instanceof XML_File) { // file
       
-      // action
       $oContent->add(new XML_Document((string) $oAction));
       
     } else {
       
-      // file
       $oContent->add($oAction);
     }
+    
+    $oRoot->addNode('messages', Controler::getMessages());
     
     $aKeys = array_reverse(array_keys(Controler::getResults()));
     
     if (Controler::countResults() >= 1) $oContent->setAttribute('recall', $aKeys[1]); // TODO
     if (Controler::countResults() == 2) $oContent->setAttribute('methods', $aKeys[0]); // TODO
     
-    $oRoot->addNode('messages', Controler::getMessages()->parse());
     $oInfos = $oRoot->addNode('infos', Controler::getInfos());
     $oInfos->getFirst()->addClass('msg-infos-sub');
   }

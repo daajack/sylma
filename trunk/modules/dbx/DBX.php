@@ -290,7 +290,7 @@ class DBX_Module extends XDB_Module {
   
   /*** Values ***/
   
-  protected function buildValues($oValues, XML_Document $oParent = null) {
+  protected function buildValues($oValues, XML_Element $oParent = null) {
     
     if (!$oParent) $oParent = new XML_Document($this->getEmpty());
     
@@ -320,7 +320,7 @@ class DBX_Module extends XDB_Module {
     return $oParent;
   }
   
-  protected function getPost(Redirect $oRedirect, $bMessage = true, $oParent = null) {
+  protected function getPost(Redirect $oRedirect, $bMessage = true, XML_Element $oParent = null) {
     
     $oResult = null;
     
@@ -526,14 +526,14 @@ class DBX_Module extends XDB_Module {
       case 'simple-list' :
         
         $this->loadView($oRedirect, $aOptions);
-        $mResult = $this->getList($this->getAdminPath().'/simple-list', 'simple-list');
+        $mResult = $this->getList($this->getAdmin().'/simple-list', 'simple-list');
         
       break;
       
       case 'list' :
         
         $this->loadView($oRedirect, $aOptions);
-        $mResult = $this->getList($this->getAdminPath().'/simple-list');
+        $mResult = $this->getList($this->getAdmin().'/simple-list');
         
       break;
       
@@ -744,7 +744,7 @@ class DBX_Module extends XDB_Module {
       $aOptions['path'] = $this->readOption('database/name').'/'.$sPath;
     }
     
-    if ($oValues = $this->getPost($oRedirect, true, $oParent->getDocument())) {
+    if ($oValues = $this->getPost($oRedirect, true, $oParent)) {
       //dspf($oValues);
       if (!$oValues->validate($this->getSchema(), $aOptions)) {
         
@@ -763,7 +763,7 @@ class DBX_Module extends XDB_Module {
         } else {
           
           if ($sPath) $bResult = $this->replace($this->getPath("//id('$sID')/".$this->parsePath($sPath)), $oValues);
-          else $bResult = $this->update($sID, $oValues);
+          else $bResult = $this->replaceID($sID, $oValues);
           
           if ($bResult) dspm(t('Elément mis-à-jour'), 'success');
         }

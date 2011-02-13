@@ -342,12 +342,12 @@ class DBX_Module extends XDB_Module {
           dspm(xt('Erreur dans la conversion des valeurs %s dans $_POST', view($oPost)), 'action/error');
         }
         
-      } else $oResult = $oValues;
+      } else $oResult = $oValues->getDocument();
     }
     
     return $oResult;
   }
-
+  
   /*** Actions ***/
   
   public function run(Redirect $oRedirect, $sAction, $aOptions = array(), XML_Element $oOptions = null) {
@@ -716,7 +716,9 @@ class DBX_Module extends XDB_Module {
         // if ($oFile = $oValues->saveTemp()) $this->getDB()->run("add to {$this->getParent()} {$oFile->getSystemPath()}");
         $sPath = $this->getPath('/'.$sParent);
         
-        if ($this->query($sPath, array(), false) && $this->insert($oValues, $sPath)) {
+        if ($this->query($sPath, array(), false)) {
+          
+          $this->insert($oValues, $sPath);
           
           dspm(t('Elément ajouté'), 'success');
           
@@ -762,10 +764,11 @@ class DBX_Module extends XDB_Module {
           
         } else {
           
-          if ($sPath) $bResult = $this->replace($this->getPath("//id('$sID')/".$this->parsePath($sPath)), $oValues);
-          else $bResult = $this->replaceID($sID, $oValues);
+          if ($sPath) $this->replace($this->getPath("//id('$sID')/".$this->parsePath($sPath)), $oValues);
+          else $this->replaceID($sID, $oValues);
           
-          if ($bResult) dspm(t('Elément mis-à-jour'), 'success');
+          $bResult = true;
+          dspm(t('Elément mis-à-jour'), 'success');
         }
       }
     }

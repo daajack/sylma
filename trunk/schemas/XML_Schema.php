@@ -1612,7 +1612,8 @@ class XSD_Type extends XSD_Container { // complex or simple, but defined
         }
         
         $this->getParser()->popType();
-      }
+        
+      } else $bResult = true;
     }
     
     return $bResult;

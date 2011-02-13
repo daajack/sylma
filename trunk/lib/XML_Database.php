@@ -157,9 +157,9 @@ class XML_Database {
     else return $this->sCollection;
   }
   
-  public function check($sPath) {
+  public function check($sPath, array $aNamespaces = array()) {
     
-    return $this->query("if ($sPath) then 1 else ''");
+    return $this->query("if ($sPath) then 1 else ''", $aNamespaces, true, false);
   }
   
   public function load($sID) {
@@ -236,11 +236,6 @@ class XDB_Module extends Module {
   
   /* XQuery */
   
-  public function check($sID) {
-    
-   return $this->getDB()->check($this->getPath("//id('$sID')"));
-  }
-  
   public function load($sID) {
     
    return $this->getDB()->load($sID);
@@ -267,14 +262,24 @@ class XDB_Module extends Module {
     return $this->getDB()->query($sQuery, $this->mergeNamespaces($aNamespaces), false, false);
   }
   
-  protected function replaceID($sID, XML_Document $oDocument, array $aNamespaces = array()) {
+  public function check($sPath, $aNamespaces = array()) {
     
-    return $this->replace($this->getPath($this->getPathID($sID)), $oDocument, $aNamespaces);
+   return $this->getDB()->check($sPath, $this->mergeNamespaces($aNamespaces));
+  }
+  
+  public function checkID($sID) {
+    
+    return $this->getDB()->check($this->getPathID($sID));
   }
   
   protected function replace($sPath, XML_Document $oDocument, array $aNamespaces = array()) {
     
     return $this->getDB()->replace($sPath, $oDocument, $this->mergeNamespaces($aNamespaces));
+  }
+  
+  protected function replaceID($sID, XML_Document $oDocument, array $aNamespaces = array()) {
+    
+    return $this->replace($this->getPath($this->getPathID($sID)), $oDocument, $aNamespaces);
   }
   
   protected function insert(XML_Document $mElement, $sTarget, array $aNamespaces = array()) {

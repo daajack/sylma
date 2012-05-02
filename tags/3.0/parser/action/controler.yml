@@ -1,0 +1,24 @@
+extensions :
+  - eml
+  - iml
+classes :
+  @sylma-classbase : \sylma\parser\action
+  window :
+    name : php\basic\Window
+  caller :
+    name \sylma\parser\caller\Controler
+  basic :
+    name : Basic
+  dom :
+    name : compiler\Reflector
+  php : @sylma:import php/window.yml;
+  document :
+    name : \sylma\dom\basic\handler\Rooted
+  action :
+    name : handler\Action
+  path :
+    name : Path
+  parser :
+    classes :
+      security :
+        name : \sylma\parser\security\Domed

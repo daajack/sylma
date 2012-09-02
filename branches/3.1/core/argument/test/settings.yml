@@ -1,0 +1,9 @@
+class-alias : basic
+classes :
+  §sylma-classbase : \sylma\core\argument
+  controler :
+    name : test\controler\Filed
+  basic :
+    name : Iterator
+  filed :
+    name : Filed

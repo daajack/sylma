@@ -1,0 +1,6 @@
+classes :
+  §sylma-classbase : \sylma\storage\fs
+  file :
+    name : basic\File
+    
+  

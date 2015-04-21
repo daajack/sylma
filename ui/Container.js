@@ -44,6 +44,8 @@ sylma.ui.ContainerProps = {
       options = Object.append({
         onSuccess : success,
         url : path + '.json',
+        method : 'get',
+        data : this.get('arguments') || {}
       }, options);
 
       new Request.JSON(options).send();

@@ -32,10 +32,11 @@
   </crud:global>
 
   <crud:group name="crud"/>
+  <crud:group name="view"/>
 
   <crud:route groups="crud">
 
-    <view:view mode="view" _debug="x">
+    <view:view mode="view" groups="view">
 
       <tpl:template mode="form/token">
         <sql:token>

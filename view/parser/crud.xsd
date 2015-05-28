@@ -13,6 +13,7 @@
   <xs:import namespace="http://2013.sylma.org/schema/ssd" schemaLocation="../../schema/ssd/simple.xsd"/>
   <xs:import namespace="http://2013.sylma.org/view"/>
   <xs:import namespace="http://2013.sylma.org/template"/>
+  <xs:import namespace="http://2013.sylma.org/action"/>
 
   <xs:group name="content">
     <xs:choice>
@@ -120,6 +121,7 @@
     <xs:complexType>
       <xs:group ref="anyContent" minOccurs="0" maxOccurs="unbounded"/>
       <xs:attribute name="path" type="ssd:path" use="required"/>
+      <xs:attribute name="mode" type="le:mode"/>
       <xs:attribute name="hollow" type="ssd:boolean">
         <xs:annotation>
           <xs:documentation>

@@ -1,7 +1,7 @@
 <?php
 
 namespace sylma\parser\security;
-use sylma\core, sylma\parser\reflector, sylma\dom, sylma\parser\languages\php;
+use sylma\core, sylma\parser\reflector, sylma\view;
 
 abstract class Main extends reflector\handler\Elemented {
 
@@ -23,7 +23,12 @@ abstract class Main extends reflector\handler\Elemented {
   protected function reflectRights($result, array $aRights) {
 
     $window = $this->getWindow();
+    $parser = $this->getParent(); // view\parser\Elemented
 
-    return $window->createCondition($this->reflectTest($aRights), $result);
+    //return $window->createCondition($this->reflectTest($aRights), $result);
+    return $window->createCaller(function() use ($window, $aRights, $result, $parser) {
+
+      return $window->createCondition($this->reflectTest($aRights), $parser->addToResult($result, false));
+    });
   }
 }

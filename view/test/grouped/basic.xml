@@ -359,15 +359,15 @@ EOT;
   </tst:test>
   <tst:test name="Return argument">
     <tst:document>
-      <view:view sql:ns="ns" build:class="\sylma\core\argument\Readable" build:output="array">
+      <view:view sql:ns="ns" build:class="\sylma\core\argument\Readable" build:output="result">
         <sql:resource>
           <sql:id>2</sql:id>
         </sql:resource>
         <view:schema>samples/user1.xql</view:schema>
         <tpl:template>
           <le:array>
-            <tpl:read le:name="name" select="name"/>
-            <tpl:read le:name="email" select="email"/>
+            <tpl:read select="name" le:name="name"/>
+            <tpl:read select="email" le:name="email"/>
           </le:array>
         </tpl:template>
       </view:view>
@@ -403,8 +403,44 @@ EOT;
 
     </tst:expected>
   </tst:test>
-  <tst:test name="Array with dom content" catch="\sylma\core\exception" disabled="true">
-    <!-- exception on compile -->
+  <tst:test name="Return array">
+    <tst:document>
+      <view:view sql:ns="ns" build:return="result" build:output="array">
+        <sql:resource multiple="x"/>
+        <view:schema>samples/user1.xql</view:schema>
+        <tpl:template>
+          <tpl:apply select="*"/>
+        </tpl:template>
+        <tpl:template match="*">
+          <le:array>
+            <tpl:read select="name" le:name="name"/>
+            <tpl:read select="email" le:name="email"/>
+          </le:array>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:expected>
+
+      $manager->assertEqual($manager->get('result')->asArray(), array(
+        array(
+          'name' => 'root',
+          'email' => 'root@sylma.org',
+        ),
+        array(
+        'name' => 'admin',
+        'email' => 'admin@sylma.org',
+        ),
+        array(
+          'name' => 'webmaster',
+          'email' => 'webmaster@sylma.org',
+        ),
+      ));
+
+      return true;
+
+    </tst:expected>
+  </tst:test>
+  <tst:test name="Array with dom content">
     <tst:document>
       <view:view sql:ns="ns" build:output="array">
         <sql:resource>
@@ -416,6 +452,9 @@ EOT;
         </tpl:template>
       </view:view>
     </tst:document>
+    <tst:node>
+      <abc/>
+    </tst:node>
   </tst:test>
   <tst:test name="Two templates">
     <tst:document>

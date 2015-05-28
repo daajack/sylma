@@ -188,11 +188,15 @@ abstract class Basic extends Asserter {
     return $this->catchExceptionCheck($test->readAttribute('catch', null, false), $test, $e, $file);
   }
 
-  protected function catchExceptionCheck($sException, dom\element $test, core\exception $e, fs\file $file) {
+  protected function catchExceptionCheck($sException, dom\element $test, core\exception $e, fs\file $file, $sMessage = '') {
 
     $bResult = false;
 
     if ($sException && $e instanceof $sException) {
+
+      $bResult = true;
+    }
+    else if ($sMessage && $e->getMessage() === $sMessage) {
 
       $bResult = true;
     }

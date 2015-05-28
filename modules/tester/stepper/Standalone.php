@@ -61,10 +61,18 @@ class Standalone extends tester\Parser implements dom\domable {
     $test = $this->loadTest($doc);
     $this->prepareTest($test, $this);
 
-    if (!$result = $this->parseResult($test, $this->getFile(), array('contexts' => $this->contexts))) {
+    $aResult = $this->parseResult($test, $this->getFile(), array('contexts' => $this->contexts));
+    $result = $aResult['content'];
+
+    if ($aResult['result'] && !$result) {
 
       $this->prepareTest($test, $this);
-      $result = $this->get('result');
+      $result = $this->get(self::RESULT_ARGUMENT);
+    }
+
+    if (!$aResult['result']) {
+
+      $this->launchException('Test result is FALSE');
     }
 
     $bCallback = 0;

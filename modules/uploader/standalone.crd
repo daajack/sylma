@@ -61,7 +61,7 @@
     groups="crud"
 
     builder:class="\sylma\modules\uploader\Download"
-    builder:output="array"
+    builder:output="result"
   >
 
     <sql:resource/>

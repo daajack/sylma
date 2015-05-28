@@ -197,4 +197,56 @@
 
     </tst:expected>
   </tst:test>
+  <tst:test name="Delete cascade disabled" catch="\sylma\core\exception">
+    <tst:prepare>
+
+      $manager->runQuery('DROP TABLE IF EXISTS user', 2);
+      $manager->runQuery('DROP TABLE IF EXISTS `group`', 2);
+
+      $manager->getScript('/#sylma/storage/sql/alter/index.vml', array(
+        'file' => '/#sylma/storage/sql/test/samples/user-foreign.xql',
+        'depth' => 1,
+      ));
+
+      $manager->runQuery("INSERT INTO `group` (name) VALUES ('group01')", $manager::MODE_INSERT);
+      $manager->runQuery("INSERT INTO user (name, `group`) VALUES ('user01', 1)", $manager::MODE_INSERT);
+
+    </tst:prepare>
+    <tst:expected>
+
+      $manager->runQuery("DELETE FROM `group` WHERE id = 1", $manager::MODE_DELETE);
+
+      return false;
+
+    </tst:expected>
+  </tst:test>
+  <tst:test name="Delete cascade">
+    <tst:prepare>
+
+      $manager->runQuery('DROP TABLE IF EXISTS user', 2);
+      $manager->runQuery('DROP TABLE IF EXISTS `group`', 2);
+
+      $manager->getScript('/#sylma/storage/sql/alter/index.vml', array(
+        'file' => '/#sylma/storage/sql/test/samples/user-foreign-cascade.xql',
+        'depth' => 1,
+      ));
+
+      $manager->runQuery("INSERT INTO `group` (name) VALUES ('group01')", $manager::MODE_INSERT);
+      $manager->runQuery("INSERT INTO user (name, `group`) VALUES ('user01', 1)", $manager::MODE_INSERT);
+
+    </tst:prepare>
+    <tst:expected>
+
+      $manager->runQuery("DELETE FROM `group` WHERE id = 1", $manager::MODE_DELETE);
+      $count = $manager->runQuery("SELECT count(*) FROM user", $manager::MODE_READ);
+
+      $manager->assertEquals($count, '0');
+
+      // no error
+      //$manager->resetDB();
+
+      return true;
+
+    </tst:expected>
+  </tst:test>
 </tst:tests>

@@ -24,6 +24,11 @@ class Foreign extends sql\schema\component\Foreign implements sql\alter\alterabl
       $sKey = $this->getKey();
 
       $sResult = $this->asString() . ",CONSTRAINT FOREIGN KEY (`{$this->getName()}`) REFERENCES `{$ref->getName()}` ($sKey)";
+
+      if ($this->readx('@cascade')) {
+
+        $sResult.= ' ON DELETE CASCADE ON UPDATE RESTRICT';
+      }
     }
     else {
 

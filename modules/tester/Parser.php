@@ -8,7 +8,9 @@ class Parser extends Prepare {
   const NS = 'http://www.sylma.org/modules/tester/parser';
   const TRASH_MANAGER = 'fs/trash';
   const DEBUG_RUN = true;
+  const RESULT_ARGUMENT = 'result';
   const PARSER_EXCEPTION = 'exception-parser';
+  const BUILD_EXCEPTION = 'build-exception';
 
   protected static $sArgumentClass = 'sylma\core\argument\Readable';
   protected $exportDirectory;
@@ -58,7 +60,10 @@ class Parser extends Prepare {
 
   protected function parseResult(dom\element $test, fs\file $file, array $aArguments = array()) {
 
-    $result = null;
+    $aResult = array(
+      'content' => null,
+      'result' => true,
+    );
 
     if ($document = $test->getx('self:document', array(), false)) {
 
@@ -69,16 +74,17 @@ class Parser extends Prepare {
       $cache->saveText((string) $this->createDocument($document->getFirst()));
 
       $manager = $this->getManager(self::PARSER_MANAGER);
-      $result = $this->buildResult($test, $manager, $cache, $aArguments);
+      $aResult = $this->buildResult($test, $manager, $cache, $aArguments);
 
-      $this->set('result', $result);
+      $this->set(self::RESULT_ARGUMENT, $aResult['content']);
     }
 
-    return $result;
+    return $aResult;
   }
 
   protected function buildResult(dom\element $test, $manager, fs\file $file, array $aArguments) {
 
+    $bResult = false;
     $result = null;
 
     try
@@ -98,17 +104,34 @@ class Parser extends Prepare {
 
       $result = $this->loadResult($manager, $file, $aArguments, $sRun !== 'false', $bExpected);
 
+      $bResult = true;
+
     } catch (\sylma\core\exception $e) {
 
-      $this->catchParserException($test, $e, $file);
+      $bResult = $this->catchParserException($test, $e, $file);
+
     }
 
-    return $result;
+    return array(
+      'content' => $result,
+      'result' => $bResult,
+    );
   }
 
   protected function catchParserException(dom\element $test, core\exception $e, fs\file $file) {
 
-    return $this->catchExceptionCheck($test->readAttribute(self::PARSER_EXCEPTION, null, false), $test, $e, $file);
+    $bResult = $this->catchExceptionCheck(
+      $test->readAttribute(self::PARSER_EXCEPTION, null, false),
+      $test,
+      $e,
+      $file,
+      $test->readAttribute(self::BUILD_EXCEPTION, null, false)
+    );
+
+    $test->setAttribute(self::PARSER_EXCEPTION, null);
+    $test->setAttribute(self::BUILD_EXCEPTION, null);
+
+    return $bResult;
   }
 
   protected function loadResult($manager, fs\file $file, array $aArguments, $bRun = true, $bDelete = true) {
@@ -148,12 +171,14 @@ class Parser extends Prepare {
 
   protected function test(dom\element $test, $sContent, $controler, dom\document $doc, fs\file $file) {
 
-    $this->set('result', null);
+    $bResult = false;
+    $this->set(self::RESULT_ARGUMENT, null);
 
     try {
 
       $this->prepareTest($test, $controler);
-      $this->parseResult($test, $file);
+      $aResult = $this->parseResult($test, $file);
+      $bResult = $aResult['result'];
     }
     catch (core\exception $e) {
 
@@ -165,9 +190,22 @@ class Parser extends Prepare {
       return false;
     }
 
-    $this->loadResultNode($test);
+    if ($bResult) {
 
-    return parent::test($test, $sContent, $controler, $doc, $file);
+      if ($test->readAttribute(self::PARSER_EXCEPTION, null, false) ||
+          $test->readAttribute(self::BUILD_EXCEPTION, null, false))
+      {
+
+        $this->launchException('An exception should occured');
+      }
+      else {
+
+        $this->loadResultNode($test);
+        $bResult = parent::test($test, $sContent, $controler, $doc, $file);
+      }
+    }
+
+    return $bResult;
   }
 
   public function loadScript(array $aArguments = array(), array $aPosts = array(), array $aContexts = array()) {

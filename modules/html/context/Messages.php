@@ -69,8 +69,5 @@ class Messages extends core\module\Domed implements core\argumentable, dom\domab
   public function asArgument() {
 
     return $this->getArguments();
-    $json = $this->getArguments()->asJSON();
-
-    return $json ? $json : '';
   }
 }

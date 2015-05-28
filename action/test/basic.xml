@@ -21,6 +21,13 @@
     2;admin;admin@sylma.org
     3;webmaster;webmaster@sylma.org
   </tst:datas>
+  <tst:test name="Prepare DB">
+    <tst:prepare>
+
+      $manager->resetDB();
+
+    </tst:prepare>
+  </tst:test>
   <tst:test name="Complex file">
     <tst:document>
       <view:view>

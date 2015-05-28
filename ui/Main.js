@@ -232,18 +232,16 @@ sylma.uiClass = {
 
       if (result.messages) {
 
-        var msg;
-
         if (!$('sylma-messages')) {
 
           $(document.body).grab(new Element('div', {id : 'sylma-messages'}), 'top');
         }
 
-        for (var i in result.messages) {
+        result.messages.forEach(function(message) {
 
-          this.showMessage(result.messages[i].content);
+          this.showMessage(message.content);
           //el.addClass('sylma-visible');
-        }
+        }.bind(this));
       }
 
       if (result.errors) {

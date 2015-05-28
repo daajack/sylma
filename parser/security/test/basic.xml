@@ -5,9 +5,9 @@
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns:view="http://2013.sylma.org/view"
   xmlns:tpl="http://2013.sylma.org/template"
-  xmlns:xl="http://2013.sylma.org/storage/xml"
-
   xmlns:ls="http://2013.sylma.org/parser/security"
+
+  xmlns:xl="http://2013.sylma.org/storage/xml"
 >
   <tst:description>Basic</tst:description>
   <tst:test name="Read tester01">

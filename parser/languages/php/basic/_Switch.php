@@ -24,7 +24,7 @@ class _Switch extends common\basic\Structured implements common\argumentable, co
     $this->launchException('Cannot manipulate switch content');
   }
 
-  public function addCase($sName = null, $content = null) {
+  public function addCase($sName = null, $content = null, $bBreak = true) {
 
     if (!$sName) {
 
@@ -33,7 +33,7 @@ class _Switch extends common\basic\Structured implements common\argumentable, co
 
     if (!isset($this->aCases[$sName])) {
 
-      $this->aCases[$sName] = $this->createCase($sName, $content);
+      $this->aCases[$sName] = $this->createCase($sName, $content, $bBreak);
     }
     else {
 
@@ -41,9 +41,9 @@ class _Switch extends common\basic\Structured implements common\argumentable, co
     }
   }
 
-  protected function createCase($sName, $content = null) {
+  protected function createCase($sName, $content = null, $bBreak = true) {
 
-    return $this->getControler()->createCase($sName, $content, $sName && $content);
+    return $this->getControler()->createCase($sName, $content, $bBreak && $sName && $content);
   }
 
   public function getTest() {

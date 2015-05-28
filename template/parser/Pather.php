@@ -146,6 +146,13 @@ class Pather extends component\Child {
         $result = $window->createNumeric($sToken);
       }
     }
+/*
+    else if ($aMatch = $this->matchVariable($sToken)) {
+
+      $mResult = $this->parseVariable($aMatch, array(), '');
+      $result = $window->toString($mResult);
+    }
+ */
     else if ($sToken) {
 
       $result = $this->readPath($sToken, '');
@@ -492,7 +499,7 @@ class Pather extends component\Child {
     $pather = clone $this;
 
     $pather->setSource($tree);
-    
+
     return $pather->parsePathToken($aPath, $sMode, $bRead, $aArguments);
   }
 }

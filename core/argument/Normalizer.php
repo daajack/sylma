@@ -131,7 +131,7 @@ abstract class Normalizer extends Basic {
     return $this->normalizeArray($this->query(), $iMode);
   }
 
-  public function asJSON($iMode = \JSON_FORCE_OBJECT) {
+  public function asJSON($iMode = \JSON_OBJECT_AS_ARRAY) {
 
     return json_encode($this->asArray(true), $iMode);
   }

@@ -225,7 +225,7 @@ sylma.crud.Form = new Class({
 
     if (response.messages) {
 
-      var messages = Object.filter(response.messages, function(msg) {
+      var messages = response.messages.filter(function(msg) {
 
         if (msg.arguments) {
 
@@ -314,7 +314,7 @@ sylma.crud.Form = new Class({
     }
     else {
 
-      this.submitSuccess(result);
+      this.submitSuccess(result, args);
     }
   },
 
@@ -323,9 +323,9 @@ sylma.crud.Form = new Class({
     window.location.href = document.referrer;
   },
 
-  submitSuccess : function(result) {
+  submitSuccess : function(result, args) {
 
-    this.fireEvent('success', result);
+    this.fireEvent('success', [result, args]);
     //throw new Error('Must do something');
   },
 

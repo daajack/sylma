@@ -9,9 +9,10 @@ sylma.crud.FormAjax = new Class({
     this.getParent('tab').getObject('list').update();
   },
 
-  submitSuccess : function () {
+  submitSuccess : function (result, args) {
 
     this.getParent('container').hide();
+    this.fireEvent('success', [result, args]);
     this.updateList();
   },
 

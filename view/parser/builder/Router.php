@@ -69,7 +69,7 @@ class Router extends View {
 
     if ($path = $this->getDefault()) {
 
-      $switch->addCase($path->getAlias());
+      $switch->addCase($path->getAlias(), $window->createCall($window->getVariable(self::ARGUMENTS_NAME), 'shift', 'php-string'), false);
       $switch->addCase(null, $this->reflectView($path, $window));
     }
 
@@ -81,16 +81,23 @@ class Router extends View {
 
   protected function reflectView(crud\Pathed $path, common\_window $window) {
 
+    $aResult = array();
+
+    if ($path !== $this->getDefault()) {
+
+      $aResult[] = $window->createCall($window->getVariable(self::ARGUMENTS_NAME), 'shift', 'php-string');
+    }
+
     if ($path instanceof crud\Route) {
 
-      $result = $this->reflectRoute($path, $window);
+      $aResult[] = $this->reflectRoute($path, $window);
     }
     else {
 
-      $result = $this->reflectViewComponent($path, $window);
+      $aResult[] = $this->reflectViewComponent($path, $window);
     }
 
-    return $result;
+    return $aResult;
   }
 
   protected function setPaths(array $aPaths) {
@@ -217,7 +224,7 @@ class Router extends View {
 
   protected function createSwitch(common\_window $window) {
 
-    $call = $window->createCall($window->getVariable(self::ARGUMENTS_NAME), 'shift', 'php-string');
+    $call = $window->createCall($window->getVariable(self::ARGUMENTS_NAME), 'current', 'php-string');
     $result = $window->createSwitch($call);
 
     return $result;

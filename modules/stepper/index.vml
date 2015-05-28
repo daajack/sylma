@@ -11,9 +11,6 @@
 
   xmlns:cls="http://2013.sylma.org/core/factory"
   xmlns:test="http://2014.sylma.org/modules/tester/stepper"
-
-  build:class="\sylma\core\argument\Readable"
-  build:output="array"
 >
 
   <crud:global test:ns="ns">
@@ -87,7 +84,7 @@
 
   <view:view name="loadTest"
     build:class="\sylma\core\argument\Readable"
-    build:output="array"
+    build:output="result"
   >
 
     <tpl:template>
@@ -98,7 +95,7 @@
 
   <view:view name="loadDirectory"
     build:class="\sylma\core\argument\Readable"
-    build:output="array"
+    build:output="result"
   >
 
     <tpl:template>

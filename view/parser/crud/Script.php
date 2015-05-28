@@ -5,6 +5,11 @@ use sylma\core, sylma\dom, sylma\action, sylma\template;
 
 class Script extends action\component\Script implements template\parser\component {
 
+  /**
+   * template\parser\template
+   */
+  protected $template;
+
   public function parseRoot(dom\element $el) {
 
     parent::parseRoot($el);
@@ -17,6 +22,11 @@ class Script extends action\component\Script implements template\parser\componen
   }
 
   protected function parseElementSelf(dom\element $el) {
+
+    if (!$this->template) {
+
+      $this->launchException('No template defined');
+    }
 
     return $this->template->parseElementSelf($el);
   }

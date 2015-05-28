@@ -45,6 +45,14 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="mode">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="get"/>
+      <xs:enumeration value="post"/>
+      <xs:enumeration value="context"/>
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:simpleType name="path">
     <xs:restriction base="ssd:path">
       <xs:minLength value="0"/>
@@ -61,6 +69,7 @@
     <xs:complexType mixed="true">
       <xs:group ref="anyContent" minOccurs="0" maxOccurs="unbounded"/>
       <xs:attribute name="path" type="ssd:path" use="required"/>
+      <xs:attribute name="mode" type="mode"/>
       <xs:attribute name="hollow" type="ssd:boolean">
         <xs:annotation>
           <xs:documentation>

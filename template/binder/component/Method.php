@@ -1,7 +1,7 @@
 <?php
 
 namespace sylma\template\binder\component;
-use sylma\core, sylma\dom, sylma\parser\languages\common;
+use sylma\core, sylma\dom, sylma\parser\languages\common, sylma\template\binder, sylma\parser\languages\js;
 
 class Method extends Basic implements common\arrayable {
 
@@ -28,7 +28,12 @@ class Method extends Basic implements common\arrayable {
     $function = $window->createFunction($aArguments, $this->getValue());
     $this->loadName();
 
-    $this->getParser()->getObject()->setMethod($this->getName(), $function);
+    $this->addContentToClass($this->getParser()->getObject(), $function);
+  }
+
+  protected function addContentToClass(binder\_class $class, js\basic\instance\_Function $function) {
+
+    $class->setMethod($this->getName(), $function);
   }
 
   protected function loadName() {

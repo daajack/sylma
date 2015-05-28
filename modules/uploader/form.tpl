@@ -52,20 +52,16 @@
       <tpl:read select="gen('uploader')"/>
     </tpl:variable>
 
-    <form class="sylma-uploader" target="{$name}" enctype="multipart/form-data" method="post" js:class="sylma.ui.Container" js:name="uploader">
+    <tpl:variable name="action">
+      <tpl:apply mode="file/action" required="x"/>
+    </tpl:variable>
+
+    <form class="sylma-uploader" target="{$name}" action="{$action}" enctype="multipart/form-data" method="post" js:class="sylma.ui.Container" js:name="uploader">
       <js:option name="ajax">1</js:option>
-      <tpl:apply mode="file/form/init"/>
       <input type="hidden" name="position" js:node="position"/>
       <iframe name="{$name}" js:node="iframe"/>
     </form>
 
-  </tpl:template>
-
-  <tpl:template match="*" mode="file/form/init">
-    <tpl:token name="action">
-      <le:path>validate</le:path>
-      <tpl:text>.json</tpl:text>
-    </tpl:token>
   </tpl:template>
 
   <tpl:template match="*" mode="file/tree">

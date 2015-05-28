@@ -7,6 +7,8 @@
   elementFormDefault="qualified"
 >
 
+  <xs:import namespace="http://2013.sylma.org/schema/ssd" schemaLocation="../../schema/ssd/simple.xsd"/>
+
   <!-- definition of complex elements -->
   <xs:element name="tests">
     <xs:complexType>
@@ -26,7 +28,31 @@
         <xs:element name="expected" type="xs:string" minOccurs="0"/>
       </xs:sequence>
       <xs:attribute name="name" type="xs:string" use="required"/>
-      <xs:attribute name="disabled" type="xs:string"/><!-- boolean -->
+      <xs:attribute name="catch" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>
+            Exception on run, must be a class or an interface used by exception.
+            E.g : \sylma\core\exception
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="exception-parser" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>
+            Exception on build, must be a class or an interface used by exception.
+            E.g : \sylma\core\exception
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="build-exception" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>
+            Exception on build, must be the message returned by exception.
+            E.g : No options defined
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="disabled" type="ssd:boolean"/>
     </xs:complexType>
   </xs:element>
 

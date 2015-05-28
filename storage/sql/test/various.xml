@@ -667,4 +667,25 @@
 
     </tst:expected>
   </tst:test>
+  <tst:test name="Security parser" xmlns:ls="http://2013.sylma.org/parser/security">
+    <tst:document>
+      <view:view>
+        <sql:resource/>
+        <view:schema>samples/user1.xql</view:schema>
+        <sql:filter name="id">1</sql:filter>
+        <tpl:template>
+          <div>
+            <h1 ls:owner="root" ls:group="user" ls:mode="710">
+              <tpl:read select="name"/>
+            </h1>
+          </div>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <div>
+        <h1>root</h1>
+      </div>
+    </tst:node>
+  </tst:test>
 </tst:tests>

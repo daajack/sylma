@@ -41,13 +41,9 @@
       <tpl:apply mode="file/container"/>
     </tpl:template>
 
-    <tpl:template match="*" mode="file/form/init">
-
-      <tpl:token name="action">
-        <le:path/>
-        <tpl:text>/upload.json</tpl:text>
-      </tpl:token>
-
+    <tpl:template match="*" mode="file/action">
+      <le:path/>
+      <tpl:text>/upload.json</tpl:text>
     </tpl:template>
 
     <tpl:template match="user:files" mode="container">

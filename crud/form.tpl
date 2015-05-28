@@ -10,11 +10,16 @@
   xmlns:sql="http://2013.sylma.org/storage/sql"
 >
 
-  <tpl:template mode="js">
+  <tpl:template match="*" mode="form/js">
     <js:include>Form.js</js:include>
     <js:include>/#sylma/ui/Clonable.js</js:include>
     <js:include>Field.js</js:include>
     <js:include>type/Text.js</js:include>
+  </tpl:template>
+
+  <!-- @deprecated, use form/js instead -->
+  <tpl:template mode="js">
+    <tpl:apply mode="form/js"/>
   </tpl:template>
 
   <tpl:template match="*" mode="container">

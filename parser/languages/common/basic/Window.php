@@ -5,6 +5,10 @@ use sylma\core, sylma\dom, sylma\parser\languages\common;
 
 abstract class Window extends core\module\Domed {
 
+  const MODE_DOM = 'dom';
+  const MODE_RESULT = 'result';
+  const MODE_ARRAY = 'array';
+
   // Indexed
   protected $aContent = array();
 
@@ -431,15 +435,26 @@ return; // todo, decide to use or not
 
     if ($aStrings) {
 
-      if ($this->getMode() === 1) {
+      switch ($this->getMode()) {
 
-        $content = $this->createString($aStrings);
-        $sOP = $bFirst ? '' : '.';
-      }
-      else {
+        case self::MODE_ARRAY :
 
-        $content = $aStrings;
-        $sOP = '';
+          $content = $this->createString($aStrings);
+          $sOP = $bFirst ? '' : '[]';
+          break;
+
+        case self::MODE_RESULT :
+
+          $content = $aStrings;
+          $sOP = '';
+          break;
+
+        case self::MODE_DOM :
+
+        default :
+
+          $content = $this->createString($aStrings);
+          $sOP = $bFirst ? '' : '.';
       }
 
       $result = $this->createInstruction($this->createAssign($target, $content, $sOP));
@@ -505,7 +520,7 @@ return; // todo, decide to use or not
     }
     else {
 
-      $this->throwException(sprintf('Cannot add %s to result', $this->show($val)));
+      $this->launchException('Cannot add value to result', get_defined_vars());
     }
 
     return $result;

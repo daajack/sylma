@@ -140,9 +140,14 @@ class Documented extends Logger implements reflector\documented {
   /**
    * @param common\_window $window
    */
-  protected function setWindow(common\_window $window) {
+  public function setWindow(common\_window $window) {
 
     $this->window = $window;
+  }
+
+  public function getSchema() {
+
+    $this->launchException('No schema defined');
   }
 
   /**
@@ -357,7 +362,18 @@ class Documented extends Logger implements reflector\documented {
 
     if ($sOutput = $this->getDocument()->getRoot()->readx('@build:output', $this->getNS(), false)) {
 
-      if ($sOutput !== 'dom') $result->setMode(2);
+      switch ($sOutput) {
+
+        case 'array' : $iValue = $result::MODE_ARRAY; break;
+        case 'result' : $iValue = $result::MODE_RESULT; break;
+        case 'dom' :
+        default :
+
+          $iValue = $result::MODE_DOM;
+          break;
+      }
+
+      $result->setMode($iValue);
     }
 
     return $result;

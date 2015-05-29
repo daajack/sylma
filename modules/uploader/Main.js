@@ -35,12 +35,17 @@ sylma.uploader.Main = new Class({
     return this.getObject('uploader');
   },
 
-  sendFile: function(fieldset, input) {
+  sendFile: function(fieldset, input, action) {
 
     this.fieldset = fieldset;
     this.input = input;
-    
+
     var node = this.getForm().getNode();
+
+    if (action) {
+
+      node.set('action', action);
+    }
 
     node.grab(input);
     node.submit();

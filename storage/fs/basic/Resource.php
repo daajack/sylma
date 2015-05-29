@@ -74,6 +74,9 @@ abstract class Resource implements fs\resource {
     return $this->sFullPath;
   }
 
+  /**
+   * @deprecated for fs\file, use getDirectory() instead
+   */
   public function getParent() {
 
     return $this->parent;

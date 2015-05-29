@@ -237,11 +237,17 @@ sylma.uiClass = {
           $(document.body).grab(new Element('div', {id : 'sylma-messages'}), 'top');
         }
 
-        result.messages.forEach(function(message) {
+        if (result.messages) {
 
-          this.showMessage(message.content);
-          //el.addClass('sylma-visible');
-        }.bind(this));
+          if (result.messages instanceof Array) {
+
+            result.messages.forEach(function(message) {
+
+              this.showMessage(message.content);
+              //el.addClass('sylma-visible');
+            }.bind(this));
+          }
+        }
       }
 
       if (result.errors) {

@@ -28,7 +28,7 @@ abstract class Caller extends Basic {
 
   protected function addParsedChild(dom\element $el, array &$aResult, $mContent) {
 
-    $mContent = current($this->getWindow()->parseArrayables(array($mContent)));
+    $mContent = $this->getWindow()->parse($mContent);
 
     if ($sKey = $el->readx('@action:name', array(), false)) {
 

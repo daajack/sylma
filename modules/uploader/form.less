@@ -12,6 +12,16 @@ form.sylma-uploader
   height: 8em;
   border: 2px solid #ddd;
   background: rgba(255,255,255,0.5) url(dropper.png);
+  
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.5s, opacity 0.5s;
+
+  &.visible
+  {
+    max-height: 10em;
+    opacity: 1;
+  }
 
   &:hover
   {

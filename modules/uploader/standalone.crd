@@ -22,14 +22,10 @@
 
   <crud:group name="crud">
 
-    <tpl:template match="sql:table" mode="file/form/init">
-
-      <tpl:token name="action">
-        <le:path/>
-        <tpl:text>/upload.json?parent=</tpl:text>
-        <tpl:apply mode="file/argument"/>
-      </tpl:token>
-
+    <tpl:template match="*" mode="file/action">
+      <le:path/>
+      <tpl:text>/upload.json?parent=</tpl:text>
+      <tpl:apply mode="file/argument"/>
     </tpl:template>
 
   </crud:group>

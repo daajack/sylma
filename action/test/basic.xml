@@ -460,4 +460,25 @@
       <span>/sylma/action/test/samples/view1/myarg</span>
     </tst:node>
   </tst:test>
+  <tst:test name="Script with string expression">
+    <tst:document>
+      <view:view>
+        <sql:resource>
+          <sql:id>2</sql:id>
+        </sql:resource>
+        <view:schema>samples/user2.xql</view:schema>
+        <tpl:template>
+          <le:script path="samples/view2">
+            <tpl:read select="'my-{name}'" le:name="hello"/>
+            <tpl:read select="email" le:name="email"/>
+          </le:script>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <div>
+        <h3>root</h3>my-admin<a href="mailto:email">admin@sylma.org</a>
+      </div>
+    </tst:node>
+  </tst:test>
 </tst:tests>

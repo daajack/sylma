@@ -41,13 +41,18 @@
           <sql:id>1</sql:id>
         </sql:resource>
         <view:schema>samples/user1b.xql</view:schema>
+        <le:argument name="my/arg">
+          <le:default>abc</le:default>
+        </le:argument>
         <tpl:template>
-          <div><tpl:read select="'test/{name}'"/></div>
+          <div>
+            <tpl:read select="name, 'my/{name}'"/>
+          </div>
         </tpl:template>
       </view:view>
     </tst:document>
     <tst:node>
-      <div>test/root</div>
+      <div>rootmy/root</div>
     </tst:node>
   </tst:test>
   <tst:test name="Expression">

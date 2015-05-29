@@ -9,6 +9,8 @@ interface file extends fs\resource {
 
   function __construct($sName, fs\directory $parent, array $aRights, $iDebug);
 
+  function getDirectory();
+
   /**
    * @return dom\document|null An XML document loaded with the content of this file
    *

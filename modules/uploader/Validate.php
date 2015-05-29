@@ -9,7 +9,7 @@ class Validate extends core\module\Domed implements core\stringable {
 
   public function __construct() {
 
-    
+
   }
 
   public function setExtensions(array $aExtensions) {
@@ -90,6 +90,12 @@ class Validate extends core\module\Domed implements core\stringable {
     else {
 
       //$this->throwException('No file received');
+    }
+
+    if (!$bResult) {
+
+      //$this->addMessage('No file found');
+      $this->launchException('No file found');
     }
 
     return $bResult;

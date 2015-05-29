@@ -6,9 +6,29 @@ sylma.uploader.Dropper = new Class({
   onLoad : function() {
 
     var main = this.getMain();
+    var fieldset = this.getParent('fieldset');
 
-    //main.setDropper(this);
-    //main.addEvent('complete', this.sendComplete.bind(this));
+    fieldset.addEvent('remove', this.checkCount.bind(this, true));
+    this.checkCount();
+  },
+
+  checkCount: function (remove) {
+
+    //if (!this.options.max) return;
+
+    var fieldset = this.getParent('fieldset');
+    var count = fieldset.getCount();
+
+    if (remove) count--;
+
+    if (count >= this.options.max) {
+
+      this.hide();
+    }
+    else {
+
+      this.show();
+    }
   },
 
   getMain : function() {
@@ -30,7 +50,7 @@ sylma.uploader.Dropper = new Class({
 
     this.highlight();
 
-    this.getMain().sendFile(this.getParent('fieldset'), input);
+    this.getMain().sendFile(this.getParent('fieldset'), input, this.options.action);
   },
 
   getInput : function() {
@@ -42,6 +62,8 @@ sylma.uploader.Dropper = new Class({
 
     this.getInput().set('value');
     this.downlight();
+
+    this.checkCount();
   },
 
   highlight : function() {

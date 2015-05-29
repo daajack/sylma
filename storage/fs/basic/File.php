@@ -25,11 +25,17 @@ class File extends Resource implements fs\file {
    */
   private $iChanged = null;
 
-  public function __construct($sName, fs\directory $parent, array $aRights, $iDebug) {
+  /**
+   * @var fs\directory
+   */
+  protected $directory = null;
 
-    $this->sFullPath = (string) $parent . '/' . $sName;
+  public function __construct($sName, fs\directory $dir, array $aRights, $iDebug) {
+
+    $this->sFullPath = (string) $dir . '/' . $sName;
     $this->sName = $sName;
-    $this->parent = $parent;
+    $this->directory = $dir;
+    $this->parent = $dir;
 
     $this->bExist = is_file($this->getRealPath());
 
@@ -46,6 +52,15 @@ class File extends Resource implements fs\file {
 
       $this->throwException(sprintf('@file %s does not exist', $this->getRealPath()));
     }
+  }
+
+  /**
+   * Get parent directory
+   * @return fs\directory
+   */
+  public function getDirectory() {
+
+    return $this->directory;
   }
 
   public function getLastChange() {
@@ -181,7 +196,7 @@ class File extends Resource implements fs\file {
 
     return $this->asArray();
   }
-  
+
   public function asArray() {
 
     return file($this->getRealPath(), FILE_SKIP_EMPTY_LINES);

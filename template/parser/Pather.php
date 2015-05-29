@@ -304,13 +304,50 @@ class Pather extends component\Child {
    */
   protected function parsePath($sPath) {
 
-    if ($sPath{0} == "'") {
+    $aResult = [''];
+    $iExpression = 0;
+    $bString = false;
+    $iKey = 0;
 
-      $aResult = array($sPath);
-    }
-    else {
+    foreach (str_split($sPath) as $sChar) {
 
-      $aResult = explode('/', $sPath);
+      switch ($sChar) {
+
+        case '/' :
+
+          if ($iExpression || $bString) {
+
+            $aResult[$iKey] .= $sChar;
+          }
+          else {
+
+            $aResult[] = '';
+            $iKey++;
+          }
+          break;
+
+        case '\'' :
+
+          $bString = !$bString;
+          $aResult[$iKey] .= $sChar;
+          break;
+
+        case '(' :
+
+          $iExpression++;
+          $aResult[$iKey] .= $sChar;
+          break;
+
+        case ')' :
+
+          $iExpression--;
+          $aResult[$iKey] .= $sChar;
+          break;
+
+        default :
+
+          $aResult[$iKey] .= $sChar;
+      }
     }
 
     return $aResult;
@@ -377,7 +414,8 @@ class Pather extends component\Child {
     }
     else if ($sValue = $this->matchString($sPath) or !is_null($sValue)) {
 
-      $mResult = $this->getParser()->xmlize($this->getTemplate()->parseValue($sValue));
+      $content = $this->getParser()->xmlize($this->getTemplate()->parseValue($sValue));
+      $mResult = $this->getWindow()->toString($content);
     }
     else if ($aMatch = $this->matchFunction($sPath)) {
 

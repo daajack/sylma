@@ -37,7 +37,8 @@
 
     <tpl:argument name="alias" default="alias('form')"/>
 
-    <div js:name="template" js:class="sylma.uploader.Dropper" class="clearfix sylma-uploader dropper">
+    <div js:name="template" js:class="sylma.uploader.Dropper" class="clearfix hidder visible sylma-uploader dropper">
+      <tpl:apply mode="file/dropper/init"/>
       <input type="file" name="{$alias}">
         <js:event name="change">return %object%.sendFile(this);</js:event>
       </input>

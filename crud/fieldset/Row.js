@@ -34,6 +34,7 @@ sylma.crud.fieldset.Row = new Class({
       }, this);
 
       var fieldset = this.getParent('fieldset');
+      fieldset.fireEvent('remove', this);
 
       if (fieldset.get('useID')) {
 

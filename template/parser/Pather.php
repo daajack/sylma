@@ -304,7 +304,7 @@ class Pather extends component\Child {
    */
   protected function parsePath($sPath) {
 
-    $aResult = [''];
+    $aResult = array('');
     $iExpression = 0;
     $bString = false;
     $iKey = 0;

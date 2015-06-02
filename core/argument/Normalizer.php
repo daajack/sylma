@@ -10,6 +10,7 @@ use sylma\core;
 abstract class Normalizer extends Basic {
 
   const DEBUG_NORMALIZE_RECURSION = false;
+  const JSON_OBJECT_AS_ARRAY = 1;
 
   protected static $aNormalizedObjects = array();
 
@@ -131,7 +132,7 @@ abstract class Normalizer extends Basic {
     return $this->normalizeArray($this->query(), $iMode);
   }
 
-  public function asJSON($iMode = \JSON_OBJECT_AS_ARRAY) {
+  public function asJSON($iMode = self::JSON_OBJECT_AS_ARRAY) {
 
     return json_encode($this->asArray(true), $iMode);
   }

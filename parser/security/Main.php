@@ -24,11 +24,12 @@ abstract class Main extends reflector\handler\Elemented {
 
     $window = $this->getWindow();
     $parser = $this->getParent(); // view\parser\Elemented
+    $test = $this->reflectTest($aRights);
 
     //return $window->createCondition($this->reflectTest($aRights), $result);
-    return $window->createCaller(function() use ($window, $aRights, $result, $parser) {
+    return $window->createCaller(function() use ($window, $aRights, $result, $parser, $test) {
 
-      return $window->createCondition($this->reflectTest($aRights), $parser->addToResult($result, false));
+      return $window->createCondition($test, $parser->addToResult($result, false));
     });
   }
 }

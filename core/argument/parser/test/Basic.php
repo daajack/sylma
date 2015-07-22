@@ -3,7 +3,7 @@
 namespace sylma\core\argument\parser\test;
 use \sylma\modules\tester, \sylma\core, \sylma\dom, \sylma\storage\fs;
 
-class Basic extends tester\Stepper implements core\argumentable {
+class Basic extends tester\Profiler implements core\argumentable {
 
   const NS = 'http://www.sylma.org/modules/tester';
 
@@ -28,7 +28,7 @@ class Basic extends tester\Stepper implements core\argumentable {
     $cache = \Sylma::getManager('fs/cache');
     $this->exportDirectory = $cache->getDirectory()->addDirectory((string) $this->getDirectory());
 
-    $this->setArguments(array());
+    parent::__construct();
     $this->setFiles(array($this->getFile('basic.xml')));
   }
 
@@ -42,7 +42,9 @@ class Basic extends tester\Stepper implements core\argumentable {
 
     $doc->saveFile($tmp, true);
 
+    $this->startProfile();
     $result = $this->getManager()->load($tmp, array(), true);
+    $this->stopProfile();
     //$result->setBaseDirectory($file->getParent());
 
     return $result;

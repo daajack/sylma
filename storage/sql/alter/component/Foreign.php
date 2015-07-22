@@ -54,13 +54,14 @@ class Foreign extends sql\schema\component\Foreign implements sql\alter\alterabl
     }
 
     $sContent = $sDefault ? ' NULL' . ($this->getDefault() ? ' DEFAULT ' . $this->getDefault() : '') : ' NOT NULL';
-/*
+
     $ref = $this->getElementRef()->getElement($this->getKey());
-    $sType = $ref->getType()->asString();
+//if (!$ref instanceof Field) dsp($ref);
+    //$sType = $ref->getType()->asString();
+    //$sType = $ref instanceof Field ? $ref->asType() : $ref->getType()->asString();
+    $sType = $ref->asType();
 
     return $sType . $sContent;
-*/
-    return "BIGINT UNSIGNED" . $sContent;
   }
 
   public function asString() {

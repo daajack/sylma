@@ -18,6 +18,7 @@ class Basic extends core\argument\test\Basic {
     $this->setNamespace(self::NS, 'self');
 
     $this->setArguments('settings.yml');
+    $this->initArguments();
 
     $controler = $this->create('controler', array($this, $this->getDirectory('samples')));
     $controler->setArguments($this->getArguments());

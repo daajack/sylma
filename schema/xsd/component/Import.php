@@ -13,7 +13,7 @@ class Import extends reflector\component\Foreigner {
 
   public function parseFile(fs\file $file) {
 
-    return $this->getParser()->addSchema($file->getDocument());
+    return $this->getParser()->addSchema($file->getDocument(), $file);
   }
 }
 

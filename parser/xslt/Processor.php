@@ -84,12 +84,12 @@ class Processor extends dom\basic\handler\Rooted {
     if ($this->getFile()) {
 
       $dir = $this->getFile()->getParent();
-      $fs = $dir->getControler();
+      $fs = $dir->getManager();
     }
     else {
 
       $dir = null;
-      $fs = $this->getControler('fs');
+      $fs = $this->getManager('fs');
     }
 
     require_once('core/functions/Path.php');
@@ -182,7 +182,7 @@ class Processor extends dom\basic\handler\Rooted {
 
   public function includeExternals(array &$aPaths = array(), $iLevel = 0) {
 
-    $dom = $this->getControler();
+    $dom = $this->getManager();
 
     $iMaxLevel = $dom->readArgument('import-depth');
 
@@ -241,7 +241,7 @@ class Processor extends dom\basic\handler\Rooted {
   public function parseDocument(dom\handler $doc, $bXML = true) { // WARNING, XML_Document typed can cause crashes
 
     $mResult = null;
-    $dom = $this->getControler();
+    $dom = $this->getManager();
 
     if ($doc->isEmpty()) {
 

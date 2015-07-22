@@ -17,8 +17,9 @@ class Form extends core\module\Domed {
 
     $this->setMode($sMode);
 
-    $this->setArguments($arguments);
+    //$this->setArguments($arguments);
     $this->setContexts($contexts);
+    $this->setSettings($arguments);
     $this->setSettings($post);
   }
 
@@ -48,6 +49,11 @@ class Form extends core\module\Domed {
   public function getMode() {
 
     return $this->sMode;
+  }
+
+  public function read($sPath, $bDebug = true) {
+
+    return parent::read($sPath, $bDebug);
   }
 
   protected function setContexts(core\argument $contexts) {

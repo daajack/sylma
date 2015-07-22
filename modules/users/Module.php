@@ -64,9 +64,9 @@ class Module extends core\module\Domed {
     $aGroups = array();
     $contexts = $this->aContext['contexts'];
 
-    $doc = $this->getScript('login/default/check', array(), $contexts->query(), array(
+    $doc = $this->getScript('login/default/check', array(), array(
       'name' => $sName,
-    ));
+    ), $contexts->query());
 
     if (!$doc->isEmpty()) {
 

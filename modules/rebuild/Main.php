@@ -47,19 +47,37 @@ class Main extends core\module\Domed implements dom\domable {
     $this->loadDefaultSettings();
 
     $common = $this->createArgument(array(
-      'extensions' => array('vml'),
-      'mode' => 'argument',
+      'includes' => array('/\.vml$/'),
+      'excludes' => array('/sylma', '/users', '/\.svn/'),
+      'depth' => true,
     ));
 
     $root = $common;
-    $root->set('excluded', array('/sylma', '/users'));
 
-    $files = $this->getDirectory('/')->browse($root);
-    $doc = $files->asDOM();
+    $dir = $this->getDirectory('/');
+    $files = $dir->getFiles(array(
+      '/\.vml$/'
+    ), array(
+      '|^/users|',
+      '/\.svn/',
+      '|^/sylma/modules/tester|',
+      '|/test|',
+    ), true);
 
-    $modules = $common;
-    $modules->set('excluded', array('/sylma/modules/tester', 'test'));
-    $doc->add($this->getDirectory('/sylma')->browse($modules)->query());
+    foreach ($files as $file) {
+
+      $aFiles[] = array(
+        'path' => (string) $file,
+        'action-path' => $file->asPath()
+      );
+    }
+
+    $controller = $dir->getManager();
+
+    //$files = $dir->browse($root);
+    $doc = $this->createArgument(array('directory' => array(
+      '#file' => $aFiles
+    )), $controller::NS)->asDOM();
 
     return $this->getTemplate('source.xsl')->parseDocument($doc);
   }

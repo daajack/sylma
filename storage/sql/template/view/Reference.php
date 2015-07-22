@@ -77,7 +77,11 @@ class Reference extends sql\template\component\Reference {
     }
     else {
 
-      $table->getQuery()->setWhere($element, '=', $this->getParent()->getElement('id')->reflectRead());
+      $key = $this->getParent()->getElement($element->getKey());
+      $val = $key->reflectRead();
+      $bString = $key->getType()->doExtends($this->getParser()->getType('string', $this->getNamespace('sql')));
+
+      $table->getQuery()->setWhere($element, '=', $bString ? $this->reflectEscape($val) : $val);
     }
 
     return $result;

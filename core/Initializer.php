@@ -84,10 +84,10 @@ class Initializer extends module\Domed {
 
     $this->setStartTime(microtime(true));
 
-    require_once('storage/fs/Controler.php');
+    require_once('storage/fs/Manager.php');
 
     // load directory without security
-    $fs = new fs\Controler(\Sylma::ROOT, false, false, false);
+    $fs = new fs\Manager(\Sylma::ROOT, false, false, false);
     $fs->loadDirectory();
     \Sylma::setManager('fs', $fs);
     \Sylma::setManager('fs/free', $fs);
@@ -102,7 +102,7 @@ class Initializer extends module\Domed {
     }
 
     // load directory with security
-    $fs = new fs\Controler(\Sylma::ROOT, false, true, true);
+    $fs = new fs\Manager(\Sylma::ROOT, false, true, true);
     $fs->loadDirectory();
     \Sylma::setManager('fs', $fs);
 

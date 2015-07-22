@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<crud:crud
+  xmlns:crud="http://2013.sylma.org/view/crud"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:le="http://2013.sylma.org/action"
+
+  xmlns:sql="http://2013.sylma.org/storage/sql"
+>
+
+  <crud:global>
+
+  </crud:global>
+
+  <view:view>
+
+    <sql:resource/>
+
+    <view:schema>../class.xql</view:schema>
+
+    <le:script path="../import/file">
+      <le:get-argument name="file" le:name="file"/>
+    </le:script>
+
+    <le:context name="css">
+      <le:file>php.less</le:file>
+    </le:context>
+
+    <tpl:template>
+
+      <div class="inspector">
+
+        <em>
+          <tpl:apply select="file/ref()" mode="file"/>
+        </em>
+
+        <h3>
+<!--
+          <tpl:read select="namespace/name"/>\
+-->
+          <tpl:read select="name"/>
+
+        </h3>
+
+        <ul>
+          <tpl:apply select="extends/ref()" mode="extends"/>
+        </ul>
+<br/>
+        <ul>
+          <tpl:apply select="extends/ref()" mode="methods"/>
+        </ul>
+
+      </div>
+
+    </tpl:template>
+
+    <tpl:template match="*" mode="methods">
+
+      <tpl:apply select="methods/join()" mode="method"/>
+
+    </tpl:template>
+
+    <tpl:template match="*" mode="extends">
+
+      <sql:filter name="id" op="!=">
+        <tpl:read select="/root()/id"/>
+      </sql:filter>
+
+      <li>
+        <a href="javascript:void(0)" onclick="">
+          <tpl:read select="name"/>
+        </a>
+      </li>
+
+    </tpl:template>
+
+    <tpl:template match="*" mode="file">
+
+      <sql:filter name="name">
+        <le:get-argument name="file"/>
+      </sql:filter>
+
+      <tpl:read select="name"/>
+
+    </tpl:template>
+
+    <tpl:template match="*" mode="method">
+
+      <li class="{(modifiers &amp; 512 ? 'protected' : '')}">
+        <tpl:read select="name"/>
+        <div class="calls">
+          <ul class="callers">
+            <tpl:apply select="callers/ref()" mode="caller"/>
+          </ul>
+        </div>
+      </li>
+
+    </tpl:template>
+
+    <tpl:template match="*" mode="caller">
+
+      <li>
+        <a href="javascript:void(0)" onclick="">
+          <tpl:read select="source"/>
+          <span class="count">
+            (<tpl:read select="ct"/>)
+          </span>
+        </a>
+      </li>
+
+    </tpl:template>
+
+  </view:view>
+
+</crud:crud>

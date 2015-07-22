@@ -2,6 +2,7 @@ sylma.stepper.Snapshot = new Class({
 
   Extends : sylma.stepper.Step,
   target : null,
+  delay : 200,
 
   onLoad : function() {
 
@@ -41,8 +42,8 @@ sylma.stepper.Snapshot = new Class({
 
   test : function(callback) {
 
-    //this.testConfirm.delay(200, this, callback);
-    this.testConfirm(callback);
+    this.testConfirm.delay(this.delay, this, callback);
+    //this.testConfirm(callback);
   },
 
   testConfirm: function (callback) {

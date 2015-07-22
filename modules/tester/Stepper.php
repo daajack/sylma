@@ -82,6 +82,8 @@ class Stepper extends Basic implements core\argumentable {
 
     $bResult = false;
 
+    $this->onStart();
+
     if ($doc = $this->openDocument($file)) {
 
       if ($test = $doc->getx("self:test[position() = '$sID']")) {
@@ -93,6 +95,11 @@ class Stepper extends Basic implements core\argumentable {
     $this->onFinish();
 
     return $bResult;
+  }
+
+  protected function onStart() {
+
+
   }
 
 }

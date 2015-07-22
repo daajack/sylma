@@ -16,6 +16,7 @@ class Collection extends Dummed implements sql\template\pathable {
   protected $aStart = array();
   protected $bBuilded = false;
   protected $bPreBuilt = false;
+  protected $bReady = false;
 
   public function getElement($sName, $sNamespace = null) {
 
@@ -23,7 +24,9 @@ class Collection extends Dummed implements sql\template\pathable {
   }
 
   /**
-   * @usedby sql\template\component\Reference::loadCollection()
+   * @usedby \sylma\storage\sql\template\component\Reference::loadCollection()
+   * @usedby \sylma\storage\sql\template\component\Foreign::reflectFunctionAll()
+   * @usedby \sylma\storage\sql\template\view\Foreign::buildMultiple()
    */
   public function setTable(Table $table, $bReset = false) {
 
@@ -86,15 +89,15 @@ class Collection extends Dummed implements sql\template\pathable {
 
   public function reflectRead(array $aPath = array(), array $aArguments = array()) {
 
-    if (!$aPath) {
-
-      $this->launchException('Cannot read collection');
-    }
-
-    return $this->getParse()->parsePathToken($this, $aPath, $aArguments, true);
+    $this->launchException('Cannot read collection');
   }
 
   public function reflectApplyDefault($sPath, array $aPath, $sMode, $bRead = false, array $aArguments = array()) {
+
+    if (!$this->bReady) {
+
+      $this->launchException('Cannot apply, collection not ready', get_defined_vars());
+    }
 
     $aResult = $this->prepareApply();
     array_unshift($aPath, $sPath);
@@ -147,6 +150,8 @@ class Collection extends Dummed implements sql\template\pathable {
   }
 
   public function reflectApplyAll($sMode, array $aArguments = array()) {
+
+    $this->bReady = true;
 
     $aResult = $this->prepareApply();
     $aResult[] = $this->postBuild($this->getTable()->reflectApply($sMode, $aArguments));

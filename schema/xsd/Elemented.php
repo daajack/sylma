@@ -25,6 +25,11 @@ class Elemented extends schema\parser\Handler implements reflector\elemented, sc
   protected $aElements = array();
   protected $aTypes = array();
 
+  /**
+   * List of stringed files
+   */
+  protected $aFiles = array();
+
   protected $element;
 
   public function parseRoot(dom\element $el) {
@@ -45,7 +50,7 @@ class Elemented extends schema\parser\Handler implements reflector\elemented, sc
 
     $this->setDocument($this->createDocument($doc));
     $this->getDocument()->getRoot()->set();
-    $this->addSchema($doc);
+    $this->addSchema($doc, $doc->getFile());
 
     $this->loadBaseTypes(array(
       'string' => self::NS,
@@ -148,7 +153,7 @@ class Elemented extends schema\parser\Handler implements reflector\elemented, sc
 
   public function getElements() {
 
-    $this->launchException('Not yet implemented');
+    return $this->aElements;
   }
 
   protected function lookupElement($sName, $sNamespace, $bDebug = true) {
@@ -222,15 +227,27 @@ class Elemented extends schema\parser\Handler implements reflector\elemented, sc
 
   public function addSchema(dom\document $doc, fs\file $file = null) {
 
-    if ($file) {
+    //$sResult = '';
+    $sFile = $file ? (string) $file : null;
 
-      $this->getRoot()->importDocument($doc, $file);
+    if (!$sFile || !in_array($sFile, $this->aFiles)) {
+
+      if ($file) {
+
+        $this->getRoot()->importDocument($doc, $file);
+      }
     }
+      $sNamespace = $this->parseTargetNamespace($doc);
 
-    $sNamespace = $this->parseTargetNamespace($doc);
+      $sResult = $this->browseSchemaChild($doc->getRoot(), $sNamespace);
 
-    $sResult = $this->browseSchemaChild($doc->getRoot(), $sNamespace);
+      $this->aFiles[] = $sFile;
+/*    }
+    else {
 
+
+    }
+*/
     return $sResult;
   }
 

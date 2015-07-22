@@ -34,7 +34,7 @@ class Basic extends parser\test\Basic {
     return parent::testArgument($test, $doc, $file);
   }
 
-  public function create($sName, array $aArguments = array(), $sDirectory = '') {
+  public function getInstance($sName, array $aArguments = array(), $sDirectory = '') {
 
     return $this->factoryTest->create($sName, $aArguments, $sDirectory);
   }

@@ -53,14 +53,11 @@ class Browser extends core\module\Domed {
 
     $aResult = array();
 
-    $args = $this->createArgument(array(
-      'extensions' => array('tml'),
-    ));
-
     $sCurrentDirectory = (string) $this->getDirectory();
     $iBase = strlen($sCurrentDirectory);
+    $files = $this->getDirectory('', true)->getFiles(array('/\.tml/'), array(), true);
 
-    foreach ($this->getDirectory('', true)->browse($args, false) as $file) {
+    foreach ($files as $file) {
 
       $sDirectory = '';
       $sSubDirectory = (string) $file->getParent();
@@ -124,7 +121,7 @@ class Browser extends core\module\Domed {
 
       default :
 
-        $this->launchException('Bad collection child');
+        $this->launchException('Bad collection child', get_defined_vars());
     }
 
     return $aResult;

@@ -149,7 +149,7 @@ class Foreign extends sql\template\component\Foreign {
   protected function buildMultiple() {
 
     $parent = $this->getParent();
-    $element = $this->getElementRef();
+    $element = clone $this->getElementRef();
 
     $key = $parent->getElement($this->getKey(), $parent->getNamespace());
 

@@ -16,7 +16,13 @@ class Field extends sql\schema\component\Field implements sql\alter\alterable {
 
     if ($this->isID()) {
 
-      $sResult .= ",PRIMARY KEY (`{$this->getName()}`)";
+      $sResult .= ", PRIMARY KEY (`{$this->getName()}`)";
+    }
+    else if ($this->isUnique()) {
+
+      $sName = $this->getName();
+
+      $sResult .= ", UNIQUE KEY `$sName` (`$sName`)";
     }
 
     return $sResult;
@@ -28,14 +34,32 @@ class Field extends sql\schema\component\Field implements sql\alter\alterable {
     return $this->getType()->doExtends($id);
   }
 
-  protected function typeAsString() {
+  protected function isUnique() {
+
+    return $this->readx('@unique');
+  }
+
+  protected function getAlterDefault() {
 
     if (!$sDefault = $this->readx('@alter-default')) {
 
       $sDefault = $this->getDefault();
     }
 
+    return $sDefault;
+  }
+
+  protected function typeAsString() {
+
+    $sDefault = $this->getAlterDefault();
     $sContent = $sDefault ? ' NULL' . ($this->getDefault() ? ' DEFAULT ' . $sDefault : '') : ' NOT NULL';
+
+    return $this->asType() . ($this->isID() ? ' AUTO_INCREMENT' : $sContent);
+  }
+
+  public function asType() {
+
+    $sDefault = $this->getAlterDefault();
 
     $type = $this->getType();
 
@@ -56,7 +80,7 @@ class Field extends sql\schema\component\Field implements sql\alter\alterable {
     }
 
 
-    return $sType . ($this->isID() ? ' AUTO_INCREMENT' : $sContent);
+    return $sType;
   }
 
   public function asString() {

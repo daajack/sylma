@@ -32,9 +32,9 @@ class Manager extends core\module\Namespaced implements fs\security\manager {
     $this->parent = $dir;
   }
 
-  protected function getControler() {
+  protected function getManager() {
 
-    return $this->parent->getControler();
+    return $this->parent->getManager();
   }
 
   protected function getDocument() {
@@ -108,7 +108,7 @@ class Manager extends core\module\Namespaced implements fs\security\manager {
       $sGroup = $el->readByName('group', self::NS);
       $sMode = $el->readByName('mode', self::NS);
 
-      $user = $this->getControler()->getControler(self::USER_CONTROLER);
+      $user = $this->getManager()->getManager(self::USER_CONTROLER);
       $iMode = $user->getMode($sOwner, $sGroup, $sMode);
 
       if ($iMode !== null) {

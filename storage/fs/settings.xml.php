@@ -6,7 +6,7 @@
   'mode' => '711',
   '0' => 'user-mode'),
 'browse' => array(
-  'excluded' => array(
+  'excludes' => array(
     '.svn'),
   'depth' => '1',
   '0' => 'extensions',
@@ -23,9 +23,9 @@
 'system' => array(
   'rights' => '0770'),
 'classes' => array(
-  'controler' => array(
-    'file' => '\sylma\storage\fs\Controler.php',
-    'name' => '\sylma\storage\fs\Controler'),
+  'manager' => array(
+    'file' => '\sylma\storage\fs\Manager.php',
+    'name' => '\sylma\storage\fs\Manager'),
   'file' => array(
     'file' => '\sylma\storage\fs\basic\File.php',
     'name' => '\sylma\storage\fs\basic\File',
@@ -50,4 +50,3 @@
       'document' => array(
         'file' => '\sylma\dom\basic\handler\Rooted.php',
         'name' => '\sylma\dom\basic\handler\Rooted'))))));
-  

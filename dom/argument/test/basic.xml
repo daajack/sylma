@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<tst:tests xmlns:tst="http://www.sylma.org/core/argument/test" xmlns="http://www.sylma.org" xmlns:html="http://www.w3.org/1999/xhtml" xmlns:arg="http://www.sylma.org/core/argument/test" arg:class="basic">
+<tst:tests
+  xmlns:tst="http://www.sylma.org/core/argument/test"
+  xmlns="http://www.sylma.org"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns:arg="http://www.sylma.org/core/argument/test"
+  arg:class="basic"
+>
   <tst:description>Basic</tst:description>
   <tst:test name="A simple read">
     <tst:prepare>

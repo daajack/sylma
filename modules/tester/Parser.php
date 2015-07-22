@@ -30,7 +30,10 @@ class Parser extends Prepare {
 
     //$this->setArguments(array());
     //$this->setSettings($this->getArguments());
-    $this->setSettings(array());
+    //parent::__construct();
+    $this->initSettings();
+
+    $this->initProfile();
 
     //$this->setFiles(array($this->getFile('basic.xml')));
   }
@@ -89,7 +92,9 @@ class Parser extends Prepare {
 
     try
     {
+      $this->startProfile();
       $manager->build($file, $this->getDirectory());
+      $this->stopProfile();
 
       if ($sLoad = $test->readx('self:load', array(), false)) {
 
@@ -106,10 +111,9 @@ class Parser extends Prepare {
 
       $bResult = true;
 
-    } catch (\sylma\core\exception $e) {
+    } catch (core\exception $e) {
 
       $bResult = $this->catchParserException($test, $e, $file);
-
     }
 
     return array(
@@ -141,7 +145,10 @@ class Parser extends Prepare {
 
     if ($bRun) {
 
+      $this->startProfile();
       $result = $manager->load($file, $aArguments, false, static::DEBUG_RUN);
+      $this->stopProfile();
+
       if ($bDelete) $file->delete();
     }
 
@@ -182,12 +189,12 @@ class Parser extends Prepare {
     }
     catch (core\exception $e) {
 
+      $bResult = false;
+
       $e->addPath('Test ID : ' . $test->readx('@name'));
       $e->addPath($file->asToken());
 
       $e->save(false);
-
-      return false;
     }
 
     if ($bResult) {
@@ -195,7 +202,7 @@ class Parser extends Prepare {
       if ($test->readAttribute(self::PARSER_EXCEPTION, null, false) ||
           $test->readAttribute(self::BUILD_EXCEPTION, null, false))
       {
-
+        $this->saveProfile();
         $this->launchException('An exception should occured');
       }
       else {
@@ -204,23 +211,35 @@ class Parser extends Prepare {
         $bResult = parent::test($test, $sContent, $controler, $doc, $file);
       }
     }
+    else {
+
+      $this->saveProfile();
+    }
 
     return $bResult;
   }
 
   public function loadScript(array $aArguments = array(), array $aPosts = array(), array $aContexts = array()) {
 
-    return $this->getScriptFile($this->getFile(), $this->buildScriptArguments($aArguments, $aContexts, $aPosts));
+    $this->startProfile();
+    $result = $this->getScriptFile($this->getFile(), $this->buildScriptArguments($aArguments, $aContexts, $aPosts));
+    $this->stopProfile();
+
+    return $result;
   }
 
   public function getScript($sPath, array $aArguments = array(), array $aContexts = array(), array $aPosts = array(), $bRun = true) {
 
-    return $this->getManager(self::PARSER_MANAGER)->load($this->getFile($sPath), $this->buildScriptArguments($aArguments, $aContexts, $aPosts), true, $bRun);
+    $this->startProfile();
+    $result = $this->getManager(self::PARSER_MANAGER)->load($this->getFile($sPath), $this->buildScriptArguments($aArguments, $aContexts, $aPosts), true, $bRun);
+    $this->stopProfile();
+
+    return $result;
   }
 
   public function buildScript($sPath, array $aArguments = array(), array $aContexts = array(), array $aPosts = array()) {
 
-    return $this->getScript($sPath, $aArguments, $aContexts, $aPosts, false);
+    return $this->getScript($sPath, $aArguments, $aPosts, $aContexts, false);
   }
 
   public function set($sPath, $mValue = null) {

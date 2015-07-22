@@ -73,7 +73,7 @@ class Documented extends Logger implements reflector\documented {
 
     $bElement = \Sylma::read('template/debug/source');
 
-    if (!$file->getControler()->getName()) {
+    if (!$file->getManager()->getName()) {
 
       foreach ($doc->queryx('//*') as $el) {
 
@@ -320,7 +320,7 @@ class Documented extends Logger implements reflector\documented {
         }
       }
 
-      $dir = $this->getControler('fs/editable')->getDirectory($sTarget);
+      $dir = $this->getManager('fs/editable')->getDirectory($sTarget);
       $result = $dir->getFile($file->getName() . '.php', fs\resource::DEBUG_EXIST);
     }
     else {

@@ -3,7 +3,7 @@
 namespace sylma\storage\fs;
 use \sylma\core;
 
-interface resource extends core\argumentable, core\tokenable, core\stringable {
+interface resource extends core\tokenable, core\stringable, core\arrayable {
 
   const DEBUG_NOT = 0;
   /**
@@ -19,7 +19,7 @@ interface resource extends core\argumentable, core\tokenable, core\stringable {
   /**
    * @return core\factory
    */
-  function getControler();
+  //function getManager();
 
   /**
    * @param boolean $bRecursive Try to get manager from parents
@@ -56,6 +56,8 @@ interface resource extends core\argumentable, core\tokenable, core\stringable {
    * @return string The full path to resource, including root directory path (ex: protected/index.eml)
    */
   function getRealPath();
+
+  function asArray();
 
   /**
    * @return string The full path to the resource (ex : /storage/fs/resource.php)

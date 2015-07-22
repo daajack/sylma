@@ -47,8 +47,8 @@ class Context extends html\context\CSS {
 
     $less = new Prefixer;
     //$less->setImportDir($file->getParent()->getRealPath());
-//echo (string) $file->getControler()->getDirectory()->getRealPath();
-    $less->setImportDir($file->getControler()->getDirectory()->getRealPath());
+//echo (string) $file->getManager()->getDirectory()->getRealPath();
+    $less->setImportDir($file->getManager()->getDirectory()->getRealPath());
 
     try {
 

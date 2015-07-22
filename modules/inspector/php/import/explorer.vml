@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<crud:crud
+  xmlns:crud="http://2013.sylma.org/view/crud"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:js="http://2013.sylma.org/template/binder"
+  xmlns:cls="http://2013.sylma.org/core/factory"
+  xmlns:builder="http://2013.sylma.org/parser/reflector/builder"
+
+  extends="/#sylma/modules/explorer/index.vml"
+>
+
+  <view:view>
+
+    <tpl:template mode="explorer/title">Inspector</tpl:template>
+
+    <tpl:template match="fs:root">
+      <div class="root" js:class="sylma.modules.explorer.Root" js:alias="root">
+        <h3 class="name">//files</h3>
+        <tpl:apply mode="children"/>
+      </div>
+    </tpl:template>
+
+    <tpl:template match="fs:file">
+      <a href="javascript:void(0)" class="file" js:class="sylma.modules.explorer.File" js:alias="file">
+        <js:option name="path">
+          <tpl:read select="path"/>
+        </js:option>
+        <js:event name="click">%object%.open()</js:event>
+        <tpl:read select="path"/>
+      </a>
+    </tpl:template>
+
+  </view:view>
+
+  <view:view name="getDirectory">
+
+    <tpl:template>
+      <tpl:apply select="buildDirectory()">
+        <tpl:text>/sylma</tpl:text>
+        <le:array>
+          <tpl:text>^[^\.]+\.php$</tpl:text>
+        </le:array>
+        <le:array>
+          <tpl:text>/sylma/Init.php</tpl:text>
+          <tpl:text>/sylma/core/factory/test/sample/BadName.php</tpl:text>
+          <tpl:text>/sylma/core/debug/Functions.php</tpl:text>
+          <tpl:text>/sylma/core/functions/*.php</tpl:text>
+          <tpl:text>/sylma/device/lib/Mobile_Detect.php</tpl:text>
+          <tpl:text>/sylma/core/module/Extension.php</tpl:text>
+          <tpl:text>/sylma/core/module/test/samples/Domed.php</tpl:text>
+          <tpl:text>/sylma/parser/reflector/component/Simple.php</tpl:text>
+          <tpl:text>/sylma/template/parser/Texted.php</tpl:text>
+          <tpl:text>/sylma/core/argument/spyc.php</tpl:text>
+          <tpl:text>/sylma/modules/install/skeleton/index.php</tpl:text>
+          <tpl:text>/sylma/modules/less/lessc.php</tpl:text>
+          <tpl:text>/sylma/dom/functions.php</tpl:text>
+        </le:array>
+      </tpl:apply>
+    </tpl:template>
+
+  </view:view>
+
+</crud:crud>

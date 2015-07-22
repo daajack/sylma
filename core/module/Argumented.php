@@ -190,7 +190,7 @@ abstract class Argumented extends Managed {
 
       if ($factory = $this->getFactory(false)) {
 
-        $factory->setArguments($this->getSettings(), $bMerge, static::FACTORY_RELOAD);
+        $factory->setArguments($this->getSettings(), static::FACTORY_RELOAD);
       }
     }
   }

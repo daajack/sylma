@@ -47,9 +47,14 @@ sylma.stepper.Main = new Class({
       this.root.loadTests();
     }
 
+    this.updating = this.get('updating');
+
     if (this.updating) {
 
-      console.log('!!!!!!!!! WARNING : update mode enabled. DO NOT RUN TESTS if you don\'t want update files !!!!!!!!!!!');
+      var msg = 'WARNING : update mode enabled. DO NOT RUN TESTS if you don\'t want to update files !';
+      
+      sylma.ui.showMessage(msg);
+      console.log(msg);
     }
 
     this.prepareActionFrame();

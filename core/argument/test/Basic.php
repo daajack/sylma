@@ -6,6 +6,7 @@ use \sylma\modules\tester, \sylma\core, \sylma\dom, \sylma\storage\fs;
 class Basic extends tester\Prepare implements core\argumentable {
 
   const NS = 'http://www.sylma.org/core/argument/test';
+
   protected $sTitle = 'Basic';
 
   public function __construct() {
@@ -16,11 +17,13 @@ class Basic extends tester\Prepare implements core\argumentable {
     $this->setNamespace(self::NS, 'self');
 
     $this->setArguments('settings.yml');
+    //$this->setArguments(\Sylma::get('tester'));
+    parent::__construct();
 
-    $controler = $this->create('controler', array($this, $this->getDirectory('samples')));
-    $controler->setArguments($this->getArguments());
+    $manager = $this->create('controler', array($this, $this->getDirectory('samples')));
+    $manager->setArguments($this->getArguments());
 
-    $this->setControler($controler);
+    $this->setManager($manager);
   }
 
   protected function openDocument(fs\file $file) {

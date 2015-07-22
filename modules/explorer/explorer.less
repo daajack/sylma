@@ -1,0 +1,61 @@
+
+.explorer
+{
+  overflow: hidden;
+
+  h2
+  {
+    margin-top: 0;
+  }
+
+  .sidebar
+  {
+    box-sizing: border-box;
+    width: 10%;
+    border-right: 1px solid #ddd;
+    float: left;
+
+    .children
+    {
+      height: 75em;
+      overflow-y: auto;
+      padding-right: 2%;
+      margin-right: 2%;
+    }
+
+  }
+
+  .open
+  {
+    color: blue;
+  }
+
+  .view
+  {
+    width: 82%;
+    padding: 2%;
+    float: right;
+  }
+
+  .directory
+  {
+    .name
+    {
+      font-size: 1.2em;
+    }
+  }
+
+  .directory,
+  .file
+  {
+    display: block;
+    padding: 0.5em 1em;
+    border: 1px solid #eee;
+    margin-bottom: 0.1em;
+  }
+
+  .directory
+  {
+    background-color: #fcefa1;
+  }
+}

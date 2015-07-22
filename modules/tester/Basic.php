@@ -16,11 +16,26 @@ abstract class Basic extends Asserter {
 
   const FILE_MANAGER = 'fs/editable';
 
+  public function __construct() {
+
+    $this->initArguments();
+  }
+
+  protected function initArguments() {
+
+    $this->setArguments(\Sylma::get('tester'));
+  }
+
+  protected function initSettings() {
+
+    $this->setSettings(\Sylma::get('tester'));
+  }
+
   protected function getFiles() {
 
     if (!$this->aFiles) {
 
-      $this->aFiles = $this->getDirectory()->getFiles(array('xml'), null, 1);
+      $this->aFiles = $this->getDirectory()->getFiles(array('/\.xml/'));
     }
 
     return $this->aFiles;
@@ -141,7 +156,7 @@ abstract class Basic extends Asserter {
     return $aResult;
   }
 
-  protected function evaluate($closure, $controler) {
+  protected function evaluate(\Closure $closure, $controler) {
 
     if (!is_callable($closure)) {
 
@@ -150,6 +165,7 @@ abstract class Basic extends Asserter {
 
     //core\exception\Basic::throwError(false);
     $mResult = $closure($controler);
+    //$mResult = call_user_func($closure, $controler);
     //core\exception\Basic::throwError(true);
 
     return $mResult;
@@ -202,7 +218,7 @@ abstract class Basic extends Asserter {
     }
     else {
 
-      $e->addPath($file->asToken());
+      $e->addPath($test->getDocument()->asToken());
       $e->addPath('Test ID : ' . $test->readAttribute('name'));
 
       if ($sException) {

@@ -72,6 +72,19 @@
       </div>
     </tst:node>
   </tst:test>
+  <tst:test name="Cannot apply collection" build-exception="Cannot apply, collection not ready">
+    <tst:document>
+      <view:view>
+        <sql:resource multiple="multiple"/>
+        <view:schema>samples/user1.xql</view:schema>
+        <tpl:template match="*">
+          <div>
+            <tpl:read select="name"/>
+          </div>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+  </tst:test>
   <tst:test name="Test result">
     <tst:document>
       <view:view user:ns="ns">

@@ -27,7 +27,7 @@ class Sylma {
    */
   private static $settings = null;
 
-  protected static $aControlers = array();
+  protected static $aManagers = array();
   protected static $aFiles = array();
 
   public static $sExceptionFile = 'core/exception/Basic.php';
@@ -60,7 +60,7 @@ class Sylma {
 
     //xdebug_start_code_coverage();
 
-    $init = self::$aControlers['init'] = new self::$sInitializerClass;
+    $init = self::$aManagers['init'] = new self::$sInitializerClass;
     self::setManager('init', $init);
 
     try {
@@ -91,37 +91,37 @@ class Sylma {
     //session_write_close();
   }
 
-  public static function setManager($sName, $controler) {
+  public static function setManager($sName, $manager) {
 
-    self::$aControlers[$sName] = $controler;
-    return $controler;
+    self::$aManagers[$sName] = $manager;
+    return $manager;
   }
 
   public static function getManager($sName, $bLoad = true, $bDebug = true) {
 
-    $controler = array_key_exists($sName, self::$aControlers) ? self::$aControlers[$sName] : null;
+    $manager = array_key_exists($sName, self::$aManagers) ? self::$aManagers[$sName] : null;
 
-    if (!$controler && $bLoad) {
+    if (!$manager && $bLoad) {
 
-      $controler = self::loadManager($sName);
+      $manager = self::loadManager($sName);
     }
 
-    if (!$controler && $bLoad && $bDebug) {
+    if (!$manager && $bLoad && $bDebug) {
 
       self::throwException(sprintf('Manager "%s" is not defined', $sName));
     }
 
-    return $controler;
+    return $manager;
   }
 
   public static function getManagers() {
 
-    return self::$aControlers;
+    return self::$aManagers;
   }
 
   public static function setManagers(array $aManagers) {
 
-    self::$aControlers = $aManagers;
+    self::$aManagers = $aManagers;
   }
 
   protected static function loadManager($sName) {
@@ -149,35 +149,35 @@ class Sylma {
 
       case 'fs/editable' :
 
-        $result = new storage\fs\Controler(self::ROOT, true, true, true, 'editable');
+        $result = new storage\fs\Manager(self::ROOT, true, true, true, 'editable');
         $result->loadDirectory();
 
       break;
 
       case 'fs/cache' :
 
-        $result = new storage\fs\Controler(self::PATH_CACHE, true, true, false, 'cache');
+        $result = new storage\fs\Manager(self::PATH_CACHE, true, true, false, 'cache');
         $result->loadDirectory('');
 
       break;
 
       case 'fs/trash' :
 
-        $result = new storage\fs\Controler(self::PATH_TRASH, true, true, false, 'trash');
+        $result = new storage\fs\Manager(self::PATH_TRASH, true, true, false, 'trash');
         $result->loadDirectory('');
 
       break;
 
       case 'fs/tmp' :
 
-        $result = new storage\fs\Controler(self::read('directory/tmp'), true, true, false, 'tmp');
+        $result = new storage\fs\Manager(self::read('directory/tmp'), true, true, false, 'tmp');
         $result->loadDirectory('');
 
       break;
 
       case 'fs/root' :
 
-        $result = new storage\fs\Controler('/', true, true, false, '/');
+        $result = new storage\fs\Manager('/', true, true, false, '/');
         $result->loadDirectory('');
 
       break;
@@ -203,7 +203,7 @@ class Sylma {
 
       case 'redirect' :
 
-        $init = self::getControler('init');
+        $init = self::getManager('init');
         $result = $init->loadRedirect();
 
       break;

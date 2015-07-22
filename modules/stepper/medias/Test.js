@@ -218,11 +218,11 @@ sylma.stepper.Test = new Class({
       var pages = this.getPages();
       this.getMain().toggleWindow(true);
 
-      pages[0].goTest(function() {
+      pages[0].go(function() {
 
-        this.testNextItem(pages, 1, callback);
+        this.testNextItem(pages, 0, callback);
 
-      }.bind(this));
+      }.bind(this), true);
 
     }.bind(this));
   },
@@ -249,7 +249,7 @@ sylma.stepper.Test = new Class({
 
       if (this.getParent('main').updating && this.needUpdate) {
 
-        //this.save();
+        this.save();
         sylma.ui.showMessage('save');
       }
 

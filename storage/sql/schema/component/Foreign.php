@@ -22,6 +22,7 @@ class Foreign extends Element implements sql\schema\foreign {
 
     $this->reflectOccurs($el);
     $this->loadOptional();
+    $this->loadKey();
   }
 
   protected function loadName() {
@@ -36,10 +37,12 @@ class Foreign extends Element implements sql\schema\foreign {
 
   protected function loadKey() {
 
-    if ($sKey = $this->readx('@key', array(), false)) {
+    if ($sKey = $this->readx('@key', false)) {
 
-      $this->setName($sKey);
+      $this->setKey($sKey);
     }
+
+    return $this->getKey();
   }
 
   protected function setKey($sKey) {
@@ -56,7 +59,7 @@ class Foreign extends Element implements sql\schema\foreign {
 
     list($sNamespace, $sName) = $this->parseName($this->readx('@table', true));
 
-    return $this->getParser()->getElement($sName, $sNamespace, false);
+    return $this->getHandler()->getElement($sName, $sNamespace, false);
   }
 
   protected function getElementRefFile() {
@@ -87,11 +90,11 @@ class Foreign extends Element implements sql\schema\foreign {
     if (!$result = $this->loadElementRef()) {
 
       $file = $this->getElementRefFile();
-      $this->getParser()->addSchema($file->getDocument(), $file);
+      $this->getHandler()->addSchema($file->getDocument(), $file);
 
       if (!$result = $this->loadElementRef($file)) {
 
-        $this->launchException('Cannot find foreign table', get_defined_vars());
+        $this->launchException('Cannot find reference', get_defined_vars());
       }
     }
 
@@ -162,9 +165,18 @@ class Foreign extends Element implements sql\schema\foreign {
     $ref = $this->getElementRef();
     $parent = $this->getParent();
 
-    $sCurrent = 'id_' . $parent->getName();
-    $sTarget = 'id_' . $ref->getName();
+    $sParentName = $parent->getName();
+    $sRefName = $ref->getName();
+
+    $sCurrent = 'id_' . $sParentName;
+    $sTarget = 'id_' . $sRefName;
     $sConnection = $parent->getConnectionAlias();
+
+    if ($sParentName === $sRefName) {
+
+      $sCurrent .= '_source';
+      $sTarget .= '_target';
+    }
 
     $doc = $this->createArgument(array(
       'schema' => array(

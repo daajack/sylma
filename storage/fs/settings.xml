@@ -14,7 +14,7 @@
     <user-mode></user-mode>
   </rights>
   <browse>
-    <excluded arg:type="token">.svn</excluded>
+    <excludes arg:type="token">.svn</excludes>
     <depth>1</depth>
     <extensions arg:type="token"/>
     <only-path>1</only-path>
@@ -37,7 +37,7 @@
   </system>
   <cls:classes>
     <cls:base>\sylma\storage\fs</cls:base>
-    <cls:class alias="controler" name="Controler"/>
+    <cls:class alias="manager" name="Manager"/>
     <cls:class alias="file" name="basic\File">
       <cls:classes>
         <cls:class alias="document" name="\sylma\dom\basic\handler\Rooted"/>

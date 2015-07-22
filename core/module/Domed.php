@@ -18,6 +18,8 @@ abstract class Domed extends Filed {
    */
   private $options = null;  // contextual settings
 
+  protected $path = null;
+
   /**
    * @var dom\handler
    */
@@ -107,7 +109,7 @@ abstract class Domed extends Filed {
     );
   }
 
-  protected function getScript($sPath, array $aArguments = array(), array $aContexts = array(), array $aPosts = array()) {
+  protected function getScript($sPath, array $aArguments = array(), array $aPosts = array(), array $aContexts = array()) {
 
     if (strpos($sPath, '.') !== false) {
 
@@ -115,7 +117,18 @@ abstract class Domed extends Filed {
     }
     else {
 
-      $path = $this->createPath($sPath, $aArguments);
+      if ($path = $this->path) {
+
+        $path->updatePath($sPath);
+        $path->setArguments($aArguments, false);
+        $path->parse();
+      }
+      else {
+
+        $path = $this->createPath($sPath, $aArguments);
+        $this->path = $path;
+      }
+
       $aArguments = $path->getArguments()->query();
       $file = $path->asFile();
     }

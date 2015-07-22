@@ -3,8 +3,8 @@
 namespace sylma\core\argument;
 use \sylma\core, sylma\storage\fs, sylma\core\functions\path;
 
-require_once('core/functions/Path.php');
-require_once('spyc.php');
+\Sylma::load('/core/functions/Path.php');
+\Sylma::load('/core/argument/spyc.php');
 
 class Filed extends Setable {
 

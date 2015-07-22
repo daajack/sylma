@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<crud:crud
+  xmlns:crud="http://2013.sylma.org/view/crud"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:js="http://2013.sylma.org/template/binder"
+  xmlns:cls="http://2013.sylma.org/core/factory"
+  xmlns:builder="http://2013.sylma.org/parser/reflector/builder"
+
+  xmlns:xl="http://2013.sylma.org/storage/xml"
+>
+
+  <crud:global>
+
+    <tpl:template>
+
+      <tpl:settings>
+        <cls:classes>
+          <cls:class alias="cached" name="\sylma\modules\inspector\php\import\Importer"/>
+        </cls:classes>
+      </tpl:settings>
+
+      <tpl:apply mode="content"/>
+
+    </tpl:template>
+
+  </crud:global>
+
+  <view:view>
+
+    <xl:resource/>
+
+    <le:context name="css">
+      <le:file>../view/php.less</le:file>
+    </le:context>
+
+    <tpl:template mode="content">
+
+      <div js:class="sylma.ui.Container">
+        <js:method name="onLoad">
+          this.getObject('explorer');
+        </js:method>
+        <button style="float: right">
+          <js:event name="click">
+            %object%.getObject('explorer').run();
+          </js:event>
+          Run
+        </button>
+        <le:script path="explorer"/>
+      </div>
+
+    </tpl:template>
+
+  </view:view>
+
+  <view:view name="file" builder:return="result">
+
+    <xl:resource/>
+
+    <tpl:template mode="content">
+
+      <tpl:read select="inspect()">
+        <le:get-argument name="file"/>
+      </tpl:read>
+
+    </tpl:template>
+
+  </view:view>
+
+</crud:crud>

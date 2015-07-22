@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<crud:crud
+  xmlns:crud="http://2013.sylma.org/view/crud"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:builder="http://2013.sylma.org/parser/reflector/builder"
+
+  xmlns:sql="http://2013.sylma.org/storage/sql"
+>
+
+  <crud:global>
+
+    <sql:resource/>
+
+    <tpl:constant name="fields">* ^ sql:id, sql:reference, sql:datetime</tpl:constant>
+
+    <tpl:template>
+      <tpl:apply use="fields"/>
+    </tpl:template>
+
+    <tpl:template match="*">
+      <tpl:register/>
+    </tpl:template>
+
+  </crud:global>
+
+  <crud:group name="select">
+
+    <sql:resource multiple="x"/>
+
+    <tpl:template>
+      <sql:filter name="name">
+        <le:get-argument name="name"/>
+      </sql:filter>
+      <tpl:if test="has-children()">
+        <tpl:apply select="*"/>
+      </tpl:if>
+    </tpl:template>
+
+    <tpl:template match="*">
+      <tpl:read select="id"/>
+    </tpl:template>
+
+  </crud:group>
+
+  <crud:group name="file">
+
+    <view:schema>../file.xql</view:schema>
+
+  </crud:group>
+
+  <crud:group name="class">
+
+    <view:schema>../class.xql</view:schema>
+
+  </crud:group>
+
+  <view:view name="file-id" builder:return="result" groups="select, file"/>
+
+  <view:view name="file-time" builder:return="result" groups="select, file">
+
+    <tpl:template match="*">
+      <tpl:read select="update"/>
+    </tpl:template>
+
+  </view:view>
+
+  <view:view name="file-insert" mode="insert" groups="file"/>
+
+  <view:view name="file-update" mode="update" groups="file">
+
+    <tpl:constant name="fields">update</tpl:constant>
+
+    <sql:filter name="id">
+      <le:get-argument name="id"/>
+    </sql:filter>
+
+  </view:view>
+
+  <crud:route name="namespace">
+
+    <crud:local>
+
+      <view:schema>../namespace.xql</view:schema>
+
+    </crud:local>
+
+    <view:view builder:return="result" groups="select"/>
+
+    <view:view name="insert" mode="insert"/>
+
+  </crud:route>
+
+  <view:view name="class-select" builder:return="result" groups="select,class">
+
+  </view:view>
+
+  <view:view name="class-update" mode="update" groups="class">
+
+    <tpl:constant name="fields">extends</tpl:constant>
+
+    <sql:filter name="id">
+      <le:get-argument name="id"/>
+    </sql:filter>
+
+  </view:view>
+
+  <crud:route name="class" groups="class">
+
+    <view:view builder:return="result" builder:output="array" groups="select">
+
+      <tpl:template match="*">
+        <tpl:apply select="extends/ref()" mode="extends"/>
+      </tpl:template>
+
+      <tpl:template match="*" mode="extends">
+        <tpl:read select="id"/>
+      </tpl:template>
+
+    </view:view>
+
+    <view:view name="insert" mode="insert"/>
+
+  </crud:route>
+
+  <view:view name="method" mode="insert">
+
+    <view:schema>../method.xql</view:schema>
+
+  </view:view>
+
+</crud:crud>

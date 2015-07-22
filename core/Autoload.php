@@ -7,6 +7,7 @@ class Autoload
 {
   protected $aNamespaces = array();
   protected $aNames = array();
+  protected $aLoaded = array();
 
   public function __construct() {
 
@@ -29,12 +30,19 @@ class Autoload
     if (in_array($sName, $this->aNames)) {
 
       $sDirectory = $this->aNamespaces[$sName];
-      $sFile = $sDirectory . implode('/', array_slice($aClass, 1)) . '.php';
 
-      //if (file_exists($sFile)) {
+      $sClass = $sDirectory . implode('/', array_slice($aClass, 1));
 
+      if (!in_array($sName, $this->aLoaded)) {
+
+        $sFile = $sClass . '.php';
         include_once($sFile);
-      //}
+
+        $this->aLoaded[] = $sClass;
+      }
+
+      //file_put_contents('cache/debug.log', $sFile . "\n", \FILE_APPEND);
+      //include_once(\Sylma::buildCache(\Sylma::ROOT . '/' . $sFile));
     }
   }
 

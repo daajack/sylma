@@ -30,9 +30,9 @@ class Manager extends core\module\Domed implements core\stringable {
 
     $this->setDirectory(__FILE__);
 
-    return $this->getScript(self::LOGIN, array(), array(
+    return $this->getScript(self::LOGIN, array(), $this->aUser, array(
       'messages' => $this->getManager(self::PARSER_MANAGER)->getContext('messages'),
-    ), $this->aUser);
+    ));
   }
 
   public function asString() {

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<explorer
+  xmlns="http://2014.sylma.org/storage/fs"
+>
+  <root name="">
+    <directory name=""/>
+    <file name="" extension=""/>
+  </root>
+</explorer>

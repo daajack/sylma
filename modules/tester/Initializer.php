@@ -6,6 +6,7 @@ use sylma\core, sylma\dom;
 class Initializer extends Parser implements core\argumentable {
 
   protected $aManagers = array();
+  protected $tmpArguments;
 
   public function createDocument($mContent = null) {
 
@@ -18,14 +19,7 @@ class Initializer extends Parser implements core\argumentable {
 
     return $this->create('action', array($this->getFile($sPath)));
   }
-/*
-  protected function prepareTest(dom\element $test, $controler) {
 
-    $this->restoreSylma();
-
-    return parent::prepareTest($test, $controler);
-  }
-*/
   public function createUser($sAlias = '', $bPrivate = false) {
 
     $manager = $this->getManager('user')->getManager();
@@ -81,9 +75,25 @@ class Initializer extends Parser implements core\argumentable {
     return parent::createArgument($mArguments, $sNamespace);
   }
 
+  protected function onStart() {
+
+    $this->setManagers(\Sylma::getManagers());
+    $this->tmpArguments = \Sylma::getSettings();
+
+    parent::onStart();
+  }
+
+  protected function saveProfile() {
+
+    $this->restoreSylma();
+
+    return parent::saveProfile();
+  }
+
   public function restoreSylma() {
 
     \Sylma::setManagers($this->getManagers());
+    \Sylma::setSettings($this->tmpArguments);
   }
 
   protected function onFinish() {
@@ -93,8 +103,9 @@ class Initializer extends Parser implements core\argumentable {
 
   public function asArgument() {
 
-    $this->setManagers(\Sylma::getManagers());
-    $args = \Sylma::getSettings();
+    //$this->setManagers(\Sylma::getManagers());
+    //$args = \Sylma::getSettings();
+    //$this->tmpArguments = \Sylma::getSettings();
     //$args->set('debug/enable', false);
 
     $result = parent::asArgument();
@@ -104,7 +115,7 @@ class Initializer extends Parser implements core\argumentable {
     $init->setHeaderContent($init->getMime('html'));
     //$args->set('debug/enable', true);
 
-    \Sylma::setSettings($args);
+    //\Sylma::setSettings($this->tmpArguments);
 
     return $result;
   }

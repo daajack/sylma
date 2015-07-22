@@ -14,10 +14,12 @@ class Standalone extends tester\Prepare implements core\argumentable {
     $this->setDirectory(__file__);
     $this->setNamespace(self::NS, 'self');
 
-    //if (!$controler) $controler = $this;
+    //if (!$manager) $manager = $this;
 
-    $this->setControler($this->getControler('parser'));
+    $this->setManager($this->getManager('parser'));
     $this->setFiles(array($this->getFile('standalone.xml')));
+
+    parent::__construct();
   }
 
   public function getDirectory($sPath = '', $bDebug = true) {
@@ -35,16 +37,16 @@ class Standalone extends tester\Prepare implements core\argumentable {
     return parent::setArgument($sPath, $mValue);
   }
 
-  protected function test(dom\element $test, $sContent, $controler, dom\document $doc, fs\file $file) {
+  protected function test(dom\element $test, $sContent, $manager, dom\document $doc, fs\file $file) {
 
     return parent::test($test, $sContent, $this, $doc, $file);
   }
 
   public function createHandler($sPath) {
 
-    $file = $this->getControler('fs')->getFile($sPath, $this->getDirectory('samples'));
+    $file = $this->getManager('fs')->getFile($sPath, $this->getDirectory('samples'));
 
-    return $this->getControler()->load($file, array(), true);
+    return $this->getManager()->load($file, array(), true);
   }
 }
 

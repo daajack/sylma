@@ -81,7 +81,7 @@ class Directory extends fs\basic\tokened\Directory implements fs\editable\direct
       $this->throwException('You have no rights to create this directory');
     }
 
-    if (!$bResult = mkdir($this->getRealPath(), 0750)) { //$this->getControler()->readArgument('system/rights')
+    if (!$bResult = mkdir($this->getRealPath(), 0750)) { //$this->getManager()->readArgument('system/rights')
 
       $this->throwException(sprintf('Cannot create directory called %s', $sName));
     }
@@ -123,12 +123,12 @@ class Directory extends fs\basic\tokened\Directory implements fs\editable\direct
 
     if ($this->checkRights(\Sylma::MODE_WRITE)) {
 
-      if ($this === $this->getControler()->getDirectory()) {
+      if ($this === $this->getManager()->getDirectory()) {
 
         $this->throwException(t('Cannot delete root directory !'));
       }
 
-      $fs = $this->getControler('fs/trash');
+      $fs = $this->getManager('fs/trash');
       $tmp = $fs->getDirectory();
 
       $sName = 'trashed-' . uniqid() . '-' . $this->getName();

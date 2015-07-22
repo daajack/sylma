@@ -25,6 +25,8 @@ class CollectionGroup extends Collection
 
   protected function reflectFunctionGroups($sMode, array $aArguments = array()) {
 
+    $this->bReady = true;
+
     $window = $this->getWindow();
     $return = $this->getHandler()->getView()->getResult();
     $query = $this->getQuery()->getVar();

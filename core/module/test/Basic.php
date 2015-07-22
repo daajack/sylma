@@ -14,6 +14,7 @@ class Basic extends tester\Prepare implements core\argumentable {
     $this->setNamespace(self::NS, 'self');
 
     $this->setArguments('settings.yml');
+    parent::__construct();
 
     $this->setControler($this);
   }

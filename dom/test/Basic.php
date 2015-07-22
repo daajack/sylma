@@ -5,15 +5,14 @@ use \sylma\modules\tester, \sylma\core, \sylma\dom, \sylma\storage\fs;
 
 class Basic extends tester\Parser implements core\argumentable {
 
-  const NS = 'http://www.sylma.org/dom/test';
   protected $sTitle = 'DOM';
 
   public function __construct() {
 
     $this->setDirectory(__file__);
-    $this->setNamespace(self::NS, 'self');
 
     $this->setSettings('settings.xml');
+    parent::__construct();
 
     $this->setControler($this);
   }

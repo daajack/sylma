@@ -13,6 +13,11 @@ render :
       prefix : builder
       uri : http://2013.sylma.org/parser/reflector/builder
 
+tester :
+  profile : false
+  classes :
+    profiler :
+      name : \sylma\modules\profiler\XHProf
 
 initializer :
   debug :
@@ -46,7 +51,7 @@ initializer :
         action : /sylma/modules/stepper/test/window.vml
         pattern : `^/(sylma/modules/stepper/test|sylma/modules/tester/stepper/standalone)`
         weight : 10
-        
+
       crud :
         action : /sylma/modules/html/window.vml
         pattern : `^/(sylma/storage/sql/crud/test)`

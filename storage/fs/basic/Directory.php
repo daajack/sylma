@@ -16,7 +16,7 @@ class Directory extends Resource implements fs\directory {
 
   private $aChildrenRights = null;
 
-  public function __construct($sName, fs\directory $parent = null, array $aRights = array(), fs\controler $controler = null) {
+  public function __construct($sName, fs\directory $parent = null, array $aRights = array(), fs\Manager $controler = null) {
 
     $this->sFullPath = $parent ? $parent. '/' .$sName : '';
     $this->controler = $controler;
@@ -70,9 +70,9 @@ class Directory extends Resource implements fs\directory {
 
   private function loadRights() {
 
-    if ($this->getControler()->mustSecure()) {
+    if ($this->getManager()->mustSecure()) {
 
-      $settings = $this->getControler()->createSettings($this);
+      $settings = $this->getManager()->createSettings($this);
       $this->setSettings($settings);
 
       // self rights
@@ -90,147 +90,128 @@ class Directory extends Resource implements fs\directory {
     }
   }
 
-  public function unbrowse() {
+  protected function scan() {
 
-    $oResult = $this->parseXML();
-    $oParent = $this;
+    $aChildren = scandir($this->getRealPath(), 0);
 
-    while ($oParent = $oParent->getParent()) {
+    foreach ($aChildren as $sFile) {
 
-      $oResult->shift($oParent->parseXML());
-    }
+      if ($sFile != '.' && $sFile != '..') {
 
-    return $oResult;
-  }
+        if (!$this->getFile($sFile, self::DEBUG_NOT)) {
 
-  public function browse(core\argument $arg = null, $bRoot = true) {
-
-    $tmp = $this->getControler()->getArgument('browse');
-
-    if ($arg) {
-
-      $tmp->merge($arg);
-      $arg = $tmp;
-    }
-    else {
-
-      $arg = $tmp;
-    }
-
-    //array $aExtensions = array(), array $aPaths = array(), $iDepth = null, $bRender = true
-    $aResult = array();
-
-    $sMode = $arg->read('mode', false);
-
-    $iDepth = $arg->read('depth');
-    $aExtensions = $arg->query('extensions', false);
-    $aPaths = $arg->query('excluded', false);
-    $bInsertRoot = $bRoot ? $arg->read('root') : false;
-
-    if ($iDepth || is_null($iDepth)) {
-
-      if (is_integer($iDepth)) $iDepth--;
-
-      $aFiles = scandir($this->getRealPath(), 0);
-
-      foreach ($aFiles as $sFile) {
-
-        if ($sFile != '.' && $sFile != '..') {
-
-          if ($file = $this->getFile($sFile, self::DEBUG_NOT)) {
-
-            if (!$aExtensions || in_array(strtolower($file->getExtension()), $aExtensions)) {
-
-              switch ($sMode) {
-
-                case 'path' :
-
-                  $aResult[] = (string) $file;
-                  break;
-
-                case 'argument' :
-
-                  $aResult[] = $file->asArgument();
-                  break;
-
-                case 'file' :
-                default :
-
-                  $aResult[] = $file;
-                  break;
-              }
-            }
-          }
-          else if ($dir = $this->getDirectory($sFile)) {
-
-            $bValid = true;
-
-            foreach ($aPaths as $sPath) {
-
-              switch ($sPath{0}) {
-
-                case '/' : if ($sPath == $dir->getFullPath()) $bValid = false; break;
-                default : if ($sPath == $dir->getName()) $bValid = false; break;
-              }
-            }
-
-            if ($bValid) {
-
-              $arg->set('depth', $iDepth);
-              $aResult = array_merge($aResult, $dir->browse($arg, false)->query());
-            }
-          }
+          $this->getDirectory($sFile);
         }
       }
     }
-
-    return $this->getControler()->createArgument($bInsertRoot ? array('browse' => $aResult) : $aResult);
   }
 
   /**
-   * Browse then return a list of files inside the directory and optionaly sub-directories
+   * Get a tree of directories and files
    *
-   * @param array $aExtensions File's extensions to be included
-   * @param string $sPreg Regular expression validation
-   * @param integer $iDepth Nbr. of level to look through, or all if 0
-   * @return array
+   * @param \sylma\core\argument $arg
+   * @return array of fs\directory and fs\file
    */
-  public function getFiles(array $aExtensions = array(), $sPreg = null, $iDepth = 1) {
+  public function browse(core\argument $arg = null) {
 
-    $arg = $this->getControler()->createArgument(array(
-      'extensions' => $aExtensions,
-      'depth' => $iDepth,
-    ));
+    $tmp = $this->getManager()->getArgument('browse');
+    $tmp->merge($arg);
+    $arg = $tmp;
 
-    $this->browse($arg);
+    $bDepth = $arg->read('depth');
+    $aIncludes = $arg->query('includes', false);
+    $aExcludes = $arg->query('excludes', false);
+
+    return $this->browseRun($bDepth, $aIncludes, $aExcludes);
+  }
+
+  protected function browseRun($bDepth, array $aIncludes, array $aExcludes) {
+
+    $this->scan();
+
+    $aResult = $bDepth ? array() : $this->asArray();
+
+    $aDirectories = $this->getDirectories($aExcludes);
+
+    if ($bDepth) {
+
+      $aResult['directory'] = array();
+
+      foreach ($aDirectories as $dir) {
+
+        $aResult['directory'][] = $dir->browseRun(true, $aIncludes, $aExcludes);
+      }
+    }
+    else {
+
+      $aResult['directory'] = $aDirectories;
+    }
+
+    $aResult['file'] = $this->getFiles($aIncludes);
+
+    return $aResult;
+  }
+
+  /**
+   * Get a list of files inside this directory and optionally sub-directories
+   *
+   * @param array $aExcludes File's extensions to be included, if empty all are used
+   * @param string $sPreg Regular expression validation
+   * @param integer $bDepth If TRUE, get sub-directories files
+   * @return array of fs\file
+   */
+  public function getFiles(array $aIncludes = array(), array $aExcludes = array(), $bDepth = false) {
+
+    $this->scan();
+
     $aResult = array();
 
     // Files of current directory
 
-    if ($aExtensions) {
+    if ($aExcludes || $aIncludes) {
 
-      foreach ($this->aFiles as $sFile => $file) {
+      foreach ($this->aFiles as $file) {
 
-        if ($file) {
+        $bValid = true;
+        $sFile = (string) $file;
 
-          $bExtension = !$aExtensions || in_array(strtolower($file->getExtension()), $aExtensions);
-          $bPreg = !$sPreg || preg_match($sPreg, $sFile);
+        foreach ($aIncludes as $sInclude) {
 
-          if ($bExtension && $bPreg) $aResult[] = $file;
+          if (!$bValid = preg_match($sInclude, $sFile)) {
+
+            break;
+          }
+        }
+
+        if ($bValid) {
+
+          foreach ($aExcludes as $sExclude) {
+//dsp(preg_match($sExclude, $sFile), $sExclude, $sFile);
+            if (!$bValid = !preg_match($sExclude, $sFile)) {
+
+              break;
+            }
+          }
+        }
+
+        if ($bValid) {
+
+          $aResult[] = $file;
         }
       }
 
-    } else $aResult = array_values($this->aFiles);
+    } else {
+
+      $aResult = array_values($this->aFiles);
+    }
 
     // Recursion in sub-directory
 
-    if (($iDepth === null || $iDepth > 0)) {
+    if ($bDepth) {
 
-      if ($iDepth) $iDepth--;
+      foreach ($this->getDirectories() as $dir) {
 
-      foreach ($this->aDirectories as $dir) {
-
-        if ($dir) $aResult = array_merge($aResult, $dir->getFiles($aExtensions, $sPreg, $iDepth));
+        $aResult = array_merge($aResult, $dir->getFiles($aIncludes, $aExcludes, $bDepth));
       }
     }
 
@@ -277,7 +258,7 @@ class Directory extends Resource implements fs\directory {
 
     $result = null;
 
-    $file = $this->getControler()->create('file', array(
+    $file = $this->getManager()->create('file', array(
         $sName,
         $this,
         $this->getRights(),
@@ -349,7 +330,7 @@ class Directory extends Resource implements fs\directory {
 
     //dspf($file);
 
-    if ($this->getControler()->mustSecure()) {
+    if ($this->getManager()->mustSecure()) {
 
       if (!$this->getSettings() or !$aRights = $this->getSettings()->getFile($file->getName())) {
 
@@ -404,9 +385,30 @@ class Directory extends Resource implements fs\directory {
     return $result;
   }
 
-  public function getDirectories() {
+  public function getDirectories(array $aExcluded = array()) {
 
-    return $this->aDirectories;
+    $aResult = array();
+
+    foreach ($this->aDirectories as $dir) {
+
+      $bValid = true;
+
+      foreach ($aExcluded as $sExclude) {
+
+        switch ($sExclude{0}) {
+
+          case '/' : $bValid = $sExclude !== $dir->getFullPath(); break;
+          default : $bValid = $sExclude !== $dir->getName(); break;
+        }
+      }
+
+      if ($bValid) {
+
+        $aResult[] = $dir;
+      }
+    }
+
+    return $aResult;
   }
 
   /**
@@ -419,7 +421,7 @@ class Directory extends Resource implements fs\directory {
 
     $result = null;
 
-    $dir = $this->getControler()->create('directory', array(
+    $dir = $this->getManager()->create('directory', array(
       $sName,
       $this,
       $this->getChildrenRights(),
@@ -491,14 +493,14 @@ class Directory extends Resource implements fs\directory {
 
   public function getSystemPath() {
 
-    return $this->getControler()->getSystemPath() . '/' . $this->getRealPath();
+    return $this->getManager()->getSystemPath() . '/' . $this->getRealPath();
   }
 
   public function getRealPath() {
 
     return $this->getParent() ?
            $this->getParent()->getRealPath() . '/' . $this->getName() :
-           $this->getControler()->getPath() . $this->getName();
+           $this->getManager()->getPath() . $this->getName();
   }
 
   public function asToken() {
@@ -506,33 +508,23 @@ class Directory extends Resource implements fs\directory {
     return '@directory ' . (string) $this;
   }
 
-  public function asArgument() {
+  public function asArray() {
 
-    if (!$this->getParent()) {
-
-      $sName = '<racine>';
-      $sPath = '';
-
-    } else {
-
-      $sName = $this->getName();
-      $sPath = $this->getFullPath();
-    }
+    $sName = $this->getParent() ? $this->getName() : '/';
+    $sPath = $this->getParent() ? $this->getFullPath() : '/';
 
     require_once('core/functions/Global.php');
 
-    return $this->getControler()->createArgument(array(
-      'directory' => array(
-        'path' => $sPath,
-        'owner' => $this->getOwner(),
-        'group' => $this->getGroup(),
-        'mode' => $this->getMode(),
-        'read' => functions\booltostr($this->checkRights(\Sylma::MODE_READ)),
-        'write' => functions\booltostr($this->checkRights(\Sylma::MODE_WRITE)),
-        'execution' => functions\booltostr($this->checkRights(\Sylma::MODE_EXECUTE)),
-        'name' => $sName,
-      ),
-    ), self::NS);
+    return array(
+      'path' => $sPath,
+      'owner' => $this->getOwner(),
+      'group' => $this->getGroup(),
+      'mode' => $this->getMode(),
+      'read' => functions\booltostr($this->checkRights(\Sylma::MODE_READ)),
+      'write' => functions\booltostr($this->checkRights(\Sylma::MODE_WRITE)),
+      'execution' => functions\booltostr($this->checkRights(\Sylma::MODE_EXECUTE)),
+      'name' => $sName,
+    );
   }
 
   public function __toString() {

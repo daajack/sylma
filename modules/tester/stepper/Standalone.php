@@ -13,6 +13,9 @@ class Standalone extends tester\Parser implements dom\domable {
   public function __construct(core\argument $args, core\argument $post, core\argument $contexts) {
 
     $this->contexts = $contexts;
+
+    //$this->initArguments();
+    $this->setSettings(\Sylma::get('tester'));
   }
 
   public function initTest(fs\file $file, $iTest) {
@@ -26,7 +29,7 @@ class Standalone extends tester\Parser implements dom\domable {
 
     $this->setFile($file);
     $this->setTestKey($iTest);
-    $this->setSettings(array());
+    //$this->setSettings(array());
 
     $this->exportDirectory = $this->loadCacheDirectory($this->getDirectory());
   }
@@ -89,6 +92,8 @@ class Standalone extends tester\Parser implements dom\domable {
     if (!$sBind) $sBind = 'example';
 
     $this->contexts->get('js/load')->add("$(window).addEvent('load', function() { sylma.tester.main.run(function() { $sExpected; }, $sBind, $bCallback); });");
+
+    $this->saveProfile();
 
     return $result;
   }

@@ -3,7 +3,7 @@
 namespace sylma\core\factory\test;
 use \sylma\modules\tester, \sylma\core, \sylma\dom, \sylma\storage\fs;
 
-class Basic extends tester\Stepper implements core\argumentable {
+class Basic extends tester\Profiler implements core\argumentable {
 
   const NS = 'http://www.sylma.org/core/factory/test';
 
@@ -16,7 +16,8 @@ class Basic extends tester\Stepper implements core\argumentable {
     $this->setDirectory(__file__);
     $this->setNamespace(self::NS, 'self');
 
-    $this->setControler($this->getFactory());
+    $this->setManager($this->getFactory());
+    parent::__construct();
   }
 
   public function createArgument($mArguments, $sNamespace = '') {
@@ -34,11 +35,11 @@ class Basic extends tester\Stepper implements core\argumentable {
     return parent::createFactory($arg);
   }
 
-  protected function test(dom\element $test, $sContent, $controler, dom\document $doc, fs\file $file) {
+  protected function test(dom\element $test, $sContent, $manager, dom\document $doc, fs\file $file) {
 
-    $controler = $this;
+    $manager = $this;
 
-    return parent::test($test, $sContent, $controler, $doc, $file);
+    return parent::test($test, $sContent, $manager, $doc, $file);
   }
 }
 

@@ -3,7 +3,7 @@
 namespace sylma\modules\tester;
 use sylma\core, sylma\dom, sylma\storage\fs;
 
-abstract class Prepare extends Stepper {
+abstract class Prepare extends Profiler {
 
   const DB_ARGUMENTS = '/#sylma/view/test/database.xml';
   const DB_CONNECTION = 'test';
@@ -62,6 +62,8 @@ abstract class Prepare extends Stepper {
 
       $bResult = $this->catchException($test, $e, $file);
     }
+
+    $this->saveProfile();
 
     return $bResult;
   }

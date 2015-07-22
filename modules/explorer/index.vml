@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<crud:crud
+  xmlns:crud="http://2013.sylma.org/view/crud"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:js="http://2013.sylma.org/template/binder"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:build="http://2013.sylma.org/parser/reflector/builder"
+
+  xmlns:cls="http://2013.sylma.org/core/factory"
+  xmlns:fs="http://2014.sylma.org/storage/fs"
+
+  xmlns:xl="http://2013.sylma.org/storage/xml"
+>
+
+  <crud:global fs:ns="ns">
+
+    <xl:resource file="schema.xml"/>
+
+    <tpl:settings>
+      <cls:classes>
+        <cls:class alias="tree">
+          <cls:classes>
+            <cls:class alias="cached" name="\sylma\modules\explorer\Explorer"/>
+          </cls:classes>
+        </cls:class>
+      </cls:classes>
+    </tpl:settings>
+
+    <tpl:template mode="explorer/resources">
+
+      <js:include>/#sylma/ui/Template.js</js:include>
+      <js:include>/#sylma/ui/Extras.js</js:include>
+      <js:include>/#sylma/ui/Locale.js</js:include>
+      <js:include>/#sylma/ui/Date.js</js:include>
+
+      <js:include>Explorer.js</js:include>
+      <js:include>Tree.js</js:include>
+      <js:include>Directory.js</js:include>
+      <js:include>Root.js</js:include>
+      <js:include>File.js</js:include>
+
+    </tpl:template>
+
+  </crud:global>
+
+  <view:view _debug="x">
+
+    <le:context name="css">
+      <le:file>explorer.less</le:file>
+      <le:file>../inspector/php/view/php.less</le:file>
+    </le:context>
+
+    <tpl:template mode="explorer/title">Explorer</tpl:template>
+
+    <le:argument name="dir">
+      <le:default>/</le:default>
+    </le:argument>
+
+    <tpl:template>
+
+      <le:context name="title">
+        <tpl:apply mode="explorer/title"/>
+      </le:context>
+
+      <tpl:apply mode="explorer/resources"/>
+
+      <tpl:variable name="directory" format="array">
+      </tpl:variable>
+
+      <div class="explorer" js:class="sylma.modules.explorer.Explorer" js:name="explorer" js:parent-name="explorer">
+        <js:option name="inspector">
+          <le:path>/#sylma/modules/inspector/php/view</le:path>
+        </js:option>
+        <h2>Explorer</h2>
+        <div class="sidebar" js:class="sylma.modules.explorer.Tree" js:name="sidebar" js:parent-name="tree">
+          <js:option name="datas">
+            <crud:include path="getDirectory"/>
+          </js:option>
+          <js:option name="path">
+            <crud:path path="getDirectory"/>
+          </js:option>
+          <tpl:apply select="root"/>
+        </div>
+        <div class="view" js:class="sylma.ui.Container" js:name="view">
+          <js:option name="sylma-inside">1</js:option>
+        </div>
+      </div>
+
+    </tpl:template>
+
+    <tpl:template match="fs:root">
+      <div class="root" js:class="sylma.modules.explorer.Root" js:alias="root">
+        <h3 class="name">
+          <tpl:read select="name"/>
+        </h3>
+        <tpl:apply mode="children"/>
+      </div>
+    </tpl:template>
+
+    <tpl:template match="*" mode="children">
+      <div class="children" js:node="children">
+        <div class="directories">
+          <tpl:apply select="*"/>
+        </div>
+        <div class="files">
+          <tpl:apply select="*"/>
+        </div>
+      </div>
+    </tpl:template>
+
+    <tpl:template match="fs:directory">
+      <a href="javascript:void(0)" class="directory" js:class="sylma.modules.explorer.Directory" js:alias="directory">
+        <js:event name="click">%object%.open()</js:event>
+        <tpl:read select="name"/>
+      </a>
+    </tpl:template>
+
+    <tpl:template match="fs:file">
+      <a href="javascript:void(0)" class="file" js:class="sylma.modules.explorer.File" js:alias="file">
+        <js:option name="path">
+          <tpl:read select="path"/>
+        </js:option>
+        <js:event name="click">%object%.open()</js:event>
+        <tpl:read select="name"/>
+      </a>
+    </tpl:template>
+
+  </view:view>
+
+  <view:view name="getDirectory"
+    build:class="\sylma\core\argument\Readable"
+    build:output="result"
+  >
+
+    <tpl:template>
+      <tpl:apply select="buildDirectory()">
+        <le:get-argument name="dir"/>
+      </tpl:apply>
+    </tpl:template>
+
+  </view:view>
+
+</crud:crud>

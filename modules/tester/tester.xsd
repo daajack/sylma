@@ -2,6 +2,7 @@
 <xs:schema
   xmlns="http://www.sylma.org/modules/tester/parser"
   xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns:ssd="http://2013.sylma.org/schema/ssd"
 
   targetNamespace="http://www.sylma.org/modules/tester/parser"
   elementFormDefault="qualified"

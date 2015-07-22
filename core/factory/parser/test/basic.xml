@@ -14,7 +14,7 @@
       </cls:classes>
     </arg:argument>
     <tst:expected>
-      $obj = $controler->create('test');
+      $obj = $controler->getInstance('test');
 
       return
         $obj instanceof \sylma\core\factory\parser\test\samples\Sample1
@@ -28,7 +28,7 @@
       </cls:classes>
     </arg:argument>
     <tst:expected>
-      $obj = $controler->create('test');
+      $obj = $controler->getInstance('test');
 
       return
         $obj instanceof \sylma\core\factory\parser\test\samples\Sample1
@@ -48,9 +48,9 @@
       </cls:classes>
     </arg:argument>
     <tst:expected>
-      $obj1 = $controler->create('test1');
-      $obj2 = $controler->create('test1/sub');
-      $obj3 = $controler->create('test2');
+      $obj1 = $controler->getInstance('test1');
+      $obj2 = $controler->getInstance('test1/sub');
+      $obj3 = $controler->getInstance('test2');
 
       return
         $obj1 instanceof \sylma\core\factory\parser\test\samples\Sample1 &amp;&amp;
@@ -69,7 +69,7 @@
       </cls:classes>
     </arg:argument>
     <tst:expected>
-      $obj = $controler->create('hello/test');
+      $obj = $controler->getInstance('hello/test');
 
       return
         $obj instanceof \sylma\core\factory\parser\test\samples\Sample1
@@ -85,7 +85,7 @@
       </cls:classes>
     </arg:argument>
     <tst:expected>
-      $obj = $controler->create('test');
+      $obj = $controler->getInstance('test');
       $arg = $controler->getArgument('arg');
 
       return
@@ -104,8 +104,8 @@
       </cls:classes>
     </arg:argument>
     <tst:expected>
-      $obj1 = $controler->create('test');
-      $obj2 = $controler->create('test/world');
+      $obj1 = $controler->getInstance('test');
+      $obj2 = $controler->getInstance('test/world');
 
       return
         $obj1 instanceof \sylma\core\factory\parser\test\samples\Sample1 &amp;&amp;
@@ -125,8 +125,8 @@
       </cls:classes>
     </arg:argument>
     <tst:expected>
-      $obj1 = $controler->create('test');
-      $obj2 = $controler->create('test/world');
+      $obj1 = $controler->getInstance('test');
+      $obj2 = $controler->getInstance('test/world');
 
       return
         $obj1 instanceof \sylma\core\factory\parser\test\samples\Sample1 &amp;&amp;
@@ -157,8 +157,8 @@
       </cls:classes>
     </arg:argument>
     <tst:expected>
-      $obj1 = $controler->create('test');
-      $obj2 = $controler->create('test/hello/world');
+      $obj1 = $controler->getInstance('test');
+      $obj2 = $controler->getInstance('test/hello/world');
 
       return
         $obj1 instanceof \sylma\core\factory\parser\test\samples\Sample1 &amp;&amp;
@@ -174,7 +174,7 @@
       </cls:classes>
     </arg:argument>
     <tst:expected>
-      $obj = $controler->create('test');
+      $obj = $controler->getInstance('test');
       $args = $controler->findClass('test');
 
       return
@@ -195,8 +195,8 @@
       </cls:classes>
     </arg:argument>
     <tst:expected>
-      $obj1 = $controler->create('hello');
-      $obj2 = $controler->create('hello/abc/world');
+      $obj1 = $controler->getInstance('hello');
+      $obj2 = $controler->getInstance('hello/abc/world');
 
       return
         $obj1 instanceof \sylma\core\factory\parser\test\samples\Sample1 &amp;&amp;
@@ -212,8 +212,8 @@
       </cls:classes>
     </arg:argument>
     <tst:expected>
-      $obj1 = $controler->create('hello');
-      $obj2 = $controler->create('hello/abc/world');
+      $obj1 = $controler->getInstance('hello');
+      $obj2 = $controler->getInstance('hello/abc/world');
 
       return
         $obj1 instanceof \sylma\core\factory\parser\test\samples\Sample1 &amp;&amp;

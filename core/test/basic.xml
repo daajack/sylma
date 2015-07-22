@@ -534,7 +534,7 @@
 
       $manager->restoreSylma();
 
-      $rows = $manager->get('log')->asArray();
+      $rows = $manager->get('log')->getArray();
 
       $manager->assertEquals(count($rows), 1);
       preg_match('/-\s([\w\s]+)/', current($rows), $aMatch);

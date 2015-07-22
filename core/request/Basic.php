@@ -23,9 +23,12 @@ class Basic extends core\module\Filed implements core\request {
    */
   public function __construct($sPath, fs\directory $dir = null, array $aArguments = array(), $bParse = true, core\argument $arg = null) {
 
-    $sPath = $this->resolvePath($sPath, $dir);
+    $this->updatePath($sPath, $dir);
 
-    $this->setPath($sPath);
+    if ($dir) {
+
+      $this->setDirectory($dir);
+    }
 
     //$this->setSettings($arg);
     $this->loadSettings();
@@ -35,6 +38,36 @@ class Basic extends core\module\Filed implements core\request {
     //$this->setExtensions($aExtensions);
 
     if ($bParse) $this->parse();
+  }
+
+  public function setPath($sPath) {
+
+    $sPath = str_replace('__', '..', $sPath); // tmp until parseGet ^ available
+
+    if ($sPath{0} != '/') {
+
+      $this->throwException(sprintf('Invalid path : %s', $sPath));
+    }
+
+    $this->sPath = $sPath;
+  }
+
+  public function updatePath($sPath, fs\directory $dir = null) {
+
+    $sPath = $this->resolvePath($sPath, $dir ? $dir : $this->getDirectory('', false));
+    $this->setPath($sPath);
+
+    return $sPath;
+  }
+
+  public function setDirectory($mDirectory) {
+
+    return parent::setDirectory($mDirectory);
+  }
+
+  public function setArguments($mArguments = null, $bMerge = true) {
+
+    return parent::setArguments($mArguments, $bMerge);
   }
 
   protected function resolvePath($sPath, fs\directory $dir = null) {
@@ -250,18 +283,6 @@ class Basic extends core\module\Filed implements core\request {
   public function getArguments() {
 
     return parent::getArguments();
-  }
-
-  protected function setPath($sPath) {
-
-    $sPath = str_replace('__', '..', $sPath); // tmp until parseGet ^ available
-
-    if ($sPath{0} != '/') {
-
-      $this->throwException(sprintf('Invalid path : %s', $sPath));
-    }
-
-    $this->sPath = $sPath;
   }
 
   protected function getPath($bArray = false) {

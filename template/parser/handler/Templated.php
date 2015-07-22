@@ -90,6 +90,7 @@ abstract class Templated extends reflector\handler\Elemented {
   }
 
   /**
+   * Check if template has ever been used
    * @usedby \sylma\storage\sql\template\handler\Basic::lookupTemplate()
    */
   public function checkTemplate(parser\template $tpl, $sToken, $bDebug = true) {

@@ -6,7 +6,7 @@ use \sylma\core, \sylma\storage\fs, \sylma\core\functions\path;
 require_once('core/functions/Path.php');
 require_once('resource.php');
 
-class Controler extends core\module\Argumented {
+class Manager extends core\module\Argumented {
 
   const NS = 'http://www.sylma.org/storage/fs';
   const SETTINGS = 'settings.xml.php';
@@ -39,7 +39,7 @@ class Controler extends core\module\Argumented {
 
     if (!$this->getArgument('rights')) {
 
-      $this->throwException('No right defined for fs controler');
+      $this->throwException('No right defined for fs manager');
     }
 
     if ($bEditable) $this->setEditable();
@@ -65,7 +65,7 @@ class Controler extends core\module\Argumented {
     $this->setArgument('classes/file/name', $this->readArgument('classes/file/classes/editable/name'));
     $this->setArgument('classes/directory/name', $this->readArgument('classes/directory/classes/editable/name'));
   }
-
+ 
   public function loadDirectory($sPath = '') {
 
     $dir = $this->create('directory', array($sPath, null, $this->getArgument('rights')->query(), $this));
@@ -95,6 +95,15 @@ class Controler extends core\module\Argumented {
 
     return parent::createArgument($mArguments, $sNamespace);
   }
+
+  public function runScript(array $aGet, array $aPost, array $aContexts) {
+
+    return $this->getManager(self::PARSER_MANAGER)->load($this, array(
+      'arguments' => $aGet ? $this->createArgument($aGet) : null,
+      'contexts' => $aContexts ? $this->createArgument($aContexts) : null,
+      'post' => $aPost ? $this->createArgument($aPost) : null,
+    ));
+}
 
   /**
    * Retrieve the directory from a file path, return an object by default
@@ -214,6 +223,11 @@ class Controler extends core\module\Argumented {
   public function getNamespace($sPrefix = null) {
 
     return parent::getNamespace($sPrefix);
+  }
+
+  public function getManager($sName = '', $bDebug = true) {
+
+    return parent::getManager($sName, $bDebug);
   }
 
   public function throwException($sMessage, $mSender = array(), $iOffset = 1) {

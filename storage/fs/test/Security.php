@@ -30,18 +30,19 @@ class Security extends tester\Prepare implements core\argumentable {
     $this->setNamespace(self::NS, 'self');
 
     $this->setArguments('../settings.yml');
+    parent::__construct();
 
     //$dir = $this->getDirectory();
 
-    //$this->setControler($this->createControler((string) $dir), 'fs/test');
-    $this->setControler($this);
+    //$this->setManager($this->createManager((string) $dir), 'fs/test');
+    $this->setManager($this);
 
     $this->setFiles(array($this->getFile('security.xml')));
   }
 
-  protected function createControler($sPath) {
+  protected function createManager($sPath) {
 
-    $result = $this->create('controler', array(\Sylma::ROOT));
+    $result = $this->create('manager', array(\Sylma::ROOT));
     $result->loadDirectory($sPath);
 
     return $result;
@@ -67,12 +68,12 @@ class Security extends tester\Prepare implements core\argumentable {
 
   public function onPrepared() {
 
-    $this->getControler('fs/test')->setControler($this->getUser(), 'user');
+    $this->getManager('fs/test')->setManager($this->getUser(), 'user');
   }
 
-  protected function test(dom\element $test, $sContent, $controler, dom\document $doc, fs\file $file) {
+  protected function test(dom\element $test, $sContent, $manager, dom\document $doc, fs\file $file) {
 
-    $this->setControler($this->createControler((string) $this->getDirectory()), 'fs/test');
+    $this->setManager($this->createManager((string) $this->getDirectory()), 'fs/test');
 
     $result = parent::test($test, $sContent, $this, $doc, $file);
 

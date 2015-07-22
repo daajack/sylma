@@ -12,6 +12,10 @@
   xmlns:user="http://2013.sylma.org/storage/sql/test/sample1"
 >
   <tst:description>Alter</tst:description>
+  <!--
+    This is tests on alter only.
+    Other tests using and testing alter can be found in other files.
+  -->
   <tst:datas name="mysql://user">
   </tst:datas>
   <tst:test name="Create table">

@@ -178,6 +178,11 @@
     </tst:node>
   </tst:test>
   <tst:test name="Get ref values">
+    <tst:prepare>
+
+      $manager->runQueryFile('samples/user_ref.sql');
+
+    </tst:prepare>
     <tst:document>
       <view:view user:ns="ns" group:ns="ns">
         <sql:resource>
@@ -649,6 +654,107 @@
         <a href="email">admin,1</a>
         <a href="email">webmaster,0</a>
       </div>
+    </tst:node>
+  </tst:test>
+  <tst:test name="Multiple foreign on self">
+    <tst:prepare>
+
+      $manager->runQuery('DROP TABLE IF EXISTS user_user', $manager::MODE_READ);
+      $manager->runQuery('DROP TABLE IF EXISTS user_foreign_self', $manager::MODE_READ);
+
+      $manager->getScript('/#sylma/storage/sql/alter/index.vml', array(
+        'file' => '/#sylma/storage/sql/test/samples/user_foreign_self.xql',
+        'depth' => true,
+      ));
+
+      $manager->runQueryFile('samples/user_foreign_self.sql');
+
+    </tst:prepare>
+    <tst:document>
+      <view:view>
+        <view:schema>samples/user_foreign_self.xql</view:schema>
+        <sql:resource multiple="x"/>
+        <tpl:template>
+          <div>
+            <tpl:apply select="*" mode="user"/>
+          </div>
+        </tpl:template>
+        <tpl:template match="*" mode="user">
+          <ul>
+            <h2>
+              <tpl:read select="name"/>
+            </h2>
+            <tpl:apply select="parents/ref()" mode="parent"/>
+            <span>
+              <tpl:read select="id"/>
+            </span>
+          </ul>
+        </tpl:template>
+        <tpl:template match="*" mode="parent">
+          <li>
+            <tpl:read select="'{id}:{name}'"/>
+          </li>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <div>
+        <ul>
+          <h2>alexandra</h2>
+          <li>2:faith</li>
+          <li>3:isaac</li>
+          <span>1</span>
+        </ul>
+        <ul>
+          <h2>faith</h2>
+          <span>2</span>
+        </ul>
+        <ul>
+          <h2>isaac</h2>
+          <li>1:alexandra</li>
+          <li>3:isaac</li>
+          <span>3</span>
+        </ul>
+      </div>
+    </tst:node>
+  </tst:test>
+  <tst:test name="Foreign key">
+    <tst:prepare>
+
+      $manager->runQuery('DROP TABLE IF EXISTS user_foreign_key', $manager::MODE_READ);
+      $manager->runQuery('DROP TABLE IF EXISTS group_index', $manager::MODE_READ);
+
+      $manager->getScript('/#sylma/storage/sql/alter/index.vml', array(
+        'file' => '/#sylma/storage/sql/test/samples/user_foreign_key.xql',
+        'depth' => true,
+      ));
+
+      $manager->runQueryFile('samples/group_index.sql');
+      $manager->runQueryFile('samples/user_foreign_key.sql');
+
+    </tst:prepare>
+    <tst:document>
+      <view:view>
+        <sql:resource>
+          <sql:id>1</sql:id>
+        </sql:resource>
+        <view:schema>samples/user_foreign_key.xql</view:schema>
+        <tpl:template>
+          <ul>
+            <tpl:apply select="group/ref()"/>
+          </ul>
+        </tpl:template>
+        <tpl:template match="*">
+          <li>
+            <tpl:read select="'{id}:{name}'"/>
+          </li>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <ul>
+        <li>3:group03</li>
+      </ul>
     </tst:node>
   </tst:test>
   <tst:test name="Multiple refs on same table">

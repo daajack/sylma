@@ -22,18 +22,18 @@ abstract class Resource implements fs\resource {
 
   protected $bExist = false;
 
-  public function getControler($sName = '') {
+  public function getManager($sName = '') {
 
     if ($sName) {
 
-      $controler = $this->getControler();
-      $result = $controler->getControler($sName);
+      $controler = $this->getManager();
+      $result = $controler->getManager($sName);
     }
     else {
 
       if ($this->getParent()) {
 
-        $result = $this->getParent()->getControler();
+        $result = $this->getParent()->getManager();
       }
       else {
 
@@ -86,7 +86,7 @@ abstract class Resource implements fs\resource {
 
     if (!array_key_exists('user-mode', $this->aRights)) {
 
-      $user = $this->getControler('user');
+      $user = $this->getManager('user');
       $this->aRights['user-mode'] = $user->getMode($this->getOwner(), $this->getGroup(), $this->getMode());
     }
 
@@ -127,7 +127,7 @@ abstract class Resource implements fs\resource {
 
   public function checkRights($iMode) {
 
-    if (!$this->getControler()->mustSecure() || \Sylma::read('debug/rights')) return true;
+    if (!$this->getManager()->mustSecure() || \Sylma::read('debug/rights')) return true;
     if ($iMode & $this->getUserMode()) return true;
 
     return false;
@@ -199,7 +199,7 @@ abstract class Resource implements fs\resource {
       '@resource ' . (string) $this,
     );
 
-    $this->getControler()->throwException($sMessage, $aPath, 3);
+    $this->getManager()->throwException($sMessage, $aPath, 3);
   }
 
   public function asString($iMode = 0) {

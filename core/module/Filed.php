@@ -135,7 +135,7 @@ abstract class Filed extends Sessioned {
 
       $dir = $this->getDirectory();
 
-      $result = $dir->getControler()->getDirectory($sPath, $dir, $bDebug);
+      $result = $dir->getManager()->getDirectory($sPath, $dir, $bDebug);
     }
     else {
 

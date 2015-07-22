@@ -3,7 +3,7 @@
 namespace sylma\modules\tester;
 use sylma\core;
 
-class Formed extends Profiler {
+class Formed extends Parser {
 
   const MODE_GET = 0;
   const MODE_QUERY = 1;

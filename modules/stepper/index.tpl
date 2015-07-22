@@ -14,6 +14,9 @@
 
   <tpl:template mode="stepper/options">
 
+    <js:option name="updating">
+      <le:get-argument name="update" optional="x"/>
+    </js:option>
     <js:option name="directory" cast="x">
       <tpl:apply select="getDirectory()"/>
     </js:option>

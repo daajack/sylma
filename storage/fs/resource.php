@@ -57,8 +57,6 @@ interface resource extends core\tokenable, core\stringable, core\arrayable {
    */
   function getRealPath();
 
-  function asArray();
-
   /**
    * @return string The full path to the resource (ex : /storage/fs/resource.php)
    */

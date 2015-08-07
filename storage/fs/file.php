@@ -23,11 +23,6 @@ interface file extends fs\resource {
   function read();
 
   /**
-   * @return array The content of the file as an array of lines, usefull for YAML loads
-   */
-  function asArray();
-
-  /**
    * Get file name without extension
    * ex : /sylma/index.eml will output index
    */

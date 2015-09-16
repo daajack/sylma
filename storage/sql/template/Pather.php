@@ -37,7 +37,7 @@ class Pather extends template\parser\Pather {
 
     if (trim($sVal) !== '*') {
 
-      preg_match('/^\*\s*\^\s*([\w:-\s_,]+)$/', $sVal, $aMatch);
+      preg_match('/^\*\s*\^\s*([\w:\-\s_,]+)$/', $sVal, $aMatch);
 
       if (!$aMatch) {
 

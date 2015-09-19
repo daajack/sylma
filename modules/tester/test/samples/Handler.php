@@ -1,6 +1,6 @@
 <?php
 
-namespace sylma\modules\tester\test;
+namespace sylma\modules\tester\test\samples;
 use sylma\core, sylma\modules\tester, sylma\dom;
 
 class Handler extends tester\Parser implements core\argumentable {
@@ -9,11 +9,22 @@ class Handler extends tester\Parser implements core\argumentable {
 
   public function __construct() {
 
-    //$this->setNamespace(self::NS, self::PREFIX);
     $this->setDirectory(__file__);
-    //$this->setManager($this);
 
     parent::__construct();
+  }
+
+  protected function saveProfile() {
+
+    if ($this->profiler) {
+
+      $this->profiler->stop(true);
+    }
+  }
+
+  public function saveTestProfile() {
+
+    return parent::saveProfile();
   }
 }
 

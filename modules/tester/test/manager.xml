@@ -1,0 +1,11 @@
+<arg:argument
+  xmlns:arg="http://2013.sylma.org/core/argument"
+  xmlns:cls="http://2013.sylma.org/core/factory"
+
+  xmlns="http://2013.sylma.org/modules/tester/test"
+>
+  <cls:classes>
+    <cls:base>\sylma\modules\tester\test\samples</cls:base>
+    <cls:class alias="handler" name="Handler"/>
+  </cls:classes>
+</arg:argument>

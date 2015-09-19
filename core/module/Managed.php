@@ -50,7 +50,7 @@ class Managed extends Namespaced {
 
       if ($bDebug && !$this->manager) {
 
-        $this->throwException('No controler defined');
+        $this->throwException('No manager defined');
       }
 
       $result = $this->manager;

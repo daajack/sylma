@@ -47,6 +47,9 @@ class Manager extends compiler\Manager {
     return $result;
   }
 
+  /**
+   * @return \sylma\parser\reflector\documented
+   */
   public function loadBuilder(fs\file $file, fs\directory $dir = null, core\argument $args = null, dom\document $doc = null) {
 
     if (!$dir) $dir = $file->getParent();
@@ -85,7 +88,14 @@ class Manager extends compiler\Manager {
     $builder = $this->loadBuilder($file, $dir);
     $this->aBuilded[] = $file;
 
-    return $builder->build($dir);
+    $result = $builder->build($dir);
+
+    if ($aDependancies = $builder->getDependancies()) {
+
+      $this->buildDependancies($dir, $file, $aDependancies);
+    }
+
+    return $result;
   }
 
   public function getCachedParser($sNamespace, $parent, $bDebug = true) {

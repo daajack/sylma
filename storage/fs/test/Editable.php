@@ -29,12 +29,13 @@ class Editable extends tester\Profiler implements core\argumentable {
     $dir = $fs->getDirectory()->createDirectory();
     $this->tmp = $dir;
 
-    $controler = $this->create('manager', array(\Sylma::PATH_CACHE, true));
-    $controler->loadDirectory((string) $dir);
+    $manager = $this->create('manager', array(\Sylma::PATH_CACHE, true));
+    $manager->loadDirectory((string) $dir);
 
     $this->setFiles(array($this->getFile('editable.xml')));
 
-    $this->setManager($controler);
+    $this->setManager($manager, 'main');
+    $this->setManager($this);
   }
 
   protected function onFinish() {

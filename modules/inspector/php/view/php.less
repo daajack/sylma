@@ -9,10 +9,27 @@
     color: @color-text4;
   }
 
+  .method
+  {
+
+    &:hover
+    {
+
+      .callers
+      {
+        max-height: 50em;
+      }
+    }
+  }
+
   .callers
   {
     font-size: 0.85em;
     margin-left: 2em;
+    max-height: 0;
+    transition: max-height 0.5s;
+    overflow: hidden;
+
   }
 
 }

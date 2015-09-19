@@ -21,6 +21,7 @@ class Documented extends Logger implements reflector\documented {
 
   protected $bThrow = true;
   protected $aElements = array();
+  protected $aDependancies = array();
 
   public function __construct($manager, fs\file $file = null, fs\directory $dir = null, core\argument $args = null, dom\document $doc = null) {
 
@@ -66,12 +67,17 @@ class Documented extends Logger implements reflector\documented {
       $this->throwException('Empty document');
     }
 
-    return $bImport ? $this->importDocument($doc, $this->getFile()) : $doc;
+    return $bImport ? $this->importDocument($doc, $this->getFile(), true) : $doc;
   }
 
-  public function importDocument(dom\handler $doc, fs\file $file) {
+  public function importDocument(dom\handler $doc, fs\file $file, $bSelf = false) {
 
     $bElement = \Sylma::read('template/debug/source');
+
+    if (!$bSelf) {
+
+      $this->addDependancy($file);
+    }
 
     if (!$file->getManager()->getName()) {
 
@@ -304,7 +310,24 @@ class Documented extends Logger implements reflector\documented {
     $sContent = $template->parseDocument($content, false);
     $result->saveText($sContent);
 
+    clearstatcache();
+
     return $result;
+  }
+
+  public function addDependancy(fs\file $file) {
+
+    $sFile = (string) $file;
+
+    if (!in_array($sFile, $this->aDependancies)) {
+
+      $this->aDependancies[] = $sFile;
+    }
+  }
+
+  public function getDependancies() {
+
+    return $this->aDependancies;
   }
 
   protected function loadTarget(dom\document $doc, fs\file $file) {

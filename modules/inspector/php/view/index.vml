@@ -87,7 +87,7 @@
 
     <tpl:template match="*" mode="method">
 
-      <li class="{(modifiers &amp; 512 ? 'protected' : '')}">
+      <li class="method {(modifiers &amp; 512 ? 'protected' : '')}">
         <tpl:read select="name"/>
         <div class="calls">
           <ul class="callers">

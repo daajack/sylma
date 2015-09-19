@@ -103,12 +103,14 @@ class ImageBuilder extends core\module\Filed {
 
     $sFunction($img, $file->getRealPath());
     imagedestroy($img);
+    
+    $file->updateStatut();
   }
 
   protected function filter($img, $sFilter) {
 
     //imagestring($img, 2, 5, 15, date('H:i:s'), imagecolorallocate($img, 255, 216, 147));
-    
+
     switch ($sFilter) {
 
       case 'grayscale' :

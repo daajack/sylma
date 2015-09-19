@@ -7,6 +7,7 @@ class File extends Resource implements fs\file {
 
   const NS = 'http://www.sylma.org/storage/fs/basic/file';
   const DOM_CONTROLER = 'dom';
+  const PARSER_MANAGER = 'parser';
 
   /**
    * @var string
@@ -37,7 +38,7 @@ class File extends Resource implements fs\file {
     $this->directory = $dir;
     $this->parent = $dir;
 
-    $this->bExist = is_file($this->getRealPath());
+    $this->updateStatut();
 
     //\Sylma::getManager('init')->addStat($this->getRealPath());
 
@@ -55,6 +56,15 @@ class File extends Resource implements fs\file {
   }
 
   /**
+   * Reset file stat, used by self::doExist()
+   * To update object use directory::updateFile()
+   */
+  public function updateStatut() {
+
+    $this->bExist = is_file($this->getRealPath());
+  }
+
+  /**
    * Get parent directory
    * @return fs\directory
    */
@@ -63,7 +73,7 @@ class File extends Resource implements fs\file {
     return $this->directory;
   }
 
-  public function getLastChange() {
+  public function getUpdateTime() {
 
     return filemtime($this->getRealPath());
 /*
@@ -230,9 +240,13 @@ class File extends Resource implements fs\file {
     return $this->freeRead();
   }
 
-  public function run(array $aGet, array $aPost, array $aContexts) {
+  public function run(array $aGet = array(), array $aPost = array(), array $aContexts = array()) {
 
-    return $this->getManager()->runScript($aGet, $aPost, $aContexts);
+    return $this->getManager(self::PARSER_MANAGER)->load($this, array(
+      'arguments' => $aGet ? $this->createArgument($aGet) : null,
+      'contexts' => $aContexts ? $this->createArgument($aContexts) : null,
+      'post' => $aPost ? $this->createArgument($aPost) : null,
+    ));
   }
 
   public function asToken() {

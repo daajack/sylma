@@ -80,6 +80,16 @@ class File extends fs\basic\File implements fs\editable\file {
     return $result;
   }
 
+  public function copy(fs\editable\directory $target) {
+
+    $sContent = $this->read(); // check read right
+
+    $result = $target->getFile($this->getName(), self::DEBUG_EXIST);
+    $result->saveText($sContent);
+
+    return $result;
+  }
+
   public function rename($sNewName) {
 
     $result = null;

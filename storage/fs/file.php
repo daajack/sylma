@@ -30,5 +30,15 @@ interface file extends fs\resource {
 
   function getExtension();
 
+  /**
+   * Get last modify time
+   */
+  function getUpdateTime();
+
+  /**
+   * Check for file existanz
+   */
+  function updateStatut();
+
   function asPath();
 }

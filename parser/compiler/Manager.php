@@ -11,6 +11,8 @@ abstract class Manager extends core\module\Domed {
   protected $baseDirectory = null;
   public static $aLoaded = array();
 
+  const DEPENDANCY_SUFFIX = '.dependencies.php';
+
   /**
    * order of arguments merge : domed, argument, directory
    * @param $arg
@@ -98,7 +100,10 @@ abstract class Manager extends core\module\Domed {
 
     if ((!$result = $this->getCache($file, $bUpdate)) && $this->getControler('user')->isPrivate()) {
 
-      if ($bUpdate !== false) $result = $this->build($file, $file->getParent());
+      if ($bUpdate !== false) {
+
+        $result = $this->build($file, $file->getParent());
+      }
     }
 
     return $result;
@@ -136,7 +141,12 @@ abstract class Manager extends core\module\Domed {
 
     if ($this->getControler('user')->isPrivate() && $bUpdate !== false) {
 
-      $bUpdate = !$tmpFile || $bUpdate || $this->readArgument('debug/update') || $tmpFile->getLastChange() < $file->getLastChange();
+      $bUpdate = !$tmpFile || $bUpdate || $this->readArgument('debug/update') || $tmpFile->getUpdateTime() < $file->getUpdateTime();
+
+      if (!$bUpdate) {
+
+        $bUpdate = $this->checkDependancies($tmpDir, $file, $tmpFile->getUpdateTime());
+      }
 
       if ($tmpFile && !$bUpdate) {
 
@@ -149,6 +159,39 @@ abstract class Manager extends core\module\Domed {
     }
 
     return $result;
+  }
+
+  protected function checkDependancies(fs\directory $dir, fs\file $file, $iCurrent) {
+
+    $bResult = false;
+    $deps = $dir->getFile($file->getName() . self::DEPENDANCY_SUFFIX, fs\resource::DEBUG_EXIST);
+
+    if ($deps->doExist()) {
+
+      $aDependancies = include($deps->getRealPath());
+      //$iCurrent = $file->getUpdateTime();
+
+      foreach($aDependancies as $sDependancy) {
+
+        $dep = $this->getFile($sDependancy);
+
+        if ($dep->getUpdateTime() > $iCurrent) {
+
+          $bResult = true;
+          break;
+        }
+      }
+    }
+
+    return $bResult;
+  }
+
+  protected function buildDependancies(fs\directory $dir, fs\file $file, array $aDependancies) {
+
+    $cache = $this->getCachedDirectory($file)->getFile($file->getName() . self::DEPENDANCY_SUFFIX, fs\resource::DEBUG_EXIST);
+    $sContent = '<?php return ' . var_export($aDependancies, true) . ';';
+
+    $cache->saveText($sContent);
   }
 
   /**

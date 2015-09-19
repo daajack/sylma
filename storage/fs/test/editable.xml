@@ -2,55 +2,97 @@
 <tst:tests xmlns:tst="http://www.sylma.org/storage/fs/test" xmlns="http://www.sylma.org" xmlns:html="http://www.w3.org/1999/xhtml">
   <tst:description>Editing methods</tst:description>
   <tst:test name="Add a directory">
-    $dir = $controler->getDirectory();
+
+    $fs = $manager->getManager('main');
+    $dir = $fs->getDirectory();
     $result = $dir->addDirectory('mydir');
-    return
-      $result instanceof \sylma\storage\fs\directory &amp;&amp;
-      (string) $result == '/mydir';
+
+    $manager->assertTrue($result instanceof \sylma\storage\fs\directory, 'is directory');
+    $manager->assertEquals((string) $result, '/mydir', 'directory name');
+
+    return true;
+
   </tst:test>
   <tst:test name="Delete a directory" disabled="true">
-    $dir = $controler->getDirectory('mydir');
+
+    $fs = $manager->getManager('main');
+    $dir = $fs->getDirectory('mydir');
     $dir->delete();
-    return
-      $controler->getDirectory('mydir', false) === null;
+
+    $manager->assertEquals($fs->getDirectory('mydir', false), null);
+
+    return true;
+
   </tst:test>
   <tst:test name="Create a file">
-    $dir = $controler->getDirectory();
+
+    $fs = $manager->getManager('main');
+    $dir = $fs->getDirectory();
     $file = $dir->getFile('myfile.txt', \sylma\storage\fs\resource::DEBUG_EXIST);
     $file->saveText('abc');
-    $file = $controler->getFile('myfile.txt');
-    return
-      $file instanceof \sylma\storage\fs\file &amp;&amp;
-      $file->read() == 'abc';
+    $file = $fs->getFile('myfile.txt');
+
+    $manager->assertTrue($file instanceof \sylma\storage\fs\file, 'is file');
+    $manager->assertEquals($file->read(), 'abc', 'content');
+
+    return true;
+
   </tst:test>
   <tst:test name="Rename a file">
 
-    $dir = $controler->getDirectory();
+    $fs = $manager->getManager('main');
+    $dir = $fs->getDirectory();
     $file = $dir->getFile('myfile.txt', \sylma\storage\fs\resource::DEBUG_EXIST);
     $file->saveText('abc');
 
-    $file = $controler->getFile('myfile.txt');
+    $file = $fs->getFile('myfile.txt');
     $file->rename('newname.txt');
-    $newFile = $controler->getFile('newname.txt');
+    $newFile = $fs->getFile('newname.txt');
 
-    return
-      $newFile->getName() == 'newname.txt' &amp;&amp;
-      $newFile instanceof \sylma\storage\fs\file
+    $manager->assertEquals($newFile->getName(), 'newname.txt', 'check name');
+    $manager->assertTrue($newFile instanceof \sylma\storage\fs\file, 'is file');
+
+    return true;
+
   </tst:test>
   <tst:test name="Move a file">
-    $dir = $controler->getDirectory();
+
+    $fs = $manager->getManager('main');
+    $dir = $fs->getDirectory();
     $file = $dir->getFile('newname.txt', \sylma\storage\fs\resource::DEBUG_EXIST);
     $file->saveText('abc');
 
-    $file = $controler->getFile('newname.txt');
-    $sub = $controler->getDirectory()->addDirectory('mydir2');
+    $file = $fs->getFile('newname.txt');
+    $sub = $fs->getDirectory()->addDirectory('mydir2');
 
     $file->move($sub);
-    $newFile = $controler->getFile('mydir2/newname.txt');
+    $newFile = $fs->getFile('mydir2/newname.txt');
 
-    return
-      $file->getName() == 'newname.txt' &amp;&amp;
-      $newFile instanceof \sylma\storage\fs\file
+    $manager->assertEquals($file->getName(), 'newname.txt', 'check name');
+    $manager->assertTrue($newFile instanceof \sylma\storage\fs\file, 'is file');
+
+    return true;
+
+  </tst:test>
+  <tst:test name="Copy a file">
+
+    $fs = $manager->getManager('main');
+    $dir = $fs->getDirectory();
+    $file = $dir->getFile('myfile.txt', \sylma\storage\fs\resource::DEBUG_EXIST);
+    $file->saveText('abc');
+
+    $file = $fs->getFile('myfile.txt');
+    $sub = $fs->getDirectory()->addDirectory('mydir2');
+
+    $file->copy($sub);
+    $newFile = $fs->getFile('mydir2/myfile.txt');
+
+    $manager->assertEquals($file->getName(), 'myfile.txt', 'file name');
+    $manager->assertEquals($file->read(), 'abc', 'file name');
+    $manager->assertTrue($newFile instanceof \sylma\storage\fs\file, 'file name');
+
+    return true;
+
   </tst:test>
 </tst:tests>
 

@@ -37,6 +37,40 @@
         $manager->compareNodes($result, $node);
     </tst:expected>
   </tst:test>
+  <tst:test name="Extends dependancy update">
+    <tst:node>
+      <div>
+        <h3>root</h3>
+        <span>root@sylma.org</span>
+      </div>
+    </tst:node>
+    <tst:expected>
+
+      $file1 = $manager->copyFile('samples/extends1.vml');
+      $file2 = $manager->copyFile('samples/basic1.vml');
+
+      $result = $file1->run();
+      $cache = $manager->getManager('parser')->getCachedFile($file1);
+      $time1 = $cache->getUpdateTime();
+
+      sleep(1);
+      $file1->run();
+
+      $manager->assertEquals($time1, $cache->getUpdateTime(), 'no update');
+
+      sleep(1);
+      touch($file2->getRealPath());
+      clearstatcache();
+
+      $file1->run();
+
+      $manager->assertTrue($cache->getUpdateTime() > $time1, 'updated');
+      $manager->compareNodes($result, $manager->get('node'));
+
+      return true;
+
+    </tst:expected>
+  </tst:test>
   <tst:test name="Disabled extends">
     <tst:prepare>
       $manager->set('result', $manager->load('samples/extends_disabled.vml'));

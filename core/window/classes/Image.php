@@ -19,7 +19,7 @@ class Image extends File {
       $sName = "{$file->getSimpleName()}_$sSize.{$file->getExtension()}";
       $cache = $dir->getFile($sName, fs\resource::DEBUG_EXIST);
 
-      if (!$cache->doExist() || $cache->getLastChange() < $file->getLastChange() || $this->read('rebuild')) {
+      if (!$cache->doExist() || $cache->getUpdateTime() < $file->getUpdateTime() || $this->read('rebuild')) {
 
         $builder = $this->create('builder', array($file));
         $builder->build($cache, $size->read('width'), $size->read('height'), $size->read('filter', false));

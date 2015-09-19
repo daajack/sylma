@@ -3,11 +3,11 @@
   <tst:description>Basic manipulation methods</tst:description>
   <tst:test name="Read file">
     <tst:prepare>
-      $controler->setUser('tester01');
+      $manager->setUser('tester01');
     </tst:prepare>
     <tst:expected>
-      $controler = $controler->getControler('fs/test');
-      if (!$file = $controler->getFile('/sample1/sub1/noright.txt')) return false;
+      $manager = $manager->getControler('fs/test');
+      if (!$file = $manager->getFile('/sample1/sub1/noright.txt')) return false;
 
       return
         !$file->checkRights(\Sylma::MODE_EXECUTE) &amp;&amp;
@@ -16,11 +16,11 @@
   </tst:test>
   <tst:test name="Read directory">
     <tst:prepare>
-      $controler->setUser('tester02');
+      $manager->setUser('tester02');
     </tst:prepare>
     <tst:expected>
-      $controler = $controler->getControler('fs/test');
-      if (!$dir = $controler->getDirectory('/sample1/sub2')) return false;
+      $manager = $manager->getControler('fs/test');
+      if (!$dir = $manager->getDirectory('/sample1/sub2')) return false;
 
       return
         !$dir->checkRights(\Sylma::MODE_EXECUTE) &amp;&amp;

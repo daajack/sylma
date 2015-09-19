@@ -33,6 +33,9 @@
     <tester:module dummy="\sylma\storage\xml\test\Handler"/>
     <tester:module dummy="\sylma\view\parser\crud\test\grouped\Grouped"/>
   </group>
+  <group name="modules">
+    <tester:module dummy="\sylma\modules\tester\test\Manager"/>
+  </group>
   <group name="various">
     <tester:module dummy="\sylma\device\test\Handler"/>
     <tester:module dummy="\sylma\template\binder\test\Module"/>

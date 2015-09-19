@@ -28,6 +28,7 @@ interface file {
   public function rename($sNewName);
   public function delete($bMessage = true, $bUpdateDirectory = true);
   public function saveText($sContent);
+  public function copy(directory $dir);
 
   /**
    * Call parent directory to reload (re-create) an XML_File reference, this one will be destroy

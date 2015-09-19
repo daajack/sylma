@@ -20,7 +20,7 @@ abstract class Asserter extends core\module\Domed {
     return $this->assertEquals($val1, $val2);
   }
 
-  public function assertEquals($val1, $val2) {
+  public function assertEquals($val1, $val2, $sAlias = '') {
 
     if ($val1 !== $val2) {
 
@@ -31,7 +31,8 @@ abstract class Asserter extends core\module\Domed {
         $sPost = $this->findDiff($val1, $val2);
       }
 
-      $this->launchException("Values not equal in  '{$this->getCount()}'" . $sPost, get_defined_vars());
+      $sAlias = $this->getAlias($sAlias);
+      $this->launchException("Values not equal in  '{$sAlias}'" . $sPost, get_defined_vars());
     }
 
     $this->updateCount();
@@ -55,16 +56,21 @@ abstract class Asserter extends core\module\Domed {
     $this->iCount++;
   }
 
+  protected function getAlias($sAlias) {
+
+    return $sAlias = $sAlias ? $sAlias : $this->getCount();
+  }
   protected function getCount() {
 
     return $this->iCount;
   }
 
-  public function assertTrue($val) {
+  public function assertTrue($val, $sAlias = '') {
 
     if (!$val) {
 
-      $this->launchException("Value is not TRUE or equivalent in '{$this->getCount()}'", get_defined_vars());
+      $sAlias = $this->getAlias($sAlias);
+      $this->launchException("Value is not TRUE or equivalent in '{$sAlias}'", get_defined_vars());
     }
 
     $this->updateCount();

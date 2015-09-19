@@ -19,9 +19,14 @@ class Profiler extends Stepper
     $this->initProfile();
   }
 
+  protected function useProfile(dom\element $test = null) {
+
+    return $this->readArgument('profile') || $test && $test->readx('@profile', array(), false);
+  }
+
   protected function initProfile(dom\element $test = null) {
-//dsp('init');
-    $bResult = $this->readArgument('profile') || $test && $test->readx('@profile', array(), false);
+
+    $bResult = $this->useProfile($test);
 
     if ($bResult) {
 
@@ -31,18 +36,18 @@ class Profiler extends Stepper
     return $bResult;
   }
 
-  protected function test(dom\element $test, $sContent, $controler, dom\document $doc, fs\file $file) {
+  protected function test(dom\element $test, $sContent, $manager, dom\document $doc, fs\file $file) {
 
-    $result = parent::test($test, $sContent, $controler, $doc, $file);
+    $result = parent::test($test, $sContent, $manager, $doc, $file);
     $this->saveProfile();
 
     return $result;
   }
 
-  protected function evaluate(\Closure $closure, $controler) {
+  protected function evaluate(\Closure $closure, $manager) {
 
     $this->startProfile();
-    $result = parent::evaluate($closure, $controler);
+    $result = parent::evaluate($closure, $manager);
     $this->stopProfile();
 
     return $result;
@@ -74,14 +79,16 @@ class Profiler extends Stepper
   }
 
   protected function saveProfile() {
-//dsp('save');
-    if (!$this->profiler) {
 
-      return;
+    $aResult = array();
+
+    if ($this->profiler) {
+
+      $this->profiler->stop(true);
+      $aResult = $this->profiler->save();
     }
 
-    $this->profiler->stop(true);
-    $this->profiler->save();
+    return $aResult;
   }
 
 }

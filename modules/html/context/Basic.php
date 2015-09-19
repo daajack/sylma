@@ -122,11 +122,11 @@ class Basic extends core\argument\Readable implements window\context {
 
     if (!$bResult) {
 
-      $update = $cache->getLastChange();
+      $update = $cache->getUpdateTime();
 
       foreach ($aFiles as $file) {
 
-        if ($file->getLastChange() > $update) {
+        if ($file->getUpdateTime() > $update) {
 
           $bResult = true;
           break;

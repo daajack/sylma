@@ -24,6 +24,8 @@ class Argument extends _Callable {
 
       $this->setFile($this->getSourceFile($sFile));
 
+      $this->getRoot()->addDependancy($this->getFile());
+
       $options = $this->createOptions((string) $this->getFile());
       $this->setOptions($options);
     }
@@ -142,7 +144,7 @@ class Argument extends _Callable {
 
       $iPosition = $this->getPosition();
     }
-    
+
     $result->setPosition($iPosition);
 
     return $result;

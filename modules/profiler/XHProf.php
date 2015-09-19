@@ -35,7 +35,8 @@ ALTER TABLE `sandbox`.`profiler_calls` ADD UNIQUE `unique_index`(`source`, `targ
         'sylma\modules\tester\Basic::evaluate',
         'sylma\modules\tester\Profiler::stopProfile',
         'sylma\modules\tester\Basic::{closure}',
-        'sylma\modules\profiler\Manager::stop',
+        'sylma\modules\tester\Prepare::{closure}',
+        'sylma\modules\profiler\XHProf::stop',
       ),
     )); //\XHPROF_FLAGS_CPU + \XHPROF_FLAGS_MEMORY
   }
@@ -44,9 +45,12 @@ ALTER TABLE `sandbox`.`profiler_calls` ADD UNIQUE `unique_index`(`source`, `targ
 
     if ($this->iStack === 1) {
 
-      $this->aResult = array_merge($this->aResult, xhprof_disable());
+      if ($aResult = \xhprof_disable()) {
+
+        $this->aResult = array_merge($this->aResult, $aResult);
+      }
     }
-    
+
     if ($bForce) {
 
       $this->iStack = 0;
@@ -70,7 +74,6 @@ ALTER TABLE `sandbox`.`profiler_calls` ADD UNIQUE `unique_index`(`source`, `targ
     require_once(self::ROOT . '/utils/xhprof_runs.php');
 
     $xhprof_runs = new \XHProfRuns_Default();
-//dsp(\Sylma::getSettings());
 
     $db = $this->getManager(self::DB_MANAGER)->getConnection(self::DB_CONNECTION)->getDatabase();
     $sTable = 'profiler_calls';
@@ -83,9 +86,8 @@ ALTER TABLE `sandbox`.`profiler_calls` ADD UNIQUE `unique_index`(`source`, `targ
            . " ON DUPLICATE KEY UPDATE"
            . " ct=VALUES(ct) + ct, wt = VALUES(wt) + wt";
 
-//dsp($sql);
     $sth = $db->prepare($sql, array(\PDO::ATTR_CURSOR => \PDO::CURSOR_FWDONLY));
-//$test = microtime(true);
+
     foreach ($this->aResult as $sKey => $aValues) {
 
       if (!strpos($sKey, '==>')) {
@@ -119,25 +121,27 @@ ALTER TABLE `sandbox`.`profiler_calls` ADD UNIQUE `unique_index`(`source`, `targ
         //continue;
       }
 
-try {
-      $sth->execute(array(
-        ':source' => $sSource,
-        ':target' => $sTarget,
-        ':ct' => $aValues['ct'],
-        ':wt' => $aValues['wt'],
-        //':cpu' => $aValues['cpu'],
-        //':mu' => $aValues['mu'],
-        //':pmu' => $aValues['pmu'],
-      ));
-}
-catch (\Exception $e) {
+      try {
 
-  $this->launchException($e->getMessage(), get_defined_vars());
-}
+        $sth->execute(array(
+          ':source' => $sSource,
+          ':target' => $sTarget,
+          ':ct' => $aValues['ct'],
+          ':wt' => $aValues['wt'],
+          //':cpu' => $aValues['cpu'],
+          //':mu' => $aValues['mu'],
+          //':pmu' => $aValues['pmu'],
+        ));
+      }
+      catch (\Exception $e) {
 
+        $this->launchException($e->getMessage(), get_defined_vars());
+      }
     }
-//dsp(round(microtime(true) - $test, 2) . ' seconds elapsed');
-//dsp(count($this->aResult) . ' calls added');
-    //$run_id = $xhprof_runs->save_run($this->aResult, "xhprof_testing");
+
+    //dsp(round(microtime(true) - $test, 2) . ' seconds elapsed');
+    //dsp(count($this->aResult) . ' calls added');
+
+    return $this->aResult;
   }
 }

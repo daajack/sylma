@@ -715,20 +715,44 @@
 
       $init = $manager->create('init');
       $user = $manager->createUser('tester01');
+      $fs = $manager->getManager('fs/editable');
+
       $manager->clearSylma($init, $user);
 
       $sPath = '/sylma/core/test/samples';
+      $sName = '/image01.jpg';
+
+      // create
+
       $settings = $init->loadSettings(\Sylma::ROOT . '/sylma/core/test/samples/config_image.yml', \Sylma::ROOT . \Sylma::PATH . \Sylma::PATH_OPTIONS);
-      $init->setGET($sPath . '/image01.jpg', array('format' => 'small'));
+      $init->setGET($sPath . $sName, array('format' => 'small'));
       $sResult = $init->run($settings->get('initializer'), false);
 
-      $manager->setArgument('result', $sResult);
+      $time1 = $fs->getFile($sPath . $sName)->getUpdateTime();
+
+      $manager->setArgument('time1', $time1);
+      $manager->setArgument('result1', $sResult);
+
+      // reload
+
+      $settings = $init->loadSettings('/sylma/core/test/samples/config_image.yml', \Sylma::PATH . \Sylma::PATH_OPTIONS);
+      $sResult = $init->run($settings->get('initializer'), false);
+
+      $time2 = $fs->getFile($sPath . $sName)->getUpdateTime();
+
+      $manager->setArgument('time2', $time2);
+      $manager->setArgument('result2', $sResult);
       $manager->setArgument('path', $sPath);
+
 
     </tst:prepare>
     <tst:expected>
 
-      $manager->assertEqual($manager->read('result'), $manager->getFile($manager->read('path') . '/image01_small.jpg')->read());
+      $img = $manager->getFile($manager->read('path') . '/image01_small.jpg')->read();
+
+      $manager->assertEquals($manager->read('result1'), $img);
+      $manager->assertEquals($manager->read('result2'), $img);
+      $manager->assertEquals($manager->read('time1'), $manager->read('time2'));
 
       return true;
 

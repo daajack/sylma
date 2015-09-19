@@ -15,6 +15,7 @@ abstract class Basic extends Asserter {
   protected $aFiles = array();
 
   const FILE_MANAGER = 'fs/editable';
+  const TEST_DIRECTORY = '/test';
 
   public function __construct() {
 
@@ -59,24 +60,17 @@ abstract class Basic extends Asserter {
 
     return array_filter($aResult);
   }
-/*
-  public function loadNext() {
 
-    if ($params = $this->getSession()) {
+  public function copyFile($sPath) {
 
-    }
-    else {
+    $dir = $this->getDirectory(self::TEST_DIRECTORY);
+    $file = $this->getFile($sPath);
 
-      $aFiles = $this->getFiles();
+    $cache = $file->copy($dir);
 
-      $param = $this->createArgument(array(
-        'file' => array_shift($aFiles),
-      ))
-
-      $this->setSession($params);
-    }
+    return $cache;
   }
-*/
+
   protected function loadFile(fs\file $file) {
 
     $doc = $file->getDocument();
@@ -156,7 +150,7 @@ abstract class Basic extends Asserter {
     return $aResult;
   }
 
-  protected function evaluate(\Closure $closure, $controler) {
+  protected function evaluate(\Closure $closure, $manager) {
 
     if (!is_callable($closure)) {
 
@@ -164,7 +158,7 @@ abstract class Basic extends Asserter {
     }
 
     //core\exception\Basic::throwError(false);
-    $mResult = $closure($controler);
+    $mResult = $closure($manager);
     //$mResult = call_user_func($closure, $controler);
     //core\exception\Basic::throwError(true);
 
@@ -174,21 +168,21 @@ abstract class Basic extends Asserter {
   /**
    *
    * @param dom\element $test
-   * @param type $controler
+   * @param type $manager
    * @param dom\document $doc
    * @param fs\file $file
    * @return boolean
    */
-  protected function test(dom\element $test, $sContent, $controler, dom\document $doc, fs\file $file) {
+  protected function test(dom\element $test, $sContent, $manager, dom\document $doc, fs\file $file) {
 
     $this->resetCount();
     $bResult = false;
 
     try {
 
-      if (eval('$closure = function($controler) { ' . $sContent . '; };') === null) {
+      if (eval($this->buildClosure($sContent)) === null) {
 
-        $bResult = $this->evaluate($closure, $controler);
+        $bResult = $this->evaluate($closure, $manager);
       }
     }
     catch (core\exception $e) {
@@ -197,6 +191,11 @@ abstract class Basic extends Asserter {
     }
 
     return $bResult;
+  }
+
+  protected function buildClosure($sContent) {
+
+    return '$closure = function($controler) { $manager = $controler; ' . $sContent . '; };';
   }
 
   protected function catchException(dom\element $test, core\exception $e, fs\file $file) {

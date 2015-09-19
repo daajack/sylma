@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <tst:tests
-  xmlns:tst="http://www.sylma.org/modules/tester/parser"
+  xmlns:tst="http://www.sylma.org/modules/tester"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns:view="http://2013.sylma.org/view"
   xmlns:tpl="http://2013.sylma.org/template"
@@ -14,42 +14,93 @@
 
   <tst:description>Basic</tst:description>
 
-  <tst:test name="Success">
+  <tst:test name="Simple">
     <tst:document>
-      <view:view>
-        <xl:resource/>
-        <tpl:template>
-          <div>
-            <h3>Hello</h3>
-            <p>World</p>
-          </div>
-        </tpl:template>
-      </view:view>
+      <tst:test name="Simple">
+        <tst:prepare>
+
+        </tst:prepare>
+        <tst:expected>
+
+          return true;
+
+        </tst:expected>
+      </tst:test>
     </tst:document>
-    <tst:node>
-      <div>
-        <h3>Hello</h3>
-        <p>World</p>
-      </div>
-    </tst:node>
+    <tst:expected>
+
+      $result = $manager->read('result', false);
+      $manager->assertEquals($result, true, 'success result');
+
+      return true;
+
+    </tst:expected>
   </tst:test>
   <tst:test name="Error">
     <tst:document>
-      <view:view>
-        <xl:resource/>
-        <tpl:template>
-          <div>
-            <h3>Hello</h3>
-            <p>World</p>
-          </div>
-        </tpl:template>
-      </view:view>
+      <tst:test name="Simple">
+        <tst:prepare>
+
+        </tst:prepare>
+        <tst:expected>
+
+          return false;
+
+        </tst:expected>
+      </tst:test>
     </tst:document>
-    <tst:node>
-      <div>
-        <h2>Hello</h2>
-      </div>
-    </tst:node>
+    <tst:expected>
+
+      $result = $manager->read('result', false);
+      $manager->assertEquals($result, false, 'error result');
+
+      return true;
+
+    </tst:expected>
+  </tst:test>
+
+  <tst:test name="Profile">
+    <tst:document>
+      <tst:test name="Simple">
+        <tst:prepare>
+
+          new \sylma\modules\tester\test\samples\MyClass;
+
+        </tst:prepare>
+        <tst:expected>
+
+          return true
+
+        </tst:expected>
+      </tst:test>
+    </tst:document>
+    <tst:expected>
+
+      if (!$manager->useProfile()) {
+
+        dsp('Cannot test profile');
+        return true;
+      }
+
+      $result = $manager->read('result', false);
+      $handler = $manager->get('handler');
+      $profile = array_keys($handler->saveTestProfile());
+
+      $manager->assertEquals($result, false, 'error result');
+
+      //dsp($profile);
+
+      $manager->assertEquals($profile, array(
+        'sylma\core\Autoload::loader==>load::samples/MyClass.php',
+        'sylma\core\Autoload::loader==>???_op',
+        'main()==>sylma\core\Autoload::loader',
+        'main()==>sylma\modules\tester\test\samples\MyClass::__construct',
+        'main()',
+      ), 'profile result');
+
+      return true;
+
+    </tst:expected>
   </tst:test>
 
 </tst:tests>

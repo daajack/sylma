@@ -90,13 +90,13 @@ class Importer extends core\module\Domed
     if ($iFile) {
 
       $updateDB = new \DateTime($iFile);
-      $updateFile = $file->getLastChange();
+      $updateFile = $file->getUpdateTime();
     }
 
     if (!$iFile || $updateFile > $updateDB->getTimestamp() || self::FORCE_UPDATE) {
 
       //$sClass = $this->findClass($file);
-      $sClass = str_replace('/', '\\', substr($file, 0, -4));
+      $sClass = str_replace('/', '\\', substr($file, 1, -4));
 
       if ((string) $file === '/sylma/core/Sylma.php') {
 
@@ -117,7 +117,9 @@ class Importer extends core\module\Domed
 
       if (!$class->isInternal()) {
 
-        if ($this->getScript('update/class-select', array('name' => $sClass))) {
+        $sID = $this->getScript('update/class-select', array('name' => $sClass));
+
+        if ($sID) {
 
           $this->aClasses[$sClass] = $this->getScript('update/class', array('name' => $sClass));
         }
@@ -212,6 +214,7 @@ class Importer extends core\module\Domed
     ));
 
     //array_unshift($aExtends, $iClass);
+    $db = $this->getManager('mysql')->getConnection('test');
 
     $iMethods = 0;
 

@@ -46,14 +46,6 @@ class Main extends core\module\Domed implements dom\domable {
 
     $this->loadDefaultSettings();
 
-    $common = $this->createArgument(array(
-      'includes' => array('/\.vml$/'),
-      'excludes' => array('/sylma', '/users', '/\.svn/'),
-      'depth' => true,
-    ));
-
-    $root = $common;
-
     $dir = $this->getDirectory('/');
     $files = $dir->getFiles(array(
       '/\.vml$/'
@@ -61,6 +53,7 @@ class Main extends core\module\Domed implements dom\domable {
       '|^/users|',
       '/\.svn/',
       '|^/sylma/modules/tester|',
+      '|^/sylma/samples|',
       '|/test|',
     ), true);
 

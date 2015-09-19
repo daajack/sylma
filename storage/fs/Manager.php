@@ -65,7 +65,7 @@ class Manager extends core\module\Argumented {
     $this->setArgument('classes/file/name', $this->readArgument('classes/file/classes/editable/name'));
     $this->setArgument('classes/directory/name', $this->readArgument('classes/directory/classes/editable/name'));
   }
- 
+
   public function loadDirectory($sPath = '') {
 
     $dir = $this->create('directory', array($sPath, null, $this->getArgument('rights')->query(), $this));
@@ -95,15 +95,6 @@ class Manager extends core\module\Argumented {
 
     return parent::createArgument($mArguments, $sNamespace);
   }
-
-  public function runScript(array $aGet, array $aPost, array $aContexts) {
-
-    return $this->getManager(self::PARSER_MANAGER)->load($this, array(
-      'arguments' => $aGet ? $this->createArgument($aGet) : null,
-      'contexts' => $aContexts ? $this->createArgument($aContexts) : null,
-      'post' => $aPost ? $this->createArgument($aPost) : null,
-    ));
-}
 
   /**
    * Retrieve the directory from a file path, return an object by default

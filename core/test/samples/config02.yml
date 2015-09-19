@@ -1,4 +1,7 @@
 
+tester :
+  profile : true
+
 debug :
   enable : false
 exception :

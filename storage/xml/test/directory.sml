@@ -3,8 +3,8 @@
   <propagate>
     <security>
       <owner>root</owner>
-      <group>0</group>
-      <mode>700</mode>
+      <group>sylma/tester</group>
+      <mode>710</mode>
     </security>
   </propagate>
 </directory>

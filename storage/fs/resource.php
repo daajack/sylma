@@ -28,7 +28,7 @@ interface resource extends core\tokenable, core\stringable, core\arrayable {
   function getSettings($bRecursive = false);
 
   /**
-   * Indicate if the resource exist or not, allow the manipulation of un-existent resource
+   * Indicate if the resource exists or not, allow the manipulation of un-existent resource
    * @return boolean
    */
   function doExist();

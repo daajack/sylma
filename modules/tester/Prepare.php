@@ -8,7 +8,7 @@ abstract class Prepare extends Profiler {
   const DB_ARGUMENTS = '/#sylma/view/test/database.xml';
   const DB_CONNECTION = 'test';
 
-  protected function prepareTest(dom\element $test, $controler) {
+  protected function prepareTest(dom\element $test, $manager) {
 
     $bResult = true;
 
@@ -16,7 +16,7 @@ abstract class Prepare extends Profiler {
 
       if (is_null(eval('$closure = function($controler) { $manager = $controler; ' . $prepare->readx() . '; };'))) {
 
-        $this->evaluate($closure, $controler);
+        $this->evaluate($closure, $manager);
         $this->onPrepared();
       }
       else {
@@ -30,7 +30,7 @@ abstract class Prepare extends Profiler {
     return $bResult;
   }
 
-  protected function test(dom\element $test, $sExpected, $controler, dom\document $doc, fs\file $file) {
+  protected function test(dom\element $test, $sExpected, $manager, dom\document $doc, fs\file $file) {
 
     $bResult = false;
     $bReady = true;
@@ -41,15 +41,15 @@ abstract class Prepare extends Profiler {
 
     try {
 
-      $this->prepareTest($test, $controler);
+      $this->prepareTest($test, $manager);
 
       if ($bReady) {
 
         if ($sExpected) {
 
-          if (is_null(eval('$closure = function($controler) { $manager = $controler; ' . $sExpected . '; };'))) {
+          if (is_null(eval($this->buildClosure($sExpected)))) {
 
-            $bResult = $this->evaluate($closure, $controler);
+            $bResult = $this->evaluate($closure, $manager);
           }
         }
         else {

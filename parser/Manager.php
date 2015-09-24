@@ -23,11 +23,14 @@ class Manager extends compiler\Manager {
 
   public function __construct() {
 
+  }
+
+  public function prepare() {
+
     $this->setDirectory(__FILE__);
     $this->setArguments('manager.yml');
 
     $this->loadNamespaces($this->getArgument('namespaces'));
-
   }
 
   protected function loadNamespaces(core\argument $namespaces) {

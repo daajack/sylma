@@ -39,7 +39,6 @@ class Initializer extends module\Domed {
     return $result;
   }
 
-
   public function createArgument($mArguments, $sNamespace = '') {
 
     return parent::createArgument($mArguments, $sNamespace);
@@ -84,6 +83,8 @@ class Initializer extends module\Domed {
 
     $this->setStartTime(microtime(true));
 
+    $parser = \Sylma::getManager('parser');
+
     require_once('storage/fs/Manager.php');
 
     // load directory without security
@@ -91,6 +92,8 @@ class Initializer extends module\Domed {
     $fs->loadDirectory();
     \Sylma::setManager('fs', $fs);
     \Sylma::setManager('fs/free', $fs);
+
+    $parser->prepare();
 
     // load user
     $user = \Sylma::getManager('user');

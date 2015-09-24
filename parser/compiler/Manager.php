@@ -139,7 +139,7 @@ abstract class Manager extends core\module\Domed {
       $tmpFile = $this->getCachedFile($file, static::EXTENSION_DEFAULT, fs\resource::DEBUG_NOT);
     }
 
-    if ($this->getControler('user')->isPrivate() && $bUpdate !== false) {
+    if (\Sylma::isAdmin() && $bUpdate !== false) {
 
       $bUpdate = !$tmpFile || $bUpdate || $this->readArgument('debug/update') || $tmpFile->getUpdateTime() < $file->getUpdateTime();
 

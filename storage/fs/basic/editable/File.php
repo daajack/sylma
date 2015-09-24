@@ -111,25 +111,25 @@ class File extends fs\basic\File implements fs\editable\file {
     return $result;
   }
 
-  public function delete($bMessage = true, $bUpdateDirectory = true) {
+  public function delete($bUpdateDirectory = true) {
 
     $bResult = null;
 
     if ($this->checkRights(\Sylma::MODE_WRITE)) {
 
-      if ($bResult = unlink($this->getRealPath())) {
+      $bResult = unlink($this->getRealPath());
 
-        //if ($bUpdateDirectory) $this->update();
-        //$this->getSettings()->deleteFile($this->getName());
+      if ($bResult && $bUpdateDirectory) {
+
+        $this->update();
+          //$this->getSettings()->deleteFile($this->getName());
       }
     }
-
+    
     return $bResult;
   }
 
   public function saveText($sContent) {
-
-    $bResult = false;
 
     if (!$this->checkRights(\Sylma::MODE_WRITE)) {
 
@@ -137,20 +137,24 @@ class File extends fs\basic\File implements fs\editable\file {
     }
 
     $bResult = file_put_contents($this->getRealPath(), $sContent);
-    if (!$this->doExist()) chmod($this->getRealPath(), 0750);
+
+    if (!$this->doExist()) {
+
+      chmod($this->getRealPath(), 0750);
+    }
 
     $this->bExist = true;
 
+    clearstatcache();
     //$this->iChanged = null;
-
     //$this->update();
 
     return $bResult;
   }
 
-/*  public function update() {
+  public function update() {
 
-    $this->getParent()->updateFile($this->getName());
-  }*/
+    return $this->getDirectory()->updateFile($this->getName());
+  }
 }
 

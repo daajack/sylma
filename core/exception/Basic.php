@@ -281,6 +281,12 @@ class Basic extends \Exception implements core\exception {
 
   public function save($bPrint = true, $bHTML = true, $bTrace = true) {
 
+    if (\Sylma::read('debug/enable') && \Sylma::read('exception/break')) {
+
+      echo $this->getMessage();
+      return;
+    }
+
     $sResult = '';
 
     $aPath = $this->getPath();

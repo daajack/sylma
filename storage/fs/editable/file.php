@@ -26,12 +26,13 @@ interface file {
    */
   public function moveFree($sDirectory, $sName = '');
   public function rename($sNewName);
-  public function delete($bMessage = true, $bUpdateDirectory = true);
+  public function delete($bUpdateDirectory = true);
   public function saveText($sContent);
   public function copy(directory $dir);
 
   /**
-   * Call parent directory to reload (re-create) an XML_File reference, this one will be destroy
+   * Call parent directory to re-create object, self is lost
+   * @return fs\file new object
    */
-  //public function update();
+  public function update();
 }

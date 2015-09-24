@@ -35,11 +35,21 @@ function winToUnix($sPath) {
 
 function toAbsolute($sTarget, $mSource = '', $sChar = '/') {
 
-  if (!$sTarget || $sTarget{0} == $sChar) return $sTarget;
+  if (!is_string($sTarget)) {
+
+    \Sylma::throwException('String expected');
+  }
+
+  if (!$sTarget || $sTarget{0} == $sChar) {
+
+    $sResult = $sTarget;
+  }
   else {
 
-    return $mSource . $sChar . $sTarget;
+    $sResult = $mSource . $sChar . $sTarget;
   }
+  
+  return $sResult;
 }
 
 /**

@@ -32,10 +32,6 @@ classes :
     classes :
       editable :
         name : basic\editable\Directory
-  security :
-    name : basic\security\Manager
-    classes :
-      document :
-        name : \sylma\dom\basic\handler\Rooted
+
 system :
   rights : 0770

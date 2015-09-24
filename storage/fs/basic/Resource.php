@@ -22,6 +22,9 @@ abstract class Resource implements fs\resource {
 
   protected $bExist = false;
 
+  /**
+   * @return fs\Manager
+   */
   public function getManager($sName = '') {
 
     if ($sName) {

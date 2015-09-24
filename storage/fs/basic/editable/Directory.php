@@ -142,5 +142,15 @@ class Directory extends fs\basic\tokened\Directory implements fs\editable\direct
 
     return $bResult;
   }
+
+  public function update() {
+
+    if (!$this->getParent()) {
+
+      $this->getManager()->throwException('Cannot update root directory');
+    }
+
+    return $this->getParent()->updateDirectory($this->getName());
+  }
 }
 

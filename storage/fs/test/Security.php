@@ -26,6 +26,11 @@ class Security extends tester\Prepare implements core\argumentable {
 
   public function __construct() {
 
+    if (!\Sylma::isAdmin()) {
+
+      $this->launchException('Must be root');
+    }
+
     $this->setDirectory(__file__);
     $this->setNamespace(self::NS, 'self');
 
@@ -35,6 +40,7 @@ class Security extends tester\Prepare implements core\argumentable {
     //$dir = $this->getDirectory();
 
     //$this->setManager($this->createManager((string) $dir), 'fs/test');
+    $this->setSettings(array());
     $this->setManager($this);
 
     $this->setFiles(array($this->getFile('security.xml')));
@@ -73,7 +79,8 @@ class Security extends tester\Prepare implements core\argumentable {
 
   protected function test(dom\element $test, $sContent, $manager, dom\document $doc, fs\file $file) {
 
-    $this->setManager($this->createManager((string) $this->getDirectory()), 'fs/test');
+    \Sylma::get('debug')->set('rights', false);
+    $this->setManager($this->createManager(''), 'fs/test');
 
     $result = parent::test($test, $sContent, $this, $doc, $file);
 

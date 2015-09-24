@@ -55,9 +55,12 @@ exception :
     to : none
   # /#cache/..
   file : error.log
-  # WARNING : if TRUE everybody will see exception message and vars
-  show : false
   level : -1
+  # DEV
+  # if TRUE everybody will see exception message and vars
+  show : false
+  # completely avoid format, /debug/enable must be TRUE
+  break : false
 
 initializer :
   debug :

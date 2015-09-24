@@ -301,7 +301,7 @@ class Documented extends Logger implements reflector\documented {
     }
   }
 
-  protected function createFile(fs\file $result, $content) {
+  protected function createFile(fs\editable\file $result, $content) {
 
     $this->showResult($content);
 
@@ -309,8 +309,6 @@ class Documented extends Logger implements reflector\documented {
 
     $sContent = $template->parseDocument($content, false);
     $result->saveText($sContent);
-
-    clearstatcache();
 
     return $result;
   }

@@ -2,7 +2,7 @@
     return new \sylma\core\argument\parser\Cached(array(
 'rights' => array(
   'owner' => 'root',
-  'group' => '0',
+  'group' => 'admin',
   'mode' => '711',
   '0' => 'user-mode'),
 'browse' => array(
@@ -44,9 +44,13 @@
         'file' => '\sylma\storage\fs\basic\editable\Directory.php',
         'name' => '\sylma\storage\fs\basic\editable\Directory'))),
   'security' => array(
-    'file' => '\sylma\storage\fs\basic\security\Manager.php',
-    'name' => '\sylma\storage\fs\basic\security\Manager',
+    'file' => '\sylma\storage\fs\basic\security\Cached.php',
+    'name' => '\sylma\storage\fs\basic\security\Cached',
     'classes' => array(
-      'document' => array(
-        'file' => '\sylma\dom\basic\handler\Rooted.php',
-        'name' => '\sylma\dom\basic\handler\Rooted'))))));
+      'options' => array(
+        'file' => '\sylma\dom\argument\Iterator.php',
+        'name' => '\sylma\dom\argument\Iterator'),
+      'parser' => array(
+        'file' => '\sylma\storage\fs\basic\security\Parser.php',
+        'name' => '\sylma\storage\fs\basic\security\Parser'))))));
+  

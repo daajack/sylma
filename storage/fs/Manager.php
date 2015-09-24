@@ -1,7 +1,7 @@
 <?php
 
 namespace sylma\storage\fs;
-use \sylma\core, \sylma\storage\fs, \sylma\core\functions\path;
+use \sylma\core, \sylma\storage\fs, \sylma\core\functions\path, sylma\dom;
 
 require_once('core/functions/Path.php');
 require_once('resource.php');

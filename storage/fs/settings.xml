@@ -49,9 +49,10 @@
         <cls:class alias="editable" name="basic\editable\Directory"/>
       </cls:classes>
     </cls:class>
-    <cls:class alias="security" name="basic\security\Manager">
+    <cls:class alias="security" name="basic\security\Cached">
       <cls:classes>
-        <cls:class alias="document" name="\sylma\dom\basic\handler\Rooted"/>
+        <cls:class alias="options" name="\sylma\dom\argument\Iterator"/>
+        <cls:class alias="parser" name="basic\security\Parser"/>
       </cls:classes>
     </cls:class>
   </cls:classes>

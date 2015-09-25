@@ -93,8 +93,9 @@ class Foreign extends Element implements sql\schema\foreign {
       $this->getHandler()->addSchema($file->getDocument(), $file);
 
       if (!$result = $this->loadElementRef($file)) {
-
-        $this->launchException('Cannot find reference', get_defined_vars());
+        
+        list($sNamespace, $sName) = $this->parseName($this->readx('@table', true));
+        $this->launchException('Cannot find reference : ' . $sNamespace . ':' . $sName, get_defined_vars());
       }
     }
 

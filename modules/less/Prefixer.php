@@ -22,10 +22,19 @@ class Prefixer extends \lessc {
       'moz' => self::MODE_PREFIX,
     ),
 
-    'column-count' => array(
+    'columns' => array(
+      'moz' => self::MODE_PREFIX,
+    ),
+    'column-width' => array(
+      'moz' => self::MODE_PREFIX,
+    ),
+    'column-gap' => array(
       'moz' => self::MODE_PREFIX,
     ),
     'column-fill' => array(
+      'moz' => self::MODE_PREFIX,
+    ),
+    'column-rule' => array(
       'moz' => self::MODE_PREFIX,
     ),
 

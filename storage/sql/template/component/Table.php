@@ -204,6 +204,11 @@ class Table extends Dummed implements sql\template\pathable, schema\parser\eleme
 
   public function addElementToQuery(schema\parser\element $el) {
 
+    if ($this->isStatic() && !$this->getSource(false)) {
+
+      $this->launchException('Cannot read in static');
+    }
+
     $this->addColumn($el);
 
     $this->checkQuery($this->getQuery())->setElement($el);
@@ -232,12 +237,7 @@ class Table extends Dummed implements sql\template\pathable, schema\parser\eleme
     return $result;
   }
 
-  public function isStatic($bValue = null) {
-
-    if (is_bool($bValue)) {
-
-      $this->bStatic = $bValue;
-    }
+  public function isStatic() {
 
     return $this->bStatic;
   }
@@ -325,7 +325,7 @@ class Table extends Dummed implements sql\template\pathable, schema\parser\eleme
     }
 
     $bCurrent = $this->isStatic();
-    $this->isStatic(true);
+    $this->bStatic = true;
 
     return array(
       'source' => $current,
@@ -336,7 +336,7 @@ class Table extends Dummed implements sql\template\pathable, schema\parser\eleme
   protected function stopStatic(array $aStat) {
 
     $this->setSource($aStat['source']);
-    $this->isStatic($aStat['static']);
+    $this->bStatic = $aStat['static'];
   }
 
   public function reflectRead() {

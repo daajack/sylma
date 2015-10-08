@@ -2,10 +2,10 @@
 <ns0:test xmlns:ns0="http://2013.sylma.org/modules/stepper">
   <ns0:page>
     <ns0:steps>
-      <ns0:call path="/sylma/modules/stepper/test/samples/stepper01/sample?path=/sylma/modules/stepper/test/samples/sample01" method="post"/>
+      <ns0:call path="/sylma/modules/stepper/test/tester/sample?path=/sylma/modules/stepper/test/samples/sample01" method="post"/>
     </ns0:steps>
   </ns0:page>
-  <ns0:page url="/sylma/modules/stepper/test/samples/stepper01?dir=/test/tmp">
+  <ns0:page url="/sylma/modules/stepper/test/tester?dir=/test/tmp">
     <ns0:steps>
       <ns0:event name="click" element="#tester &gt; div &gt; div:nth-child(2) &gt; button:nth-child(4)"/>
       <ns0:watcher element="#tester &gt; div &gt; div:nth-child(2)">
@@ -29,7 +29,7 @@
       </ns0:watcher>
     </ns0:steps>
   </ns0:page>
-  <ns0:page url="/sylma/modules/stepper/test/samples/stepper01?dir=/test/tmp">
+  <ns0:page url="/sylma/modules/stepper/test/tester?dir=/test/tmp">
     <ns0:steps>
       <ns0:event name="click" element="#tester &gt; div &gt; div:nth-child(1) &gt; button:nth-child(2)"/>
       <ns0:watcher element="#tester &gt; div:nth-child(2) &gt; iframe" delay="3000">
@@ -46,7 +46,7 @@
       </ns0:snapshot>
     </ns0:steps>
   </ns0:page>
-  <ns0:page url="/sylma/modules/stepper/test/samples/stepper01?dir=/sylma/modules/stepper/test/samples">
+  <ns0:page url="/sylma/modules/stepper/test/tester?dir=/sylma/modules/stepper/test/samples">
     <ns0:steps>
       <ns0:event name="click" element="#tester &gt; div &gt; div:nth-child(3) &gt; button:nth-child(3)"/>
       <ns0:watcher element="#tester &gt; div:nth-child(2) &gt; iframe" delay="3000">

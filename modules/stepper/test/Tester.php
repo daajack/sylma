@@ -1,21 +1,18 @@
 <?php
 
-namespace sylma\modules\stepper\test\samples;
+namespace sylma\modules\stepper\test;
 use sylma\core, sylma\modules\stepper;
 
-class Stepper01 extends stepper\Browser {
+class Tester extends stepper\Browser {
 
   const NS = 'http://2013.sylma.org/modules/stepper';
   const DIRECTORY = '/test/tmp';
 
   public function __construct(core\argument $args, core\argument $post) {
 
+    $this->setDirectory($this->getManager(self::FILE_MANAGER)->getDirectory()->addDirectory(self::DIRECTORY));
+
     parent::__construct($args, $post);
-
-    if (!$this->getDirectory('', false)) {
-
-      $this->setDirectory($this->getManager(self::FILE_MANAGER)->getDirectory(self::DIRECTORY));
-    }
   }
 
   public function clearDirectory() {
@@ -30,17 +27,24 @@ class Stepper01 extends stepper\Browser {
     }
   }
 
-  public function prepareSample() {
+  protected function getSamplesDirectory() {
 
     $current = $this->getManager('fs')->extractDirectory(__FILE__);
 
+    return $current->getDirectory('samples');
+  }
+
+  public function prepareSample() {
+
+    $samples = $this->getSamplesDirectory();
+
     if ($sFile = $this->read('file', false)) {
 
-      $sample = $current->getFile($sFile);
+      $sample = $samples->getFile($sFile);
     }
     else {
 
-      $sample = $current->getFile('sample01.tml');
+      $sample = $samples->getFile('sample01.tml');
     }
 
     $doc = $sample->asDocument();
@@ -53,15 +57,15 @@ class Stepper01 extends stepper\Browser {
 
     $this->clearDirectory();
     $dir = $this->getDirectory();
-
     $samplecopy = $dir->createFile($sample->getName());
+
     $doc->saveFile($samplecopy);
   }
 
   public function prepareCollection() {
 
-    $current = $this->getManager('fs')->extractDirectory(__FILE__);
-    $sample = $current->getFile('collection_01.tml');
+    $samples = $this->getSamplesDirectory();
+    $sample = $samples->getFile('collection_01.tml');
 
     $this->clearDirectory();
     $dir = $this->getDirectory();

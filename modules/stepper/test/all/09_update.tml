@@ -2,10 +2,10 @@
 <ns0:test xmlns:ns0="http://2013.sylma.org/modules/stepper">
   <ns0:page>
     <ns0:steps>
-      <ns0:call path="/sylma/modules/stepper/test/samples/stepper01/sample?file=update.tml" method="post"/>
+      <ns0:call path="/sylma/modules/stepper/test/tester/sample?file=update.tml" method="post"/>
     </ns0:steps>
   </ns0:page>
-  <ns0:page url="/sylma/modules/stepper/test/samples/stepper01?dir=/test/tmp&amp;update=1">
+  <ns0:page url="/sylma/modules/stepper/test/tester?dir=/test/tmp&amp;update=1">
     <ns0:steps>
       <ns0:watcher element=" &gt; div:nth-child(1) &gt; div">
         <ns0:property name="height">16</ns0:property>
@@ -27,10 +27,10 @@
   </ns0:page>
   <ns0:page>
     <ns0:steps>
-      <ns0:call path="/sylma/modules/stepper/test/samples/stepper01/sample?file=update.tml" method="post"/>
+      <ns0:call path="/sylma/modules/stepper/test/tester/sample?file=update.tml" method="post"/>
     </ns0:steps>
   </ns0:page>
-  <ns0:page url="/sylma/modules/stepper/test/samples/stepper01?dir=/test/tmp&amp;update=1">
+  <ns0:page url="/sylma/modules/stepper/test/tester?dir=/test/tmp&amp;update=1">
     <ns0:steps>
       <ns0:watcher element=" &gt; div:nth-child(1) &gt; div">
         <ns0:property name="height">16</ns0:property>

@@ -5,7 +5,7 @@ use sylma\core, sylma\dom, sylma\storage\sql, sylma\schema, sylma\template;
 
 class Pather extends template\parser\Pather {
 
-  protected function parsePathTokenValue($sPath, array $aPath, $sMode, $bRead, array $aArguments = array()) {
+  protected function parsePathTokenValue($sPath, array $aPath, $sMode, $bRead, array $aArguments = array(), $bStatic = false) {
 
     if ($aMatch = $this->matchContext($sPath)) {
 
@@ -13,15 +13,15 @@ class Pather extends template\parser\Pather {
     }
     else {
 
-      $aResult = parent::parsePathTokenValue($sPath, $aPath, $sMode, $bRead, $aArguments);
+      $aResult = parent::parsePathTokenValue($sPath, $aPath, $sMode, $bRead, $aArguments, $bStatic);
     }
 
     return $aResult;
   }
 
-  protected function parsePathDefault($sPath, array $aPath, $sMode, $bRead, array $aArguments = array()) {
+  protected function parsePathDefault($sPath, array $aPath, $sMode, $bRead, array $aArguments = array(), $bStatic = false) {
 
-    return $this->getSource()->reflectApplyDefault($sPath, $aPath, $sMode, $bRead, $aArguments);
+    return $this->getSource()->reflectApplyDefault($sPath, $aPath, $sMode, $bRead, $aArguments, $bStatic);
 
     //return $this->parsePathElement(, $sPath, $aPath, $sMode);
   }

@@ -80,11 +80,16 @@ class File extends fs\basic\File implements fs\editable\file {
     return $result;
   }
 
-  public function copy(fs\editable\directory $target) {
+  public function copy(fs\editable\directory $target, $sName = '') {
 
     $sContent = $this->read(); // check read right
 
-    $result = $target->getFile($this->getName(), self::DEBUG_EXIST);
+    if (!$sName) {
+
+      $sName = $this->getName();
+    }
+
+    $result = $target->getFile($sName, self::DEBUG_EXIST);
     $result->saveText($sContent);
 
     return $result;
@@ -115,17 +120,22 @@ class File extends fs\basic\File implements fs\editable\file {
 
     $bResult = null;
 
-    if ($this->checkRights(\Sylma::MODE_WRITE)) {
+    if (!$this->checkRights(\Sylma::MODE_WRITE)) {
+
+      $this->getManager()->throwException('Cannot delete file, missing rights');
+    }
+
+    if ($this->doExist()) {
 
       $bResult = unlink($this->getRealPath());
-
-      if ($bResult && $bUpdateDirectory) {
-
-        $this->update();
-          //$this->getSettings()->deleteFile($this->getName());
-      }
     }
-    
+
+    if ($bResult && $bUpdateDirectory) {
+
+      $this->update();
+        //$this->getSettings()->deleteFile($this->getName());
+    }
+
     return $bResult;
   }
 

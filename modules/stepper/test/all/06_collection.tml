@@ -2,11 +2,11 @@
 <ns0:test xmlns:ns0="http://2013.sylma.org/modules/stepper">
   <ns0:page>
     <ns0:steps>
-      <ns0:call path="/sylma/modules/stepper/test/samples/stepper01/clear" method="post"/>
-      <ns0:call path="/sylma/modules/stepper/test/samples/stepper01/collection" method="post"/>
+      <ns0:call path="/sylma/modules/stepper/test/tester/clear" method="post"/>
+      <ns0:call path="/sylma/modules/stepper/test/tester/collection" method="post"/>
     </ns0:steps>
   </ns0:page>
-  <ns0:page url="/sylma/modules/stepper/test/samples/stepper01?file=/test/tmp/collection_01.tml">
+  <ns0:page url="/sylma/modules/stepper/test/tester?file=/test/tmp/collection_01.tml">
     <ns0:steps>
       <ns0:snapshot element="#tester &gt; div &gt; div:nth-child(3)">
         <ns0:content>{"name":"div","children":[{"name":"div","children":[{"name":"button","children":[{"name":"span","content":"▷","position":{"x":1248,"y":58},"size":{"x":13,"y":7}}],"position":{"x":1245,"y":54},"size":{"x":19,"y":16}},{"name":"button","children":[{"name":"span","content":"▶","position":{"x":1227,"y":58},"size":{"x":13,"y":7}}],"position":{"x":1224,"y":54},"size":{"x":19,"y":16}},{"name":"h4","content":"/test/tmp/sub1","position":{"x":1017,"y":54},"size":{"x":250,"y":24}},{"name":"div","children":[{"name":"span","content":".","position":{"x":0,"y":0},"size":{"x":0,"y":0}}],"position":{"x":1017,"y":77},"size":{"x":250,"y":0}}],"position":{"x":1017,"y":48},"size":{"x":250,"y":30}},{"name":"div","children":[{"name":"button","children":[{"name":"span","content":"▷","position":{"x":1248,"y":88},"size":{"x":13,"y":7}}],"position":{"x":1245,"y":83},"size":{"x":19,"y":16}},{"name":"button","children":[{"name":"span","content":"▶","position":{"x":1227,"y":88},"size":{"x":13,"y":7}}],"position":{"x":1224,"y":83},"size":{"x":19,"y":16}},{"name":"h4","content":"/test/tmp/sub2","position":{"x":1017,"y":83},"size":{"x":250,"y":24}},{"name":"div","children":[{"name":"span","content":".","position":{"x":0,"y":0},"size":{"x":0,"y":0}}],"position":{"x":1017,"y":107},"size":{"x":250,"y":0}}],"position":{"x":1017,"y":77},"size":{"x":250,"y":30}},{"name":"span","content":".","position":{"x":0,"y":0},"size":{"x":0,"y":0}}],"position":{"x":1017,"y":48},"size":{"x":250,"y":59}}</ns0:content>
@@ -47,7 +47,7 @@
       </ns0:watcher>
     </ns0:steps>
   </ns0:page>
-  <ns0:page url="/sylma/modules/stepper/test/samples/stepper01?file=/test/tmp/collection_01.tml">
+  <ns0:page url="/sylma/modules/stepper/test/tester?file=/test/tmp/collection_01.tml">
     <ns0:steps>
       <ns0:snapshot element="#tester &gt; div &gt; div:nth-child(3)">
         <ns0:content>{"name":"div","children":[{"name":"div","children":[{"name":"button","children":[{"name":"span","content":"▷","position":{"x":1248,"y":58},"size":{"x":13,"y":7}}],"position":{"x":1245,"y":54},"size":{"x":19,"y":16}},{"name":"button","children":[{"name":"span","content":"▶","position":{"x":1227,"y":58},"size":{"x":13,"y":7}}],"position":{"x":1224,"y":54},"size":{"x":19,"y":16}},{"name":"h4","content":"/test/tmp/sub1","position":{"x":1017,"y":54},"size":{"x":250,"y":24}},{"name":"div","children":[{"name":"span","content":".","position":{"x":0,"y":0},"size":{"x":0,"y":0}}],"position":{"x":1017,"y":77},"size":{"x":250,"y":0}}],"position":{"x":1017,"y":48},"size":{"x":250,"y":30}},{"name":"div","children":[{"name":"button","children":[{"name":"span","content":"▷","position":{"x":1248,"y":88},"size":{"x":13,"y":7}}],"position":{"x":1245,"y":83},"size":{"x":19,"y":16}},{"name":"button","children":[{"name":"span","content":"▶","position":{"x":1227,"y":88},"size":{"x":13,"y":7}}],"position":{"x":1224,"y":83},"size":{"x":19,"y":16}},{"name":"h4","content":"/test/tmp/sub2","position":{"x":1017,"y":83},"size":{"x":250,"y":24}},{"name":"div","children":[{"name":"span","content":".","position":{"x":0,"y":0},"size":{"x":0,"y":0}}],"position":{"x":1017,"y":107},"size":{"x":250,"y":0}}],"position":{"x":1017,"y":77},"size":{"x":250,"y":30}},{"name":"span","content":".","position":{"x":0,"y":0},"size":{"x":0,"y":0}}],"position":{"x":1017,"y":48},"size":{"x":250,"y":59}}</ns0:content>
@@ -70,7 +70,7 @@
       </ns0:snapshot>
     </ns0:steps>
   </ns0:page>
-  <ns0:page url="/sylma/modules/stepper/test/samples/stepper01?file=/test/tmp/collection_01.tml">
+  <ns0:page url="/sylma/modules/stepper/test/tester?file=/test/tmp/collection_01.tml">
     <ns0:steps>
       <ns0:event name="click" element="#tester &gt; div &gt; div:nth-child(1) &gt; button:nth-child(2)"/>
       <ns0:watcher element="#tester &gt; div:nth-child(2) &gt; iframe" delay="3000">

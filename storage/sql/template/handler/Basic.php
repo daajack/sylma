@@ -111,12 +111,12 @@ class Basic extends sql\schema\Handler {
     return $this->getView()->getCurrentTemplate()->getPather();
   }
 
-  public function parsePathToken(template\parser\tree $source, array $aPath, $sMode, $bRead = false, array $aArguments = array()) {
+  public function parsePathToken(template\parser\tree $source, array $aPath, $sMode, $bRead = false, array $aArguments = array(), $bStatic = false) {
 
     $pather = $this->getPather();
     $pather->setSource($source);
 
-    $result = $pather->parsePathToken($aPath, $sMode, $bRead, $aArguments);
+    $result = $pather->parsePathToken($aPath, $sMode, $bRead, $aArguments, $bStatic);
 
     return $result;
   }

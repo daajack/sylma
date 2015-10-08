@@ -379,11 +379,11 @@ class Pather extends component\Child {
    * @param array $aArguments
    * @return type
    */
-  public function parsePathToken(array $aPath, $sMode, $bRead, array $aArguments = array()) {
+  public function parsePathToken(array $aPath, $sMode, $bRead, array $aArguments = array(), $bStatic = false) {
 
     if ($aPath) {
 
-      $result = $this->parsePathTokenValue(array_shift($aPath), $aPath, $sMode, $bRead, $aArguments);
+      $result = $this->parsePathTokenValue(array_shift($aPath), $aPath, $sMode, $bRead, $aArguments, $bStatic);
     }
     else {
 
@@ -397,7 +397,7 @@ class Pather extends component\Child {
   /**
    * Apply single token, can find : variable, expression, string, numeric, function, default (key)
    */
-  protected function parsePathTokenValue($sPath, array $aPath, $sMode, $bRead, array $aArguments = array()) {
+  protected function parsePathTokenValue($sPath, array $aPath, $sMode, $bRead, array $aArguments = array(), $bStatic = false) {
 
     if ($aMatch = $this->matchVariable($sPath)) {
 
@@ -423,7 +423,7 @@ class Pather extends component\Child {
     }
     else if ($sPath) {
 
-      $mResult = $this->parsePathDefault($sPath, $aPath, $sMode, $bRead, $aArguments);
+      $mResult = $this->parsePathDefault($sPath, $aPath, $sMode, $bRead, $aArguments, $bStatic);
     }
     else {
 
@@ -434,7 +434,7 @@ class Pather extends component\Child {
     return $mResult;
   }
 
-  protected function parsePathDefault($sPath, array $aPath, $sMode, $bRead, array $aArguments = array()) {
+  protected function parsePathDefault($sPath, array $aPath, $sMode, $bRead, array $aArguments = array(), $bStatic = false) {
 
     $this->launchException('No default action defined');
   }

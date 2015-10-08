@@ -61,12 +61,12 @@ abstract class Basic extends Asserter {
     return array_filter($aResult);
   }
 
-  public function copyFile($sPath) {
+  public function copyFile($sPath, $sName = '') {
 
     $dir = $this->getDirectory(self::TEST_DIRECTORY);
     $file = $this->getFile($sPath);
 
-    $cache = $file->copy($dir);
+    $cache = $file->copy($dir, $sName);
 
     return $cache;
   }

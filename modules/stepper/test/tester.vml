@@ -21,7 +21,7 @@
       <cls:classes>
         <cls:class alias="tree">
           <cls:classes>
-            <cls:class alias="cached" name="\sylma\modules\stepper\test\samples\Stepper01"/>
+            <cls:class alias="cached" name="\sylma\modules\stepper\test\Tester"/>
           </cls:classes>
         </cls:class>
       </cls:classes>
@@ -32,7 +32,7 @@
   <view:view>
 
     <tpl:template mode="path">
-      <le:path>../empty</le:path>
+      <le:path>empty</le:path>
     </tpl:template>
 
   </view:view>

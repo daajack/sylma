@@ -48,7 +48,7 @@ class Security extends tester\Prepare implements core\argumentable {
 
   protected function createManager($sPath) {
 
-    $result = $this->create('manager', array(\Sylma::ROOT));
+    $result = $this->create('manager', array(\Sylma::ROOT, true));
     $result->loadDirectory($sPath);
 
     return $result;

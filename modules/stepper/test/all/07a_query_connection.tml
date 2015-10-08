@@ -13,7 +13,7 @@
       </ns0:snapshot>
     </ns0:steps>
   </ns0:page>
-  <ns0:page url="/sylma/modules/stepper/test/samples/stepper01?dir=/test/tmp">
+  <ns0:page url="/sylma/modules/stepper/test/tester?dir=/test/tmp">
     <ns0:steps>
       <ns0:event name="click" element="#tester &gt; div &gt; div:nth-child(2) &gt; button:nth-child(4)"/>
       <ns0:watcher element="#tester &gt; div &gt; div:nth-child(2) &gt; div:nth-child(6) &gt; ul &gt; div:nth-child(7) &gt; li"/>
@@ -34,7 +34,7 @@
       <ns0:query creation="2014-03-20 23:35:05" connection="test">../empty01.sql</ns0:query>
     </ns0:steps>
   </ns0:page>
-  <ns0:page url="/sylma/modules/stepper/test/samples/stepper01?dir=/test/tmp">
+  <ns0:page url="/sylma/modules/stepper/test/tester?dir=/test/tmp">
     <ns0:steps>
       <ns0:event name="click" element="#tester &gt; div &gt; div:nth-child(1) &gt; button:nth-child(2)"/>
       <ns0:watcher element="#tester &gt; div &gt; div:nth-child(2) &gt; div:nth-child(6) &gt; ul &gt; div:nth-child(7) &gt; li"/>

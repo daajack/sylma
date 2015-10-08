@@ -1,0 +1,626 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tst:tests
+  xmlns:tst="http://www.sylma.org/modules/tester/parser"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:sql="http://2013.sylma.org/storage/sql"
+  xmlns:ls="http://2013.sylma.org/parser/security"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:cls="http://2013.sylma.org/core/factory"
+
+  xmlns:user="http://2013.sylma.org/view/test/sample1"
+  xmlns:group="http://2013.sylma.org/view/test/sample2"
+>
+  <tst:description>Collection</tst:description>
+  <tst:test name="Simple order">
+    <tst:prepare>
+      $manager->resetDB();
+    </tst:prepare>
+    <tst:document>
+      <view:view user:ns="ns">
+        <sql:resource multiple="x"/>
+        <sql:order>name</sql:order>
+        <view:schema>samples/user1.xql</view:schema>
+        <tpl:template>
+          <ul>
+            <tpl:apply select="*"/>
+          </ul>
+        </tpl:template>
+        <tpl:template match="user:user">
+          <li>
+            <tpl:apply select="name"/>
+          </li>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <ul>
+        <li>admin</li>
+        <li>root</li>
+        <li>webmaster</li>
+      </ul>
+    </tst:node>
+  </tst:test>
+  <tst:test name="Order on numeric">
+    <tst:document>
+      <view:view user:ns="ns">
+        <sql:resource multiple="x"/>
+        <sql:order>age</sql:order>
+        <view:schema>samples/user1c.xql</view:schema>
+        <tpl:template>
+          <ul>
+            <tpl:apply select="*"/>
+          </ul>
+        </tpl:template>
+        <tpl:template match="user:user1c">
+          <li>
+            <tpl:apply select="name"/>
+          </li>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <ul>
+        <li>webmaster</li>
+        <li>admin</li>
+        <li>root</li>
+      </ul>
+    </tst:node>
+  </tst:test>
+  <tst:test name="Order case insensitive">
+    <tst:document>
+      <view:view user:ns="ns">
+        <sql:resource multiple="x"/>
+        <sql:order>name</sql:order>
+        <view:schema>samples/user1e.xql</view:schema>
+        <tpl:template>
+          <ul>
+            <tpl:apply select="*"/>
+          </ul>
+        </tpl:template>
+        <tpl:template match="user:user1e">
+          <li value="{id}">
+            <tpl:apply select="name"/>
+          </li>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <ul>
+        <li value="1">alpha</li>
+        <li value="2">Alpha2</li>
+        <li value="3">beta</li>
+        <li value="4">Beta</li>
+        <li value="5">Beta</li>
+        <li value="6">beta3</li>
+        <li value="7">charlie</li>
+      </ul>
+    </tst:node>
+  </tst:test>
+  <tst:test name="Order inverted">
+    <tst:document>
+      <view:view user:ns="ns">
+        <sql:resource multiple="x"/>
+        <sql:order>!name</sql:order>
+        <view:schema>samples/user1.xql</view:schema>
+        <tpl:template>
+          <ul>
+            <tpl:apply select="*"/>
+          </ul>
+        </tpl:template>
+        <tpl:template match="user:user">
+          <li>
+            <tpl:apply select="name"/>
+          </li>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <ul>
+        <li>webmaster</li>
+        <li>root</li>
+        <li>admin</li>
+      </ul>
+    </tst:node>
+  </tst:test>
+  <tst:test name="Order static function">
+    <tst:document>
+      <view:view user:ns="ns">
+        <sql:resource multiple="x"/>
+        <sql:order function="x">AVG(id)</sql:order>
+        <view:schema>samples/user1.xql</view:schema>
+        <tpl:template>
+          <ul>
+            <tpl:apply select="*"/>
+          </ul>
+        </tpl:template>
+        <tpl:template match="user:user">
+          <li>
+            <tpl:apply select="name"/>
+          </li>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <ul>
+        <li>root</li>
+      </ul>
+    </tst:node>
+  </tst:test>
+  <tst:test name="Order dummy function">
+    <tst:document>
+      <view:view user:ns="ns">
+        <sql:resource multiple="x"/>
+        <view:schema>samples/user1c.xql</view:schema>
+        <tpl:template>
+          <span>
+            <tpl:apply select="*"/>
+            <sql:order>
+              <tpl:read select="'abc'"/>
+            </sql:order>
+          </span>
+        </tpl:template>
+        <tpl:template match="user:user1c">
+          <sql:function name="min" element="age" alias="abc"/>
+          <tpl:read select="column()/abc"/>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <span>8</span>
+    </tst:node>
+  </tst:test>
+  <tst:test name="Dynamic order">
+    <tst:document>
+      <view:view user:ns="ns">
+        <sql:resource multiple="x"/>
+        <le:argument name="order">
+          <le:default>name</le:default>
+        </le:argument>
+        <sql:order><le:get-argument name="order"/></sql:order>
+        <view:schema>samples/user1e.xql</view:schema>
+        <tpl:template>
+          <ul>
+            <tpl:apply select="*"/>
+          </ul>
+        </tpl:template>
+        <tpl:template match="user:user1e">
+          <li value="{id}">
+            <tpl:apply select="name"/>
+          </li>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <ul>
+        <li value="1">alpha</li>
+        <li value="2">Alpha2</li>
+        <li value="3">beta</li>
+        <li value="4">Beta</li>
+        <li value="5">Beta</li>
+        <li value="6">beta3</li>
+        <li value="7">charlie</li>
+      </ul>
+    </tst:node>
+  </tst:test>
+  <tst:test name="Dynamic ambigous order">
+    <tst:document>
+      <view:view user:ns="ns">
+        <sql:resource multiple="x"/>
+        <le:argument name="order">
+          <le:default>name</le:default>
+        </le:argument>
+        <sql:order><le:get-argument name="order"/></sql:order>
+        <view:schema>samples/user2.xql</view:schema>
+        <tpl:template>
+          <ul>
+            <tpl:apply select="*"/>
+          </ul>
+        </tpl:template>
+        <tpl:template match="user:user">
+          <li>
+            <tpl:read select="id"/>-<tpl:read select="group_id/ref()/name"/>
+          </li>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <ul>
+        <li>3-</li>
+        <li>2-group01</li>
+        <li>1-group02</li>
+      </ul>
+    </tst:node>
+  </tst:test>
+  <tst:test name="Multiple dynamic order">
+    <tst:document>
+      <view:view user:ns="ns">
+        <sql:resource multiple="x"/>
+        <le:argument name="order">
+          <le:default>name,!email</le:default>
+        </le:argument>
+        <sql:order><le:get-argument name="order"/></sql:order>
+        <view:schema>samples/user1e.xql</view:schema>
+        <tpl:template>
+          <ul>
+            <tpl:apply select="*"/>
+          </ul>
+        </tpl:template>
+        <tpl:template match="user:user1e">
+          <li value="{id}">
+            <tpl:apply select="name"/>,<tpl:apply select="email"/>
+          </li>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <ul>
+        <li value="1">alpha,alpha@sylma.org</li>
+        <li value="2">Alpha2,Alpha2@sylma.org</li>
+        <li value="5">Beta,charlie@sylma.org</li>
+        <li value="4">Beta,beta@sylma.org</li>
+        <li value="3">beta,alpha@sylma.org</li>
+        <li value="6">beta3,beta3@sylma.org</li>
+        <li value="7">charlie,charlie@sylma.org</li>
+      </ul>
+    </tst:node>
+  </tst:test>
+  <tst:test name="Dynamic ambigous order without view" disabled="true">
+    <tst:document>
+      <view:view user:ns="ns">
+        <sql:resource multiple="x"/>
+        <le:argument name="order">
+          <le:default>name</le:default>
+        </le:argument>
+        <sql:order><le:get-argument name="order"/></sql:order>
+        <view:schema>samples/user2.xql</view:schema>
+        <tpl:template>
+          <ul>
+            <tpl:apply select="*"/>
+          </ul>
+        </tpl:template>
+        <tpl:template match="user:user">
+          <li>
+            <tpl:read select="id"/>-<tpl:read select="group_id/ref()/id"/>
+          </li>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <ul>
+        <li>admin</li>
+        <li>root</li>
+        <li>webmaster</li>
+      </ul>
+    </tst:node>
+  </tst:test>
+
+  <tst:test name="Simple distinct">
+    <tst:document>
+      <view:view user:ns="ns" group:ns="ns">
+        <sql:resource multiple="multiple">
+          <sql:table>user_multi</sql:table>
+        </sql:resource>
+        <view:schema>samples/user2.xql</view:schema>
+        <tpl:template>
+          <div>
+            <tpl:apply select="distinct(group_id)/*"/>
+          </div>
+        </tpl:template>
+        <tpl:template match="group:group">
+          <span>
+            <tpl:read select="name"/>
+          </span>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <div>
+        <span>group01</span>
+        <span>group02</span>
+      </div>
+    </tst:node>
+  </tst:test>
+  <tst:test name="Static" exception-parser="\sylma\core\exception">
+    <tst:document>
+      <view:view user:ns="ns" group:ns="ns">
+        <sql:resource multiple="multiple"/>
+        <view:schema>samples/user2.xql</view:schema>
+        <tpl:template>
+          <div>
+            <tpl:apply select="static()"/>
+          </div>
+        </tpl:template>
+        <tpl:template match="*">
+          <span>
+            <tpl:read select="name"/>
+          </span>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+  </tst:test>
+  <tst:test name="Static using dummy">
+    <tst:document>
+      <view:view user:ns="ns" group:ns="ns">
+
+        <sql:resource multiple="multiple"/>
+        <view:schema>samples/user2.xql</view:schema>
+
+        <tpl:template>
+
+          <tpl:apply select="source()"/>
+          <tpl:apply select="static()"/>
+
+        </tpl:template>
+
+        <tpl:template match="sql:table">
+          <ul>
+            <tpl:apply select="*"/>
+          </ul>
+        </tpl:template>
+
+        <tpl:template match="*">
+          <li>
+            <tpl:read/>
+          </li>
+        </tpl:template>
+
+      </view:view>
+    </tst:document>
+    <tst:load>
+      return array(
+        'post' => $manager->createArgument(array(
+          'id' => 0,
+          'name' => 'myname',
+          'group_id' => 1,
+        )),
+      );
+    </tst:load>
+    <tst:node>
+      <ul>
+        <li>0</li>
+        <li>myname</li>
+        <li>1</li>
+      </ul>
+    </tst:node>
+  </tst:test>
+  <tst:test name="Cannot read in static" build-exception="Cannot read in static">
+    <tst:document>
+      <view:view user:ns="ns" group:ns="ns">
+        <sql:resource multiple="multiple"/>
+        <view:schema>samples/user2.xql</view:schema>
+        <tpl:template>
+          <div>
+            <tpl:read select="static()/name"/>
+          </div>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+  </tst:test>
+  <tst:test name="Static apply field">
+    <tst:document>
+      <view:view user:ns="ns" group:ns="ns">
+        <sql:resource multiple="multiple"/>
+        <view:schema>samples/user2.xql</view:schema>
+        <tpl:template>
+          <div>
+            <tpl:read select="static()/name/title()"/>
+            <tpl:text> - </tpl:text>
+            <tpl:apply select="static()/name"/>
+          </div>
+        </tpl:template>
+        <tpl:template match="*">
+          <tpl:read select="name()"/>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <div>name - name</div>
+    </tst:node>
+  </tst:test>
+  <tst:test name="Group order">
+    <tst:prepare>
+
+      $manager->getScript('/#sylma/storage/sql/alter/index.vml', array(
+        'file' => '/#sylma/storage/sql/test/samples/country01.xql',
+      ));
+
+      $manager->getScript('/#sylma/storage/sql/alter/index.vml', array(
+        'file' => '/#sylma/storage/sql/test/samples/city01.xql',
+      ));
+
+      $manager->runQueryFile('samples/country02.sql');
+
+    </tst:prepare>
+    <tst:document>
+      <view:view user:ns="ns">
+
+        <sql:resource multiple="x"/>
+
+        <view:schema>samples/city01.xql</view:schema>
+
+        <tpl:template>
+
+          <sql:order>country,name</sql:order>
+
+          <ul>
+            <tpl:apply select="group()" mode="group">
+              <tpl:read select="country"/>
+            </tpl:apply>
+          </ul>
+        </tpl:template>
+
+        <tpl:template mode="group">
+          <li>
+            <h2>
+              <tpl:read select="country/name"/>
+            </h2>
+            <tpl:apply select="*"/>
+          </li>
+        </tpl:template>
+
+        <tpl:template match="sql:table">
+          <span>
+            <tpl:if test="position() = 1">
+              <tpl:read select="'[{name}]'"/>
+              <tpl:else>
+                <tpl:read select="name"/>
+              </tpl:else>
+            </tpl:if>
+          </span>
+        </tpl:template>
+
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <ul>
+        <li>
+          <h2>Turkey</h2>
+          <span>[Istanbul]</span>
+        </li>
+        <li>
+          <h2>India</h2>
+          <span>[Delhi]</span>
+        </li>
+        <li>
+          <h2>Russia</h2>
+          <span>[Iekaterinbourg]</span>
+          <span>Moscow</span>
+        </li>
+      </ul>
+    </tst:node>
+  </tst:test>
+  <tst:test name="Group order dynamic" run="false">
+    <tst:prepare>
+
+      $manager->getScript('/#sylma/storage/sql/alter/index.vml', array(
+        'file' => '/#sylma/storage/sql/test/samples/country01.xql',
+      ));
+
+      $manager->getScript('/#sylma/storage/sql/alter/index.vml', array(
+        'file' => '/#sylma/storage/sql/test/samples/city01.xql',
+      ));
+
+      $manager->runQueryFile('samples/country02.sql');
+
+    </tst:prepare>
+    <tst:document>
+      <view:view user:ns="ns">
+
+        <sql:resource multiple="x"/>
+
+        <sql:order>
+          <le:get-argument name="order"/>
+        </sql:order>
+        <view:schema>samples/city01.xql</view:schema>
+
+        <tpl:template>
+          <ul>
+            <tpl:apply select="group()" mode="group">
+              <tpl:apply mode="group/filters"/>
+            </tpl:apply>
+          </ul>
+        </tpl:template>
+
+        <tpl:template mode="group/filters">
+          <tpl:variable name="group">
+            <tpl:apply mode="group/argument"/>
+          </tpl:variable>
+          <tpl:switch test="$group">
+            <tpl:case value="name">
+              <tpl:read select="name/format(end=1)"/>
+            </tpl:case>
+            <tpl:default>
+              <tpl:read select="country"/>
+            </tpl:default>
+          </tpl:switch>
+        </tpl:template>
+
+        <tpl:template mode="group">
+          <tpl:variable name="group">
+            <tpl:apply mode="group/argument"/>
+          </tpl:variable>
+          <li>
+            <h2>
+              <tpl:switch test="$group">
+                <tpl:case value="country">
+                  <tpl:read select="country/name"/>
+                </tpl:case>
+                <tpl:default>
+                  <tpl:read select="group-value()"/>
+                </tpl:default>
+              </tpl:switch>
+            </h2>
+            <tpl:apply select="*"/>
+          </li>
+        </tpl:template>
+
+        <tpl:template match="*" mode="group/argument">
+          <le:get-argument name="group"/>
+        </tpl:template>
+
+        <tpl:template match="sql:table">
+          <span>
+            <tpl:read select="name"/>
+          </span>
+        </tpl:template>
+
+      </view:view>
+    </tst:document>
+    <tst:node name="node1">
+      <ul>
+        <li>
+          <h2>D</h2>
+          <span>Delhi</span>
+        </li>
+        <li>
+          <h2>I</h2>
+          <span>Iekaterinbourg</span>
+          <span>Istanbul</span>
+        </li>
+        <li>
+          <h2>M</h2>
+          <span>Moscow</span>
+        </li>
+      </ul>
+    </tst:node>
+    <tst:node name="node2">
+      <ul>
+        <li>
+          <h2>India</h2>
+          <span>Delhi</span>
+        </li>
+        <li>
+          <h2>Russia</h2>
+          <span>Iekaterinbourg</span>
+          <span>Moscow</span>
+        </li>
+        <li>
+          <h2>Turkey</h2>
+          <span>Istanbul</span>
+        </li>
+      </ul>
+    </tst:node>
+    <tst:expected>
+
+      $node = $manager->getArgument('node');
+
+      $view1 = $manager->loadScript(array(
+        'order' => 'name',
+        'group' => 'name',
+      ));
+
+      $view2 = $manager->loadScript(array(
+        'order' => 'country,name',
+        'group' => 'country',
+      ));
+
+      $manager->compareNodes($view1, $node->get('node1'));
+      $manager->compareNodes($view2, $node->get('node2'));
+
+      return true;
+
+    </tst:expected>
+  </tst:test>
+</tst:tests>

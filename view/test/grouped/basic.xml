@@ -48,6 +48,7 @@
     <tst:expected>
 
       $file = $manager->copyFile('samples/sample1.vml');
+      $manager->copyFile('samples/user1.xql');
 
       $result = $file->run();
       $cache = $manager->getManager('parser')->getCachedFile($file);

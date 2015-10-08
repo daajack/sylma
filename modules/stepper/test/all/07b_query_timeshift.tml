@@ -2,7 +2,7 @@
 <ns0:test xmlns:ns0="http://2013.sylma.org/modules/stepper">
   <ns0:page>
     <ns0:steps>
-      <ns0:call path="/sylma/modules/stepper/test/samples/stepper01/sample" method="post"/>
+      <ns0:call path="/sylma/modules/stepper/test/tester/sample" method="post"/>
       <ns0:call path="/sylma/storage/sql/alter?file=/sylma/modules/stepper/test/samples/schema01.xql" method="get"/>
       <ns0:query creation="2014-03-12 17:24:01">../empty01.sql</ns0:query>
     </ns0:steps>
@@ -14,7 +14,7 @@
       </ns0:snapshot>
     </ns0:steps>
   </ns0:page>
-  <ns0:page url="/sylma/modules/stepper/test/samples/stepper01?dir=/test/tmp">
+  <ns0:page url="/sylma/modules/stepper/test/tester?dir=/test/tmp">
     <ns0:steps>
       <ns0:event name="click" element="#tester &gt; div &gt; div:nth-child(2) &gt; button:nth-child(3)"/>
       <ns0:watcher element="#tester &gt; div &gt; div:nth-child(2)">
@@ -29,7 +29,7 @@
       </ns0:watcher>
     </ns0:steps>
   </ns0:page>
-  <ns0:page url="/sylma/modules/stepper/test/samples/stepper01?dir=/test/tmp">
+  <ns0:page url="/sylma/modules/stepper/test/tester?dir=/test/tmp">
     <ns0:steps>
       <ns0:event name="click" element="#tester &gt; div &gt; div:nth-child(2) &gt; button:nth-child(3)"/>
       <ns0:watcher element="#tester &gt; div &gt; div:nth-child(2) &gt; div:nth-child(6) &gt; ul &gt; div:nth-child(7) &gt; li">
@@ -43,7 +43,7 @@
         <ns0:content>{"name":"div","children":[{"name":"div","children":[{"name":"h4","content":"Faith Mills","position":{"x":13,"y":78},"size":{"x":1254,"y":14}},{"name":"a","content":"faith.mills@example.com","position":{"x":13,"y":108},"size":{"x":136,"y":14}},{"name":"span","content":"2014-01-17 19:39","position":{"x":152,"y":108},"size":{"x":98,"y":14}}],"position":{"x":13,"y":78},"size":{"x":1254,"y":44}}],"position":{"x":12,"y":62},"size":{"x":1256,"y":402}}</ns0:content>
         <ns0:exclude element="#content &gt; div &gt; span"/>
       </ns0:snapshot>
-      <ns0:call path="/sylma/modules/stepper/test/samples/stepper01/getTimeshift" method="post">
+      <ns0:call path="/sylma/modules/stepper/test/tester/getTimeshift" method="post">
         <ns0:variable name="time"/>
       </ns0:call>
       <ns0:watcher element="#content &gt; div &gt; span">

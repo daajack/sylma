@@ -199,7 +199,7 @@ class Collection extends Dummed implements sql\template\pathable {
 
       case 'static' :
 
-        $result = $aPath ? $this->getHandler()->parsePathToken($this->getTable(), $aPath, $sMode, true, $aArguments) : $this->getTable()->reflectApply($sMode, $aArguments, true);
+        $result = $this->reflectFunctionStatic($aPath, $sMode, $bRead, $aArguments);
         break;
 
       case 'counter' :
@@ -244,6 +244,20 @@ class Collection extends Dummed implements sql\template\pathable {
       default :
 
         $result = parent::reflectApplyFunction($sName, $aPath, $sMode, $bRead, $sArguments, $aArguments);
+    }
+
+    return $result;
+  }
+
+  protected function reflectFunctionStatic(array $aPath, $sMode, $bRead = false, array $aArguments = array()) {
+
+    if ($aPath) {
+
+      $result = $this->getHandler()->parsePathToken($this->getTable(), $aPath, $sMode, $bRead, $aArguments, true);
+    }
+    else {
+
+      $result = $this->getTable()->reflectApply($sMode, $aArguments, true);
     }
 
     return $result;

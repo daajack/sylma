@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<tst:tests xmlns:tst="http://www.sylma.org/storage/fs/test" xmlns="http://www.sylma.org" xmlns:html="http://www.w3.org/1999/xhtml">
+<tst:tests
+  xmlns:tst="http://www.sylma.org/storage/fs/test"
+  xmlns="http://www.sylma.org"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+>
   <tst:description>Basic manipulation methods</tst:description>
   <tst:test name="Auto-update">
     <tst:expected>
@@ -96,6 +100,38 @@
       $manager->assertTrue($dir->checkRights(\Sylma::MODE_READ), 'read');
 
       return true;
+
+    </tst:expected>
+  </tst:test>
+  <tst:test name="Cannot delete file" catch="\sylma\core\exception">
+    <tst:prepare>
+
+      $manager->setUser('tester02');
+
+      $manager->copyFile('samples/no_write.sml', 'directory.sml');
+      $file = $manager->copyFile('samples/file.txt');
+
+      $dir = $manager->getDirectory($manager::TEST_DIRECTORY);
+      $dir = $dir->update();
+
+      $manager->setUser('tester02');
+      $manager->set('file', $file);
+
+    </tst:prepare>
+    <tst:expected>
+
+      $file = $manager->get('file');
+      $fs = $manager->getControler('fs/test');
+      $file = $fs->getFile((string) $file);
+
+      if (!$file instanceof \sylma\storage\fs\editable\file) {
+
+        $manager->launchException('File must be editable');
+      }
+
+      $file->delete();
+
+      return false;
 
     </tst:expected>
   </tst:test>

@@ -235,7 +235,6 @@
         </tpl:template>
         <tpl:template match="*">
           <input name="{alias('form')}"/>
-          <tpl:register/>
         </tpl:template>
       </view:view>
     </tst:document>

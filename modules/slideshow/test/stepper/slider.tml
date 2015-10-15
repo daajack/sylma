@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ns0:test xmlns:ns0="http://2013.sylma.org/modules/stepper">
+  <ns0:page>
+    <ns0:steps>
+      <ns0:call path="/sylma/modules/rebuild/standalone?path=/sylma/modules/slideshow/test/slider.vml" method="get"/>
+    </ns0:steps>
+  </ns0:page>
+  <ns0:page url="/sylma/modules/slideshow/test/slider">
+    <ns0:steps>
+      <ns0:snapshot element="#content">
+        <ns0:content>{"name":"div","children":[{"name":"div","content":"","position":{"x":218,"y":159},"size":{"x":1044,"y":0}},{"name":"div","children":[{"name":"div","content":"","position":{"x":419,"y":296},"size":{"x":400,"y":0}},{"name":"div","children":[{"name":"div","content":"","position":{"x":218,"y":159},"size":{"x":400,"y":0}},{"name":"div","children":[{"name":"div","content":"","position":{"x":218,"y":159},"size":{"x":400,"y":300}},{"name":"div","content":"","position":{"x":618,"y":159},"size":{"x":400,"y":300}},{"name":"div","content":"","position":{"x":1018,"y":159},"size":{"x":400,"y":300}},{"name":"div","content":"","position":{"x":1418,"y":159},"size":{"x":400,"y":300}}],"position":{"x":218,"y":159},"size":{"x":1600,"y":300}},{"name":"div","children":[{"name":"a","content":"&lt;&lt;","position":{"x":402,"y":447},"size":{"x":14,"y":14}},{"name":"div","children":[{"name":"a","children":[{"name":"span","content":"","position":{"x":407,"y":465},"size":{"x":7,"y":7}}],"position":{"x":404,"y":461},"size":{"x":13,"y":16}},{"name":"a","children":[{"name":"span","content":"","position":{"x":421,"y":465},"size":{"x":7,"y":7}}],"position":{"x":418,"y":461},"size":{"x":13,"y":16}}],"position":{"x":218,"y":461},"size":{"x":400,"y":16}},{"name":"a","content":"&gt;&gt;","position":{"x":419,"y":447},"size":{"x":14,"y":14}}],"position":{"x":218,"y":447},"size":{"x":400,"y":14}}],"position":{"x":218,"y":159},"size":{"x":400,"y":300}}],"position":{"x":218,"y":159},"size":{"x":1044,"y":300}}],"position":{"x":200,"y":136},"size":{"x":1080,"y":646}}</ns0:content>
+      </ns0:snapshot>
+      <ns0:watcher element="#content &gt; div:nth-child(2) &gt; div:nth-child(2) &gt; div:nth-child(2)">
+        <ns0:property name="margin-left">0</ns0:property>
+      </ns0:watcher>
+      <ns0:watcher element="#content &gt; div:nth-child(2) &gt; div:nth-child(2) &gt; div:nth-child(2)" delay="3000">
+        <ns0:property name="margin-left">-400</ns0:property>
+      </ns0:watcher>
+      <ns0:watcher element="#content &gt; div:nth-child(2) &gt; div:nth-child(2) &gt; div:nth-child(2)" delay="2500">
+        <ns0:property name="margin-left">-800</ns0:property>
+      </ns0:watcher>
+    </ns0:steps>
+  </ns0:page>
+</ns0:test>

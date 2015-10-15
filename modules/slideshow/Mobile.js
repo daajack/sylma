@@ -19,6 +19,8 @@ sylma.slideshow.MobileProps = {
     var main = this.getParent('main');
     this.device = main.getDevice();
 
+    this.initPeriod();
+
     if (this.get('scrollTop') && this.isMobile()) {
 
       this.device.setupScroll();

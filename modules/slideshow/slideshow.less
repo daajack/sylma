@@ -37,13 +37,21 @@
     }
   }
 
-  &.slider .slide
+  &.slider
   {
-    position: initial;
-
-    &.ready
+    .notransition
     {
-      opacity: 1;
+      transition: none;
+    }
+
+    .slide
+    {
+      position: initial;
+
+      &.ready
+      {
+        opacity: 1;
+      }
     }
   }
 }

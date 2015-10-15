@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<view:view
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:js="http://2013.sylma.org/template/binder"
+
+  xmlns:sql="http://2013.sylma.org/storage/sql"
+
+  extends="default.vml"
+>
+
+  <tpl:template>
+
+    <tpl:apply mode="slideshow/contexts/css"/>
+    <tpl:apply mode="slideshow/contexts"/>
+
+    <js:include>/#sylma/modules/html/Main.js</js:include>
+    <js:include>/#sylma/modules/slideshow/Pager.js</js:include>
+    <js:include>/#sylma/modules/slideshow/Mobile.js</js:include>
+    <js:include>/#sylma/modules/slideshow/Slider.js</js:include>
+
+    <div js:class="sylma.html.Main" js:parent-name="main">
+
+      <div js:class="sylma.slideshow.Slider" js:parent-name="handler" js:name="slideshow" class="slideshow slider">
+
+        <tpl:apply mode="slideshow/content"/>
+
+      </div>
+
+    </div>
+
+  </tpl:template>
+
+</view:view>

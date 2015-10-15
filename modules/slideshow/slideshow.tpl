@@ -49,19 +49,19 @@
     <tpl:apply mode="top"/>
 
     <div class="loading" js:node="loading"/>
-    <div class="container" js:node="container">
-      <tpl:apply mode="slideshow/container"/>
-    </div>
+    <tpl:apply mode="slideshow/container"/>
 
     <tpl:apply mode="slideshow/pager"/>
 
   </tpl:template>
 
-  <tpl:template match="*" mode="slideshow/delay">12000</tpl:template>
+  <tpl:template match="*" mode="slideshow/delay">7000</tpl:template>
 
   <tpl:template mode="slideshow/container">
-    <tpl:apply mode="query"/>
-    <tpl:apply select="*" mode="slideshow/tree"/>
+    <div class="container" js:node="container">
+      <tpl:apply mode="query"/>
+      <tpl:apply select="*" mode="slideshow/tree"/>
+    </div>
   </tpl:template>
 
   <tpl:template match="*" mode="slideshow/pager">
@@ -90,7 +90,7 @@
           %object%.goNext('normal');
           %object%.resetLoop();
         </js:event>
-        <tpl:apply mode="pager/previous/content"/>
+        <tpl:apply mode="pager/next/content"/>
       </a>
   </tpl:template>
 

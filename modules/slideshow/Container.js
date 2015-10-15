@@ -24,7 +24,7 @@ sylma.slideshow.ContainerProps = {
 
     var main = this.getParent('main');
 
-    this.period = this.options.delay || this.period;
+    this.initPeriod();
 
     if (main) {
 
@@ -47,6 +47,11 @@ sylma.slideshow.ContainerProps = {
         this.startLoop();
       }
     }
+  },
+
+  initPeriod: function () {
+
+    this.period = this.options.delay || this.period;
   },
 
   prepareContainer: function() {
@@ -162,12 +167,13 @@ sylma.slideshow.ContainerProps = {
     this.prepareSlide(this.getPrevious());
     this.prepareSlide(this.getNext());
 
-    this.loop = function() {
+    var loop = function() {
 
       this.updateSpeed();
       this.goNext();
+    };
 
-    }.periodical(this.period, this);
+    this.loop = loop.periodical(this.period, this);
   },
 
   resetLoop: function() {

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<view:view
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:js="http://2013.sylma.org/template/binder"
+
+  xmlns:sql="http://2013.sylma.org/storage/sql"
+>
+
+  <sql:resource multiple="x"/>
+  <view:schema>default.xql</view:schema>
+
+  <tpl:import>../slideshow.tpl</tpl:import>
+
+  <le:context name="css">
+    .slideshow
+    {
+      width: 400px;
+      height: 300px;
+    }
+
+    .slideshow .pager
+    {
+      position: relative;
+      margin-top: -1em;
+    }
+  </le:context>
+
+  <tpl:template match="*" mode="slideshow/delay">2000</tpl:template>
+
+  <tpl:template>
+    <tpl:apply mode="slideshow/contexts/css"/>
+    <tpl:apply/>
+  </tpl:template>
+
+  <tpl:template match="*" mode="slideshow/tree">
+    <tpl:apply mode="slideshow/item"/>
+  </tpl:template>
+
+  <tpl:template match="*" mode="slideshow/files">
+    <le:directory>medias</le:directory>
+  </tpl:template>
+
+  <tpl:template match="*" mode="slideshow/parent"/>
+</view:view>

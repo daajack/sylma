@@ -28,7 +28,7 @@ sylma.slideshow.SliderProps = {
 
   updateWidth: function() {
 
-    this.width = this.getNode().getParent().getStyle('width').toInt();
+    this.width = this.getContainer().getParent().getStyle('width').toInt();
   },
 
   updateSize : function() {

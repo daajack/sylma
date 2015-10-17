@@ -242,10 +242,12 @@ class File extends Resource implements fs\file {
 
   public function run(array $aGet = array(), array $aPost = array(), array $aContexts = array()) {
 
+    $manager = $this->getManager();
+
     return $this->getManager(self::PARSER_MANAGER)->load($this, array(
-      'arguments' => $aGet ? $this->createArgument($aGet) : null,
-      'contexts' => $aContexts ? $this->createArgument($aContexts) : null,
-      'post' => $aPost ? $this->createArgument($aPost) : null,
+      'arguments' => $manager->createArgument($aGet),
+      'post' => $manager->createArgument($aPost),
+      'contexts' => $manager->createArgument($aContexts),
     ));
   }
 

@@ -1,6 +1,6 @@
 <?php
 
-use sylma\core, sylma\modules, sylma\dom, sylma\storage;
+use sylma\core, sylma\modules, sylma\dom, sylma\storage, sylma\core\argument;
 
 class Sylma {
 
@@ -26,6 +26,7 @@ class Sylma {
    * @var core\argument
    */
   private static $settings = null;
+  protected static $isAdmin = null;
 
   protected static $aManagers = array();
   protected static $aFiles = array();
@@ -236,14 +237,21 @@ class Sylma {
 
   public static function isAdmin() {
 
-    $bResult = self::read('debug/enable');
+    if (self::$isAdmin === null) {
 
-    if (!$bResult and $user = self::getManager('user', false)) {
+      $bResult = self::read('debug/enable');
 
-      if ($user->getName() === 'root') {
+      if (!$bResult and $user = self::getManager('user', false)) {
 
-        $bResult = true;
+        if ($user->getName() === 'root') {
+
+          $bResult = true;
+        }
       }
+    }
+    else {
+
+      $bResult = self::$isAdmin;
     }
 
     return $bResult;
@@ -322,6 +330,11 @@ class Sylma {
   public static function isWindows() {
 
     return PHP_OS == 'WINNT';
+  }
+
+  public static function createArgument($mContent = array()) {
+
+    return new argument\Readable($mContent);
   }
 
   public static function includeFile($sFile, array $aSylmaArguments = array(), $bSylmaExternal = false) {

@@ -110,7 +110,7 @@ class Document extends core\window\classes\Container {
       //case action\cached::CONTEXT_DEFAULT : break;
       case 'errors' :
 
-        if (\Sylma::isAdmin()) {
+        if (\Sylma::read('debug/public') || \Sylma::isAdmin()) {
 
           if ($messages = $this->result->getx('//html:div[@id="messages"]', array(), false)) {
 

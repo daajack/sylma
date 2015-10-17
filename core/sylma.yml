@@ -9,6 +9,8 @@ debug :
   enable : false
   # WARNING : if TRUE everybody has admin rights
   rights: false
+  # WARNING : if TRUE exceptions and messages are showed to all users
+  public : false
   show : false
   # if TRUE : log parse component messages, require lot of memory, can reach memory limits
   parser : false
@@ -57,8 +59,6 @@ exception :
   file : error.log
   level : -1
   # DEV
-  # if TRUE everybody will see exception message and vars
-  show : false
   # completely avoid format, /debug/enable must be TRUE
   break : false
 

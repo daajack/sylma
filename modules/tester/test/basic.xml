@@ -69,7 +69,7 @@
         </tst:prepare>
         <tst:expected>
 
-          return true
+          return true;
 
         </tst:expected>
       </tst:test>
@@ -86,7 +86,7 @@
       $handler = $manager->get('handler');
       $profile = array_keys($handler->saveTestProfile());
 
-      $manager->assertEquals($result, false, 'error result');
+      $manager->assertEquals($result, true, 'success result');
 
       //dsp($profile);
 

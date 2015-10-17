@@ -103,9 +103,9 @@ abstract class Domed extends Filed {
   protected function buildScriptArguments(array $aArguments = array(), array $aContexts = array(), array $aPosts = array()) {
 
     return array(
-      'arguments' => $aArguments ? $this->createArgument($aArguments) : null,
-      'contexts' => $aContexts ? $this->createArgument($aContexts) : null,
-      'post' => $aPosts ? $this->createArgument($aPosts) : null,
+      'arguments' => $this->createArgument($aArguments),
+      'contexts' => $this->createArgument($aContexts),
+      'post' => $this->createArgument($aPosts),
     );
   }
 

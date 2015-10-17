@@ -16,6 +16,7 @@ class Standalone extends tester\Parser implements dom\domable {
 
     //$this->initArguments();
     $this->setSettings(\Sylma::get('tester'));
+    $this->initProfile();
   }
 
   public function initTest(fs\file $file, $iTest) {

@@ -20,7 +20,7 @@ class Grouped extends tester\Formed implements core\argumentable {
 
   public function load($sPath, array $aArguments = array(), $bUpdate = true) {
 
-    return $this->getManager(self::PARSER_MANAGER)->load($this->getFile($sPath), $aArguments, $bUpdate);
+    return $this->getManager(self::PARSER_MANAGER)->load($this->getFile($sPath), $this->checkArguments($aArguments), $bUpdate);
   }
 
   protected function loadResult($manager, fs\file $file, array $aArguments, $bRun = true, $bDelete = true) {
@@ -54,7 +54,7 @@ class Grouped extends tester\Formed implements core\argumentable {
   public function loadScript(array $aArguments = array(), array $aPosts = array(), array $aContexts = array()) {
 
     $manager = $this->getManager(self::PARSER_MANAGER);
-    $result = $manager->load($this->getFile(), $aArguments, false);
+    $result = $manager->load($this->getFile(), $this->checkArguments($aArguments), false);
 
     return $result;
   }

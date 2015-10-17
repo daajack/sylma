@@ -180,7 +180,7 @@ class Crud extends reflector\handler\Elemented implements reflector\elemented {
 
     if (!isset($this->aGroups[$sName])) {
 
-      if ($bDebug) $this->launchException('No group with this name');
+      if ($bDebug) $this->launchException('No group named ' . $sName);
       $result = null;
     }
     else {

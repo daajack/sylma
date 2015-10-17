@@ -115,10 +115,6 @@ class Handler extends reflector\handler\Elemented implements reflector\elemented
     $window = $this->getPHPWindow();
     $contexts = $window->getVariable('contexts');
 
-    $isset = $window->callFunction('isset', $window->tokenToInstance('php-boolean'), array($contexts));
-    $content = $window->createCall($window->getSylma(), 'throwException', 'php-boolean', array('No context sent'));
-    $aResult[] = $window->createCondition($window->createNot($isset), $content);
-
     $this->setDirectory(__FILE__);
 
     $context_common = $contexts->call('get', array(self::CONTEXT_JS_COMMON), '\sylma\core\window\context')->getVar(false);
@@ -231,7 +227,6 @@ class Handler extends reflector\handler\Elemented implements reflector\elemented
   public function parseAttributes(dom\element $el, $resultElement, $current) {
 
     $aResult = null;
-    $bRoot = false;
 
     //$el = $this->setNode($el);
     $aResult[] = $this->init();

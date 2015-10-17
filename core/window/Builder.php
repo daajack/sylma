@@ -109,7 +109,8 @@ class Builder extends core\module\Domed {
 
     return $builder->load($window, array(
       'arguments' => $args,
-      //'post' => $this->loadPost(true),
+      'post' => $this->createArgument(array()),
+      'contexts' => $this->createArgument(array()),
     ), $bUpdate, $bRun);
   }
 

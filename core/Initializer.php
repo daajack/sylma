@@ -99,7 +99,7 @@ class Initializer extends module\Domed {
     $user = \Sylma::getManager('user');
     $user->load();
 
-    if (\Sylma::isAdmin()) {
+    if (\Sylma::read('debug/public') || \Sylma::isAdmin()) {
 
       require_once('debug/Functions.php');
     }

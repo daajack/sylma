@@ -303,7 +303,7 @@ class Basic extends \Exception implements core\exception {
       $aResult['trace'] = $this->loadTraces($bHTML);
     }
 
-    if (\Sylma::isAdmin() || \Sylma::read('exception/show')) {
+    if (\Sylma::read('debug/public') || \Sylma::isAdmin()) {
 
       $this->show($aResult, $bPrint);
     }
@@ -369,6 +369,7 @@ class Basic extends \Exception implements core\exception {
     $file = $fs->extractDirectory(__FILE__)->getFile('insert.vml');
 
     return $parser->load($file, array(
+      'arguments' => \Sylma::createArgument(),
       'post' => new \sylma\core\argument\Readable(array(
         'message' => $this->getMessage(),
         'message_html' => $aContent['message'],
@@ -380,7 +381,7 @@ class Basic extends \Exception implements core\exception {
         'server' => $this->dump($_SERVER),
         //'browser' => $this->dump(get_browser(null, true)),
       )),
-      //'contexts' => array('messages' => $parser->getContext('messages')),
+      'contexts' => \Sylma::createArgument(),
     ), false);
   }
 

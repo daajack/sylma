@@ -146,13 +146,38 @@ class Parser extends Prepare {
     if ($bRun) {
 
       $this->startProfile();
-      $result = $manager->load($file, $aArguments, false, static::DEBUG_RUN);
+      $result = $manager->load($file, $this->checkArguments($aArguments), false, static::DEBUG_RUN);
       $this->stopProfile();
 
       if ($bDelete) $file->delete();
     }
 
     return $result;
+  }
+
+  /**
+   * Complete array of arguments with empty arguments
+   * using keys : arguments, post, contexts
+   * @return array
+   */
+  protected function checkArguments(array &$aArguments) {
+
+    if (!isset($aArguments['arguments'])) {
+
+      $aArguments['arguments'] = $this->createArgument(array());
+    }
+
+    if (!isset($aArguments['post'])) {
+
+      $aArguments['post'] = $this->createArgument(array());
+    }
+
+    if (!isset($aArguments['contexts'])) {
+
+      $aArguments['contexts'] = $this->createArgument(array());
+    }
+
+    return $aArguments;
   }
 
   protected function loadResultNode(dom\element $test) {

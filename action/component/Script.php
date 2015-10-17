@@ -9,8 +9,8 @@ class Script extends Caller implements common\arrayable {
 
     $path = $this->loadPath($this->readx('@path'));
 
-    $parser = $this->getWindow()->addControler(self::PARSER_MANAGER);
-    $fs = $this->getWindow()->addControler(self::FILE_MANAGER);
+    $parser = $this->getWindow()->addManager(self::PARSER_MANAGER);
+    $fs = $this->getWindow()->addManager(self::FILE_MANAGER);
 
     if ($sMode = $this->readx('@mode')) {
 
@@ -29,6 +29,7 @@ class Script extends Caller implements common\arrayable {
     if ($sMode === 'get') {
 
       $args = $this->createObject('argument', array(array_merge($path->getArguments()->query(), $this->loadArguments())), null, false);
+      $post = $this->createObject('argument', array(array()), null, false);
     }
     else {
 

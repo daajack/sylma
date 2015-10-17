@@ -10,7 +10,7 @@ abstract class Variabled extends reflector\builder\Documented {
   protected function prepareFormed(common\_window $window) {
 
     $this->prepareArgumented($window);
-    $window->checkVariable('post', get_class($this->create('argument')));
+    $this->checkVariable($window, 'post', get_class($this->create('argument')));
 
     return $window;
   }
@@ -18,10 +18,20 @@ abstract class Variabled extends reflector\builder\Documented {
   protected function prepareArgumented(common\_window $window) {
 
     $window->createVariable('aSylmaArguments', 'php-array');
-    $window->checkVariable(self::ARGUMENTS_NAME, '\\' . get_class($this->create('argument')));
-    $window->checkVariable('contexts', '\\' . get_class($this->create('argument')));
+    $this->checkVariable($window, self::ARGUMENTS_NAME, '\\' . get_class($this->create('argument')));
+    $this->checkVariable($window, 'contexts', '\\' . get_class($this->create('argument')));
 
     return $window;
+  }
+
+  protected function checkVariable(common\_window $window, $sName, $sToken) {
+
+    if (!$var = $window->getVariable($sName, false)) {
+
+      $var = $window->createVariable($sName, $sToken);
+    }
+
+    return $var;
   }
 
 }

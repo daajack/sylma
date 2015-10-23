@@ -73,6 +73,7 @@ class Module extends core\module\Domed {
       list($sID, $sPasswordHash, $sGroups) = explode(' ', $doc->readx());
       $aGroups = array_filter(explode(',', $sGroups));
 
+      // if (hash_equals($sPasswordHash, crypt($sPassword, $sPasswordHash))) {
       if ($sPasswordHash == crypt($sPassword, $sPasswordHash)) {
 
         $sResult = $sID;

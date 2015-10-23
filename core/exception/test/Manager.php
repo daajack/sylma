@@ -1,9 +1,9 @@
 <?php
 
 namespace sylma\core\exception\test;
-use sylma\core;
+use sylma\core, sylma\modules;
 
-class Manager extends core\module\Domed implements core\stringable {
+class Manager extends modules\users\test\Tester implements core\stringable {
 
   const LOGIN = '/#sylma/modules/users/login-do.vml';
 
@@ -12,12 +12,16 @@ class Manager extends core\module\Domed implements core\stringable {
     'password' => '12345',
   );
 
-  public function checkConfig() {
+  public function login() {
 
-    if (\Sylma::read('debug/enable')) {
+    $this->setDirectory(__FILE__);
 
-      $this->launchException('Cannot test in debug mode');
-    }
+    return $this->getScript(self::LOGIN, array(), $this->aUser, array(
+      'messages' => $this->getManager(self::PARSER_MANAGER)->getContext('messages'),
+    ));
+  }
+
+  protected function checkUser() {
 
     if (!$this->login()) {
 
@@ -26,13 +30,14 @@ class Manager extends core\module\Domed implements core\stringable {
     }
   }
 
-  public function login() {
+  public function checkConfig() {
 
-    $this->setDirectory(__FILE__);
+    if (\Sylma::read('debug/enable')) {
 
-    return $this->getScript(self::LOGIN, array(), $this->aUser, array(
-      'messages' => $this->getManager(self::PARSER_MANAGER)->getContext('messages'),
-    ));
+      $this->launchException('Cannot test in debug mode');
+    }
+
+    $this->checkUser();
   }
 
   public function asString() {

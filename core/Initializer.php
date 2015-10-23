@@ -176,7 +176,7 @@ class Initializer extends module\Domed {
     if ($sExtension == $this->readArgument('redirect/extension')) {
 
       $path->parse();
-      $redirect = $this->prepareScript($path->asFile(), $path->getArguments());
+      $redirect = $this->prepareScript($path->asFile(), $path->getArguments(), \Sylma::createArgument());
 
       if (!$redirect instanceof core\redirect) {
 
@@ -256,6 +256,7 @@ class Initializer extends module\Domed {
     $result = $builder->load($file, array(
       'arguments' => $args,
       'contexts' => $contexts,
+      'post' => \Sylma::createArgument(),
     ), $this->readArgument('debug/update', false), $this->readArgument('debug/run'), true);
 
     return $result;

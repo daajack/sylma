@@ -13,6 +13,8 @@ class Form extends schema\cached\form\Form {
     $sConfirm = $this->read($sConfirmAlias);
     $password = $this->getElement('password');
 
+    $user = $this->getManager('user');
+
     if (!$sConfirm) {
 
       if ($this->getMode() == 'insert') {
@@ -39,7 +41,7 @@ class Form extends schema\cached\form\Form {
       }
       else {
 
-        $password->setValue(crypt($password->getValue()));
+        $password->setValue($user->getManager()->crypt($password->getValue()));
 
         $bResult = parent::validate();
       }

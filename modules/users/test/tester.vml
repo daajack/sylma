@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<crud:crud
+  xmlns:crud="http://2013.sylma.org/view/crud"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:js="http://2013.sylma.org/template/binder"
+  xmlns:cls="http://2013.sylma.org/core/factory"
+
+  xmlns:xl="http://2013.sylma.org/storage/xml"
+>
+
+  <crud:global>
+
+    <xl:resource/>
+
+    <tpl:settings>
+      <cls:classes>
+        <cls:class alias="tree">
+          <cls:classes>
+            <cls:class alias="cached" name="\sylma\modules\users\test\Tester"/>
+          </cls:classes>
+        </cls:class>
+      </cls:classes>
+    </tpl:settings>
+
+  </crud:global>
+
+  <view:view name="prepare">
+
+    <tpl:template>
+      <tpl:read select="prepare()"/>
+    </tpl:template>
+
+  </view:view>
+
+  <view:view name="complete">
+
+    <tpl:template>
+      <tpl:read select="complete()"/>
+    </tpl:template>
+
+  </view:view>
+
+</crud:crud>

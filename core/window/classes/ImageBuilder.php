@@ -12,6 +12,9 @@ class ImageBuilder extends core\module\Filed {
 
   protected function resize($sExtension, $iMaxWidth, $iMaxHeight, $bCrop = false) {
 
+    $wm = $iMaxWidth;
+    $hm = $iMaxHeight;
+
     $aExtensions = array('jpeg', 'png', 'gif');
 
     if (!in_array($sExtension, $aExtensions)) {
@@ -19,55 +22,65 @@ class ImageBuilder extends core\module\Filed {
       $this->launchException('Cannot edit image, unknown extension');
     }
 
-    // Calcul des nouvelles dimensions
-
     $file = $this->getFile();
-    list($iWidth, $iHeight) = getimagesize($file->getRealPath());
+    list($w, $h) = getimagesize($file->getRealPath());
 
-    $iWidthRatio = $iHeightRatio = 1;
-    $iXSource = $iYSource = 0;
-
-    $iSourceHeight = $iHeight;
-    $iSourceWidth = $iWidth;
+    $ws = $w; // source
+    $hs = $h; // source
+    $wr = $hr = 1; // ratio
+    $x = $y = 0; // position
+    $wp = $hp = 0; // preview/result
 
     // look up for ratios
 
-    if ($iWidth > $iMaxWidth) {
+    if ($w > $wm) {
 
-      $iWidthRatio = $iWidth / $iMaxWidth;
-      $iPreviewWidth = $iMaxWidth;
+      $wr = $w / $wm;
+      $wp = $wm;
 
-    } else $iPreviewWidth = $iWidth;
+    } else {
 
-    if ($iHeight > $iMaxHeight) {
-
-      $iHeightRatio = $iHeight / $iMaxHeight;
-      $iPreviewHeight = $iMaxHeight;
-
-    } else $iPreviewHeight = $iHeight;
-
-    // set croping
-    if ($iWidthRatio > $iHeightRatio) {
-
-      if ($bCrop) {
-
-        $iSourceWidth = $iPreviewWidth * $iHeightRatio;
-        $iXSource = ($iWidth - $iSourceWidth) / 2;
-
-      } else $iPreviewWidth = $iSourceWidth;
-
-    } else if ($iWidthRatio < $iHeightRatio) {
-
-      if ($bCrop) {
-
-        $iSourceHeight = $iPreviewHeight * $iWidthRatio;
-        $iYSource = ($iHeight - $iSourceHeight) / 2;
-
-      } else $iPreviewHeight = $iSourceHeight;
-
+      $wp = $w;
     }
 
-    $preview = imagecreatetruecolor($iPreviewWidth, $iPreviewHeight);
+    if ($h > $hm) {
+
+      $hr = $h / $hm;
+      $hp = $hm;
+
+    } else {
+
+      $hp = $h;
+    }
+
+    // crop
+
+    if ($wr > $hr) {
+
+      if ($bCrop) {
+
+        $ws = $wp * $hr;
+        $x = ($w - $ws) / 2;
+
+      } else {
+
+        $hp = $h / $wr;
+      }
+
+    } else if ($wr < $hr) {
+
+      if ($bCrop) {
+
+        $hs = $hp * $wr;
+        $y = ($h - $hs) / 2;
+
+      } else {
+
+        $wp = $w / $hr;
+      }
+    }
+
+    $preview = imagecreatetruecolor($wp, $hp);
 
     if ($sExtension == 'png' || $sExtension == 'gif') {
 
@@ -80,19 +93,21 @@ class ImageBuilder extends core\module\Filed {
     $sFunction = 'imagecreatefrom'.$sExtension;
     $source = @$sFunction($file->getRealPath()) or die("Cannot Initialize new GD image stream");
 
-    // Redimensionnement
-
-    imagecopyresampled($preview, $source, 0, 0, $iXSource, $iYSource, $iPreviewWidth, $iPreviewHeight, $iSourceWidth, $iSourceHeight);
+    imagecopyresampled($preview, $source, 0, 0, $x, $y, $wp, $hp, $ws, $hs);
 
     return $preview;
   }
 
-  public function build(fs\editable\file $file, $iWidth, $iHeight, $sFilter = '') {
+  public function build(fs\editable\file $file, $iWidth, $iHeight, $sFilter = '', $bCrop = true) {
 
     $sExtension = strtolower($file->getExtension());
-    if ($sExtension == 'jpg') $sExtension = 'jpeg';
 
-    $img = $this->resize($sExtension, $iWidth, $iHeight, true);
+    if ($sExtension == 'jpg') {
+
+      $sExtension = 'jpeg';
+    }
+
+    $img = $this->resize($sExtension, $iWidth, $iHeight, $bCrop);
 
     if ($sFilter) {
 
@@ -103,7 +118,7 @@ class ImageBuilder extends core\module\Filed {
 
     $sFunction($img, $file->getRealPath());
     imagedestroy($img);
-    
+
     $file->updateStatut();
   }
 

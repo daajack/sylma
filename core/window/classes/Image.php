@@ -22,7 +22,8 @@ class Image extends File {
       if (!$cache->doExist() || $cache->getUpdateTime() < $file->getUpdateTime() || $this->read('rebuild')) {
 
         $builder = $this->create('builder', array($file));
-        $builder->build($cache, $size->read('width'), $size->read('height'), $size->read('filter', false));
+        $bCrop = $size->read('crop', false) !== false;
+        $builder->build($cache, $size->read('width'), $size->read('height'), $size->read('filter', false), $bCrop);
       }
 
       $this->setFile($cache);

@@ -22,7 +22,7 @@
 
     <tpl:template mode="list/filter">
 
-      <tpl:apply select="parent" mode="filter/dummy"/>
+      <tpl:apply select="static()/parent" mode="filter/dummy"/>
 
     </tpl:template>
 

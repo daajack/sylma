@@ -202,7 +202,7 @@
 
       <tpl:if test="has-children()">
 
-        <tpl:apply select="*" mode="row"/>
+        <tpl:apply mode="list/internal/content"/>
 
         <tpl:else>
           <tr>
@@ -217,6 +217,10 @@
 
     </tbody>
 
+  </tpl:template>
+
+  <tpl:template mode="list/internal/content">
+    <tpl:apply select="*" mode="row"/>
   </tpl:template>
 
   <tpl:template mode="pager">

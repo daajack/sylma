@@ -59,9 +59,13 @@
 
   <tpl:template mode="slideshow/container">
     <div class="container" js:node="container">
-      <tpl:apply mode="query"/>
-      <tpl:apply select="*" mode="slideshow/tree"/>
+      <tpl:apply mode="slideshow/container/content"/>
     </div>
+  </tpl:template>
+
+  <tpl:template mode="slideshow/container/content">
+    <tpl:apply mode="query"/>
+    <tpl:apply select="*" mode="slideshow/tree"/>
   </tpl:template>
 
   <tpl:template match="*" mode="slideshow/pager">

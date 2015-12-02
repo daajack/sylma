@@ -648,6 +648,9 @@ return; // todo, decide to use or not
     return $this->aKeys[$sPrefix];
   }
 
+  /**
+   * @return common\scope
+   */
   public function getScope() {
 
     if (!$this->aScopes) {

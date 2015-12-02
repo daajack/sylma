@@ -211,7 +211,7 @@ class Crud extends reflector\handler\Elemented implements reflector\elemented {
     return $this->aPaths;
   }
 
-  protected function getPath($sName) {
+  public function getPath($sName) {
 
     return isset($this->aPaths[$sName]) ? $this->aPaths[$sName] : null;
   }

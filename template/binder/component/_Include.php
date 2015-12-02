@@ -22,12 +22,16 @@ class _Include extends Basic implements common\arrayable {
 
     $file = $this->getSourceFile($this->readx());
 
-    $window = $this->getPHPWindow();
+    $window = $this->getRoot()->getResourceWindow();
     $contexts = $window->getVariable('contexts');
 
     $callFile = $window->addControler(self::FILE_MANAGER)->call('getFile', array((string) $file));
+    $result = $contexts->call('get', array($this->getContext()))->call('add', array($callFile))->getInsert();
 
-    return array($contexts->call('get', array($this->getContext()))->call('add', array($callFile))->getInsert());
+    return array($window->createCaller(function() use ($result, $window) {
+
+      $window->add($result);
+    }));
   }
 
   public function asArray() {

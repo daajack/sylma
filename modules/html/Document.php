@@ -1,7 +1,7 @@
 <?php
 
 namespace sylma\modules\html;
-use sylma\core, sylma\storage\fs, sylma\template\binder, sylma\dom, sylma\modules\less;
+use sylma\core, sylma\dom;
 
 /**
  * Render window as HTML adding context and cleaning result
@@ -22,26 +22,7 @@ class Document extends core\window\classes\Container {
     $this->setPost($post);
 
     $this->setSettings($this->getManager('init')->getArgument('window'));
-
-    $messages = $this->initMessages();
-
-    $fusion = $this->get('fusion');
-    $load = new binder\context\Load;
-    $js = new context\JS(array(
-      'load' => $load,
-    ), $fusion);
-
-    $contexts = $this->createArgument(array(
-      'title' => array(),
-      'css' => new less\Context(array(), $fusion, $js),
-      'js-common' => new context\JS(array(), $fusion),
-      'js' => $js,
-      'errors' =>  $messages,
-      //'title' =>  new parser\context\Basic,
-    ));
-
     $this->setContexts($contexts);
-    $load->set('objects', new \sylma\template\binder\context\Objects());
 
     $this->setPaths($this->getArgument(self::CONTENT_ARGUMENT)->query());
     $this->setArgument(self::CONTENT_ARGUMENT, null);
@@ -172,23 +153,7 @@ class Document extends core\window\classes\Container {
     $system = $body->addElement('div', null, array('id' => 'sylma-system'));
     $system->addElement('div', $content);
   }
-/*
-  protected function cleanResult(dom\handler $doc, fs\file $file = null) {
 
-    if (\Sylma::read('debug/html/foreign')) {
-
-      $els = $doc->queryx("//*[namespace-uri() != '$this->sHTML']", array(), false);
-
-      if ($els->length) {
-
-        $this->dsp($els);
-        $this->throwException('Foreign element\'s namespace in HTML output');
-      }
-    }
-
-    return parent::cleanResult($doc, $file);
-  }
-*/
   public function prepare($sContent) {
 
     $doc = $this->createDocument($sContent);

@@ -53,6 +53,9 @@ abstract class Manager extends core\module\Domed {
     return $fs->getDirectory()->addDirectory((string) $file->getParent());
   }
 
+  /**
+   * @return \sylma\storage\fs\editable\file
+   */
   public function getCachedFile(fs\file $file, $sExtension = self::EXTENSION_DEFAULT, $iDebug = fs\resource::DEBUG_EXIST) {
 
     $sName = $file->getName() . $sExtension;
@@ -69,7 +72,7 @@ abstract class Manager extends core\module\Domed {
 
       if (!$cache) {
 
-        $this->launchException('No cache file found', get_defined_vars());
+        $this->launchException('No cache file found for ' . $file, get_defined_vars());
       }
 
       $result = $this->createCache($cache, $aArguments, $bExternal);

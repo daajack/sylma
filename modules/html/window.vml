@@ -63,11 +63,11 @@
     <link rel="stylesheet" type="text/css" media="all" href="/sylma/modules/html/medias/infos.css" ls:owner="root" ls:group="user" ls:mode="710"/>
     <tpl:apply mode="head/css/backend"/>
   </tpl:template>
-<!--
+
   <tpl:template mode="head/favicon">
-    <link rel="icon" type="image/png" href="/images/favicon.png"/>
+    <link rel="icon" type="image/png" href="/medias/favicon.png"/>
   </tpl:template>
--->
+
   <tpl:template mode="head/css/backend">
     <le:context name="css">
       <le:file>medias/backend.css</le:file>

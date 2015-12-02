@@ -1,6 +1,4 @@
 sylma.stepper = sylma.stepper || {};
-sylma.factory.debug = false;
-sylma.debug.log = true;
 
 sylma.stepper.Main = new Class({
 
@@ -52,7 +50,7 @@ sylma.stepper.Main = new Class({
     if (this.updating) {
 
       var msg = 'WARNING : update mode enabled. DO NOT RUN TESTS if you don\'t want to update files !';
-      
+
       sylma.ui.showMessage(msg);
       console.log(msg);
     }

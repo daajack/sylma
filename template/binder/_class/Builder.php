@@ -70,7 +70,6 @@ class Builder extends Proped implements common\arrayable, template\binder\_class
 
     $this->setExtend($this->readx('@js:class'));
 
-    $obj->setProperty('sylmaExtends', $this->getWindow()->toString($this->getExtend()));
     $obj->setProperty('Extends', $this->getWindow()->createVariable($this->getExtend()));
     //$obj->setProperty('Extends_key', $this->getExtend());
 
@@ -94,16 +93,12 @@ class Builder extends Proped implements common\arrayable, template\binder\_class
 
     if ($this->isUsed()) {
 
-      $js = $this->getObject();
+      $obj = $this->getWindow()->createObject();;
+      $obj->setProperty('extends', $this->getWindow()->toString($this->getExtend()));
+      $obj->setProperty('props', $this->getObject());
 
       $this->loadExtend();
-
-      $window = $this->getWindow();
-
-      $class = $window->createObject(array(), 'Class');
-      $new = $window->createInstanciate($class, array($js));
-
-      $container->setProperty($this->getID(), $new);
+      $container->setProperty($this->getID(), $obj);
     }
   }
 

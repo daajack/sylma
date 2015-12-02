@@ -133,6 +133,14 @@ class Router extends View {
     return isset($this->aPaths['']) ? $this->aPaths[''] : null;
   }
 
+  public function aliasFromRequest(core\request $path) {
+
+    $reflector = $this->buildCrudReflector();
+    $view = $reflector->getPath($path->readArgument(0));
+
+    return $view->getAlias();
+  }
+
   public function asPath() {
 
     return $this->getView()->asPath();
@@ -162,14 +170,15 @@ class Router extends View {
     $file = $this->getPathFile($view);
     $this->setView($view);
     $this->setReturn(null);
+    $sAlias = $view->getAlias();
 
     try {
 
-      $result = parent::buildView($doc, $file);
+      $result = parent::buildView($doc, $file, $sAlias);
     }
     catch (core\exception $e) {
 
-      $e->addPath('@view ' . $view->getAlias());
+      $e->addPath('@view ' . $sAlias);
       $this->loadLog();
       throw $e;
     }

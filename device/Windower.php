@@ -7,11 +7,11 @@ class Windower extends window\Builder {
 
   const DEVICE_SETTINGS = 'device';
 
-  public function buildWindow(core\request $path, core\argument $exts, $bUpdate = null, $bRun = true) {
+  public function buildWindow(core\request $path, core\argument $exts, core\argument $fusion, $bUpdate = null, $bRun = true) {
 
     $this->setupDevice();
 
-    return parent::buildWindow($path, $exts, $bUpdate, $bRun);
+    return parent::buildWindow($path, $exts, $fusion, $bUpdate, $bRun);
   }
 
   protected function setupDevice() {

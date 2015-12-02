@@ -189,6 +189,15 @@
   opacity: 1;
 }
 
+.formater-array .formater-array {
+  padding-left: 2em;
+  border-left: 1px solid #ddd;
+}
+
+.formater-array:hover {
+  border-left: 1px solid #aaa;
+}
+
 .sylma-source
 {
   position: absolute;
@@ -207,3 +216,4 @@
   text-transform: none;
   font-family: sans-serif;
 }
+

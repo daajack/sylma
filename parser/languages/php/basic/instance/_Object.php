@@ -19,6 +19,9 @@ class _Object extends common\basic\Controled implements common\_object, common\s
     return $this;
   }
 
+  /**
+   * @return php\basic\_Interface
+   */
   public function getInterface() {
 
     return $this->interfaceObject;

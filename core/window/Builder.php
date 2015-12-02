@@ -1,7 +1,7 @@
 <?php
 
 namespace sylma\core\window;
-use sylma\core, sylma\storage\fs;
+use sylma\core, sylma\storage\fs, sylma\template\binder, sylma\modules\less, sylma\modules\html;
 
 class Builder extends core\module\Domed {
 
@@ -61,7 +61,7 @@ class Builder extends core\module\Domed {
     return $window->asString();
   }
 
-  public function buildWindow(core\request $path, core\argument $exts, $bUpdate = null, $bRun = true) {
+  public function buildWindow(core\request $path, core\argument $exts, core\argument $fusion, $bUpdate = null, $bRun = true) {
 
     $this->setSettings($exts);
 
@@ -93,7 +93,9 @@ class Builder extends core\module\Domed {
 
       $this->getInitializer()->send404();
 
-      $aPaths = $this->buildWindowStack($this->createArgument(array($this->get('error'))), '');
+      $row = $this->createArgument(array($this->get('error')));
+
+      $aPaths = $this->buildWindowStack($row, '');
       $aPaths[] = $this->read('error/path');
     }
 
@@ -103,15 +105,52 @@ class Builder extends core\module\Domed {
     $window = $this->getFile($sMain);
 
     $args = $path->getArguments();
+    $post = $this->createArgument(array());
+    $contexts = $this->prepareContexts($fusion);
+
     $args->set('sylma-paths', $aPaths);
 
     $builder = $this->getManager(self::PARSER_MANAGER);
 
     return $builder->load($window, array(
       'arguments' => $args,
-      'post' => $this->createArgument(array()),
-      'contexts' => $this->createArgument(array()),
+      'post' => $post,
+      'contexts' => $contexts,
     ), $bUpdate, $bRun);
+  }
+
+  protected function prepareContexts(core\argument $fusion) {
+
+    $messages = $this->initMessages();
+
+    $load = new binder\context\Load;
+    $js = new html\context\JS(array(
+      //'classes' => new \sylma\template\binder\context\Classes(),
+      'load' => $load,
+    ), $fusion);
+
+    $result = $this->createArgument(array(
+      'title' => array(),
+      'css' => new less\Context(array(), $fusion, $js),
+      'js-common' => new html\context\JS(array(), $fusion),
+      'js' => $js,
+      'errors' =>  $messages,
+    ));
+
+    $load->set('objects', new \sylma\template\binder\context\Objects());
+
+    return $result;
+  }
+
+  protected function initMessages() {
+
+    if (!$messages = $this->getManager('parser')->getContext('errors', false)) {
+
+      $messages = new \sylma\modules\html\context\Messages;
+      $this->getManager('parser')->setContext('errors', $messages);
+    }
+
+    return $messages;
   }
 
   protected function getErrorWindow() {
@@ -194,10 +233,10 @@ class Builder extends core\module\Domed {
     return $iResult;
   }
 
-  public function loadObject(core\request $path, $window) {
+  public function loadObject(core\request $path, $window, core\argument $fusion) {
 
     $path->parse();
-    $window->setScript($path);
+    $window->setScript($path, $this->prepareContexts($fusion));
 
     return $window->asString();
   }

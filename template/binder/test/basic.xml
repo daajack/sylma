@@ -587,13 +587,13 @@
 
     </tst:callback>
   </tst:test>
-  <tst:test name="Import script" disabled="true">
+  <tst:test name="Import script">
     <tst:document>
       <view:view>
         <xl:resource/>
         <tpl:template>
-          <section>
-            <div js:script="samples/simple"/>
+          <section js:class="sylma.ui.Base" js:parent="example" js:name="test">
+            <div js:script="samples/simple" js:name="container"/>
           </section>
         </tpl:template>
       </view:view>
@@ -601,11 +601,53 @@
     <tst:prepare>
       $manager->buildScript('samples/simple.vml');
     </tst:prepare>
-    <tst:expected>
+    <tst:callback>
 
       var test = example.test;
-      return test.hello() === 'helloworld';
+      var container = test.getObject('container');
 
-    </tst:expected>
+      container.update(function() {
+
+        var sub = container.getObject('sub');
+
+        sylma.tester.assertEquals('helloworld', sub.hello());
+        sylma.tester.test(true);
+      });
+
+    </tst:callback>
+  </tst:test>
+  <tst:test name="Import crud script">
+    <tst:document>
+      <view:view>
+        <xl:resource/>
+        <tpl:template>
+          <section js:class="sylma.ui.Base" js:parent="example" js:name="test">
+            <div js:script="samples/crud_sub/sub1" js:name="container"/>
+          </section>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:prepare>
+      $manager->buildScript('samples/crud_sub.vml');
+    </tst:prepare>
+    <tst:callback>
+
+      var test = example.test;
+      var container = test.getObject('container');
+
+      container.update(function() {
+
+        var sub = container.getObject('sub');
+
+        sub.options.callback = function(val) {
+
+          sylma.tester.assertEquals(val, 'hello');
+          sylma.tester.test(true);
+        }
+
+        sub.getNode().click();
+      });
+
+    </tst:callback>
   </tst:test>
 </tst:tests>

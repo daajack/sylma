@@ -41,7 +41,7 @@ class Handler extends reflector\handler\Elemented implements reflector\elemented
   protected $aClasses = array();
 
   /**
-   * Stack of script var
+   * Stack of objects containing properties of the objects
    */
   protected $aSources = array();
 
@@ -77,7 +77,7 @@ class Handler extends reflector\handler\Elemented implements reflector\elemented
       $this->initWindow();
       $this->getPHPWindow()->add($this->prepareParent());
 
-      $this->getContainer()->setPHPWindow($this->getPHPWindow());
+      $this->getContainer()->setPHPWindow($this->getRoot()->getResourceWindow());
       $this->getContainer()->setContext($this->getClasses());
     }
 
@@ -111,9 +111,12 @@ class Handler extends reflector\handler\Elemented implements reflector\elemented
   protected function prepareParent() {
 
     $aResult = array();
+    $aResources = array();
 
     $window = $this->getPHPWindow();
-    $contexts = $window->getVariable('contexts');
+    $resourceWindow = $this->getRoot()->getResourceWindow();
+
+    $contexts = $resourceWindow->getVariable('contexts');
 
     $this->setDirectory(__FILE__);
 
@@ -121,21 +124,23 @@ class Handler extends reflector\handler\Elemented implements reflector\elemented
     $context = $contexts->call('get', array(self::CONTEXT_JS), '\sylma\core\window\context')->getVar(false);
     $this->setContext($context);
 
-    $aResult[] = $context_common->getInsert();
-    $aResult[] = $context->getInsert();
+    $aResources[] = $context_common->getInsert();
+    $aResources[] = $context->getInsert();
 
-    $aResult[] = $this->addScript($context_common, $this->read('mootools'));
+    $aResources[] = $this->addScript($context_common, $this->read('mootools'));
 
     foreach ($this->aFiles as $sFile) {
 
-      $aResult[] = $this->addScript($context_common, $sFile);
+      $aResources[] = $this->addScript($context_common, $sFile);
     }
 
-    list($content, $classes) = $this->checkContext($contexts, self::CLASSES_PATH, self::CLASSES_CONTEXT, $window);
+    list($content, $classes) = $this->checkContext($contexts, self::CLASSES_PATH, self::CLASSES_CONTEXT, $resourceWindow);
     $this->setClasses($classes);
-    $aResult[] = $content;
+    $aResources[] = $content;
 
-    list($content, $objects) = $this->checkContext($contexts, self::OBJECTS_PATH, self::OBJECTS_CONTEXT, $window);
+    $resourceWindow->add($aResources);
+
+    list($content, $objects) = $this->checkContext($window->getVariable('contexts'), self::OBJECTS_PATH, self::OBJECTS_CONTEXT, $window);
     $this->setObjects($objects);
     $aResult[] = $content;
 
@@ -144,7 +149,7 @@ class Handler extends reflector\handler\Elemented implements reflector\elemented
 
   public function addScript(common\_var $js, $sPath) {
 
-    $window = $this->getPHPWindow();
+    $window = $this->getRoot()->getResourceWindow();
     $fs = $window->addControler('fs');
 
     return $js->call('add', array($fs->call('getFile', array($sPath))))->getInsert();
@@ -224,7 +229,12 @@ class Handler extends reflector\handler\Elemented implements reflector\elemented
     return $el->readx('@js:alias', $this->getNS(), false);
   }
 
-  public function parseAttributes(dom\element $el, $resultElement, $current) {
+  protected function elementIsScript(dom\element $el) {
+
+    return $el->readx('@js:script', $this->getNS(), false);
+  }
+
+  public function parseAttributes(dom\element $el, $resultElement, $current = null) {
 
     $aResult = null;
 
@@ -233,7 +243,11 @@ class Handler extends reflector\handler\Elemented implements reflector\elemented
 
     $el->getHandler()->registerNamespaces($this->getNS());
 
-    if ($this->elementIsTemplate($el)) {
+    if ($this->elementIsScript($el)) {
+
+      $aResult[] = $this->reflectScript($el, $resultElement);
+    }
+    else if ($this->elementIsTemplate($el)) {
 
       $aResult[] = $this->reflectTemplate($el, $resultElement);
     }
@@ -242,7 +256,9 @@ class Handler extends reflector\handler\Elemented implements reflector\elemented
       if (!$this->bRoot) {
 
         $this->bRoot = true;
-        $aResult[] = $this->getPHPWindow()->createInstruction($this->getContainer());
+
+        $window = $this->getRoot()->getResourceWindow();
+        $window->add($window->createInstruction($this->getContainer()));
       }
 
       $aResult[] = $this->reflectObject($el, $resultElement);
@@ -294,7 +310,7 @@ class Handler extends reflector\handler\Elemented implements reflector\elemented
   /**
    * @return common\_object
    */
-  public function getContainer() {
+  protected function getContainer() {
 
     return $this->container;
   }
@@ -372,7 +388,7 @@ class Handler extends reflector\handler\Elemented implements reflector\elemented
 
     if (!$this->bInitTemplate) {
 
-      $aResult[] = $this->addScript($this->getContext(), self::TEMPLATE_FILE);
+      $this->getRoot()->getResourceWindow()->add($this->addScript($this->getContext(), self::TEMPLATE_FILE));
       $this->bInitTemplate = true;
     }
 
@@ -384,8 +400,16 @@ class Handler extends reflector\handler\Elemented implements reflector\elemented
     return $aResult;
   }
 
+  protected function reflectScript(dom\element $el, template\element $resultElement) {
+
+    $obj = $this->loadComponent('component/script', $el);
+    $obj->setElement($resultElement);
+
+    return $obj;
+  }
+
   /**
-   * @usedby _Class children
+   * @usedby _class\Template::buildTemplate()
    */
   public function startSource(common\_var $source) {
 
@@ -393,7 +417,7 @@ class Handler extends reflector\handler\Elemented implements reflector\elemented
   }
 
   /**
-   * @see startSource()
+   * @usedby _class\Template::buildTemplate()
    */
   public function stopSource() {
 
@@ -401,7 +425,7 @@ class Handler extends reflector\handler\Elemented implements reflector\elemented
   }
 
   /**
-   * @usedby foreign parser JS
+   * @usedby \sylma\storage\xml\tree\Templated::loadProperty()
    */
   public function getSource() {
 

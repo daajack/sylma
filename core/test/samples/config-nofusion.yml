@@ -1,13 +1,13 @@
 debug :
-  enable : false
+  enable : true
 exception :
   show : true
 initializer :
   debug :
     fatal : true
+  fusion :
+    enable : false
   window :
-    fusion :
-      enable : false
     html :
       test : null
       default :

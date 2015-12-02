@@ -242,7 +242,7 @@ sylma.ui.ContainerProps = {
     var _class = this.sylma.template.classes[alias];
     var result = this.buildObject(alias, args, key);
 
-    if (sylma.factory.debug) {
+    if (sylma.debug.log) {
 
       sylma.log('Create "' + alias + '" to [' + key + ']');
     }

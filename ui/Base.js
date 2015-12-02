@@ -439,8 +439,16 @@ sylma.ui.BaseProps = {
 
     if (response.classes) {
 
+      var binder = sylma.binder.classes;
       eval(response.classes); // var classes = ..
-      Object.merge(sylma.binder.classes, classes);
+
+      Object.each(classes, function(item, key) {
+
+        if (!(key in binder)) {
+
+          sylma.ui.buildClass(binder, item, key);
+        }
+      });
     }
 
     if (target) {

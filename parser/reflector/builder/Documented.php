@@ -360,11 +360,10 @@ class Documented extends Logger implements reflector\documented {
   protected function buildReflector(common\_window $window = null) {
 
     $result = $this->createReflector();
-    //$this->setReflector($reflector);
 
     if (!$window) {
 
-      $window = $this->createWindow();
+      $window = $this->createDocumentWindow();
     }
 
     $this->setWindow($window);
@@ -376,26 +375,35 @@ class Documented extends Logger implements reflector\documented {
    *
    * @return common\_window
    */
-  protected function createWindow() {
+  protected function createDocumentWindow() {
+
+    $root = $this->getDocument()->getRoot();
+    $sOutput = $root->readx('@build:output', $this->getNS(), false);
+
+    return $this->createWindow($sOutput);
+  }
+
+  /**
+   * @param $sOutput A value in the following list : array, result, dom or empty
+   * @return common\_window
+   */
+  protected function createWindow($sOutput = '') {
 
     $sInstance = $this->getClass($this->getDocument());
     $result = $this->create('window', array($this, $this->getArgument(static::WINDOW_ARGS), $sInstance));
 
-    if ($sOutput = $this->getDocument()->getRoot()->readx('@build:output', $this->getNS(), false)) {
+    switch ($sOutput) {
 
-      switch ($sOutput) {
+      case 'array' : $iValue = $result::MODE_ARRAY; break;
+      case 'result' : $iValue = $result::MODE_RESULT; break;
+      case 'dom' :
+      default :
 
-        case 'array' : $iValue = $result::MODE_ARRAY; break;
-        case 'result' : $iValue = $result::MODE_RESULT; break;
-        case 'dom' :
-        default :
-
-          $iValue = $result::MODE_DOM;
-          break;
-      }
-
-      $result->setMode($iValue);
+        $iValue = $result::MODE_DOM;
+        break;
     }
+
+    $result->setMode($iValue);
 
     return $result;
   }

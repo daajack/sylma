@@ -11,6 +11,7 @@ class View extends Variabled {
   const VIEW_ARGUMENTS = '../view.xml';
 
   protected $reflector;
+  protected $resourceWindow;
 
   public function build() {
 
@@ -28,13 +29,12 @@ class View extends Variabled {
     return parent::getLogger($bDebug);
   }
 
-  protected function buildView(dom\handler $doc, fs\file $target) {
+  protected function buildView(dom\handler $doc, fs\file $target, $sAlias = '') {
 
     $this->loadLogger();
     $sMode = $this->loadDocument($doc);
 
     $window = $this->prepareWindow($doc, $sMode);
-    $content = $this->reflectMain($doc, $this->getFile(), $window);
 
     switch ($sMode) {
 
@@ -42,15 +42,13 @@ class View extends Variabled {
       case 'insert' :
       case 'update' :
 
-        $return = $this->buildSimple($content, $window);
-
+        $return = $this->buildDoView($doc, $window);
         break;
 
       case 'hollow' :
       case 'view' :
 
-        $return = $this->buildInstanciation($content, $window);
-
+        $return = $this->buildDisplayView($doc, $window, $sAlias);
         break;
 
       default :
@@ -72,7 +70,7 @@ class View extends Variabled {
   protected function prepareWindow(dom\handler $doc, $sMode) {
 
     $this->setDocument($doc, false);
-    $window = $this->createWindow();
+    $window = $this->createDocumentWindow();
 
     switch ($sMode) {
 
@@ -100,6 +98,66 @@ class View extends Variabled {
     $window->createVariable('bSylmaExternal', 'php-boolean');
 
     return $window;
+  }
+
+  /**
+   * @usedby \sylma\template\binder\component\Script::build()
+   * @return common\_window
+   */
+  public function getResourceWindow() {
+
+    if (!$this->resourceWindow) {
+
+      $this->launchException('No resource window defined');
+    }
+
+    return $this->resourceWindow;
+  }
+
+  protected function buildDoView(dom\document $doc, common\_window $window) {
+
+    $resourceWindow = $this->createWindow();
+    $this->resourceWindow = $resourceWindow;
+
+    $this->checkVariable($resourceWindow, 'contexts', '\\' . get_class($this->create('argument')));
+
+    $content = $this->reflectMain($doc, $this->getFile(), $window);
+    $return = $this->buildSimple($content, $window);
+
+    return $return;
+  }
+
+  protected function buildDisplayView(dom\document $doc, common\_window $window, $sAlias) {
+
+    $resourceWindow = $this->createWindow();
+    $this->resourceWindow = $resourceWindow;
+
+    $this->checkVariable($resourceWindow, 'contexts', '\\' . get_class($this->create('argument')));
+
+    $file = $this->getResourceFile($this->getSourceFile(), $sAlias);
+    $this->includeFile($file, $window);
+
+    $content = $this->reflectMain($doc, $this->getFile(), $window);
+    $return = $this->buildInstanciation($content, $window);
+
+    $resources = $resourceWindow->asDOM();
+    $this->createFile($file, $resources);
+
+    return $return;
+  }
+
+  public function includeFile(fs\file $file, common\_window $window) {
+
+    $call = $window->callFunction('require', 'php-string', array($file->getRealPath()));
+    $window->add($call);
+  }
+
+  public function getResourceFile(fs\file $file, $sAlias) {
+
+    $parser = $this->getManager(self::PARSER_MANAGER);
+    $result = $parser->getCachedFile($file, ($sAlias ? '.' . $sAlias : '') . '-ext.php');
+
+    return $result;
   }
 
   public function getExternal() {
@@ -174,6 +232,11 @@ class View extends Variabled {
     }
 
     return $result;
+  }
+
+  public function aliasFromRequest(core\request $path) {
+
+    return '';
   }
 
   public function asPath() {

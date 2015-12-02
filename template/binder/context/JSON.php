@@ -15,21 +15,14 @@ class JSON extends window\classes\Container implements window\scripted {
     }
   }
 
-  public function setScript(core\request $path, $sContext = '') {
+  public function setScript(core\request $path, core\argument $contexts) {
 
     //$path->parse();
     $bError = null;
     $parser = \Sylma::getManager('parser');
     $messages = new html\context\Messages;
 
-    $contexts = new core\argument\Readable(array(
-      'errors' => $this->initMessages(),
-      'messages' => $messages,
-      'js-common' => new html\context\JS(),
-      'js' => new html\context\JS(array(
-        'load' => new template\binder\context\Load,
-      )),
-    ));
+    $contexts->set('messages', $messages);
 
     $this->setContexts($contexts);
     $parser->setContext('messages', $messages);

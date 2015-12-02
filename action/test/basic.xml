@@ -63,7 +63,7 @@
       return true;
     </tst:expected>
   </tst:test>
-  <tst:test name="Context with distant file">
+  <tst:test name="Context with distant file" run="false">
     <tst:document>
       <view:view>
         <xl:resource/>
@@ -109,7 +109,7 @@
       return true;
     </tst:expected>
   </tst:test>
-  <tst:test name="Simple array">
+  <tst:test name="Simple array" run="false">
     <tst:document>
       <view:view>
         <sql:resource>
@@ -144,7 +144,7 @@
       return true;
     </tst:expected>
   </tst:test>
-  <tst:test name="Array exploded">
+  <tst:test name="Array exploded" run="false">
     <tst:document>
       <view:view>
         <xl:resource/>

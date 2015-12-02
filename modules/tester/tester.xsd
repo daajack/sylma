@@ -53,6 +53,7 @@
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
+      <xs:attribute name="run" type="ssd:boolean"/>
       <xs:attribute name="disabled" type="ssd:boolean"/>
     </xs:complexType>
   </xs:element>

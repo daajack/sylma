@@ -23,6 +23,11 @@
         <cls:class alias="node" name="component\Node"/>
         <cls:class alias="include" name="component\_Include"/>
         <cls:class alias="name" name="component\Name"/>
+        <cls:class alias="script" name="component\Script">
+          <cls:classes>
+            <cls:class alias="path" name="\sylma\core\request\Builder"/>
+          </cls:classes>
+        </cls:class>
       </cls:classes>
     </component>
     <context>

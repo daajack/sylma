@@ -9,9 +9,6 @@ sylma.debug = {
 }
 
 sylma.modules = {};
-sylma.factory = {
-  debug : false
-};
 
 sylma.binder = {
   classes : {},
@@ -36,12 +33,33 @@ sylma.uiClass = {
   load : function(parent, objects) {
 
     this.loadMessages();
+    this.buildClasses(sylma.binder.classes);
     this.loadObjects(parent, objects);
 
     if (sylma.debug.log) {
 
       console.log(this.objectCount + ' objects created');
     }
+  },
+
+  buildClasses: function (classes) {
+
+    Object.each(classes, function(item, key) {
+
+      this.buildClass(classes, item, key);
+
+    }, this);
+  },
+
+  buildClass: function (classes, item, key) {
+
+    if ('Extends' in item.props && !item.props.Extends) {
+
+      this.showMessage('An error has occured');
+      throw 'Cannot find class : ' + item.extends;
+    }
+
+    classes[key] = new Class(item.props);
   },
 
   loadObjects : function(parent, objects) {
@@ -130,7 +148,7 @@ sylma.uiClass = {
       throw new Error('No path defined');
     }
 
-    if (sylma.factory.debug) {
+    if (sylma.debug.log) {
 
       sylma.log('Create object : key=' + (props.sylma ? props.sylma.key : '[unknown]') + ' id=' + props.id);
     }

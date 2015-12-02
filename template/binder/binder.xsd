@@ -71,6 +71,14 @@
     </xs:annotation>
   </xs:attribute>
 
+  <xs:attribute name="script" type="xs:string">
+    <xs:annotation>
+      <xs:documentation>
+        Prepare element to load script, by configuring options and preloading contexts
+      </xs:documentation>
+    </xs:annotation>
+  </xs:attribute>
+
   <xs:attributeGroup name="element">
     <xs:attribute name="node">
       <xs:annotation>

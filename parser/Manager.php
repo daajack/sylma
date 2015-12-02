@@ -117,10 +117,6 @@ class Manager extends compiler\Manager {
   }
 
   /**
-   *
-   * @param string $sNamespace
-   * @param unknown $parent TODO : set type (between cached parser and reflector\elemented)
-   * @param boolean $bDebug
    * @return \sylma\parser\reflector\container
    */
   public function getParser($sNamespace, reflector\documented $documented, reflector\domed $parent = null, $bDebug = true) {

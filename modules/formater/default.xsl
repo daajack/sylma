@@ -10,16 +10,6 @@
   <xsl:template match="/frm:window">
     <div>
       <xsl:apply-templates/>
-      <style type="text/css">
-        .formater-array {
-          padding-left: 2em;
-          border-left: 1px solid #ddd;
-        }
-
-        .formater-array:hover {
-          border-left: 1px solid #aaa;
-        }
-      </style>
     </div>
   </xsl:template>
 

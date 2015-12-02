@@ -10,7 +10,6 @@ class Container extends core\module\Domed {
   const CONTENT_ARGUMENT = 'sylma-paths';
   const CONTENT_SUB = 'content';
 
-  protected $aPaths = array();
   protected $contexts;
   protected $content;
 
@@ -24,17 +23,6 @@ class Container extends core\module\Domed {
     $this->setArgument(self::CONTENT_ARGUMENT, null);
 
     //$this->content = $this->buildWindowScript($this->getPaths());
-  }
-
-  protected function initMessages() {
-
-    if (!$messages = $this->getManager('parser')->getContext('errors', false)) {
-
-      $messages = new \sylma\modules\html\context\Messages;
-      $this->getManager('parser')->setContext('errors', $messages);
-    }
-
-    return $messages;
   }
 
   protected function setPaths(array $aPaths) {
@@ -158,7 +146,7 @@ class Container extends core\module\Domed {
 
   public function getContent() {
 
-    return $this->buildWindowScript($this->getPaths());
+    return $this->runStack($this->getPaths());
   }
 
   protected function send404() {
@@ -166,7 +154,7 @@ class Container extends core\module\Domed {
     $this->getManager('init')->send404();
   }
 
-  protected function buildWindowScript(array $aPaths) {
+  protected function runStack(array $aPaths) {
 
     $this->setDirectory(__FILE__);
 
@@ -237,7 +225,7 @@ class Container extends core\module\Domed {
     return $result;
   }
 
-  protected function runScript(fs\file $file, core\argument $args = null, core\argument $post = null, $debug = null) {
+  protected function runScript(fs\file $file, core\argument $args = null, core\argument $post = null, core\argument $debug = null) {
 
     if (!$debug) {
 

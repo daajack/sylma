@@ -12,6 +12,7 @@ class Initializer extends module\Domed {
   protected static $aStats = array();
 
   protected static $sArgumentClass = 'sylma\core\argument\Readable';
+  protected $profiler = null;
 
   /**
    * 2. Load global settings
@@ -60,26 +61,15 @@ class Initializer extends module\Domed {
   }
 
   public function run($settings) {
-//print_r($settings->query('imports', false));
 
     \Sylma::getManager(self::AUTOLOAD_MANAGER)->loadNamespaces($settings->query('autoload'));
 
     $this->setArguments($this->createArgument($settings->query()));
     $this->setSettings($this->getArguments());
 
-    //$this->setArguments($settings);
     $this->setErrorReporting();
 
-    //set_exception_handler("self::sendException");
-    $iLifetime = $this->readArgument('session/lifetime');
-    ini_set('session.gc_maxlifetime', $iLifetime);
-    session_set_cookie_params($iLifetime);
-
-    session_cache_expire($this->readArgument('session/cache'));
-
-    $this->startSession();
-
-    // if (\Sylma::read('db/enable')) $this->loadXDB();
+    $this->initSession();
 
     $this->setStartTime(microtime(true));
 
@@ -116,22 +106,13 @@ class Initializer extends module\Domed {
 
       return $sMaintenance;
     }
-    //$this->getDirectory()->getSettings()->loadDocument();
 
     $path = $this->loadPath();
     \Sylma::setManager('path', $path);
 
-    // The extension specify the window type
-
-    // Parse of the request_uri, creation of the window - $_GET
-
-
-    // Reload last alternatives mime-type results - $_SESSION['results']
-    //self::loadResults();
-
     if ($sFile = $path->asFile()) {
 
-      $sResult = $this->createWindowBuilder()->createWindow($sFile, $this->get('images'));
+      $sResult = $this->runFile($sFile);
     }
     else {
 
@@ -141,15 +122,34 @@ class Initializer extends module\Domed {
     return $sResult;
   }
 
+  protected function runFile($sFile) {
+
+    $builder = $this->createWindowBuilder();
+
+    return $builder->createWindow($sFile, $this->get('images'));
+  }
+
   protected function createWindowBuilder() {
 
     $args = $this->getFactory()->findClass('builder');
+
     return $this->create('builder', array($args));
   }
 
-  protected function startSession() {
+  protected function initSession() {
 
-    session_start();
+    $iLifetime = $this->readArgument('session/lifetime');
+    ini_set('session.gc_maxlifetime', $iLifetime);
+    session_set_cookie_params($iLifetime);
+
+    session_cache_expire($this->readArgument('session/cache'));
+
+    // avoid error : a session had already been started - ignoring session_start()
+    if (!isset($_SESSION)) {
+
+      session_start();
+    }
+
   }
 
   protected function loadPath() {
@@ -160,7 +160,35 @@ class Initializer extends module\Domed {
 
   protected function runScript(core\request $path) {
 
+    $this->startProfile();
+
     $sResult = '';
+    $sExtension = $path->parseExtension(true);
+
+    if ($sExtension == $this->readArgument('redirect/extension')) {
+
+      $this->runRedirect($path);
+    }
+    else if (in_array($sExtension, $this->query('executables'))) {
+
+      $sResult = $this->runStandalone($path);
+    }
+    else if (!$path->getExtension()) {
+
+      $sResult = $this->runWindow($path);
+    }
+    else {
+
+      $this->throwException('No valid window defined');
+    }
+
+    $this->stopProfile();
+
+    return $sResult;
+  }
+
+  protected function startProfile() {
+
     $bProfile = $this->readArgument('debug/profile');
 
     if ($bProfile) {
@@ -168,53 +196,30 @@ class Initializer extends module\Domed {
       $profiler = $this->create('profiler');
       $profiler->start();
 
-      //xdebug_start_code_coverage(XDEBUG_CC_UNUSED | XDEBUG_CC_DEAD_CODE);
+      $this->profiler = $profiler;
     }
+  }
 
-    $sExtension = $path->parseExtension(true);
+  protected function stopProfile() {
 
-    if ($sExtension == $this->readArgument('redirect/extension')) {
+    $profiler = $this->profiler;
 
-      $path->parse();
-      $redirect = $this->prepareScript($path->asFile(), $path->getArguments(), \Sylma::createArgument());
-
-      if (!$redirect instanceof core\redirect) {
-
-        $this->throwException('Cannot redirect at that adress');
-      }
-
-      $this->runRedirect($redirect);
-    }
-    else if (in_array($sExtension, $this->query('executables'))) {
-
-      $sResult = $this->runExecutable($path);
-    }
-    else if (!$path->getExtension()) {
-
-      $builder = $this->createWindowBuilder();
-      $sResult = $builder->buildWindow($path, $this->get('window'), $this->read('debug/update', false), $this->read('debug/run'));
-    }
-    else {
-
-      $this->throwException('No valid window defined');
-    }
-
-    if ($bProfile) {
+    if ($profiler) {
 
       $profiler->stop();
       $profiler->save();
-/*
-      $data = xdebug_get_code_coverage();
-      xdebug_stop_code_coverage();
-
-      //print_r($data);
- */
     }
+  }
+
+  protected function runWindow(core\request $path) {
+
+    $builder = $this->createWindowBuilder();
+    $sResult = $builder->buildWindow($path, $this->get('window'), $this->get('fusion'), $this->read('debug/update', false), $this->read('debug/run'));
 
     return $sResult;
   }
 
-  protected function runExecutable(core\request $path) {
+  protected function runStandalone(core\request $path) {
 
     $sExtension = $path->getExtension();
 
@@ -225,7 +230,7 @@ class Initializer extends module\Domed {
       $window = $this->create($sExtension, array($this));
       \Sylma::setManager('window', $window);
 
-      $sResult = $this->createWindowBuilder()->loadObject($path, $window);
+      $sResult = $this->createWindowBuilder()->loadObject($path, $window, $this->get('fusion'));
     }
     else {
 
@@ -253,13 +258,11 @@ class Initializer extends module\Domed {
 
     $builder = $this->getManager(self::PARSER_MANAGER);
 
-    $result = $builder->load($file, array(
+    return $builder->load($file, array(
       'arguments' => $args,
       'contexts' => $contexts,
       'post' => \Sylma::createArgument(),
     ), $this->readArgument('debug/update', false), $this->readArgument('debug/run'), true);
-
-    return $result;
   }
 
   public function getExtensions() {
@@ -390,7 +393,15 @@ class Initializer extends module\Domed {
     return $redirect;
   }
 
-  protected function runRedirect(core\redirect $redirect) {
+  protected function runRedirect(core\request $path) {
+
+    $path->parse();
+    $redirect = $this->prepareScript($path->asFile(), $path->getArguments(), \Sylma::createArgument());
+
+    if (!$redirect instanceof core\redirect) {
+
+      $this->throwException('Cannot redirect at that adress');
+    }
 
     $_SESSION['redirect'] = serialize($redirect);
 

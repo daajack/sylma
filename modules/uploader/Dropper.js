@@ -5,11 +5,13 @@ sylma.uploader.Dropper = new Class({
 
   onLoad : function() {
 
-    var main = this.getMain();
     var fieldset = this.getParent('fieldset');
 
-    fieldset.addEvent('remove', this.checkCount.bind(this, true));
-    this.checkCount();
+    if (fieldset) {
+
+      fieldset.addEvent('remove', this.checkCount.bind(this, true));
+      this.checkCount();
+    }
   },
 
   checkCount: function (remove) {

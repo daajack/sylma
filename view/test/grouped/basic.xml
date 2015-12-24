@@ -1010,26 +1010,32 @@ EOT;
     </tst:node>
   </tst:test>
   <tst:test name="Constant">
+    <!-- @require le:argument -->
     <tst:document>
-      <view:view sql:ns="ns">
+      <view:view>
         <tpl:constant name="path">email</tpl:constant>
         <sql:resource>
           <sql:id>2</sql:id>
         </sql:resource>
         <view:schema>samples/user1.xql</view:schema>
+        <le:argument name="global">
+          <le:default>
+            <tpl:read select="$$path"/>
+          </le:default>
+        </le:argument>
         <tpl:template>
           <div>
             <h3><tpl:read select="name"/></h3>
             <span><tpl:apply use="path"/></span>
             <em><tpl:read use="path"/></em>
             <h4><tpl:apply select="$$path"/></h4>
+            <h5>global <le:get-argument name="global"/></h5>
           </div>
         </tpl:template>
         <tpl:template match="*">
           <tpl:read/>
           <tpl:text>!</tpl:text>
         </tpl:template>
-
       </view:view>
     </tst:document>
     <tst:node>
@@ -1038,6 +1044,7 @@ EOT;
         <span>admin@sylma.org!</span>
         <em>admin@sylma.org</em>
         <h4>email</h4>
+        <h5>global email</h5>
       </div>
     </tst:node>
   </tst:test>

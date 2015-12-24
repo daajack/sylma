@@ -48,6 +48,11 @@ class Tree extends reflector\component\Foreigner implements reflector\component,
 
   protected function getVar() {
 
+    if (!$this->var) {
+
+      $this->launchException('No variable defined', get_defined_vars());
+    }
+
     return $this->var;
   }
 

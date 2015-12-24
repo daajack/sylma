@@ -12,10 +12,14 @@ abstract class Pathed extends Domed {
    */
   public function getPather() {
 
-    //if (!$this->pather) {
+    if ($this->getTree(false)) {
 
       $result = $this->buildPather($this->getTree());
-    //}
+    }
+    else {
+
+      $result = $this->loadSimpleComponent('pather');
+    }
 
     return $result;
   }

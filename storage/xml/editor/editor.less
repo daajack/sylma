@@ -1,0 +1,92 @@
+
+@import "/sylma/modules/html/vars.less";
+
+.element
+{
+  clear: left;
+  overflow: hidden;
+
+  .prefix
+  {
+    color: @gray1;
+
+    &:not(:empty):after
+    {
+      content : ":";
+    }
+  }
+
+  & > .fullname,
+  & > .attributes,
+  & > .children
+  {
+    float: left;
+  }
+
+  & > .fullname
+  {
+    font-weight: bold;
+  }
+
+  .attribute
+  {
+    display: inline-block;
+    margin-left: 0.5em;
+    color: @gray1;
+    font-style: italic;
+
+    .prefix
+    {
+      color: @gray2;
+    }
+
+    *
+    {
+      display: inline-block;
+    }
+
+    .content:before
+    {
+      content : "=";
+      color: @gray2;
+    }
+  }
+
+  .text
+  {
+    margin: 0;
+  }
+
+  & > .children
+  {
+    padding-left: 1em;
+  }
+
+  &.format-complex > .children
+  {
+    float: none;
+    clear: left;
+    border-left: @gray3 1px solid;
+  }
+
+  &:hover
+  {
+    & > .children
+    {
+      border-color: @gray1;
+    }
+
+    & > .fullname
+    {
+      text-decoration: underline;
+    }
+  }
+
+  &.element-crud > .fullname .prefix { color: purple; }
+  &.element-le > .fullname .prefix { color: blue; }
+  &.element-view > .fullname .prefix { color: green; }
+  &.element-tpl > .fullname .prefix { color: orange; }
+
+  .attribute-js .prefix { color: red; }
+
+}

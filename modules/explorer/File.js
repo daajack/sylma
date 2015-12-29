@@ -10,32 +10,61 @@ sylma.modules.explorer.File = new Class({
   open : function(callback) {
 
     var explorer = this.getParent('explorer');
-    var view = explorer.getObject('view');
     var node = this.getNode();
+    var view = explorer.getObject('view');
 
-    node.addClass('open');
-//console.log(this.get('path'));
+    Object.each(view.objects, function(obj) {
+
+      obj.getNode().removeClass('open');
+    });
+
+    node.addClass('loading');
+
+    var container;
+
     switch (this.options.extension) {
 
       case 'php' :
 
-        view.update(function() {
+        container = view.getObject('tab-inspector');
 
-          node.removeClass('open');
-          callback && callback();
-          
-        }, {
-          url : explorer.get('inspector') + '.json',
-          data : {
-            file : this.get('path')
-          }
-        });
+        break;
+
+      case 'crd' :
+      case 'vml' :
+      case 'tpl' :
+      case 'xml' :
+      case 'sml' :
+      case 'tml' :
+      case 'xql' :
+      case 'xsd' :
+
+        container = view.getObject('tab-editor');
 
         break;
 
       default :
 
 
+    }
+
+    if (container) {
+
+      container.update(function() {
+
+        container.getNode().addClass('open');
+        node.removeClass('loading');
+        callback && callback();
+
+      }, {
+        data : {
+          file : this.get('path')
+        }
+      });
+    }
+    else {
+
+      sylma.ui.showMessage('No editor defined');
     }
   }
 });

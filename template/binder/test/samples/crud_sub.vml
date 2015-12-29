@@ -20,7 +20,14 @@
 
     <tpl:template>
 
-      <badview/>
+      <div js:class="sylma.ui.Container">
+        <button js:class="sylma.ui.Base" js:name="main">
+          <js:event name="click">
+            %object%.options.callback(this.get('text'));
+          </js:event>
+          <tpl:text>hello</tpl:text>
+        </button>
+      </div>
 
     </tpl:template>
 
@@ -30,12 +37,12 @@
 
     <tpl:template>
 
-      <div js:class="sylma.ui.Container" js:name="container">
+      <div js:class="sylma.ui.Container">
         <button js:class="sylma.ui.Base" js:name="sub">
           <js:event name="click">
             %object%.options.callback(this.get('text'));
           </js:event>
-          <tpl:text>hello</tpl:text>
+          <tpl:text>world</tpl:text>
         </button>
       </div>
 

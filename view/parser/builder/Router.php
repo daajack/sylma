@@ -136,7 +136,7 @@ class Router extends View {
   public function aliasFromRequest(core\request $path) {
 
     $reflector = $this->buildCrudReflector();
-    $view = $reflector->getPath($path->readArgument(0));
+    $view = $reflector->getPath($path->readArgument(0, false));
 
     return $view->getAlias();
   }

@@ -27,7 +27,7 @@ class Script extends Basic implements common\arrayable {
       'js:script' => null,
     );
 
-    if (!$this->readx('js:class')) {
+    if (!$this->readx('@js:class')) {
 
       $aAttributes['js:class'] = 'sylma.ui.Container';
     }

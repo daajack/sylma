@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<crud:crud
+  xmlns:crud="http://2013.sylma.org/view/crud"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:js="http://2013.sylma.org/template/binder"
+
+  xmlns:xl="http://2013.sylma.org/storage/xml"
+  xmlns:cls="http://2013.sylma.org/core/factory"
+  xmlns:node="http://2013.sylma.org/modules/xmler"
+>
+
+  <crud:global node:ns="ns">
+
+    <xl:resource file="schema.xml"/>
+
+    <tpl:settings>
+      <cls:classes>
+        <cls:class alias="tree">
+          <cls:classes>
+            <cls:class alias="cached" name="\sylma\storage\xml\editor\Editor"/>
+          </cls:classes>
+        </cls:class>
+      </cls:classes>
+    </tpl:settings>
+
+  </crud:global>
+
+  <view:view _debug="x">
+
+    <le:context name="css">
+      <le:file>editor.less</le:file>
+    </le:context>
+
+    <tpl:template>
+
+      <tpl:apply select="init()">
+        <le:file>
+          <le:get-argument name="file"/>
+        </le:file>
+      </tpl:apply>
+
+      <js:include>/#sylma/ui/Template.js</js:include>
+
+      <js:include>lib/Editor.js</js:include>
+      <js:include>lib/Node.js</js:include>
+      <js:include>lib/Document.js</js:include>
+      <js:include>lib/Element.js</js:include>
+      <js:include>lib/Attribute.js</js:include>
+      <js:include>lib/Text.js</js:include>
+
+      <div js:class="sylma.ui.Container">
+        <div class="editor" js:class="sylma.xml.Editor">
+          <js:option name="document">
+            <tpl:read select="/root()/asJSON()"/>
+          </js:option>
+          <tpl:apply select="document"/>
+        </div>
+      </div>
+
+    </tpl:template>
+
+    <tpl:template match="node:document">
+      <div class="document" js:class="sylma.xml.Document" js:alias="document">
+        <div class="children">
+          <tpl:apply select="element"/>
+        </div>
+      </div>
+    </tpl:template>
+
+    <tpl:template match="node:text">
+      <pre class="text" js:class="sylma.xml.Text" js:alias="text">
+        <tpl:read select="content"/>
+      </pre>
+    </tpl:template>
+
+    <tpl:template match="node:element">
+      <div class="element" js:class="sylma.xml.Element" js:alias="element">
+        <tpl:read select="'--'"/>
+        <tpl:read select="name"/>
+      </div>
+    </tpl:template>
+
+    <tpl:template match="node:element">
+      <div class="element element-{prefix} format-{format}" js:class="sylma.xml.Element" js:parent-name="element" js:alias="element">
+        <tpl:apply mode="fullname"/>
+        <div class="attributes">
+          <tpl:apply select="attribute"/>
+        </div>
+        <tpl:apply select="children"/>
+      </div>
+    </tpl:template>
+
+    <tpl:template match="*" mode="fullname">
+      <div class="fullname">
+        <span class="prefix">
+          <tpl:read select="prefix"/>
+        </span>
+        <span class="name">
+          <tpl:read select="name"/>
+        </span>
+      </div>
+    </tpl:template>
+
+    <tpl:template match="node:children">
+      <div class="children" js:class="sylma.ui.Template" js:alias="children" js:all="x">
+        <tpl:apply select="element, text"/>
+      </div>
+    </tpl:template>
+
+    <tpl:template match="node:attribute">
+      <div class="attribute attribute-{prefix}" js:class="sylma.xml.Attribute" js:alias="attribute">
+        <tpl:apply mode="fullname"/>
+        <div class="content">
+          <tpl:read select="content"/>
+        </div>
+      </div>
+    </tpl:template>
+
+  </view:view>
+
+</crud:crud>

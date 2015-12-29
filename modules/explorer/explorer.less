@@ -8,9 +8,14 @@
     margin-top: 0;
   }
 
-  .sidebar
+  .sidebar,
+  .view
   {
     box-sizing: border-box;
+  }
+
+  .sidebar
+  {
     width: 10%;
     border-right: 1px solid #ddd;
     float: left;
@@ -23,39 +28,56 @@
       margin-right: 2%;
     }
 
-  }
+    .open
+    {
+      color: blue;
+    }
 
-  .open
-  {
-    color: blue;
+    .view
+    {
+      width: 82%;
+      padding: 2%;
+      float: right;
+    }
+
+    .directory
+    {
+      .name
+      {
+        font-size: 1.2em;
+      }
+    }
+
+    .directory,
+    .file
+    {
+      display: block;
+      padding: 0.5em 1em;
+      border: 1px solid #eee;
+      margin-bottom: 0.1em;
+    }
+
+    .directory
+    {
+      background-color: #fcefa1;
+    }
   }
 
   .view
   {
-    width: 82%;
-    padding: 2%;
-    float: right;
-  }
+    float: left;
+    padding-left: 2em;
+    width: 90%;
 
-  .directory
-  {
-    .name
+    & > *
     {
-      font-size: 1.2em;
+      display: none;
+
+      &.open
+      {
+        display: block;
+      }
     }
   }
 
-  .directory,
-  .file
-  {
-    display: block;
-    padding: 0.5em 1em;
-    border: 1px solid #eee;
-    margin-bottom: 0.1em;
-  }
-
-  .directory
-  {
-    background-color: #fcefa1;
-  }
 }

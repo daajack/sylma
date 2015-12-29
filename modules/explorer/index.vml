@@ -70,9 +70,6 @@
       </tpl:variable>
 
       <div class="explorer" js:class="sylma.modules.explorer.Explorer" js:name="explorer" js:parent-name="explorer">
-        <js:option name="inspector">
-          <le:path>/#sylma/modules/inspector/php/view</le:path>
-        </js:option>
         <h2>Explorer</h2>
         <div class="sidebar" js:class="sylma.modules.explorer.Tree" js:name="sidebar" js:parent-name="tree">
           <js:option name="datas">
@@ -84,7 +81,10 @@
           <tpl:apply select="root"/>
         </div>
         <div class="view" js:class="sylma.ui.Container" js:name="view">
-          <js:option name="sylma-inside">1</js:option>
+          <div js:script="/#sylma/modules/inspector/php/view" js:name="tab-inspector">
+            <js:option name="sylma-inside">1</js:option>
+          </div>
+          <div js:script="/#sylma/storage/xml/editor" js:name="tab-editor"/>
         </div>
       </div>
 

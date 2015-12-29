@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<view:view
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:js="http://2013.sylma.org/template/binder"
+
+  xmlns:xl="http://2013.sylma.org/storage/xml"
+>
+
+  <xl:resource/>
+
+  <tpl:template>
+    <js:include>Container.js</js:include>
+    <div js:class="sylma.samples.Container">
+      <js:method name="hello">return this.parent() + this.getNode().get('text');</js:method>
+      <tpl:text>world</tpl:text>
+    </div>
+  </tpl:template>
+
+</view:view>

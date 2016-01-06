@@ -212,7 +212,7 @@ abstract class Manager extends core\module\Domed {
 
       $dep = $this->getFile($sDependency);
 
-      if (!in_array($dep, $this->aChecked)) {
+      if (!in_array($dep, $this->aChecked, true)) {
 
         $this->aChecked[] = $dep;
         $builder->load($dep, array(), null, false);

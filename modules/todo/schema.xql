@@ -26,6 +26,8 @@
     <field name="duration_sub" type="sql:float" default="null"/>
     <field name="duration_real" title="duration (real)" type="sql:float" default="null"/>
     <field name="duration_sub_real" type="sql:float" default="null"/>
+    <field name="start" type="sql:datetime" default="null"/>
+    <field name="start_real" title="start (real)" type="sql:datetime" default="null"/>
     <field name="term" type="sql:datetime" default="null"/>
     <field name="term_real" title="term (real)" type="sql:datetime" default="null"/>
 

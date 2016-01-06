@@ -89,7 +89,7 @@ class Manager extends compiler\Manager {
       $this->launchException('Unauthorized building access', get_defined_vars());
     }
 
-    if (in_array($file, $this->aStackBuild)) {
+    if (in_array($file, $this->aStackBuild, true)) {
 
       $this->launchException('Cannot build, recursion detected', get_defined_vars());
     }

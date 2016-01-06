@@ -112,6 +112,7 @@ class Initializer extends module\Domed {
 
     if ($sFile = $path->asFile()) {
 
+      session_write_close();
       $sResult = $this->runFile($sFile);
     }
     else {

@@ -146,7 +146,7 @@ class Parser extends Prepare {
     if ($bRun) {
 
       $this->startProfile();
-      $result = $manager->load($file, $this->checkArguments($aArguments), false, static::DEBUG_RUN);
+      $result = $manager->load($file, $this->checkArguments($aArguments), false, static::DEBUG_RUN, true);
       $this->stopProfile();
 
       if ($bDelete) $file->delete();
@@ -247,16 +247,32 @@ class Parser extends Prepare {
   public function loadScript(array $aArguments = array(), array $aPosts = array(), array $aContexts = array()) {
 
     $this->startProfile();
-    $result = $this->getScriptFile($this->getFile(), $this->buildScriptArguments($aArguments, $aContexts, $aPosts));
+
+    $result = $this->getManager(self::PARSER_MANAGER)->load(
+      $this->getFile(),
+      $this->buildScriptArguments($aArguments, $aContexts, $aPosts),
+      null,
+      true,
+      true
+    );
+
     $this->stopProfile();
 
     return $result;
   }
 
-  public function getScript($sPath, array $aArguments = array(), array $aContexts = array(), array $aPosts = array(), $bRun = true) {
+  public function getScript($sPath, array $aArguments = array(), array $aContexts = array(), array $aPosts = array(), $bRun = true, $bUpdate = true) {
 
     $this->startProfile();
-    $result = $this->getManager(self::PARSER_MANAGER)->load($this->getFile($sPath), $this->buildScriptArguments($aArguments, $aContexts, $aPosts), true, $bRun);
+
+    $result = $this->getManager(self::PARSER_MANAGER)->load(
+      $this->getFile($sPath),
+      $this->buildScriptArguments($aArguments, $aContexts, $aPosts),
+      $bUpdate,
+      $bRun,
+      true
+    );
+
     $this->stopProfile();
 
     return $result;

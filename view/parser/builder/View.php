@@ -114,6 +114,12 @@ class View extends Variabled {
     return $this->resourceWindow;
   }
 
+  public function addResourceCall(fs\file $file) {
+
+    $window = $this->getResourceWindow();
+    $window->add($this->callScript($file, $window, null, false, true));
+  }
+
   protected function buildDoView(dom\document $doc, common\_window $window) {
 
     $resourceWindow = $this->createWindow();
@@ -130,14 +136,22 @@ class View extends Variabled {
   protected function buildDisplayView(dom\document $doc, common\_window $window, $sAlias) {
 
     $resourceWindow = $this->createWindow();
+    $this->prepareArgumented($resourceWindow);
+
     $this->resourceWindow = $resourceWindow;
 
     $this->checkVariable($resourceWindow, 'contexts', '\\' . get_class($this->create('argument')));
 
-    $file = $this->getResourceFile($this->getSourceFile(), $sAlias);
-    $this->includeFile($file, $window);
+    $file = $this->buildResourceFile($this->getSourceFile(), $sAlias);
+    //$this->includeFile($file, $window);
+
+    $condition = $window->createCondition($window->getVariable('bSylmaExternal'));
+    $condition->addContent($this->callScript($file, $window, null, false));
+
+    $window->add($condition);
 
     $content = $this->reflectMain($doc, $this->getFile(), $window);
+
     $return = $this->buildInstanciation($content, $window);
 
     $resources = $resourceWindow->asDOM();
@@ -152,7 +166,15 @@ class View extends Variabled {
     $window->add($call);
   }
 
-  public function getResourceFile(fs\file $file, $sAlias) {
+  public function findResourceFile() {
+
+    $file = $this->getFile();
+    $result = $this->buildResourceFile($file);
+
+    return $result;
+  }
+
+  protected function buildResourceFile(fs\file $file, $sAlias = '') {
 
     $parser = $this->getManager(self::PARSER_MANAGER);
     $result = $parser->getCachedFile($file, ($sAlias ? '.' . $sAlias : '') . '-ext.php');
@@ -213,14 +235,16 @@ class View extends Variabled {
     return $doc->readx('@mode', array(), false);
   }
 
-  public function callScript(fs\file $file, common\_window $window, $return = null, $bReturn = true) {
+  public function callScript(fs\file $file, common\_window $window, $return = null, $bReturn = true, $bCheck = false) {
 
-    $arguments = $window->getVariable('aSylmaArguments');
+    $arguments = $window->getVariable('aSylmaArguments', false);
+    $external = $window->getVariable('bSylmaExternal', false);
 
     //$closure = $window->createClosure(array($arguments));
     //$closure->addContent($window->callFunction('include', $return, array($file->getName())));
 
-    $call = $window->createCall($window->getSylma(), 'includeFile', $return, array($file->getRealPath(), $arguments, $window->getVariable('bSylmaExternal')));
+    $sFunction = $bCheck ? 'includeFileCheck' : 'includeFile';
+    $call = $window->createCall($window->getSylma(), $sFunction, $return, array($file->getRealPath(), $arguments, $external));
 
     if ($bReturn) {
 
@@ -232,11 +256,6 @@ class View extends Variabled {
     }
 
     return $result;
-  }
-
-  public function aliasFromRequest(core\request $path) {
-
-    return '';
   }
 
   public function asPath() {

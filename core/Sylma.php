@@ -344,6 +344,20 @@ class Sylma {
     return include($sFile);
   }
 
+  public static function includeFileCheck($sFile, array $aSylmaArguments = array(), $bSylmaExternal = false) {
+
+    if (file_exists($sFile)) {
+
+      $result = self::includeFile($sFile, $aSylmaArguments, $bSylmaExternal);
+    }
+    else {
+
+      $result = null;
+    }
+
+    return $result;
+  }
+
   public static function load($sFile, $sDirectory = '') {
 
     $result = null;

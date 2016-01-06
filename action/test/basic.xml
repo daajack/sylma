@@ -109,6 +109,52 @@
       return true;
     </tst:expected>
   </tst:test>
+  <tst:test name="Context update">
+    <tst:node name="context1">
+      <html:link href="/test/style1.css" type="text/css" media="all" rel="stylesheet"/>
+    </tst:node>
+    <tst:node name="context2">
+      <html:link href="/test/style1.css" type="text/css" media="all" rel="stylesheet"/>
+      <html:link href="/test/style2.css" type="text/css" media="all" rel="stylesheet"/>
+    </tst:node>
+    <tst:expected>
+
+      $context = new \sylma\modules\html\context\CSS;
+      $manager->set('context', $context);
+
+      $manager->copyFile('samples/style1.css');
+      $manager->copyFile('samples/style2.css');
+
+      $file = $manager->copyFile('samples/context-caller.vml');
+      $manager->copyFile('samples/context1.vml', 'context.vml');
+
+      $result = $manager->getScript((string) $file, array(), array('css' => $context), array(), true, null);
+      $cache = $manager->getManager('parser')->getCachedFile($file);
+      $time1 = $cache->getUpdateTime();
+
+      $manager->compareNodes($context->asDOM(), $manager->get('node/context1'));
+
+      sleep(1);
+
+      $context = new \sylma\modules\html\context\CSS;
+      $manager->getScript((string) $file, array(), array('css' => $context), array(), true, null);
+
+      $manager->assertEquals($time1, $cache->getUpdateTime(), 'no update 1');
+
+      sleep(1);
+
+      $manager->copyFile('samples/context2.vml', 'context.vml');
+
+      $context = new \sylma\modules\html\context\CSS;
+      $result = $manager->getScript((string) $file, array(), array('css' => $context), array(), true, null);
+      $cache = $manager->getManager('parser')->getCachedFile($file);
+
+      $manager->assertEquals($time1, $cache->getUpdateTime(), 'no update 2');
+      $manager->compareNodes($context->asDOM(), $manager->get('node/context2'));
+
+      return true;
+    </tst:expected>
+  </tst:test>
   <tst:test name="Simple array" run="false">
     <tst:document>
       <view:view>
@@ -144,6 +190,35 @@
       return true;
     </tst:expected>
   </tst:test>
+  <tst:test name="Context in tree" run="false">
+    <tst:document>
+      <view:view>
+        <sql:resource>
+          <sql:id>2</sql:id>
+        </sql:resource>
+        <view:schema>samples/user2.xql</view:schema>
+        <tpl:template>
+          <le:context name="messages" location="tree">
+            <tpl:apply select="'user - {name}'"/>
+          </le:context>
+          <div/>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:expected>
+
+      $context = $manager->createArgument(array());
+      $manager->set('context', $context);
+
+      $manager->loadScript(array(), array(), array(
+        'messages' => $context,
+      ));
+
+      $manager->assertEqual($context->asArray(), array('user - admin'));
+
+      return true;
+    </tst:expected>
+  </tst:test>
   <tst:test name="Array exploded" run="false">
     <tst:document>
       <view:view>
@@ -170,6 +245,9 @@
     </tst:expected>
   </tst:test>
   <tst:test name="Call script">
+    <tst:prepare>
+      $manager->buildScript('samples/view1.vml');
+    </tst:prepare>
     <tst:document>
       <view:view sql:ns="ns">
         <sql:resource>
@@ -188,7 +266,28 @@
       <div><h3>admin</h3><a href="mailto:email">test</a></div>
     </tst:node>
   </tst:test>
+  <tst:test name="Call insert script">
+    <tst:prepare>
+      $manager->buildScript('samples/insert.vml');
+    </tst:prepare>
+    <tst:document>
+      <view:view sql:ns="ns">
+        <xl:resource/>
+        <tpl:template>
+          <div>
+            <le:script path="samples/insert"/>
+          </div>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <div>1</div>
+    </tst:node>
+  </tst:test>
   <tst:test name="Call script with arguments">
+    <tst:prepare>
+      $manager->buildScript('samples/view2.vml');
+    </tst:prepare>
     <tst:document>
       <view:view sql:ns="ns">
         <sql:resource>
@@ -216,6 +315,9 @@
     </tst:node>
   </tst:test>
   <tst:test name="Call script with mixed arguments">
+    <tst:prepare>
+      $manager->buildScript('samples/arguments_mixed.vml');
+    </tst:prepare>
     <tst:document>
       <view:view sql:ns="ns">
         <xl:resource/>
@@ -238,6 +340,9 @@
     </tst:node>
   </tst:test>
   <tst:test name="Call script hollow">
+    <tst:prepare>
+      $manager->buildScript('samples/view1.vml');
+    </tst:prepare>
     <tst:document>
       <view:view sql:ns="ns">
         <sql:resource>

@@ -20,6 +20,7 @@ class Manager extends compiler\Manager {
    * For stats
    */
   public $aBuilded = array();
+  protected $aStackBuild = array();
 
   public function __construct() {
 
@@ -85,18 +86,27 @@ class Manager extends compiler\Manager {
     if (!\Sylma::isAdmin()) {
 
       //$this->throwException('This function is low performance and must not be used in production environnement');
-      $this->throwException('Unauthorized building access');
+      $this->launchException('Unauthorized building access', get_defined_vars());
+    }
+
+    if (in_array($file, $this->aStackBuild)) {
+
+      $this->launchException('Cannot build, recursion detected', get_defined_vars());
     }
 
     $builder = $this->loadBuilder($file, $dir);
     $this->aBuilded[] = $file;
+    $this->aStackBuild[] = $file;
 
     $result = $builder->build($dir);
+    clearstatcache();
 
-    if ($aDependancies = $builder->getDependancies()) {
+    if ($aDependencies = $builder->getDependencies()) {
 
-      $this->buildDependancies($dir, $file, $aDependancies);
+      $this->buildDependencies($dir, $file, $aDependencies);
     }
+
+    array_pop($this->aStackBuild);
 
     return $result;
   }

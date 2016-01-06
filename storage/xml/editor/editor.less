@@ -1,6 +1,12 @@
 
 @import "/sylma/modules/html/vars.less";
 
+.document > .children > .element > .children > .element
+{
+  margin-top: 1.5em;
+  border-top: 1px dotted @gray3;
+}
+
 .element
 {
   clear: left;
@@ -55,6 +61,11 @@
   .text
   {
     margin: 0;
+  }
+
+  & .children
+  {
+    overflow: hidden;
   }
 
   & > .children

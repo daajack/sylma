@@ -21,7 +21,10 @@ class Documented extends Logger implements reflector\documented {
 
   protected $bThrow = true;
   protected $aElements = array();
-  protected $aDependancies = array();
+  protected $aDependencies = array(
+    'file' => array(),
+    'script' => array(),
+  );
 
   public function __construct($manager, fs\file $file = null, fs\directory $dir = null, core\argument $args = null, dom\document $doc = null) {
 
@@ -76,7 +79,7 @@ class Documented extends Logger implements reflector\documented {
 
     if (!$bSelf) {
 
-      $this->addDependancy($file);
+      $this->addDependency($file);
     }
 
     if (!$file->getManager()->getName()) {
@@ -313,19 +316,20 @@ class Documented extends Logger implements reflector\documented {
     return $result;
   }
 
-  public function addDependancy(fs\file $file) {
+  public function addDependency(fs\file $file, $bScript = false) {
 
     $sFile = (string) $file;
+    $sCurrent = $this->getFile('', false);
 
-    if (!in_array($sFile, $this->aDependancies)) {
+    if (!in_array($sFile, $this->aDependencies) && (!$sCurrent || $sFile !== $sCurrent)) {
 
-      $this->aDependancies[] = $sFile;
+      $this->aDependencies[$bScript ? 'script' : 'file'][] = $sFile;
     }
   }
 
-  public function getDependancies() {
+  public function getDependencies() {
 
-    return $this->aDependancies;
+    return $this->aDependencies;
   }
 
   protected function loadTarget(dom\document $doc, fs\file $file) {

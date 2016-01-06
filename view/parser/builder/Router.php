@@ -133,12 +133,39 @@ class Router extends View {
     return isset($this->aPaths['']) ? $this->aPaths[''] : null;
   }
 
-  public function aliasFromRequest(core\request $path) {
+  public function findResourceFile(core\request $path = null) {
+
+    if (!$path) {
+
+      $aPath = array('');
+    }
+    else {
+
+      $aPath = $path->getArguments()->asArray();
+    }
+
+    if ($aPath && $aPath[0] === 'default') {
+
+      $aPath[0] = '';
+    }
 
     $reflector = $this->buildCrudReflector();
-    $view = $reflector->getPath($path->readArgument(0, false));
+    $view = $reflector->getView($aPath);
 
-    return $view->getAlias();
+    if (!$view) {
+
+      $this->launchException('View not found : ' . implode('/', $aPath));
+    }
+
+    return $this->getResourceFile($view->getAlias());
+  }
+
+  public function getResourceFile($sAlias) {
+
+    $file = $this->getFile();
+    $result = $this->buildResourceFile($file, $sAlias);
+
+    return $result;
   }
 
   public function asPath() {

@@ -3,7 +3,7 @@
 namespace sylma\core\request;
 use sylma\core, sylma\storage\fs, sylma\core\functions;
 
-class Basic extends core\module\Filed implements core\request {
+class Basic extends core\module\Filed implements core\request, core\tokenable {
 
   const FILE_MANAGER = 'fs';
 
@@ -320,6 +320,11 @@ class Basic extends core\module\Filed implements core\request {
     $args = $this->getArguments();
 
     return $args->asArray();
+  }
+
+  public function asToken() {
+
+    return '@path' . $this->getPath();// . '/' . implode('/', $this->getArguments()->asArray());
   }
 
   public function __toString() {

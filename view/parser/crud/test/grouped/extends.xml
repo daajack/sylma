@@ -37,7 +37,7 @@
         $manager->compareNodes($result, $node);
     </tst:expected>
   </tst:test>
-  <tst:test name="Extends dependancy update">
+  <tst:test name="Extends dependency update">
     <tst:node>
       <div>
         <h3>root</h3>
@@ -127,7 +127,7 @@
         'arguments' => $manager->createArgument(array(
           'default', 'sub',
         )),
-      ));
+      ), false);
 
       $node1 = $node->get('main');
       $node2 = $node->get('sub');
@@ -158,7 +158,7 @@
         'arguments' => $manager->createArgument(array(
           'sub',
         )),
-      ));
+      ), false);
 
       $node1 = $nodes->get('main');
       $node2 = $nodes->get('sub');
@@ -192,7 +192,7 @@
         'arguments' => $manager->createArgument(array(
           'default', 'sub',
         )),
-      ));
+      ), false);
 
       $node1 = $node->get('main');
       $node2 = $node->get('sub');
@@ -233,18 +233,18 @@
         'arguments' => $manager->createArgument(array(
           'default', 'sub',
         )),
-      ));
+      ), false);
 
       $view3 = $manager->load('samples/extends5.vml', array(
         'arguments' => $manager->createArgument(array(
           'route2',
         )),
-      ));
+      ), false);
       $view4 = $manager->load('samples/extends5.vml', array(
         'arguments' => $manager->createArgument(array(
           'route2', 'sub2',
         )),
-      ));
+      ), false);
 
       $node1 = $node->get('main');
       $node2 = $node->get('sub');
@@ -289,18 +289,18 @@
         'arguments' => $manager->createArgument(array(
           'default', 'sub',
         )),
-      ));
+      ), false);
 
       $view3 = $manager->load('samples/extends6.vml', array(
         'arguments' => $manager->createArgument(array(
           'route2',
         )),
-      ));
+      ), false);
       $view4 = $manager->load('samples/extends6.vml', array(
         'arguments' => $manager->createArgument(array(
           'route2', 'sub2',
         )),
-      ));
+      ), false);
 
       $node1 = $node->get('main');
       $node2 = $node->get('sub');
@@ -336,7 +336,7 @@
         'arguments' => $manager->createArgument(array(
           'default', 'sub',
         )),
-      ));
+      ), false);
 
       $node1 = $node->get('main');
       $node2 = $node->get('sub');

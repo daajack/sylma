@@ -53,6 +53,7 @@
                     <cls:class alias="float" name="Float"/>
                     <cls:class alias="string" name="_String"/>
                     <cls:class alias="price" name="Price"/>
+                    <cls:class alias="date" name="Datetime"/>
                   </cls:classes>
                 </cls:class>
 

@@ -216,6 +216,24 @@ class Crud extends reflector\handler\Elemented implements reflector\elemented {
     return isset($this->aPaths[$sName]) ? $this->aPaths[$sName] : null;
   }
 
+  public function getView($aPath) {
+
+    $result = null;
+    $sName = array_shift($aPath);
+
+    if (isset($this->aPaths[$sName])) {
+
+      $result = $this->aPaths[$sName];
+
+      if ($aPath) {
+
+        $result = $result->getPath($aPath);
+      }
+    }
+
+    return $result;
+  }
+
   public function __clone() {
 
     $this->default = null;

@@ -50,6 +50,15 @@ class Elemented extends template\parser\handler\Domed {
     parent::parseRoot($el);
 
     $this->setMode($sMode);
+
+    return $this->build();
+  }
+
+  protected function build() {
+
+    $sMode = $this->getMode();
+    $el = $this->getNode();
+
     $this->checkInternal();
 
     $resource = $this->loadResource($sMode); // parseRoot(), onAdd()
@@ -72,7 +81,7 @@ class Elemented extends template\parser\handler\Domed {
     $window = $this->getWindow();
     $window->add($window->parseArrayables($aContent));
 
-    $result = $this->build($resource->getTree(), $sMode); // asArray()
+    $result = $this->buildContent($resource->getTree(), $sMode); // asArray()
 
     return $result;
   }
@@ -138,7 +147,7 @@ class Elemented extends template\parser\handler\Domed {
     return $sResult;
   }
 
-  protected function build(template\parser\tree $tree, $sMode) {
+  protected function buildContent(template\parser\tree $tree, $sMode) {
 
     $window = $this->getWindow();
     $content = $tree->reflectApply();

@@ -116,7 +116,7 @@ class Builder extends core\module\Domed {
       'arguments' => $args,
       'post' => $post,
       'contexts' => $contexts,
-    ), $bUpdate, $bRun);
+    ), $bUpdate, $bRun, true);
   }
 
   protected function prepareContexts(core\argument $fusion) {

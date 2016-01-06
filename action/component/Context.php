@@ -30,33 +30,54 @@ class Context extends Basic implements common\arrayable {
   protected function loadCalls(common\_callable $context, $aContent) {
 
     $aResult = array();
+    $window = $this->getWindow();
 
     foreach ($aContent as $content) {
 
-      $aResult[] = $context->call('add', array($content));
+      $aResult[] = $window->createInstruction($context->call('add', array($content)));
     }
 
     return $aResult;
   }
 
-  public function asArray() {
+  protected function buildContent(common\_window $window) {
 
-    $window = $this->getRoot()->getResourceWindow();
     $sContext = $this->readx('@name');
-
     $contexts = $window->getVariable('contexts');
-
-    $tmpWindow = $this->getHandler()->getWindow();
-    $this->getRoot()->setWindow($window);
-
-    $content = $this->parseChildren($this->getNode()->getChildren());
-
-    $this->getRoot()->setWindow($tmpWindow);
+    $content = $window->parse($this->parseChildren($this->getNode()->getChildren()));
 
     $result = $this->loadCalls($contexts->call('get', array($sContext), '\sylma\core\argument'), $content);
 
-    $window->add($result);
+    return $result;
+  }
 
-    return array();
+  protected function build() {
+
+    $sContext = $this->readx('@location');
+
+    if ($sContext !== 'tree') {
+
+      $window = $this->getRoot()->getResourceWindow();
+      $tmpWindow = $this->getHandler()->getWindow();
+
+      $this->getRoot()->setWindow($window);
+      $calls = $this->buildContent($window);
+      $this->getRoot()->setWindow($tmpWindow);
+
+      $window->add($calls);
+      $result = array();
+    }
+    else {
+
+      $window = $this->getWindow();
+      $result = $this->buildContent($window);
+    }
+
+    return $result;
+  }
+
+  public function asArray() {
+
+    return $this->build();
   }
 }

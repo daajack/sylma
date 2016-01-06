@@ -14,6 +14,7 @@ debug :
   show : false
   # if TRUE : log parse component messages, require lot of memory, can reach memory limits
   parser : false
+  dependency : false
   email :
     enable : false
     default : example@example.org

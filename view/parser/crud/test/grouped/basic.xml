@@ -402,6 +402,9 @@
           <view:view>
             <tpl:template>
               <div>
+                <h1>
+                  <crud:path/>
+                </h1>
                 <h2>
                   <crud:path path="/sub"/>
                 </h2>
@@ -422,6 +425,7 @@
     </tst:document>
     <tst:node>
       <div>
+        <h1>/sylma/view/parser/crud/test/grouped/basicxml-path-view</h1>
         <h2>/sylma/view/parser/crud/test/grouped/basicxml-path-view/default/sub</h2>
         <h3>/sylma/view/parser/crud/test/grouped/basicxml-path-view/sub</h3>
       </div>

@@ -792,7 +792,7 @@ EOT;
       </div>
     </tst:node>
   </tst:test>
-  <tst:test name="Import dependancy update">
+  <tst:test name="Import dependency update">
     <tst:node>
       <div>
         <h4>world</h4>
@@ -843,7 +843,7 @@ EOT;
       <div>world</div>
     </tst:node>
   </tst:test>
-  <tst:test name="Extends dependancy update">
+  <tst:test name="Extends dependency update">
     <tst:node>
       <div>world</div>
     </tst:node>

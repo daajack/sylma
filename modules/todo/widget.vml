@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <view:view
   xmlns:view="http://2013.sylma.org/view"
-  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns="http://2014.sylma.org/html"
   xmlns:tpl="http://2013.sylma.org/template"
-  xmlns:sql="http://2013.sylma.org/storage/sql"
   xmlns:js="http://2013.sylma.org/template/binder"
   xmlns:le="http://2013.sylma.org/action"
+
+  xmlns:sql="http://2013.sylma.org/storage/sql"
 
   xmlns:todo="http://2013.sylma.org/modules/todo"
   xmlns:stat="http://2013.sylma.org/modules/todo/statut"
 >
 
   <le:context name="css">
-    <le:file>medias/main.css</le:file>
+    <le:file>medias/main.less</le:file>
   </le:context>
 
   <view:schema>schema.xql</view:schema>
@@ -28,12 +29,16 @@
     <tpl:apply select="init()"/>
     <tpl:apply select="counter()"/>
 
+    <tpl:variable name="href">
+      <tpl:apply mode="todo/href"/>
+    </tpl:variable>
+
     <div id="sylma-todo-widget">
-      <span class="count">
+      <a href="{$href}" class="count">
         <tpl:if test="count()">
           <tpl:read select="count()"/>
         </tpl:if>
-      </span>
+      </a>
       <div class="content">
         <div class="links clearfix">
           <div class="center">
@@ -58,6 +63,8 @@
       </div>
     </div>
   </tpl:template>
+
+  <tpl:template mode="todo/href">#</tpl:template>
 
   <tpl:template match="todo:todo">
     <li>

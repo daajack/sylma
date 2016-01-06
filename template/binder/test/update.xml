@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tst:tests
+  xmlns:tst="http://www.sylma.org/modules/tester/parser"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:js="http://2013.sylma.org/template/binder"
+
+  xmlns:user="http://2013.sylma.org/view/test/sample1"
+  xmlns:group="http://2013.sylma.org/view/test/sample2"
+
+  xmlns:sql="http://2013.sylma.org/storage/sql"
+  xmlns:xl="http://2013.sylma.org/storage/xml"
+>
+  <tst:description>Update</tst:description>
+
+  <tst:test name="Update">
+    <tst:document>
+      <view:view>
+        <sql:resource>
+          <sql:id>2</sql:id>
+        </sql:resource>
+        <view:schema>/#sylma/view/test/grouped/samples/user1.xql</view:schema>
+        <tpl:template>
+          <js:include>samples/update01.js</js:include>
+          <div js:class="sylma.samples.Sample2" js:parent="example" js:name="test">
+            <js:option name="path" cast="x">
+              <le:directory/>
+              <tpl:text>/samples/update01</tpl:text>
+            </js:option>
+            <js:option name="sylma-inside">1</js:option>
+            <button>
+              <js:event name="click">%object%.update();</js:event>
+            </button>
+          </div>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:prepare>
+      $manager->buildScript('samples/update01.vml');
+    </tst:prepare>
+    <tst:callback>
+
+      var test = example.test;
+      test.node.getElement('button').fireEvent('click');
+
+    </tst:callback>
+  </tst:test>
+  <tst:test name="Update collection">
+    <tst:document>
+      <view:view>
+        <xl:resource/>
+        <tpl:template>
+          <js:include>samples/update02.js</js:include>
+          <div js:class="sylma.samples.Sample2" js:parent="example" js:name="test">
+            <js:option name="path" cast="x">
+              <le:directory/>
+              <tpl:text>/samples/update02</tpl:text>
+            </js:option>
+            <js:option name="sylma-inside">1</js:option>
+          </div>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:prepare>
+      $manager->buildScript('samples/update02.vml');
+    </tst:prepare>
+    <tst:callback>
+
+      var test = example.test;
+      test.run();
+
+    </tst:callback>
+  </tst:test>
+  <tst:test name="Import script">
+    <tst:document>
+      <view:view>
+        <xl:resource/>
+        <tpl:template>
+          <section js:class="sylma.ui.Base" js:parent="example" js:name="test">
+            <div js:script="samples/simple" js:name="container"/>
+          </section>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:prepare>
+      $manager->buildScript('samples/simple.vml');
+    </tst:prepare>
+    <tst:callback>
+
+      var test = example.test;
+      var container = test.getObject('container');
+
+      container.update(function() {
+
+        var sub = container.getObject('sub');
+
+        sylma.tester.assertEquals('helloworld', sub.hello());
+        sylma.tester.test(true);
+      });
+
+    </tst:callback>
+  </tst:test>
+  <tst:test name="Import class">
+    <!-- @warning Do not import options, methods and templates -->
+    <tst:document>
+      <view:view>
+        <xl:resource/>
+        <tpl:template>
+          <section js:class="sylma.ui.Base" js:parent="example" js:name="test">
+            <div js:script="samples/no-container" js:name="container" js:class="sylma.samples.Container"/>
+          </section>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:prepare>
+      $manager->buildScript('samples/no-container.vml');
+    </tst:prepare>
+    <tst:callback>
+
+      var test = example.test;
+      var container = test.getObject('container');
+
+      container.update(function() {
+
+        var sub = container;
+
+        sylma.tester.assertEquals('hello', sub.hello());
+        sylma.tester.test(true);
+      });
+
+    </tst:callback>
+  </tst:test>
+  <tst:test name="Import crud script">
+    <tst:document>
+      <view:view>
+        <xl:resource/>
+        <tpl:template>
+          <section js:class="sylma.ui.Base" js:parent="example" js:name="test">
+            <div js:script="samples/crud_sub" js:name="container1"/>
+            <div js:script="samples/crud_sub/sub1" js:name="container2"/>
+          </section>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:prepare>
+      $manager->buildScript('samples/crud_sub.vml');
+    </tst:prepare>
+    <tst:callback>
+
+      var test = example.test;
+      var container = test.getObject('container1');
+
+      container.update(function() {
+
+        var main = container.getObject('main');
+
+        main.options.callback = function(val) {
+
+          sylma.tester.assertEquals(val, 'hello');
+
+          container = test.getObject('container2');
+
+          container.update(function() {
+
+            var sub = container.getObject('sub');
+
+            sub.options.callback = function(val) {
+
+              sylma.tester.assertEquals(val, 'world');
+              sylma.tester.test(true);
+            }
+
+            sub.getNode().click();
+          });
+        }
+
+        main.getNode().click();
+      });
+
+
+    </tst:callback>
+  </tst:test>
+  <tst:test name="Import crud:include">
+    <tst:document>
+      <view:view>
+        <xl:resource/>
+        <tpl:template>
+          <section js:class="sylma.ui.Base" js:parent="example" js:name="test">
+            <div js:script="samples/crud_calls" js:name="container"/>
+          </section>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:prepare>
+      $manager->buildScript('samples/crud_calls.vml');
+    </tst:prepare>
+    <tst:callback>
+
+      var test = example.test;
+
+      var container = test.getObject('container');
+
+      container.update(function() {
+
+        var main = container.getObject('main');
+
+        sylma.tester.assertEquals(main.hello(), 'sub1include');
+        sylma.tester.test(true);
+      });
+
+    </tst:callback>
+  </tst:test>
+  <tst:test name="Import crud:script">
+    <tst:document>
+      <view:view>
+        <xl:resource/>
+        <tpl:template>
+          <section js:class="sylma.ui.Base" js:parent="example" js:name="test">
+            <div js:script="samples/crud_calls/crud-script" js:name="container"/>
+          </section>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:prepare>
+      $manager->buildScript('samples/crud_calls.vml');
+    </tst:prepare>
+    <tst:callback>
+
+      var test = example.test;
+
+      var container = test.getObject('container');
+
+      container.update(function() {
+
+        var main = container.getObject('main');
+
+        sylma.tester.assertEquals(main.hello(), 'sub1crud-script');
+        sylma.tester.test(true);
+      });
+
+    </tst:callback>
+  </tst:test>
+  <tst:test name="Import le:script">
+    <tst:document>
+      <view:view>
+        <xl:resource/>
+        <tpl:template>
+          <section js:class="sylma.ui.Base" js:parent="example" js:name="test">
+            <div js:script="samples/crud_calls/le-script" js:name="container"/>
+          </section>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:prepare>
+      $manager->buildScript('samples/crud_calls.vml');
+    </tst:prepare>
+    <tst:callback>
+
+      var test = example.test;
+
+      var container = test.getObject('container');
+
+      container.update(function() {
+
+        var main = container.getObject('main');
+
+        sylma.tester.assertEquals(main.hello(), 'sub1le-script');
+        sylma.tester.test(true);
+      });
+
+    </tst:callback>
+  </tst:test>
+</tst:tests>

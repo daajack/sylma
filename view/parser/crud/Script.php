@@ -1,7 +1,7 @@
 <?php
 
 namespace sylma\view\parser\crud;
-use sylma\core, sylma\dom, sylma\action, sylma\template;
+use sylma\core, sylma\dom, sylma\action, sylma\template, sylma\storage\fs;
 
 class Script extends action\component\Script implements template\parser\component {
 
@@ -14,6 +14,15 @@ class Script extends action\component\Script implements template\parser\componen
 
     parent::parseRoot($el);
     $this->setUsedNamespace($this->getNamespace(), self::PREFIX, false);
+  }
+
+  protected function rebuild(fs\file $file) {
+
+
+  }
+
+  protected function addDependency(fs\file $file) {
+
   }
 
   public function setTemplate(template\parser\template $template) {

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<crud:crud
+  xmlns:crud="http://2013.sylma.org/view/crud"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:js="http://2013.sylma.org/template/binder"
+  xmlns:le="http://2013.sylma.org/action"
+
+  xmlns:xl="http://2013.sylma.org/storage/xml"
+>
+
+  <crud:global>
+
+    <xl:resource/>
+
+  </crud:global>
+
+  <view:view>
+
+    <view:template>
+
+      <div js:class="sylma.ui.Container">
+        <div js:class="sylma.ui.Container" js:name="main">
+          <js:method name="hello">return this.getObject('sub').hello() + 'include';</js:method>
+          <crud:include path="sub"/>
+        </div>
+      </div>
+
+    </view:template>
+
+  </view:view>
+
+  <view:view name="crud-script">
+
+    <view:template>
+
+      <div js:class="sylma.ui.Container">
+        <div js:class="sylma.ui.Container" js:name="main">
+          <js:method name="hello">return this.getObject('sub').hello() + 'crud-script';</js:method>
+          <crud:script path="sub"/>
+        </div>
+      </div>
+
+    </view:template>
+
+  </view:view>
+
+  <view:view name="le-script">
+
+    <view:template>
+
+      <div js:class="sylma.ui.Container">
+        <div js:class="sylma.ui.Container" js:name="main">
+          <js:method name="hello">return this.getObject('sub').hello() + 'le-script';</js:method>
+          <le:script path="crud_calls/sub"/>
+        </div>
+      </div>
+
+    </view:template>
+
+  </view:view>
+
+  <view:view name="sub">
+
+    <js:include>Container.js</js:include>
+
+    <view:template>
+
+      <strong js:class="sylma.samples.Container" js:name="sub">
+        <js:method name="hello">return 'sub1';</js:method>
+      </strong>
+
+    </view:template>
+
+  </view:view>
+
+</crud:crud>

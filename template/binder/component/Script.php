@@ -36,16 +36,12 @@ class Script extends Basic implements common\arrayable {
     $path = $this->create('path', array($sPath, $this->getSourceDirectory()));
     $path->parse();
 
-    $builder = $this->getManager(self::PARSER_MANAGER)->loadBuilder($path->asFile());
-    $sAlias = $builder->aliasFromRequest($path);
+    $file = $path->asFile(true);
+    $this->getRoot()->addDependency($file, true);
 
-    $file = $builder->getResourceFile($builder->getSourceFile(), $sAlias);
-
-    $root = $this->getRoot();
-
-    $root->includeFile($file, $root->getResourceWindow());
-    //$include = $root->callScript($file, $root->getResourceWindow(), null, false);
-    //$root->getResourceWindow()->add($include);
+    $builder = $this->getManager(self::PARSER_MANAGER)->loadBuilder($file);
+    $resourceFile = $builder->findResourceFile($path);
+    $this->getRoot()->addResourceCall($resourceFile);
 
     $el->addElement('js:option', $path->asString(), array(
       'name' => 'path',

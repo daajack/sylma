@@ -83,20 +83,21 @@ sylma.uiClass = {
 
     var result = window;
     var lastPath = 'window';
+    var error = false;
 
-    path.split('.').each(function(item) {
+    path.split('.').some(function(item) {
 
       result = result[item];
 
       if (!result) {
 
-        throw 'No property named "' + item + '" in ' + lastPath;
+        error = true;
       }
 
       lastPath += '.' + item;
     });
 
-    return result;
+    return error ? false : result;
   },
 
   loadMultiple : function(objects, parent) {
@@ -154,6 +155,22 @@ sylma.uiClass = {
     }
 
     var parent = this.loadPath(props.extend);
+
+    if (!parent) {
+
+      var path;
+
+      if (props.source) {
+
+        path = props.source.match('@file (.+$)')[1];
+      }
+      else {
+
+        path = 'id : ' + props.id;
+      }
+
+      throw 'Cannot create object from : ' + path;
+    }
 
     var result = new parent(props);
 

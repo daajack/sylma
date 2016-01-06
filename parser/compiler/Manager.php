@@ -9,9 +9,10 @@ abstract class Manager extends core\module\Domed {
   const ARGUMENTS = 'manager.xml';
 
   protected $baseDirectory = null;
+  protected $aChecked = array();
   public static $aLoaded = array();
 
-  const DEPENDANCY_SUFFIX = '.dependencies.php';
+  const DEPENDENCY_SUFFIX = '.dependencies.php';
 
   /**
    * order of arguments merge : domed, argument, directory
@@ -148,7 +149,7 @@ abstract class Manager extends core\module\Domed {
 
       if (!$bUpdate) {
 
-        $bUpdate = $this->checkDependancies($tmpDir, $file, $tmpFile->getUpdateTime());
+        $bUpdate = $this->checkDependencies($tmpDir, $file, $tmpFile->getUpdateTime());
       }
 
       if ($tmpFile && !$bUpdate) {
@@ -164,35 +165,72 @@ abstract class Manager extends core\module\Domed {
     return $result;
   }
 
-  protected function checkDependancies(fs\directory $dir, fs\file $file, $iCurrent) {
+  protected function checkDependencies(fs\directory $dir, fs\file $file, $iCurrent) {
 
     $bResult = false;
-    $deps = $dir->getFile($file->getName() . self::DEPENDANCY_SUFFIX, fs\resource::DEBUG_EXIST);
+    $deps = $dir->getFile($file->getName() . self::DEPENDENCY_SUFFIX, fs\resource::DEBUG_EXIST);
 
     if ($deps->doExist()) {
 
-      $aDependancies = include($deps->getRealPath());
+      $aDependencies = include($deps->getRealPath());
       //$iCurrent = $file->getUpdateTime();
 
-      foreach($aDependancies as $sDependancy) {
+      $bResult = $this->checkFileDependencies($aDependencies['file'], $iCurrent);
 
-        $dep = $this->getFile($sDependancy);
+      if (!$bResult && !\Sylma::read('debug/dependency')) {
 
-        if ($dep->getUpdateTime() > $iCurrent) {
-
-          $bResult = true;
-          break;
-        }
+        $this->checkScriptDependencies($aDependencies['script']);
       }
     }
 
     return $bResult;
   }
 
-  protected function buildDependancies(fs\directory $dir, fs\file $file, array $aDependancies) {
+  protected function checkFileDependencies(array $aFiles, $iCurrent) {
 
-    $cache = $this->getCachedDirectory($file)->getFile($file->getName() . self::DEPENDANCY_SUFFIX, fs\resource::DEBUG_EXIST);
-    $sContent = '<?php return ' . var_export($aDependancies, true) . ';';
+    $bResult = false;
+
+    foreach($aFiles as $sDependency) {
+
+      $dep = $this->getFile($sDependency);
+
+      if ($dep->getUpdateTime() > $iCurrent) {
+
+        $bResult = true;
+        break;
+      }
+    }
+
+    return $bResult;
+  }
+
+  protected function checkScriptDependencies(array $aFiles) {
+
+    $builder = $this->getManager(self::PARSER_MANAGER);
+
+    foreach($aFiles as $sDependency) {
+
+      $dep = $this->getFile($sDependency);
+
+      if (!in_array($dep, $this->aChecked)) {
+
+        $this->aChecked[] = $dep;
+        $builder->load($dep, array(), null, false);
+        array_pop($this->aChecked);
+      }
+/*
+      if ($dep->getUpdateTime() > $iCurrent) {
+
+        $bResult = true;
+      }
+*/
+    }
+  }
+
+  protected function buildDependencies(fs\directory $dir, fs\file $file, array $aDependencies) {
+
+    $cache = $this->getCachedDirectory($file)->getFile($file->getName() . self::DEPENDENCY_SUFFIX, fs\resource::DEBUG_EXIST);
+    $sContent = '<?php return ' . var_export($aDependencies, true) . ';';
 
     $cache->saveText($sContent);
   }

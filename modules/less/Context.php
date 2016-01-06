@@ -56,7 +56,11 @@ class Context extends html\context\CSS {
     }
     catch (\Exception $e) {
 
-      throw \Sylma::loadException($e);
+      //throw \Sylma::loadException($e);
+      if (\Sylma::isAdmin()) {
+
+        dsp('Less error : ' . $e->getMessage() . ' in ' . $file->asToken());
+      }
     }
 
     return $sResult;

@@ -24,7 +24,7 @@ class Argument extends _Callable {
 
       $this->setFile($this->getSourceFile($sFile));
 
-      $this->getRoot()->addDependancy($this->getFile());
+      $this->getRoot()->addDependency($this->getFile());
 
       $options = $this->createOptions((string) $this->getFile());
       $this->setOptions($options);

@@ -442,12 +442,15 @@ sylma.ui.BaseProps = {
       var binder = sylma.binder.classes;
       eval(response.classes); // var classes = ..
 
+      /* @required for /#sylma/template/binder/test/update.xml : Update collection */
+
       Object.each(classes, function(item, key) {
 
         if (!(key in binder)) {
 
           sylma.ui.buildClass(binder, item, key);
         }
+
       });
     }
 

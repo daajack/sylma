@@ -1,7 +1,7 @@
 <?php
 
 namespace sylma\action\component;
-use sylma\core, sylma\dom, sylma\parser\languages\common;
+use sylma\core, sylma\parser\languages\common, sylma\storage\fs;
 
 class Script extends Caller implements common\arrayable {
 
@@ -37,7 +37,17 @@ class Script extends Caller implements common\arrayable {
       $post = $this->createObject('argument', array($this->loadArguments()), null, false);
     }
 
-    $result = $parser->call('load', array($fs->call('getFile', array((string) $path->asFile(true))), array_filter(array(
+    $file =  $path->asFile(true);
+    $builder = $this->getManager(self::PARSER_MANAGER)->loadBuilder($file);
+
+    $resourceFile = $builder->findResourceFile($path);
+    $this->getRoot()->addResourceCall($resourceFile);
+
+    $this->addDependency($file);
+
+    $this->rebuild($file);
+
+    $result = $parser->call('load', array($fs->call('getFile', array((string) $file)), array_filter(array(
       'arguments' => $args,
       'post' => $post,
       'contexts' => $this->getWindow()->getVariable('contexts'),
@@ -49,6 +59,21 @@ class Script extends Caller implements common\arrayable {
     }
 
     return array($result);
+  }
+
+  protected function addDependency(fs\file $file) {
+
+    $this->getRoot()->addDependency($file, true);
+  }
+
+  protected function rebuild(fs\file $file) {
+
+    if ((string) $file !== (string) $this->getSourceFile()) {
+
+      $builder = $this->getManager(self::PARSER_MANAGER);
+      $builder->load($file, array(), null, false);
+    }
+
   }
 
   public function asArray() {

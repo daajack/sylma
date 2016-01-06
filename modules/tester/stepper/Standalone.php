@@ -53,9 +53,9 @@ class Standalone extends tester\Parser implements dom\domable {
     return $result;
   }
 
-  public function getScript($sPath, array $aArguments = array(), array $aContexts = array(), array $aPosts = array(), $bRun = true) {
+  public function getScript($sPath, array $aArguments = array(), array $aContexts = array(), array $aPosts = array(), $bRun = true, $bUpdate = true) {
 
-    return parent::getScript($sPath, $aArguments, $this->contexts->query(), $aPosts, $bRun);
+    return parent::getScript($sPath, $aArguments, $this->contexts->query(), $aPosts, $bRun, $bUpdate);
   }
 
   public function asDOM() {

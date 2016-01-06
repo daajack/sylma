@@ -1,0 +1,132 @@
+
+#sylma-todo-widget
+{
+  @height : 42px;
+  @width : 53px;
+
+  height: 0;
+  width: @width;
+  background: url("setting_tools.png") no-repeat right 13px top 8px;
+  /* background: url("setting_tools.png") no-repeat scroll right 13px top 8px / 27px auto; */
+  padding-top: @height;
+  float:right;
+  overflow: hidden;
+  right: 42px;
+  z-index: 3;
+  font-size: 12px;
+
+  &:hover,
+  &.sylma-highlight
+  {
+    height: auto;
+    background-color: #4D4D4D;
+    overflow: visible;
+    position: absolute;
+    width: 300px;
+    margin-right: 2px;
+  }
+
+  .content
+  {
+    background-color: #EEEEEE;
+    width: 100%;
+    font-family: Helvetica;
+    font-size: 12px;
+    padding-top: 5px;
+  }
+
+  .links
+  {
+    .center
+    {
+      margin: auto;
+      width: 160px;
+    }
+
+    a
+    {
+      display: block;
+      padding: 5px 1em;
+      text-align: center;
+      background-color: #CCCCCC;
+      width: 50px;
+      margin: 0 auto 5px;
+      color: #444;
+      font-weight: bold;
+      box-shadow: 2px 2px 0px #ddd;
+      float: left;
+      margin-right: 5px;
+
+      &:hover
+      {
+        background-color: #ddd;
+      }
+    }
+  }
+
+  .no-result
+  {
+    padding: 2em;
+    text-align: center;
+  }
+
+  .count
+  {
+    color: white;
+    display: block;
+    float: right;
+    font-size: 22px;
+    margin-top: -@height;
+    padding-top: 9px;
+    text-align: center;
+    text-shadow: 1px 1px black;
+    width: @width;
+    height: @height;
+  }
+
+  ul
+  {
+    list-style-type: none;
+    border-top: 1px solid #ddd;
+  }
+
+  li
+  {
+    border: 0 solid white;
+    border-width: 1px 0;
+    border-bottom-color: #ddd;
+  }
+
+  .todo
+  {
+    display: block;
+    width: 100%;
+    padding: 5px;
+    color: #444;
+    box-sizing: padding-box;
+    -moz-box-sizing: padding-box;
+    -webkit-box-sizing: padding-box;
+
+    &:hover
+    {
+      background-color: #ddd;
+      color: black;
+    }
+  }
+}
+
+@media screen and (max-width: 460px)
+{
+  #sylma-todo-widget
+  {
+    position: absolute;
+  }
+}
+
+.sql-todo .finished
+{
+  text-decoration: line-through;
+  color: gray;
+}
+
+

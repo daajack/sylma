@@ -554,6 +554,9 @@
     </tst:expected>
   </tst:test>
   <tst:test name="Trigger on select">
+    <tst:prepare>
+      $manager->buildScript('samples/view1.vml');
+    </tst:prepare>
     <tst:document>
       <view:view user:ns="ns">
         <sql:resource>

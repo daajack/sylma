@@ -2,7 +2,7 @@
 <crud:crud
   xmlns:crud="http://2013.sylma.org/view/crud"
   xmlns:view="http://2013.sylma.org/view"
-  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns="http://2014.sylma.org/html"
   xmlns:tpl="http://2013.sylma.org/template"
   xmlns:sql="http://2013.sylma.org/storage/sql"
   xmlns:js="http://2013.sylma.org/template/binder"
@@ -12,14 +12,14 @@
   xmlns:stat="http://2013.sylma.org/modules/todo/statut"
   xmlns:proj="http://2013.sylma.org/modules/todo/project"
 
-  extends="/#sylma/storage/sql/crud.tpl"
+  extends="/#sylma/storage/sql/crud.crd"
 >
 
 
   <crud:global todo:ns="ns" stat:ns="ns" proj:ns="ns">
 
     <le:context name="css">
-      <le:file>medias/main.css</le:file>
+      <le:file>medias/main.less</le:file>
     </le:context>
 
     <view:schema>schema.xql</view:schema>

@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <view:view
-  xmlns="http://2014.sylma.org/html"
   xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
   xmlns:tpl="http://2013.sylma.org/template"
   xmlns:le="http://2013.sylma.org/action"
+  xmlns:js="http://2013.sylma.org/template/binder"
 
   xmlns:xl="http://2013.sylma.org/storage/xml"
 >
@@ -11,9 +12,9 @@
   <xl:resource/>
 
   <tpl:template>
-    <le:context name="css">
-      <le:file>style1.css</le:file>
-    </le:context>
-    <div>hello</div>
+    <section>
+      <le:script path="context"/>
+    </section>
   </tpl:template>
+
 </view:view>

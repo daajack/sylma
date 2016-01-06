@@ -8,7 +8,7 @@
 
   xmlns:user="http://2013.sylma.org/view/test/sample1"
   xmlns:group="http://2013.sylma.org/view/test/sample2"
-  
+
   mode="update"
 >
   <sql:resource>

@@ -109,6 +109,11 @@ class _Object extends Basic implements common\arrayable, core\tokenable {
       $aResult['name'] = true;
     }
 
+    if (\Sylma::read('debug/enable')) {
+
+      $aResult['source'] = $this->getNode()->asToken();
+    }
+
     return array(
       $this->getName(),
       $aResult,

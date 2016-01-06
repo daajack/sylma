@@ -38,7 +38,7 @@
       </ul>
     </tst:node>
   </tst:test>
-  <tst:test name="Collection dependancy update">
+  <tst:test name="Collection dependency update">
     <tst:node>
       <ul>
         <li>root</li>

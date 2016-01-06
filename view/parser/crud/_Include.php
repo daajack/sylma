@@ -12,14 +12,20 @@ class _Include extends template\parser\component\Child implements template\parse
 
   protected function build(builder\Router $root) {
 
-    $path = $root->getPath($this->readx('@path', false));
+    $view = $root->getPath($this->readx('@path', false));
+    
 /*
     if ($path == $this->getRoot()->getView()) {
 
       $this->launchException('Recursive call detected', get_defined_vars());
     }
 */
-    return $root->callScript($root->getPathFile($path), $this->getWindow(), '\sylma\dom\handler', false);
+    $file = $root->getPathFile($view);
+
+    $resourceFile = $root->getResourceFile($view->getAlias());
+    $root->addResourceCall($resourceFile);
+
+    return $root->callScript($file, $this->getWindow(), '\sylma\dom\handler', false);
   }
 
   public function asArray() {

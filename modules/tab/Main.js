@@ -13,6 +13,7 @@ sylma.ui.tab.Main = new Class({
   onLoad : function() {
 
     this.build(this.getObject('container').tmp);
+    this.parent();
   },
 
   prepareNode : function() {
@@ -39,6 +40,8 @@ sylma.ui.tab.Main = new Class({
   },
 
   parseMessage : function(msg) {
+
+    this.errors = true;
 
     var alias = msg.arguments.alias;
     var path = this.parseMessageAlias(alias);

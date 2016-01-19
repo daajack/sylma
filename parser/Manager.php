@@ -89,24 +89,24 @@ class Manager extends compiler\Manager {
       $this->launchException('Unauthorized building access', get_defined_vars());
     }
 
-    if (in_array($file, $this->aStackBuild, true)) {
+    $result = null;
 
-      $this->launchException('Cannot build, recursion detected', get_defined_vars());
+    if (!in_array($file, $this->aStackBuild, true)) {
+
+      $builder = $this->loadBuilder($file, $dir);
+      $this->aBuilded[] = $file;
+      $this->aStackBuild[] = $file;
+
+      $result = $builder->build($dir);
+      clearstatcache();
+
+      if ($aDependencies = $builder->getDependencies()) {
+
+        $this->buildDependencies($dir, $file, $aDependencies);
+      }
+
+      array_pop($this->aStackBuild);
     }
-
-    $builder = $this->loadBuilder($file, $dir);
-    $this->aBuilded[] = $file;
-    $this->aStackBuild[] = $file;
-
-    $result = $builder->build($dir);
-    clearstatcache();
-
-    if ($aDependencies = $builder->getDependencies()) {
-
-      $this->buildDependencies($dir, $file, $aDependencies);
-    }
-
-    array_pop($this->aStackBuild);
 
     return $result;
   }

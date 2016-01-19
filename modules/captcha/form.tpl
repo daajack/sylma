@@ -30,7 +30,7 @@
           <tpl:text>.png</tpl:text>
         </tpl:token>
       </img>
-      <tpl:apply select="element()" mode="container/empty"/>
+      <tpl:apply select="element()" mode="container" xmode="insert"/>
     </div>
   </tpl:template>
 

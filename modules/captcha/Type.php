@@ -7,6 +7,13 @@ class Type extends schema\cached\form\_String {
 
   protected $bUsed = false;
 
+  public function __construct($sValue, array $aSettings = array()) {
+
+    parent::__construct($sValue, $aSettings);
+
+    $this->isUsed(true);
+  }
+
   protected function getSessionKey() {
 
     return \Sylma::read('modules/captcha/session');
@@ -23,6 +30,7 @@ class Type extends schema\cached\form\_String {
 
     if ($this->getValue() === $sValue) {
 
+      $this->isUsed(false);
       $bResult = true;
     }
     else {

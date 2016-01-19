@@ -44,16 +44,21 @@ sylma.ui.tab.Tab = new Class({
 
   show : function(callback) {
 
-    this.getNode().addClass('active');
+    var callback2 = function() {
+
+      this.getNode().addClass('active');
+      callback && callback();
+
+    }.bind(this);
 
     if (this.needUpdate()) {
 
       this.obsolete = false;
-      this.update(this.get('arguments'), this.get('path'), undefined, callback);
+      this.updateDeprecated(this.get('arguments'), this.get('path'), undefined, callback2);
     }
     else {
 
-      callback && callback();
+      callback2();
     }
   },
 

@@ -81,7 +81,14 @@ class Elemented extends template\parser\handler\Domed {
     $window = $this->getWindow();
     $window->add($window->parseArrayables($aContent));
 
-    $result = $this->buildContent($resource->getTree(), $sMode); // asArray()
+    $tree = $resource->getTree();
+
+    if (!$tree) {
+
+      $this->launchException('No tree found, maybe schema is not defined');
+    }
+
+    $result = $this->buildContent($tree, $sMode); // asArray()
 
     return $result;
   }

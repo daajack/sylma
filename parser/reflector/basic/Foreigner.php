@@ -200,39 +200,6 @@ abstract class Foreigner extends Domed {
     return $root;
   }
 
-  /**
-   * @param dom\element $el
-   * @return dom\element|common\_scope
-   */
-  protected function parseAttributesForeign(dom\element $el, $content, array $aForeigns) {
-
-    $aParsers = array();
-    $aResult = array();
-
-    foreach ($aForeigns as $sNamespace => $bVal) {
-
-      $parser = $this->validateParser($sNamespace, 'attribute');
-
-      if ($parser) {
-
-        $aParsers[] = $parser;
-        //$parser->setParent($this);
-
-        //$aResult[] = $parser->init();
-        $aResult[] = $parser->parseAttributes($el, $content, $content);
-      }
-      else {
-
-        $this->getHandler()->lookupPrefix($sNamespace); // check valid
-        $aResult[] = $content;
-      }
-    }
-
-    $this->setAttributeParsers($aParsers);
-
-    return array_filter($aResult);
-  }
-
   protected function getAttributeParsers() {
 
     return $this->aAttributeParsers;

@@ -20,6 +20,12 @@ class Path extends template\parser\component\Child implements template\parser\co
     if ($sPath = $this->readx('@path', false)) {
 
       $path = $root->getPath($sPath);
+
+      if (!$path) {
+
+        $this->launchException('View not found : ' . $sPath);
+      }
+
       $sResult = $path->asPath();
     }
     else {

@@ -81,7 +81,12 @@ class CSS extends Basic implements dom\domable {
         }
         else {
 
-          $sURL = (string) $fs->getFile($sMatch, $dir);
+          $sURL = (string) $fs->getFile($sMatch, $dir, false);
+
+          if (\Sylma::isAdmin() && !$sURL) {
+
+            dsp('Cannot find file : ' . $sMatch);
+          }
         }
       }
       else {

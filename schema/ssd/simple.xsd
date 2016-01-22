@@ -78,4 +78,11 @@
     <xs:restriction base="xs:string"/>
   </xs:simpleType>
 
+  <xs:simpleType name="color">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="/\w+/"/>
+      <xs:maxLength value="6"/>
+    </xs:restriction>
+  </xs:simpleType>
+
 </xs:schema>

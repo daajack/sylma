@@ -141,6 +141,39 @@ class Foreigner extends reflector\basic\Reflector implements reflector\component
     return $bParse ? $this->getWindow()->parse($mResult) : $mResult;
   }
 
+  /**
+   * @param dom\element $el
+   * @return dom\element|common\_scope
+   */
+  protected function parseAttributesForeign(dom\element $el, $content, array $aForeigns) {
+
+    $aParsers = array();
+    $aResult = array();
+
+    foreach ($aForeigns as $sNamespace => $bVal) {
+
+      $parser = $this->validateParser($sNamespace, 'attribute');
+
+      if ($parser) {
+
+        $aParsers[] = $parser;
+        //$parser->setParent($this);
+
+        //$aResult[] = $parser->init();
+        $aResult[] = $parser->parseAttributes($el, $content, $content);
+      }
+      else {
+
+        $this->getHandler()->lookupPrefix($sNamespace); // check valid
+        $aResult[] = $content;
+      }
+    }
+
+    $this->setAttributeParsers($aParsers);
+
+    return array_filter($aResult);
+  }
+
     /**
    * @return \sylma\parser\languages\php\basic\Window
    */

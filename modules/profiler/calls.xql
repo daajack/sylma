@@ -2,12 +2,14 @@
 <schema
   targetNamespace="http://2015.sylma.org/modules/profiler"
   xmlns="http://2013.sylma.org/storage/sql"
+  
+  xmlns:php="http://2015.sylma.org/modules/inspector/php"
 >
 
   <table name="profiler_calls" connection="test">
 
-    <foreign name="source" occurs="0..1" table="php_method" key="fullname" import="../inspector/php/method.xql"/>
-    <foreign name="target" occurs="0..1" table="php_method" key="fullname" import="../inspector/php/method.xql"/>
+    <foreign name="source" occurs="0..1" table="php:php_method" key="fullname" import="../inspector/php/method.xql"/>
+    <foreign name="target" occurs="0..1" table="php:php_method" key="fullname" import="../inspector/php/method.xql"/>
 
     <field name="ct" type="sql:int" default="null"/>
     <field name="wt" type="sql:int" default="null"/>

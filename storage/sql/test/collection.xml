@@ -42,6 +42,30 @@
       </ul>
     </tst:node>
   </tst:test>
+  <tst:test name="Offset">
+    <tst:document>
+      <view:view user:ns="ns">
+        <sql:resource multiple="x"/>
+        <sql:limit offset="2">10</sql:limit>
+        <view:schema>samples/user1.xql</view:schema>
+        <tpl:template>
+          <ul>
+            <tpl:apply select="*"/>
+          </ul>
+        </tpl:template>
+        <tpl:template match="user:user">
+          <li>
+            <tpl:apply select="name"/>
+          </li>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <ul>
+        <li>webmaster</li>
+      </ul>
+    </tst:node>
+  </tst:test>
   <tst:test name="Order on numeric">
     <tst:document>
       <view:view user:ns="ns">

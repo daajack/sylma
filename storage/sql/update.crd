@@ -61,8 +61,6 @@
         <tpl:apply mode="form" xmode="update"/>
       </tpl:template>
 
-      <tpl:template match="sql:foreign" mode="container/multiple"/>
-
     </view:view>
 
   </crud:route>

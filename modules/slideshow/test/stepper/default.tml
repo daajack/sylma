@@ -11,23 +11,23 @@
         <ns0:property name="width">400</ns0:property>
       </ns0:watcher>
       <ns0:snapshot element="#content">
-        <ns0:content>{"name":"div","children":[{"name":"div","content":"","position":{"x":218,"y":159},"size":{"x":1044,"y":0}},{"name":"div","content":"","position":{"x":419,"y":296},"size":{"x":400,"y":0}},{"name":"div","children":[{"name":"div","content":"","position":{"x":218,"y":159},"size":{"x":400,"y":0}},{"name":"div","children":[{"name":"div","content":"","position":{"x":218,"y":159},"size":{"x":400,"y":300}},{"name":"div","content":"","position":{"x":218,"y":159},"size":{"x":400,"y":300}}],"position":{"x":218,"y":159},"size":{"x":400,"y":300}},{"name":"div","children":[{"name":"a","content":"&lt;&lt;","position":{"x":402,"y":447},"size":{"x":14,"y":14}},{"name":"div","content":"","position":{"x":218,"y":461},"size":{"x":400,"y":0}},{"name":"a","content":"&gt;&gt;","position":{"x":419,"y":447},"size":{"x":14,"y":14}}],"position":{"x":218,"y":447},"size":{"x":400,"y":14}}],"position":{"x":218,"y":159},"size":{"x":400,"y":300}}],"position":{"x":200,"y":136},"size":{"x":1080,"y":646}}</ns0:content>
+        <ns0:content>{"name":"div","children":[{"name":"div","content":"","position":{"x":218,"y":159},"size":{"x":1044,"y":0}},{"name":"div","children":[{"name":"div","content":"","position":{"x":218,"y":159},"size":{"x":400,"y":300}},{"name":"div","children":[{"name":"div","content":"","position":{"x":218,"y":159},"size":{"x":400,"y":300}},{"name":"div","content":"","position":{"x":218,"y":159},"size":{"x":400,"y":300}}],"position":{"x":218,"y":159},"size":{"x":400,"y":300}},{"name":"div","children":[{"name":"a","content":"&lt;&lt;","position":{"x":402,"y":447},"size":{"x":14,"y":14}},{"name":"div","content":"","position":{"x":218,"y":461},"size":{"x":400,"y":0}},{"name":"a","content":"&gt;&gt;","position":{"x":419,"y":447},"size":{"x":14,"y":14}}],"position":{"x":218,"y":447},"size":{"x":400,"y":14}}],"position":{"x":218,"y":159},"size":{"x":400,"y":300}}],"position":{"x":200,"y":136},"size":{"x":1080,"y":646}}</ns0:content>
       </ns0:snapshot>
-      <ns0:watcher element="#content &gt; div:nth-child(3) &gt; div:nth-child(2) &gt; div:nth-child(1)">
+      <ns0:watcher element="#content &gt; div:nth-child(2) &gt; div:nth-child(2) &gt; div:nth-child(1)">
         <ns0:property name="class">visible</ns0:property>
       </ns0:watcher>
-      <ns0:watcher element="#content &gt; div:nth-child(3) &gt; div:nth-child(2) &gt; div:nth-child(2)" delay="2500">
+      <ns0:watcher element="#content &gt; div:nth-child(2) &gt; div:nth-child(2) &gt; div:nth-child(2)" delay="2500">
         <ns0:property name="class">visible</ns0:property>
       </ns0:watcher>
-      <ns0:watcher element="#content &gt; div:nth-child(3) &gt; div:nth-child(2) &gt; div:nth-child(1)" delay="2500">
+      <ns0:watcher element="#content &gt; div:nth-child(2) &gt; div:nth-child(2) &gt; div:nth-child(1)" delay="2500">
         <ns0:property name="class">visible</ns0:property>
       </ns0:watcher>
-      <ns0:event name="click" element="#content &gt; div:nth-child(3) &gt; div:nth-child(3) &gt; a:nth-child(3)"/>
-      <ns0:watcher element="#content &gt; div:nth-child(3) &gt; div:nth-child(2) &gt; div:nth-child(2)">
+      <ns0:event name="click" element="#content &gt; div:nth-child(2) &gt; div:nth-child(3) &gt; a:nth-child(3)"/>
+      <ns0:watcher element="#content &gt; div:nth-child(2) &gt; div:nth-child(2) &gt; div:nth-child(2)">
         <ns0:property name="class">visible</ns0:property>
       </ns0:watcher>
-      <ns0:event name="click" element="#content &gt; div:nth-child(3) &gt; div:nth-child(3) &gt; a:nth-child(1)"/>
-      <ns0:watcher element="#content &gt; div:nth-child(3) &gt; div:nth-child(2) &gt; div:nth-child(1)">
+      <ns0:event name="click" element="#content &gt; div:nth-child(2) &gt; div:nth-child(3) &gt; a:nth-child(1)"/>
+      <ns0:watcher element="#content &gt; div:nth-child(2) &gt; div:nth-child(2) &gt; div:nth-child(1)">
         <ns0:property name="class">visible</ns0:property>
       </ns0:watcher>
     </ns0:steps>

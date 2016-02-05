@@ -31,6 +31,11 @@ class Limit extends reflector\component\Foreigner implements reflector\component
 
     $this->log('SQL : limit');
 
+    if ($sOffset = $this->readx('@offset')) {
+
+      $query->setOffset($sOffset);
+    }
+
     $query->setCount($content);
   }
 

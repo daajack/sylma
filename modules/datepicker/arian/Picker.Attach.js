@@ -32,17 +32,14 @@ Picker.Attach = new Class({
 		this.inputs = [];
 
 		var documentEvent = function(event){
-
-          if (this.attachedElements.contains(event.target)) return;
-          if (this.picker.contains(event.target)) return;
-
-          this.close();
-
+			if (this.attachedElements.contains(event.target)) return;
+			this.close();
 		}.bind(this);
 		var document = this.picker.getDocument().addEvent('click', documentEvent);
 
 		var preventPickerClick = function(event){
-			event.preventDefault();
+			//event.preventDefault();
+            event.stopPropagation();
 			//return false;
 		};
 		this.picker.addEvent('click', preventPickerClick);
@@ -77,7 +74,7 @@ Picker.Attach = new Class({
 		var getOpenEvent = function(element){
 			return function(event){
 				var tag = event.target.get('tag');
-          		if (tag == 'input' && event.type == 'click' && !element.match(':focus') || (self.opened && self.input == element)) return;
+				if (tag == 'input' && event.type == 'click' && !element.match(':focus') || (self.opened && self.input == element)) return;
 				if (tag == 'a') event.stop();
 				self.position(element);
 				self.open();

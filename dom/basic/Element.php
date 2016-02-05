@@ -106,7 +106,8 @@ class Element extends \DOMElement implements dom\element {
 
     if ($sResult === '' && $bDebug) {
 
-      $this->throwException(sprintf('No result for xpath expression : %s', $sQuery), array(), 3, get_defined_vars());
+      $sMessage = 'No result for xpath expression : ' . ($sQuery ? $sQuery : '[empty]');
+      $this->throwException($sMessage, array(), 3, get_defined_vars());
     }
 
     return $sResult;

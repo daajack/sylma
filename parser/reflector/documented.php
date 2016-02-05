@@ -1,7 +1,7 @@
 <?php
 
 namespace sylma\parser\reflector;
-use sylma\core, sylma\dom, sylma\parser\languages\common;
+use sylma\core, sylma\storage\fs, sylma\dom, sylma\parser\languages\common;
 
 interface documented {
 
@@ -28,6 +28,8 @@ interface documented {
   function getWindow();
   //function build();
   function getSchema();
+
+  function addDependency(fs\file $file, $bScript = false);
 
   //function setReturn($sValue);
 }

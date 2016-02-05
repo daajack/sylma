@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <tst:tests
   xmlns:tst="http://www.sylma.org/modules/tester/parser"
-  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://2014.sylma.org/html"
   xmlns:view="http://2013.sylma.org/view"
   xmlns:tpl="http://2013.sylma.org/template"
   xmlns:sql="http://2013.sylma.org/storage/sql"
@@ -99,5 +99,45 @@
         <h1>root</h1>
       </div>
     </tst:node>
+  </tst:test>
+  <tst:test name="Schema dependency update">
+    <tst:node>
+      <div>hello</div>
+    </tst:node>
+    <tst:expected>
+
+      $file1 = $manager->copyFile('samples/user1.xql');
+      $file2 = $manager->copyFile('samples/sample1.vml');
+
+      $result = $file2->run();
+      $cache = $manager->getManager('parser')->getCachedFile($file2);
+      $time1 = $cache->getUpdateTime();
+
+      sleep(1);
+      $file2->run();
+
+      $manager->assertEquals($time1, $cache->getUpdateTime(), 'no update 1');
+
+      sleep(1);
+      touch($file1->getRealPath());
+      clearstatcache();
+
+      $file2->run();
+      $time2 = $cache->getUpdateTime();
+
+      $manager->assertTrue($time2 > $time1, 'updated');
+
+      sleep(1);
+      //clearstatcache();
+
+      $file2->run();
+
+      $manager->assertTrue($cache->getUpdateTime() === $time2, 'no update 2');
+
+      $manager->compareNodes($result, $manager->get('node'));
+
+      return true;
+
+    </tst:expected>
   </tst:test>
 </tst:tests>

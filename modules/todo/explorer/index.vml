@@ -50,7 +50,7 @@
 
         <div class="view side {$view} loader" js:class="sylma.ui.Loader" js:name="view" js:parent-name="side">
 
-          <js:option name="loaderPosition">0</js:option>
+          <js:option name="loader.position">0</js:option>
 
           <js:option name="loaded">
             <tpl:read select="$view"/>

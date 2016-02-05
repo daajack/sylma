@@ -47,10 +47,7 @@
     </js:option>
 
     <tpl:apply mode="top"/>
-
-    <div class="loading" js:node="loading"/>
     <tpl:apply mode="slideshow/container"/>
-
     <tpl:apply mode="slideshow/pager"/>
 
   </tpl:template>

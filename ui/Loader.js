@@ -6,10 +6,39 @@ sylma.ui.Loader = new Class({
   loaderNode : null,
 
   options : {
-    loaderPosition : true,
+    loader : {
+      position : true,
+      format : ''
+    }
   },
 
   startLoading : function() {
+
+    if (this.options.loader.format === 'mask') {
+
+      this.startLoadingMask();
+    }
+    else {
+
+      this.startLoadingDefault();
+    }
+  },
+
+  startLoadingDefault : function() {
+
+    var node = this.loaderNode;
+
+    if (!node) {
+
+      this.loaderNode = node = this.buildLoader();
+      node.addClass('inside');
+      this.getNode().grab(node, 'top');
+    }
+
+    node.addClass('active');
+  },
+
+  startLoadingMask : function() {
 
     var node = this.loaderNode;
 
@@ -24,7 +53,7 @@ sylma.ui.Loader = new Class({
     var x = 0;
     var y = 0;
 
-    if (this.options.loaderPosition !== '0') {
+    if (this.options.loader.position !== '0') {
 
       x = el.getPosition().x;
       y = el.getPosition().y;
@@ -61,6 +90,28 @@ sylma.ui.Loader = new Class({
   },
 
   stopLoading: function() {
+
+    if (this.options.loader.format === 'mask') {
+
+      this.stopLoadingMask();
+    }
+    else {
+
+      this.stopLoadingDefault();
+    }
+  },
+
+  stopLoadingDefault: function() {
+
+    var node = this.loaderNode;
+
+    if (node) {
+
+      node.removeClass('active');
+    }
+  },
+
+  stopLoadingMask: function() {
 
     var node = this.loaderNode;
 

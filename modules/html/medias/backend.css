@@ -137,17 +137,22 @@ h3
 
 .loader
 {
-  @em : (1/40) + 0em;
-
   position: absolute;
-  opacity: 0.35;
-  background: url('loader.gif') no-repeat 50% 50% rgba(0,0,0,0.8);
-  z-index: 2;
-  pointer-events:none;
+  background: url('loader.gif') no-repeat 50% 50%;
+  background-size: 32px auto;
   transition: opacity 0.5s;
   opacity: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.loader.mask
+{
+  opacity: 0.35;
+  z-index: 2;
+  pointer-events:none;
   overflow: hidden;
-  max-height: 600px;
+  background-color: rgba(0,0,0,0.8);
 }
 
 .loader.active

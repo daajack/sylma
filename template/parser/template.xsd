@@ -351,6 +351,7 @@
             <xs:enumeration value="float"/>
             <xs:enumeration value="string"/>
             <xs:enumeration value="price"/>
+            <xs:enumeration value="date"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:attribute>

@@ -1,0 +1,19 @@
+
+tester :
+  profile : true
+
+debug :
+  public : true
+initializer :
+  debug :
+    fatal : true
+  window :
+    fusion :
+      enable : true
+      update : true
+    html :
+      default :
+        action : /#sylma/core/test/samples/window01.vml
+        sub :
+          default :
+            action : /#sylma/core/test/samples/container_resource.vml

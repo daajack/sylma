@@ -284,6 +284,11 @@ class Domed extends Templated implements reflector\elemented, template\parser\ha
 
   public function getConstant($sName) {
 
+    if (!array_key_exists($sName, $this->aConstants)) {
+
+      $this->launchException('No constant defined with name : ' . $sName);
+    }
+
     return $this->aConstants[$sName];
   }
 

@@ -189,11 +189,11 @@ class Container extends core\module\Domed {
       $sPath = current($aPaths);
 
       $args->set(self::CONTENT_SUB, $content);
-      $content = $this->getScriptFile($this->getFile($sPath), array(
+      $content = $this->getManager(self::PARSER_MANAGER)->load($this->getFile($sPath), array(
         'arguments' => $args,
         'post' => $post,
         'contexts' => $this->getContexts(),
-      ));
+      ), null, true, true);
     }
 
     return $content;

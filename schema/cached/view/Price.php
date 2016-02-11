@@ -7,10 +7,27 @@ class Price extends Numeric {
 
    public static function format($sValue, array $aSettings) {
 
-     $bSimple = isset($aSettings['simple']) && $aSettings['simple'];
-     $sResult = $bSimple ? '' : \Sylma::read('schema/currency') . ' ';
+     $sValue = parent::format($sValue, $aSettings);
 
-     return $sResult . parent::format($sValue, $aSettings) . '.-';
+     if (!isset($aSettings['simple']) || !$aSettings['simple']) {
+
+       $sResult =
+        '<span class="price">' .
+          '<span class="currency">' .
+            \Sylma::read('schema/currency') .
+          '</span>' .
+          '<span class="value numeric">' .
+            $sValue .
+          '</span>' .
+          '<span class="decimal">.-</span>' .
+        '</span>';
+     }
+     else {
+
+       $sResult = $sValue . '.-';
+     }
+
+     return $sResult;
    }
 }
 

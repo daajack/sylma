@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<crud:crud
+  xmlns:crud="http://2013.sylma.org/view/crud"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:js="http://2013.sylma.org/template/binder"
+  xmlns:le="http://2013.sylma.org/action"
+
+  xmlns:xl="http://2013.sylma.org/storage/xml"
+  xmlns:sql="http://2013.sylma.org/storage/sql"
+
+  extends="/#sylma/storage/sql/update.crd"
+>
+
+  <crud:global sql:ns="ns">
+
+    <tpl:constant name="form-cols">* ^ id, sql:reference</tpl:constant>
+    <view:schema>mymodule.xql</view:schema>
+
+    <tpl:template mode="init/delete">
+      <crud:path path="delete"/>
+    </tpl:template>
+
+  </crud:global>
+
+  <view:view name="insert" mode="insert" internal="x">
+
+    <tpl:template/>
+
+  </view:view>
+
+  <view:view name="delete" mode="delete">
+
+    <tpl:template>
+      <tpl:apply select="id" mode="post"/>
+    </tpl:template>
+
+  </view:view>
+
+</crud:crud>

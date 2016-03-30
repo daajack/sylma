@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<crud:crud
+  xmlns:crud="http://2013.sylma.org/view/crud"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:js="http://2013.sylma.org/template/binder"
+  xmlns:le="http://2013.sylma.org/action"
+
+  xmlns:sql="http://2013.sylma.org/storage/sql"
+
+  extends="ajax.crd"
+>
+
+  <crud:global sql:ns="ns">
+
+
+  </crud:global>
+
+  <crud:group name="crud">
+
+    <view:schema>sub1.xql</view:schema>
+
+  </crud:group>
+
+</crud:crud>
+

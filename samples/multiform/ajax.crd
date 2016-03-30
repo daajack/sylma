@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<crud:crud
+  xmlns:crud="http://2013.sylma.org/view/crud"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:js="http://2013.sylma.org/template/binder"
+  xmlns:le="http://2013.sylma.org/action"
+
+  xmlns:sql="http://2013.sylma.org/storage/sql"
+  xmlns:xl="http://2013.sylma.org/storage/xml"
+
+  extends="/#sylma/storage/sql/crud/ajax.crd"
+>
+
+  <crud:global>
+
+    <tpl:constant name="parent">parent</tpl:constant>
+
+    <tpl:template mode="list/filter">
+      <tpl:apply select="static()/foreign_name" mode="filter/dummy"/>
+    </tpl:template>
+
+    <tpl:template match="*" mode="insert/filter" xmode="insert">
+      <tpl:apply select="foreign_name" mode="parent"/>
+    </tpl:template>
+
+    <tpl:template match="*" mode="move/filter">
+      <tpl:apply select="foreign_name" mode="filter/post"/>
+    </tpl:template>
+
+  </crud:global>
+
+</crud:crud>
+

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<crud:crud
+  xmlns:crud="http://2013.sylma.org/view/crud"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:js="http://2013.sylma.org/template/binder"
+  xmlns:le="http://2013.sylma.org/action"
+
+  xmlns:sql="http://2013.sylma.org/storage/sql"
+
+  extends="/#sylma/storage/sql/collection.crd"
+>
+
+  <crud:global stat:ns="ns" sql:ns="ns">
+
+    <view:schema>mymodule.xql</view:schema>
+
+    <tpl:constant name="list-order">update</tpl:constant>
+    <tpl:constant name="list-cols">* ^ sql:reference</tpl:constant>
+    <tpl:constant name="form-cols">* ^ id, sql:reference</tpl:constant>
+
+    <tpl:template match="sql:table" mode="row/action/href">
+      <le:path>view</le:path>?id=<tpl:read select="id"/>
+    </tpl:template>
+
+    <tpl:template match="sql:collection" mode="actions/insert/href">
+      <le:path>view/insert</le:path>
+    </tpl:template>
+
+  </crud:global>
+
+</crud:crud>

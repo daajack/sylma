@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<crud:crud
+  xmlns:crud="http://2013.sylma.org/view/crud"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:js="http://2013.sylma.org/template/binder"
+  xmlns:ls="http://2013.sylma.org/parser/security"
+
+  xmlns:sql="http://2013.sylma.org/storage/sql"
+  xmlns:xl="http://2013.sylma.org/storage/xml"
+>
+
+  <crud:group name="view">
+
+    <xl:resource/>
+
+  </crud:group>
+
+  <view:view groups="view">
+
+    <tpl:template>
+
+      <div>
+
+        <crud:script path="view">
+          <le:get-argument name="id" le:name="id"/>
+        </crud:script>
+
+      </div>
+
+    </tpl:template>
+
+  </view:view>
+
+  <view:view name="insert" groups="view">
+
+    <tpl:template>
+
+      <tpl:variable name="id">
+        <le:script path="self/insert"/>
+      </tpl:variable>
+
+      <div>
+
+        <crud:script path="view">
+          <tpl:read select="$id" crud:name="id"/>
+        </crud:script>
+
+      </div>
+
+    </tpl:template>
+
+  </view:view>
+
+  <view:view name="view" internal="x">
+
+    <sql:resource/>
+    <view:schema>mymodule.xql</view:schema>
+
+    <tpl:import>/#sylma/modules/tab/load.tpl</tpl:import>
+
+    <le:context name="css">
+      <le:file>/#sylma/modules/tab/main.less</le:file>
+    </le:context>
+
+    <tpl:template>
+
+      <le:context name="title" location="tree">
+        <tpl:read select="'MyModule : {name}'"/>
+      </le:context>
+
+      <tpl:apply mode="tab/js"/>
+
+      <js:include>/#sylma/storage/sql/crud/Tab.js</js:include>
+      <js:include>/#sylma/storage/sql/crud/TabSub.js</js:include>
+
+      <tpl:variable name="id">
+        <le:get-argument name="id"/>
+      </tpl:variable>
+
+      <sql:filter name="id">
+        <le:get-argument name="id"/>
+      </sql:filter>
+
+      <div class="multiform" js:class="sylma.ui.Container" js:parent-name="handler">
+
+        <js:method name="getID">
+          return this.get('id');
+        </js:method>
+
+        <js:option name="id">
+          <tpl:read select="$id"/>
+        </js:option>
+
+        <div>
+          <span js:script="sub1/insert"/>
+          <span js:script="sub1/update"/>
+        </div>
+
+        <div class="sylma-tabs" js:class="sylma.ui.tab.Main" js:name="tabs" js:parent-name="tabs">
+
+          <crud:script path="tabs">
+            <tpl:read select="$id" crud:name="id"/>
+          </crud:script>
+
+          <div js:class="sylma.ui.tab.Container" js:name="container">
+
+            <div js:class="sylma.ui.tab.Tab">
+
+              <le:script path="self">
+                <tpl:read select="$id" le:name="id"/>
+              </le:script>
+
+            </div>
+
+            <tpl:variable name="parent">
+              <le:array>
+                <tpl:read select="$id" le:name="project"/>
+              </le:array>
+            </tpl:variable>
+
+            <div js:script="sub1/view" js:class="sylma.ui.tab.Tab" js:parent-name="tab">
+              <js:option name="arguments">
+                <tpl:read select="$parent"/>
+              </js:option>
+              <js:option name="sylma-inside">1</js:option>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </tpl:template>
+
+  </view:view>
+
+  <view:view name="tabs" groups="view">
+
+    <tpl:import>/#sylma/storage/sql/crud/multiform.tpl</tpl:import>
+
+    <tpl:template>
+
+      <tpl:variable name="id">
+        <le:get-argument name="id"/>
+      </tpl:variable>
+
+      <ol class="tabs" js:class="sylma.ui.tab.Head" js:name="head">
+        <js:option name="mode">normal</js:option>
+        <tpl:apply mode="tab">
+          <tpl:read select="'infos'" tpl:name="title"/>
+        </tpl:apply>
+        <tpl:apply mode="tab">
+          <tpl:read select="'Sub 1'" tpl:name="title"/>
+          <le:path tpl:name="path">sub1/insert</le:path>
+          <tpl:read select="'1'" tpl:name="key"/>
+        </tpl:apply>
+        <a href="/mymodule/{$id}" class="show">Show</a>
+      </ol>
+
+    </tpl:template>
+
+  </view:view>
+
+</crud:crud>

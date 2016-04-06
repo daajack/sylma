@@ -13,7 +13,16 @@ class Attribute extends template\parser\component\Child implements common\arraya
     if ($mValue) {
 
       $mValue = is_array($mValue) ? $this->getWindow()->flattenArray($mValue) : array($mValue);
-      $aArguments = array($sName, $mValue);
+      $aContent = array();
+
+      foreach ($mValue as $mSub) {
+
+        $aContent[] = $this->getHandler()->getCurrentTemplate()->parseValue($mSub);
+        $aContent[] = ' ';
+      }
+
+      $aArguments = array($sName, array($this->getWindow()->toString($aContent)));
+
     }
     else {
 

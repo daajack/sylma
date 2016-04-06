@@ -201,6 +201,32 @@
 
     </tst:callback>
   </tst:test>
+  <tst:test name="Event on element with token and class">
+    <tst:document>
+      <view:view>
+        <sql:resource>
+          <sql:id>2</sql:id>
+        </sql:resource>
+        <view:schema>/#sylma/view/test/grouped/samples/user1.xql</view:schema>
+        <tpl:template>
+          <div js:class="sylma.ui.Base" js:parent="example" js:name="test">
+            <strong class="abc">
+              <tpl:token name="class">def</tpl:token>
+              <js:event name="click">sylma.tester.test(true);</js:event>
+              world
+            </strong>
+            <p>hello</p>
+          </div>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:callback>
+
+      var test = example.test;
+      test.node.getElement('strong').fireEvent('click');
+
+    </tst:callback>
+  </tst:test>
   <tst:test name="Event on empty link" disabled="true">
     <!-- @TODO : bad closing when sent in JSON -->
     <tst:document>

@@ -2,6 +2,7 @@
 <tst:tests
   xmlns:tst="http://www.sylma.org/modules/tester/parser"
   xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
   xmlns:tpl="http://2013.sylma.org/template"
   xmlns:ls="http://2013.sylma.org/parser/security"
   xmlns:user="http://2013.sylma.org/view/test/sample1"

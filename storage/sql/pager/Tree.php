@@ -22,6 +22,12 @@ class Tree extends reflector\component\Foreigner implements reflector\component,
     $this->allowText(true);
 
     $collection = $this->getParser()->getTree();
+
+    if (!$collection instanceof sql\template\component\Collection) {
+
+      $this->launchException('Tree must be a collection');
+    }
+
     $collection->setPager($this);
     $this->setCollection($collection);
   }

@@ -48,11 +48,16 @@ sylma.crud.fieldset.Container = new Class({
   getCount : function() {
 
     var content = this.getContent();
-    var result;
+    var result = 0;
 
     if (content) {
 
-      result = content.getNode().getChildren().length;
+      var children = content.getNode().getChildren();
+
+      if (children.length !== 1 || !children[0].hasClass('empty')) {
+
+        result = content.getNode().getChildren().length;
+      }
     }
 
     return result;

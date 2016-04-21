@@ -201,12 +201,6 @@ button.button
 
 /*** List ***/
 
-.sql-offre,
-.sql-news
-{
-  width: 100%;
-}
-
 .sylma-form
 {
   width: 600px;
@@ -235,21 +229,4 @@ button.button
 .sylma-close:hover
 {
   background-position: 0 -26px;
-}
-
-/* Admin */
-
-#user-login {
-    color: #DDDDDD;
-    font-size: 10px;
-    margin-top: 2px;
-    position: absolute;
-    right: 5px;
-    text-decoration: none;
-    z-index: 6;
-}
-
-#user-login:hover {
-    color: #000000;
-    text-decoration: underline;
 }

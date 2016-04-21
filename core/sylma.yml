@@ -98,6 +98,8 @@ initializer :
     eot : application/octet-stream
     woff : application/x-font-woff
     vcf : text/x-vcard
+    svg : image/svg+xml
+    pdf : application/pdf
   executables : [json, png, txt, xml]
   images :
     extensions : [jpg, jpeg, png, gif]
@@ -222,7 +224,7 @@ template :
 path :
   extensions :
     executable : [vml]
-    readable : [css, js, webm, jpg, jpeg, gif, png, pdf, eot, ttf, woff, vcf, less]
+    readable : [css, js, webm, jpg, jpeg, gif, png, pdf, eot, ttf, woff, vcf, less, svg]
 
 directory :
   tmp : tmp

@@ -74,6 +74,8 @@ initializer :
     fatal : false
     # Delay JSON calls for test purposes
     delay : 0
+  locale :
+    name : en_US.utf8
   # Specify custom namespaces
   autoload : []
   output :

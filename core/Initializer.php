@@ -71,6 +71,8 @@ class Initializer extends module\Domed {
 
     $this->initSession();
 
+    setlocale(LC_TIME, $this->read('locale/name'));
+
     $this->setStartTime(microtime(true));
 
     $parser = \Sylma::getManager('parser');

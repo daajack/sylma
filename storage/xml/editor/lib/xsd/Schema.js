@@ -3,6 +3,7 @@ sylma.xsd = {};
 
 sylma.xsd.Schema = new Class({
 
+  editor : null,
   children : null,
   built : 0,
   prefixes : {},

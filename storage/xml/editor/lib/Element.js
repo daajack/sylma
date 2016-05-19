@@ -7,6 +7,9 @@ sylma.xml.Element = new Class({
   name : null,
   children : [],
   attributes : [],
+  sylma : {
+    splice : true
+  },
 
   onReady: function () {
 //return;
@@ -99,10 +102,7 @@ sylma.xml.Element = new Class({
     var child = container.add('element', {
       prefix : element.prefix,
       namespace : element.namespace,
-      name : element.name,
-      sylma : {
-        splice : true,
-      }
+      name : element.name
     }, key === container.tmp.length ? undefined : key);
 
     this.prepareChildren();
@@ -115,7 +115,6 @@ sylma.xml.Element = new Class({
       position : key,
       type : 'element'
     });
-//console.log(this.children);
   },
 
   addAttribute : function (attribute) {
@@ -152,13 +151,18 @@ sylma.xml.Element = new Class({
   },
 
   remove : function () {
-
+console.log('Remove element', this);
     this.getParent('editor').getObject('history').addStep('remove', this.toPath(true), '', {
       type : 'element',
     });
 
+    var parent = this.parentElement;
+    this.sylma.key = parent.children.indexOf(this);
+
     this.parent();
-    this.destroy();
+    //this.destroy();
+
+    parent.prepareChildren();
   },
 
   getShortName : function () {

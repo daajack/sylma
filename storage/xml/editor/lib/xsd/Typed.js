@@ -110,11 +110,17 @@ sylma.xsd.Typed = new Class({
 
     var prefix = this.prefix;
     var start = prefix ? '<span class="prefix">' + prefix + '</span>' : '';
-    var element = this.element;
+    var element = this;
+    var insert = this.schema.editor.getObject('insert');
 
     var result = new Element('div', {
       html : '<div class="fullname">' + start + this.name + '</div>',
-      'class' : 'node ' + this.element + ' node-' + prefix
+      'class' : 'node ' + this.element + ' node-' + prefix,
+      events : {
+        click : function() {
+          insert.addChild(element);
+        }
+      }
     });
 
     result.store('ref', this);

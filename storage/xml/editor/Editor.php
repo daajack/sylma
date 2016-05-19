@@ -261,7 +261,7 @@ class Editor extends core\module\Domed {
         $position = $args->read('position');
         $content = $this->createDocument($step->read('content'));
 //dsp($step, $el);
-        if ($position) {
+        if ($position !== null) {
 
           $el->insert($content, $el->getChildren()->item($position));
         }

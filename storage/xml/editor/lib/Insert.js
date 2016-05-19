@@ -38,6 +38,7 @@ sylma.xml.Insert = new Class({
 
     var input = this.getNode('input');
     input.focus.delay(200, input);
+    input.select.delay(200, input);
   },
 
   updateChildren: function () {
@@ -135,8 +136,8 @@ console.log('Add', node);
 
           this.element.add('children');
 
-          var node = this.element.getNode();
-          node.removeClass('format-text').addClass('format-complex');
+          var el = this.element.getNode();
+          el.removeClass('format-text').addClass('format-complex');
         }
 
         this.element.addElement(node, this.previous);

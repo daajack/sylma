@@ -31,8 +31,11 @@ console.log('check steps', this.sending, this.steps.length);
 
       var editor = this.getParent('editor');
 
+      var steps = this.steps;
+      this.steps = [];
+
       this.send(this.options.path, {
-        steps : this.steps,
+        steps : steps,
         file : editor.file,
         update : editor.updateTime
       }, function(response) {
@@ -41,7 +44,6 @@ console.log('check steps', this.sending, this.steps.length);
 
           console.info('File saved');
 
-          this.steps = [];
           this.sending = false;
         }
         else {

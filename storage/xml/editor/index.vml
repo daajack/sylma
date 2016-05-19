@@ -98,14 +98,12 @@
           </js:option>
 
           <div class="insert hidder" js:class="sylma.xml.Insert" js:name="insert">
-            <input type="text" js:node="input">
+            <input type="text" autocapitalize="off" autocorrect="off" js:node="input">
               <js:event name="input">%object%.updateChildren();</js:event>
               <js:event name="blur">%object%.hide();</js:event>
               <js:event name="keyup">%object%.pressKey(e);</js:event>
             </input>
-            <div class="container" js:node="container">
-              <js:event name="click:relay(.node)">this.getParent().retrieve('sylma-object').addChild(this.retrieve('ref'));</js:event>
-            </div>
+            <div class="container" js:node="container"/>
           </div>
 
           <div class="update hidder" js:class="sylma.xml.Update" js:name="update">

@@ -29,7 +29,7 @@ sylma.xml.Attribute = new Class({
   },
 
   remove : function () {
-
+console.log('Remove attribute', this);
     var path = this.parentElement.toPath(true);
 
     this.getParent('editor').getObject('history').addStep('remove', path, '', {

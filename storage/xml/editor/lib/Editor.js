@@ -17,6 +17,8 @@ sylma.xml.Editor = new Class({
     var schema = new sylma.xsd.Schema(root, this.options.namespaces);
     schema.validate(doc);
 
+    schema.editor = this;
+
     this.schema = schema;
     this.file = this.options.file;
     this.updateTime = this.options.update;

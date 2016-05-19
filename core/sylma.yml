@@ -153,7 +153,7 @@ initializer :
     json :
       name : \sylma\template\binder\context\JSON
     profiler :
-      name : \sylma\modules\profiler\Manager
+      name : \sylma\modules\profiler\XHProf
     builder :
       name : \sylma\device\Windower
       classes :

@@ -1,3 +1,4 @@
+
 @import url(list.less);
 
 .list
@@ -6,7 +7,14 @@
   .filters
   {
     overflow: hidden;
-    width: 102%;
+    width: 100%;
+
+    input,
+    select
+    {
+      box-sizing: border-box;
+      width: 100%;
+    }
 
     &.hidder
     {
@@ -21,8 +29,10 @@
 
     .filter-container
     {
-      height: 2.5em;
+      box-sizing: border-box;
+      padding: 0 0.1em;
       border-bottom: 1px solid #ccc;
+      min-height: 3em;
 
       float: left;
 
@@ -41,7 +51,6 @@
         {
           padding-right: 0;
           float: none;
-          margin-top: 1px;
         }
 
       }
@@ -64,11 +73,6 @@
       .date-container
       {
         display: inline-block;
-      }
-
-      .field-integer
-      {
-        width: 3em;
       }
     }
   }

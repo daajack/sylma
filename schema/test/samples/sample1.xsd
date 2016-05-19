@@ -1,0 +1,15 @@
+<?xml version='1.0'?>
+<xs:schema
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns="http://www.w3.org/1999/xhtml"
+
+  targetNamespace="sylma:schema:sample1"
+>
+  <xs:simpleType name="hello">
+    <xs:restriction base="xs:string">
+      <xs:maxLength value="2"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:element name="abc" type="hello"/>
+</xs:schema>
+

@@ -15,7 +15,7 @@
         <ns0:property name="class">activated</ns0:property>
       </ns0:watcher>
       <ns0:watcher element="#tester &gt; div:nth-child(2) &gt; iframe">
-        <ns0:property name="display">1;52;600;400</ns0:property>
+        <ns0:property name="display">1;60;600;400</ns0:property>
       </ns0:watcher>
     </ns0:steps>
   </ns0:page>

@@ -18,9 +18,9 @@ class Collection extends Dummed implements sql\template\pathable {
   protected $bPreBuilt = false;
   protected $bReady = false;
 
-  public function getElement($sName, $sNamespace = null) {
+  public function getElement($sName, $sNamespace = null, $debug = true) {
 
-    return $this->getTable()->getElement($sName, $sNamespace);
+    return $this->getTable()->getElement($sName, $sNamespace, $debug);
   }
 
   /**

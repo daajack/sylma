@@ -11,7 +11,7 @@
     <ns0:steps>
       <ns0:event name="click" element="#content &gt; form &gt; div:nth-child(4) &gt; div &gt; button"/>
       <ns0:watcher element="#content &gt; form &gt; div:nth-child(4) &gt; div &gt; div">
-        <ns0:property name="width">122</ns0:property>
+        <ns0:property name="width">134</ns0:property>
       </ns0:watcher>
       <ns0:event name="click" element="#content &gt; form &gt; div:nth-child(4) &gt; div &gt; div &gt; button:nth-child(2)"/>
     </ns0:steps>

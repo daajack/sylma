@@ -14,21 +14,26 @@ class Method extends Basic implements common\arrayable {
 
     $window = $this->getWindow();
 
+    $this->loadName();
     $this->loadValue($el);
 
-    if ($sArguments = $this->readx('@arguments')) {
+    $function = $window->createFunction($this->loadArguments(), $this->getValue());
 
-      $aArguments = explode(',', $sArguments);
+    $this->addContentToClass($this->getParser()->getObject(), $function);
+  }
+
+  protected function loadArguments() {
+
+    if ($arguments = $this->readx('@arguments')) {
+
+      $result = explode(',', $arguments);
     }
     else {
 
-      $aArguments = array();
+      $result = array();
     }
 
-    $function = $window->createFunction($aArguments, $this->getValue());
-    $this->loadName();
-
-    $this->addContentToClass($this->getParser()->getObject(), $function);
+    return $result;
   }
 
   protected function addContentToClass(binder\_class $class, js\basic\instance\_Function $function) {
@@ -43,7 +48,7 @@ class Method extends Basic implements common\arrayable {
 
   protected function loadValue(dom\element $el) {
 
-    $this->sValue = $this->parseContent($el->read());
+    $this->sValue = $el->read();
   }
 
   protected function getValue() {
@@ -59,17 +64,6 @@ class Method extends Basic implements common\arrayable {
   public function getName() {
 
     return $this->sName;
-  }
-
-  protected function parseContent($sContent) {
-
-    $aReplaces = array(
-      '/%([\w-_]+)%/' => '\$(this).retrieve(\'sylma-$1\')',
-      '/%([\w-_]+)\s*,\s*([^%]+)%/' => '\$(this).store(\'sylma-$1\', $2)');
-
-    $sResult = preg_replace(array_keys($aReplaces), $aReplaces, $sContent);
-
-    return $sResult;
   }
 
   public function asArray() {

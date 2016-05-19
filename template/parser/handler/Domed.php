@@ -76,8 +76,6 @@ class Domed extends Templated implements reflector\elemented, template\parser\ha
 
   public function importFile(fs\file $file) {
 
-    $this->log("Import : " . $file->asToken());
-
     $doc = $this->getRoot()->importDocument($file->getDocument(), $file);
     $aResult = $this->parseChildren($doc->getChildren());
 

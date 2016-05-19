@@ -1,11 +1,11 @@
 <?php
 
 namespace sylma\schema\parser\component;
-use sylma\core, sylma\schema\parser, sylma\parser\reflector;
+use sylma\core, sylma\dom, sylma\schema\parser, sylma\parser\reflector;
 
 class Complex extends Type implements parser\type, parser\type\complex {
 
-  protected $aParticles = array();
+  public $particle = null;
 
   public function isComplex() {
 
@@ -17,54 +17,33 @@ class Complex extends Type implements parser\type, parser\type\complex {
     return false;
   }
 
-  protected function addParticle(parser\particle $particle) {
+  protected function setParticle(parser\particle $particle) {
 
-    $this->aParticles[] = $particle;
+    $this->particle = $particle;
   }
 
-  public function getParticles() {
+  protected function addElement(schema\parser\element $element) {
 
-    return $this->aParticles;
+    $sNamespace = $element->getNamespace();
+
+    if (!isset($this->elements[$sNamespace])) {
+
+      $this->elements[$sNamespace] = array();
+    }
+
+    $this->elements[$sNamespace][$element->getName()] = $element;
+
+    return $element;
   }
 
-  /**
-   *
-   * @param parser\element
-   */
   public function getElement($sName, $sNamespace) {
 
-    $result = null;
-
-    foreach ($this->getParticles() as $particle) {
-
-      if ($result = $particle->getElement($sName, $sNamespace)) break;
-    }
-
-    return $result;
-  }
-
-  public function getElements() {
-
-    $aResult = array();
-
-    foreach ($this->getParticles() as $particle) {
-
-      $aResult = array_merge($aResult, $particle->getElements());
-    }
-
-    return $aResult;
+    return isset($this->elements[$sNamespace][$sName]) ? $this->elements[$sNamespace][$sName] : null;
   }
 
   public function __clone() {
 
-    $aParticles = array();
-
-    foreach ($this->getParticles() as $particle) {
-
-      $aParticles[] = clone $particle;
-    }
-
-    $this->aParticles = $aParticles;
+    $this->particle = clone $this->particle;
   }
 }
 

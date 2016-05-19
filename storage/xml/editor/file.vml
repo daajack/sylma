@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<crud:crud
+  xmlns:crud="http://2013.sylma.org/view/crud"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:js="http://2013.sylma.org/template/binder"
+  xmlns:builder="http://2013.sylma.org/parser/reflector/builder"
+
+  xmlns:sql="http://2013.sylma.org/storage/sql"
+>
+
+  <crud:global>
+
+    <view:schema>file.xql</view:schema>
+
+  </crud:global>
+
+  <view:view internal="x" builder:return="result">
+
+    <sql:resource multiple="x"/>
+
+    <sql:filter name="path">
+      <le:get-argument name="file"/>
+    </sql:filter>
+
+    <tpl:template>
+      <tpl:apply select="*"/>
+    </tpl:template>
+
+    <tpl:template match="*">
+      <tpl:read select="id"/>
+    </tpl:template>
+
+  </view:view>
+
+  <view:view name="insert" mode="insert" internal="x" builder:return="result">
+
+    <sql:resource/>
+
+    <tpl:template>
+      <tpl:apply select="* ^ id"/>
+    </tpl:template>
+
+  </view:view>
+
+  <view:view name="lock" mode="update" internal="x" builder:return="result">
+
+    <sql:resource/>
+
+    <sql:filter name="id">
+      <le:get-argument name="id"/>
+    </sql:filter>
+
+    <tpl:template>
+      <tpl:apply select="lock"/>
+    </tpl:template>
+
+    <tpl:template match="*">
+      <tpl:register>1</tpl:register>
+    </tpl:template>
+
+  </view:view>
+
+  <view:view name="unlock" mode="update" internal="x" builder:return="result">
+
+    <sql:resource/>
+
+    <sql:filter name="id">
+      <le:get-argument name="id"/>
+    </sql:filter>
+
+    <tpl:template>
+      <tpl:apply select="lock"/>
+    </tpl:template>
+
+    <tpl:template match="*">
+      <tpl:register select="lock">0</tpl:register>
+    </tpl:template>
+
+  </view:view>
+
+  <view:view name="locked" internal="x" builder:return="result">
+
+    <sql:resource/>
+
+    <sql:filter name="id">
+      <le:get-argument name="id"/>
+    </sql:filter>
+
+    <tpl:template>
+      <tpl:read select="lock"/>
+    </tpl:template>
+
+  </view:view>
+
+</crud:crud>

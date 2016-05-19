@@ -1,7 +1,7 @@
 <?php
 
 namespace sylma\storage\sql\alter\component;
-use sylma\core, sylma\storage\sql, sylma\parser\languages\common, sylma\schema\parser;
+use sylma\core, sylma\storage\sql, sylma\storage\fs;
 
 class Reference extends sql\schema\component\Reference implements sql\alter\alterable {
 
@@ -12,7 +12,7 @@ class Reference extends sql\schema\component\Reference implements sql\alter\alte
     return '';
   }
 
-  protected function loadElementRef() {
+  protected function loadElementRef(fs\file $file = null) {
 
     if (!$this->bBuilded && !$this->getMaxOccurs(true)) {
 
@@ -22,7 +22,7 @@ class Reference extends sql\schema\component\Reference implements sql\alter\alte
       $this->bBuilded = true;
     }
 
-    return parent::loadElementRef();
+    return parent::loadElementRef($file);
   }
 
   public function asCreate() {

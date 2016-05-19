@@ -3,28 +3,41 @@
 namespace sylma\schema\xsd\component;
 use sylma\core, sylma\dom, sylma\schema\parser;
 
-class Particle extends parser\component\Particle  {
-
-  protected $aChildren = array();
+abstract class Particle extends parser\component\Particle implements core\arrayable  {
 
   public function parseRoot(dom\element $el) {
 
-    $this->setNode($el);
+    parent::parseRoot($el);
+    $this->prepare();
   }
 
-  public function getElement($sName, $sNamespace) {
+  public function prepare() {
 
-    $this->launchException('Not yet ready');
+    $this->buildChildren();
+  }
 
-    $result = null;
+  protected function buildChildren() {
 
-    if ($el = $this->getx("self:element[@name='$sName']")) {
+    foreach ($this->getNode()->getChildren() as $el) {
 
-      $result = $this->getParser()->parseComponent($el);
-      $result->loadNamespace($sNamespace);
+      if ($el instanceof dom\comment) {
+
+        if (preg_match('/auto-complete/', $el->getValue())) {
+
+          break;
+        }
+      }
+      else if ($el instanceof dom\element) {
+
+        $child = $this->getParser()->parseComponent($el);
+        $this->children[] = $child;
+
+        if ($child instanceof schema\element) {
+
+          $this->addElement($child);
+        }
+      }
     }
-
-    return $result;
   }
 }
 

@@ -18,6 +18,7 @@ class Element extends Basic implements schema\parser\element, core\tokenable {
 
   protected $sReflector = '';
   protected $reflector;
+  protected $typeName;
 
   /**
    * Token is cached cause it's used many times as id in template lookup
@@ -99,15 +100,32 @@ class Element extends Basic implements schema\parser\element, core\tokenable {
     return $this->getParent()->getElementFromIndex($this->getPosition() + 1);
   }
 
+  protected function parseTypeString() {
+
+    if ($this->typeName) {
+
+      $ns = $this->getHandler()->parseName($this->typeName);
+      $type = $this->getHandler()->getType($ns[0], $ns[1]);
+
+      $this->setType($type);
+    }
+  }
+
   /**
-   * @param bool $bDebug
+   * @param bool $debug
    * @return \schema\parser\type
    */
-  public function getType($bDebug = true) {
+  public function getType($debug = true) {
 
-    if (!$this->type) {
+    if (!$this->type && $this->typeName) {
 
-      if ($bDebug) $this->throwException('No type defined');
+      $name = $this->typeName;
+      $this->type = $this->getHandler()->getType($name[1], $name[0]);
+    }
+
+    if (!$this->type && $debug) {
+
+      $this->throwException('No type defined');
     }
 
     return $this->type;
@@ -116,54 +134,6 @@ class Element extends Basic implements schema\parser\element, core\tokenable {
   public function setType(schema\parser\type $type) {
 
     $this->type = $type;
-  }
-
-  public function getElement($sName, $sNamespace = null, $bDebug = true) {
-
-    if (is_null($sNamespace)) {
-
-      $sNamespace = $this->getNamespace();
-    }
-
-    if (!$this->isComplex()) {
-
-      $this->launchException("Cannot get sub element of simple typed element $sNamespace:$sName", get_defined_vars());
-    }
-
-    if ($result = $this->getType()->getElement($sName, $sNamespace)) {
-
-      $this->loadChild($result);
-    }
-    else {
-
-      if ($bDebug) $this->launchException("Cannot find element $sNamespace:$sName", get_defined_vars());
-      $result = null;
-    }
-
-    return $result;
-  }
-
-  public function getElements() {
-
-    if (!$this->isComplex()) {
-
-      $this->launchException('Cannot get sub elements of complex type');
-    }
-
-    $aChildren = $this->getType()->getElements();
-
-    foreach ($aChildren as $child) {
-
-      $this->loadChild($child);
-    }
-
-    return $aChildren;
-  }
-
-  protected function loadChild(schema\parser\element $child) {
-
-    $child->setParent($this);
-    $child->loadNamespace($this->getNamespace());
   }
 
   public function isComplex() {

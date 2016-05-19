@@ -62,8 +62,9 @@ class Field extends sql\schema\component\Field implements sql\alter\alterable {
     $sDefault = $this->getAlterDefault();
 
     $type = $this->getType();
+    $sql = $this->getHandler()->getNamespace('sql');
 
-    if ($type->doExtends($this->getParser()->getType('datetime', $this->getNamespace('sql')))) {
+    if ($type->doExtends($this->getParser()->getType('datetime', $sql))) {
 
       if ($sDefault) {
 

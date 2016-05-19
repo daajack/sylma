@@ -6,17 +6,26 @@
   <arg:import>/#sylma/parser/reflector/builder.xml</arg:import>
   <cls:classes>
     <cls:base>\sylma\schema\xsd</cls:base>
-    <cls:class alias="elemented" name="Elemented">
+    <cls:class alias="elemented" name="Document">
+      <catalog>/#sylma/catalog.xml</catalog>
       <cls:classes>
         <component>
           <cls:classes>
-            <cls:class alias="element" name="component\Element"/>
+            <cls:class alias="import" name="component\Import"/>
+            <cls:class alias="include" name="component\_Include"/>
+            <cls:class alias="annotation" name="component\Annotation"/>
             <cls:class alias="complexType" name="component\ComplexType"/>
             <cls:class alias="simpleType" name="component\SimpleType"/>
+            <cls:class alias="group" name="component\Group"/>
+            <cls:class alias="any" name="component\Any"/>
+            <cls:class alias="anyAttribute" name="component\AnyAttribute"/>
             <cls:class alias="sequence" name="component\Sequence"/>
-            <cls:class alias="baseType" name="\sylma\schema\parser\component\Simple"/>
+            <cls:class alias="choice" name="component\Choice"/>
+            <cls:class alias="element" name="component\Element"/>
+            <cls:class alias="attributeGroup" name="component\AttributeGroup"/>
+            <cls:class alias="attribute" name="component\Attribute"/>
+            <cls:class alias="baseType" name="component\BaseType"/>
             <cls:class alias="restriction" name="component\Restriction"/>
-            <cls:class alias="import" name="\sylma\schema\xsd\component\Import"/>
           </cls:classes>
         </component>
       </cls:classes>

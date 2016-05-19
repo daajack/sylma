@@ -1,27 +1,19 @@
 <?php
 
 namespace sylma\schema\xsd\component;
-use sylma\core, sylma\dom, sylma\schema\parser, sylma\parser\reflector;
+use sylma\core, sylma\dom, sylma\schema;
 
-class Element extends parser\component\Element {
+class Element extends schema\parser\component\Element implements core\arrayable {
 
   public function parseRoot(dom\element $el) {
 
     $this->setNode($el, false);
 
     $this->loadName();
-    //$this->loadNamespace();
+    $this->loadNamespace();
+    $this->setNamespaces($this->getHandler()->getNS());
 
-    if ($sType = $this->readx('@type')) {
-
-      list($sNamespace, $sName) = $this->parseName($sType);
-
-      $this->setType($this->getParser()->getType($sName, $sNamespace));
-    }
-    else {
-
-      $this->setType($this->parseComponent($el->getFirst()));
-    }
+    $this->parseType($el);
   }
 
   protected function loadName() {
@@ -29,12 +21,79 @@ class Element extends parser\component\Element {
     $this->setName($this->readx('@name'));
   }
 
-  public function loadNamespace($sNamespace = '') {
+  public function loadNamespace($ns = '') {
 
-    if (!$sNamespace) $sNamespace = $this->getParser()->getTargetNamespace();
+    $this->setNamespace($this->getHandler()->getTargetNamespace(), 'element');
+    return;
 
-    $this->setNamespace($sNamespace, 'element');
-    //$this->log("load > {$this->asToken()} [" . get_class($this) . ']');
+    if (!$this->getNamespace('element')) {
+
+      if (!$ns) {
+
+        $ns = $this->getParser()->getTargetNamespace();
+      }
+
+      $this->setNamespace($ns, 'element');
+      //$this->log("load > {$this->asToken()} [" . get_class($this) . ']');
+    }
   }
+
+  protected function parseType(dom\element $el) {
+
+    $type = null;
+    $ref = $this->readx('@ref', false);
+
+    if (!$ref) {
+
+      $ref = $this->readx('@substitutionGroup', false);
+    }
+
+    if ($ref) {
+
+      $ns = $this->getHandler()->parseName($ref, null, $el);
+
+      $this->setNamespace($ns[0], 'element');
+      $name = $ns[1];
+    }
+    else {
+
+      $this->setNamespace($this->getHandler()->getTargetNamespace());
+      $name = $this->readx('@name', false);
+    }
+
+    if ($stype = $this->readx('@type', false)) {
+
+      $type = $this->getHandler()->parseName($stype);
+      $this->typeName = $type;
+    }
+    else if (!$ref) {
+
+      if (!$el = $this->getx('xs:complexType | xs:simpleType')) {
+
+        $this->launchException('No type found in : ' . $this->getNode()->asToken(), get_defined_vars());
+      }
+
+      $type = $this->parseComponent($el);
+      $this->type = $type;
+    }
+
+    $this->qualified = $this->getHandler()->useElementForm;
+    $this->name = $name;
+    $this->ref = $ref;
+  }
+
+  public function asArray() {
+
+    return array(
+      'element' => 'element',
+      'name' => $this->name,
+      'namespace' => $this->getNamespace(),
+      'qualified' => $this->qualified,
+      'ref' => $this->ref,
+      'type' => $this->type,
+      'typeName' => $this->typeName,
+      'source' => $this->getNode()->asToken(),
+    );
+   }
 }
 

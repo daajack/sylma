@@ -7,11 +7,14 @@ class Simple extends schema\component\SimpleType {
 
   public function asString() {
 
-    if ($this->doExtends($this->getParser()->getType('text', $this->getNamespace('sql')))) {
+    $sql = $this->getHandler()->getNamespace('sql');
+    $xs = $this->getHandler()->getNamespace('xs');
+
+    if ($this->doExtends($this->getParser()->getType('text', $sql))) {
 
       $sValue = 'MEDIUMTEXT';
     }
-    else if ($this->doExtends($this->getParser()->getType('string', $this->getNamespace('xs')))) {
+    else if ($this->doExtends($this->getParser()->getType('string', $xs))) {
 
       if ($define = $this->getDefine(false)) {
 
@@ -31,11 +34,11 @@ class Simple extends schema\component\SimpleType {
         $sValue = "VARCHAR({$iSize})";
       }
     }
-    else if ($this->doExtends ($this->getParser ()->getType('id', $this->getNamespace ('sql')))) {
+    else if ($this->doExtends ($this->getParser ()->getType('id', $sql))) {
 
       $sValue = 'BIGINT UNSIGNED';
     }
-    else if ($this->doExtends($this->getParser()->getType('integer', $this->getNamespace('xs')))) {
+    else if ($this->doExtends($this->getParser()->getType('integer', $xs))) {
 
       $iSize = $this->getDefine()->getRule('totalDigits');
 
@@ -46,11 +49,11 @@ class Simple extends schema\component\SimpleType {
 
       $sValue = "INT({$iSize})";
     }
-    else if ($this->doExtends($this->getParser()->getType('boolean', $this->getNamespace('xs')))) {
+    else if ($this->doExtends($this->getParser()->getType('boolean', $xs))) {
 
       $sValue = "TINYINT(1)";
     }
-    else if ($this->doExtends($this->getParser()->getType('float', $this->getNamespace('xs')))) {
+    else if ($this->doExtends($this->getParser()->getType('float', $xs))) {
 
       $sValue = "FLOAT";
     }

@@ -6,6 +6,7 @@
   xmlns:tpl="http://2013.sylma.org/template"
   xmlns:le="http://2013.sylma.org/action"
   xmlns:js="http://2013.sylma.org/template/binder"
+  xmlns:builder="http://2013.sylma.org/parser/reflector/builder"
 
   xmlns:xl="http://2013.sylma.org/storage/xml"
   xmlns:cls="http://2013.sylma.org/core/factory"
@@ -36,27 +37,94 @@
 
     <tpl:template>
 
-      <tpl:apply select="init()">
-        <le:file>
-          <le:get-argument name="file"/>
-        </le:file>
-      </tpl:apply>
-
       <js:include>/#sylma/ui/Template.js</js:include>
 
       <js:include>lib/Editor.js</js:include>
+
+      <js:include>lib/History.js</js:include>
+      <js:include>lib/Tools.js</js:include>
+      <js:include>lib/Insert.js</js:include>
+      <js:include>lib/Update.js</js:include>
+
       <js:include>lib/Node.js</js:include>
       <js:include>lib/Document.js</js:include>
       <js:include>lib/Element.js</js:include>
       <js:include>lib/Attribute.js</js:include>
       <js:include>lib/Text.js</js:include>
 
+      <js:include>lib/xsd/Schema.js</js:include>
+      <js:include>lib/xsd/Annotation.js</js:include>
+      <js:include>lib/xsd/Type.js</js:include>
+      <js:include>lib/xsd/ComplexType.js</js:include>
+      <js:include>lib/xsd/SimpleType.js</js:include>
+      <js:include>lib/xsd/BaseType.js</js:include>
+      <js:include>lib/xsd/Particle.js</js:include>
+      <js:include>lib/xsd/Group.js</js:include>
+      <js:include>lib/xsd/Sequence.js</js:include>
+      <js:include>lib/xsd/Choice.js</js:include>
+      <js:include>lib/xsd/Typed.js</js:include>
+      <js:include>lib/xsd/Element.js</js:include>
+      <js:include>lib/xsd/Any.js</js:include>
+      <js:include>lib/xsd/Attribute.js</js:include>
+      <js:include>lib/xsd/AttributeGroup.js</js:include>
+      <js:include>lib/xsd/AnyAttribute.js</js:include>
+
+      <tpl:apply select="init()">
+        <le:file>
+          <le:get-argument name="file"/>
+        </le:file>
+      </tpl:apply>
+
       <div js:class="sylma.ui.Container">
-        <div class="editor" js:class="sylma.xml.Editor">
+        <div class="editor" js:class="sylma.xml.Editor" js:parent-name="editor">
+
+          <js:option name="file" cast="x">
+            <tpl:read select="/root()/getFile()"/>
+          </js:option>
+          <js:option name="update">
+            <tpl:read select="/root()/getUpdate()"/>
+          </js:option>
+          <js:option name="rights">
+            <tpl:read select="/root()/getRights()"/>
+          </js:option>
           <js:option name="document">
             <tpl:read select="/root()/asJSON()"/>
           </js:option>
-          <tpl:apply select="document"/>
+          <js:option name="schemas">
+            <tpl:read select="/root()/getSchemas()"/>
+          </js:option>
+          <js:option name="namespaces">
+            <tpl:read select="/root()/getNamespaces()"/>
+          </js:option>
+
+          <div class="insert hidder" js:class="sylma.xml.Insert" js:name="insert">
+            <input type="text" js:node="input">
+              <js:event name="input">%object%.updateChildren();</js:event>
+              <js:event name="blur">%object%.hide();</js:event>
+              <js:event name="keyup">%object%.pressKey(e);</js:event>
+            </input>
+            <div class="container" js:node="container">
+              <js:event name="click:relay(.node)">this.getParent().retrieve('sylma-object').addChild(this.retrieve('ref'));</js:event>
+            </div>
+          </div>
+
+          <div class="update hidder" js:class="sylma.xml.Update" js:name="update">
+            <input type="text" js:node="input">
+              <js:event name="input">%object%.updateValue();</js:event>
+              <js:event name="keyup">%object%.pressKey(e);</js:event>
+              <js:event name="blur">%object%.hide();</js:event>
+            </input>
+          </div>
+
+          <div class="history" js:class="sylma.xml.History" js:name="history">
+            <js:option name="path">
+              <crud:path path="update"/>
+            </js:option>
+          </div>
+
+          <div js:class="sylma.ui.Container" js:name="container">
+            <tpl:apply select="document"/>
+          </div>
         </div>
       </div>
 
@@ -70,8 +138,15 @@
       </div>
     </tpl:template>
 
+    <tpl:template match="node:comment">
+      <pre class="comment" js:class="sylma.xml.Text" js:alias="comment">
+        <tpl:read select="content"/>
+      </pre>
+    </tpl:template>
+
     <tpl:template match="node:text">
       <pre class="text" js:class="sylma.xml.Text" js:alias="text">
+        <js:event name="click">%object%.openValue();</js:event>
         <tpl:read select="content"/>
       </pre>
     </tpl:template>
@@ -84,12 +159,44 @@
     </tpl:template>
 
     <tpl:template match="node:element">
-      <div class="element element-{prefix} format-{format}" js:class="sylma.xml.Element" js:parent-name="element" js:alias="element">
+      <div class="element node real node-{prefix} format-{format}" js:class="sylma.xml.Element" js:parent-name="element" js:alias="element">
         <tpl:apply mode="fullname"/>
+        <tpl:apply mode="tools"/>
         <div class="attributes">
           <tpl:apply select="attribute"/>
         </div>
         <tpl:apply select="children"/>
+      </div>
+    </tpl:template>
+
+    <tpl:template match="*" mode="tools">
+      <div class="tools" js:class="sylma.xml.Tools" js:alias="tools" js:autoload="x">
+        <div class="wrapper">
+          <span>
+            <js:event name="click">%parent%.parentElement.insert(%parent%);</js:event>
+            <tpl:text>+</tpl:text>
+          </span>
+          <span>
+            <js:event name="click">%parent%.insert();</js:event>
+            <tpl:text>*</tpl:text>
+          </span>
+          <span>
+            <js:event name="click">%parent%.insert(null, true);</js:event>
+            <tpl:text>@</tpl:text>
+          </span>
+          <span>
+            <js:event name="click">console.log('*');</js:event>
+            <tpl:text>.</tpl:text>
+          </span>
+          <span>
+            <js:event name="click">console.log('move');</js:event>
+            <tpl:text>&gt;</tpl:text>
+          </span>
+          <span>
+            <js:event name="click">%parent%.remove();</js:event>
+            <tpl:text>-</tpl:text>
+          </span>
+        </div>
       </div>
     </tpl:template>
 
@@ -106,17 +213,26 @@
 
     <tpl:template match="node:children">
       <div class="children" js:class="sylma.ui.Template" js:alias="children" js:all="x">
-        <tpl:apply select="element, text"/>
+        <tpl:apply select="element, text, comment"/>
       </div>
     </tpl:template>
 
     <tpl:template match="node:attribute">
-      <div class="attribute attribute-{prefix}" js:class="sylma.xml.Attribute" js:alias="attribute">
+      <div class="attribute node-{prefix}" js:class="sylma.xml.Attribute" js:alias="attribute">
+        <js:event name="click">%object%.openValue()</js:event>
         <tpl:apply mode="fullname"/>
-        <div class="content">
-          <tpl:read select="content"/>
+        <div class="value" js:node="value">
+          <tpl:read select="value"/>
         </div>
       </div>
+    </tpl:template>
+
+  </view:view>
+
+  <view:view name="update" builder:return="result">
+
+    <tpl:template>
+      <tpl:apply select="update()"/>
     </tpl:template>
 
   </view:view>

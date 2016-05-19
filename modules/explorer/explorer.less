@@ -1,7 +1,17 @@
 
 .explorer
 {
+  font-size: 1.2em;
   overflow: hidden;
+  box-sizing: border-box;
+  cursor: default;
+
+  .loader
+  {
+    z-index: 5;
+    pointer-events: none;
+    position: absolute;
+  }
 
   h2
   {
@@ -12,6 +22,7 @@
   .view
   {
     box-sizing: border-box;
+    min-height: 50em;
   }
 
   .sidebar
@@ -19,10 +30,30 @@
     width: 10%;
     border-right: 1px solid #ddd;
     float: left;
+    position: relative;
+    height: 100%;
+
+    .root
+    {
+      position: absolute;
+      top: 0;
+      margin-left: 100%;
+      width: 100%;
+      transition: all 0.2s;
+
+      &.parent
+      {
+        margin-left: -100%;
+      }
+
+      &.visible
+      {
+        margin-left: 0;
+      }
+    }
 
     .children
     {
-      height: 75em;
       overflow-y: auto;
       padding-right: 2%;
       margin-right: 2%;
@@ -68,8 +99,10 @@
     float: left;
     padding-left: 2em;
     width: 90%;
+    height: 100%;
+    position: relative;
 
-    & > *
+    & > *:last-child
     {
       display: none;
 

@@ -3,7 +3,7 @@
 namespace sylma\modules\explorer;
 use sylma\core;
 
-class Explorer extends core\module\Filed
+class Explorer extends core\module\Domed
 {
   public function __construct() {
 

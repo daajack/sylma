@@ -15,19 +15,35 @@ class Basic extends sql\schema\Handler {
   /**
    * @return \sylma\view\parser\Elemented
    */
-  public function getView($bDebug = true) {
+  public function getView($debug = true) {
 
-    if (!$this->view && $bDebug) {
+    if ($parent = $this->getParent(false)) {
+
+      $result = $parent->getView($debug);
+    }
+    else {
+
+      $result = $this->view;
+    }
+
+    if (!$result && $debug) {
 
       $this->launchException('No view defined');
     }
 
-    return $this->view;
+    return $result;
   }
 
   public function setView(template\parser\handler\Domed $view) {
 
-    $this->view = $view;
+    if ($parent = $this->getParent(false)) {
+
+      $parent->setView($view);
+    }
+    else {
+
+      $this->view = $view;
+    }
   }
 
   public function lookupTemplate(schema\parser\element $element, $sContext, $sMode, $bRoot = false) {
@@ -42,11 +58,21 @@ class Basic extends sql\schema\Handler {
     $view = $this->getView();
     $sXMode = $view->getXMode();
 
-    foreach ($this->getTemplates() as $iKey => $template) {
+    if ($parent = $this->getParent(false)) {
+
+      $templates = $parent->getTemplates();
+    }
+    else {
+
+      $templates = $this->getTemplates();
+    }
+
+    foreach ($templates as $iKey => $template) {
 
       if ($view->checkTemplate($template, $element->asToken(), false)) continue;
 
       $iWeight = $template->getWeightSchema($element, $sMode, $sXMode, $bRoot);
+
       if ($iWeight && $iWeight >= $current->weight) {
 
         $current->template = $template;

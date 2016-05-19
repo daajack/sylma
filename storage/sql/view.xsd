@@ -193,7 +193,10 @@
       </xs:attribute>
     </xs:complexType>
   </xs:element>
-  <xs:element name="result"/>
+
+  <xs:element name="result">
+    <xs:complexType/>
+  </xs:element>
 
   <xs:element name="token">
     <xs:annotation>

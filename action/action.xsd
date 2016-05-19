@@ -13,7 +13,9 @@
 
   <xs:group name="content">
     <xs:choice>
+      <xs:element ref="context"/>
       <xs:element ref="script"/>
+      <xs:element ref="argument"/>
       <xs:element ref="get-argument"/>
       <xs:element ref="file"/>
       <xs:element ref="directory"/>
@@ -190,7 +192,7 @@
     </xs:annotation>
   </xs:element>
 
-  <xs:attribute name="name" type="xs:string">
+  <xs:attribute name="name" type="xs:string" form="qualified">
     <xs:annotation>
       <xs:documentation>
         Value of a key when used into an le:script or le:array
@@ -225,7 +227,7 @@
     </xs:annotation>
     <xs:complexType mixed="true">
       <xs:group ref="anyContent" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:attribute name="value">
+      <xs:attribute name="value" type="ssd:boolean">
         <xs:annotation>
           <xs:documentation>
             Set value to TRUE or FALSE

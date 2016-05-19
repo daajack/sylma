@@ -69,6 +69,12 @@ class Resource extends reflector\handler\Elemented implements reflector\elemente
     $schema->setView($this->getParent());
 
     $root = $schema->getElement();
+
+    if (!$root instanceof sql\schema\table) {
+
+      $this->launchException('Bad root', get_defined_vars());
+    }
+
     $root->init();
 
     $this->setTree($root);

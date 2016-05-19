@@ -204,6 +204,8 @@ abstract class Domed extends Filed {
 
     $doc->registerNamespaces($this->getNS());
     $this->document = $doc;
+
+    return $doc;
   }
 
   protected function createOptions($mContent) {

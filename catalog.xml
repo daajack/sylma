@@ -7,10 +7,6 @@
       name="http://2013.sylma.org/schema/ssd"
       uri="schema/ssd/simple.xsd"/>
 
-    <public
-      publicId="http://2013.sylma.org/schema/ssd"
-      uri="schema/ssd/simple.xsd"/>
-
     <uri
       name="http://2014.sylma.org/html"
       uri="modules/html/xhtml.xsd"/>

@@ -3,34 +3,22 @@
 namespace sylma\schema\xsd;
 use sylma\core, sylma\dom, sylma\parser\reflector, sylma\schema, sylma\storage\fs;
 
-/**
- * DOM delayed class. This class won't parse all DOM at start, but lookup for
- * usefull elements when requested
- */
-class Elemented extends schema\parser\Handler implements reflector\elemented, schema\parser\schema {
+class Elemented extends schema\parser\Handler implements reflector\elemented, core\arrayable {
 
   const NS = 'http://www.w3.org/2001/XMLSchema';
   const PREFIX = 'xs';
 
   const SSD_NS = 'http://2013.sylma.org/schema/ssd';
   const SSD_PREFIX = 'ssd';
-  const SSD_TYPES = '../ssd/simple.xsd';
-
-  /**
-   * These two vars are use for dom cache and namespaced names
-   */
-  protected $aElementsNodes = array();
-  protected $aTypesNodes = array();
-
-  protected $aElements = array();
-  protected $aTypes = array();
+  const SSD_TYPES = '/#sylma/schema/ssd/simple.xsd';
 
   /**
    * List of stringed files
    */
-  protected $aFiles = array();
-
+  protected $files = array();
+  protected $documents = array();
   protected $element;
+  protected $children = array();
 
   public function parseRoot(dom\element $el) {
 
@@ -41,30 +29,98 @@ class Elemented extends schema\parser\Handler implements reflector\elemented, sc
       $this->throwException(sprintf('Bad root %s', $el->asToken()));
     }
 
-    $doc = $el->getHandler();
-
-    $this->setDocument($doc);
-
-    $this->loadTargetNamespace($doc);
-    $this->loadDefaultNamespace($doc);
-
-    $this->setDocument($this->createDocument($doc));
-    $this->getDocument()->getRoot()->set();
-    $this->addSchema($doc, $doc->getFile());
-
+    $this->loadCatalog();
     $this->loadBaseTypes(array(
       'string' => self::NS,
       'integer' => self::NS,
       'float' => self::NS,
       'boolean' => self::NS,
+      'NMTOKEN' => self::NS,
+      'ID' => self::NS,
     ));
 
+    $this->setNamespace(self::SSD_NS, self::SSD_PREFIX, false);
+
+    $doc = $this->setDocument($el->getHandler());
+/*    $file = $this->setFile($doc->getFile());
+
+    $this->parseFile($file);
+*/
+    if ($file = $doc->getFile()) {
+
+      $this->parseFile($file);
+    }
+    else {
+
+      $this->parseDocument($doc);
+    }
+  }
+
+  protected function loadCatalog() {
+
+    $this->setNamespace('urn:oasis:names:tc:entity:xmlns:xml:catalog', 'cat');
     $this->setDirectory(__FILE__);
 
-    $import = $this->loadSimpleComponent('component/import');
-    $import->parseFile($this->getFile(self::SSD_TYPES));
+    $doc = $this->getDocument($this->read('catalog'));
+    $children = $doc->getRoot()->queryx('//cat:group/*');
 
-    $this->setNamespace(self::SSD_NS, self::SSD_PREFIX, false);
+    foreach ($children as $child) {
+
+      $schemas[$child->readx('@name')] = '/#sylma/' . $child->readx('@uri');
+    }
+
+    $this->schemas = $schemas;
+  }
+
+  protected function parseFile(fs\file $file) {
+
+    $doc = $file->asDocument();
+
+    $this->setDirectory(__FILE__);
+    $this->setFile($file);
+
+    return $this->parseDocument($doc);
+  }
+
+  protected function parseDocument(dom\document $doc) {
+
+    $this->setDocument($doc);
+    //$this->setDocument($this->createDocument($doc));
+    //$this->getDocument()->getRoot()->set();
+
+    $this->loadTargetNamespace($doc);
+    $this->loadDefaultNamespace($doc);
+    $this->loadQualifications($doc);
+//dsp($doc);
+//dsp($this->getTargetNamespace());
+    $result = $this->browseSchemaChild($doc->getRoot());
+    //$this->children = array_merge($this->children, $children);
+//dsp($this->getFile('', false), $this->getParent(false));
+//dsp($this->children);
+    //end($this->children);
+//dsp($doc);
+//dsp($result);
+    return end($result);
+
+  }
+
+  protected function loadTargetNamespace(dom\document $doc) {
+
+    $this->setNamespace($this->parseTargetNamespace($doc), self::TARGET_PREFIX);
+  }
+
+  protected function loadQualifications(dom\document $doc) {
+
+    $useForm = $doc->readx('@elementFormDefault', array(), false);
+    $this->useElementForm = !$useForm || $useForm === 'qualified';
+
+    $useForm = $doc->readx('@attributeFormDefault', array(), false);
+    $this->useAttributeForm = $useForm && $useForm === 'qualified';
+  }
+
+  protected function parseTargetNamespace(dom\document $doc) {
+
+    return $doc->readx('@targetNamespace');
   }
 
   protected function lookupNamespace($sPrefix, dom\element $context = null) {
@@ -85,16 +141,6 @@ class Elemented extends schema\parser\Handler implements reflector\elemented, sc
     }
 
     return $sNamespace ? $sNamespace : $this->getNamespace($sPrefix);
-  }
-
-  protected function loadTargetNamespace(dom\document $doc) {
-
-    $this->setNamespace($this->parseTargetNamespace($doc), self::TARGET_PREFIX);
-  }
-
-  protected function parseTargetNamespace(dom\document $doc) {
-
-    return $doc->readx('@targetNamespace');
   }
 
   /**
@@ -124,27 +170,90 @@ class Elemented extends schema\parser\Handler implements reflector\elemented, sc
 
   /**
    *
-   * @param string $sName
+   * @param string $name
    * @param boolean $bDebug
    * @return type\Basic
    */
-  public function getElement($sName = '', $sNamespace = '', $bDebug = true) {
+  protected function loadDefaultNamespace(dom\document $doc) {
 
-    //list($sNamespace, $sName) = $this->parseName($sName, $context);
-    if (!$sNamespace) $sNamespace = $this->getTargetNamespace();
+    $this->setDefaultNamespace($doc->getRoot()->lookupNamespace());
+  }
 
-    if (!$sName or !$result = $this->loadElement($sName, $sNamespace)) {
+  protected function addSchemaChild(dom\node $node) {
 
-      if ($el = $this->lookupElement($sName, $sNamespace, $bDebug)) {
+    $child = null;
 
-        $result = $this->parseComponent($el);
+    if ($node->getType() !== $node::COMMENT) {
 
-        $result->loadNamespace($sNamespace);
-        $this->addElement($result);
+      $child = $this->parseComponent($node);
+
+      switch ($node->getName()) {
+
+        case 'complexType' :
+        case 'simpleType' : $this->addType($child); break;
+        case 'element' : $this->addElement($child); break;
+        case 'attribute' :
+        case 'attributeGroup' :
+        case 'annotation' :
+        case 'group' : break;
+        case 'import' :
+        case 'include' :
+
+          //$this->getDocument()->add($node);
+          $child = null;
+          break;
+
+        default: $this->launchException('Uknown element : ' . $node->asToken(), get_defined_vars());
+      }
+
+      if ($child) {
+
+        $this->children[] = $child;
+      }
+    }
+
+    return $child;
+  }
+
+  protected function browseSchemaChild(dom\element $parent) {
+
+    $result = array();
+
+    foreach ($parent->getChildren() as $el) {
+
+      $result[] = $this->addSchemaChild($el);
+    }
+
+    return $result;
+  }
+
+  public function getElement($name = '', $namespace = '', $debug = true) {
+
+    if (!$name) {
+
+      $result = current($this->getElements());
+    }
+    else {
+
+      if (!$namespace) {
+
+        $namespace = $this->getTargetNamespace();
+      }
+
+      if (!isset($this->elements[$namespace]) || !isset($this->elements[$namespace][$name])) {
+
+        if ($debug) {
+
+          $this->launchException('Cannot find element : ' . $namespace . ':' . $name);
+        }
+        else {
+
+          $result = null;
+        }
       }
       else {
 
-        $result = null;
+        $result = $this->elements[$namespace][$name];
       }
     }
 
@@ -153,184 +262,137 @@ class Elemented extends schema\parser\Handler implements reflector\elemented, sc
 
   public function getElements() {
 
-    return $this->aElements;
-  }
+    $result = array();
 
-  protected function lookupElement($sName, $sNamespace, $bDebug = true) {
+    foreach ($this->elements as $namespace) {
 
-    if (!count($this->aElementsNodes)) {
+      foreach ($namespace as $element) {
 
-      $this->throwException('No element loaded');
-    }
-
-    if (!$sName) {
-
-      $sName = key(current($this->aElementsNodes));
-    }
-
-    if (!isset($this->aElementsNodes[$sNamespace][$sName])) {
-
-      if ($bDebug) $this->throwException(sprintf('Cannot find element %s:%s', $sNamespace, $sName));
-      $result = null;
-    }
-    else {
-
-      $result = $this->aElementsNodes[$sNamespace][$sName];
-    }
-
-    return $result;
-  }
-
-  /**
-   *
-   * @param string $sName
-   * @param boolean $bDebug
-   * @return type\Basic
-   */
-  public function getType($sName, $sNamespace, $bDebug = true) {
-
-    //list($sNamespace, $sName) = $this->parseName($sName, $source, $context);
-
-    if (!$result = $this->loadType($sName, $sNamespace)) {
-
-      if ($el = $this->lookupType($sName, $sNamespace, $bDebug)) {
-
-        $result = $this->parseComponent($el);
-        $result->setNamespace($sNamespace, self::TYPE_PREFIX);
-
-        $this->addType($result);
+        $result[] = $element;
       }
     }
 
     return $result;
   }
 
-  protected function lookupType($sName, $sNamespace, $bDebug = true) {
+  public function getType($name, $namespace, $debug = true) {
 
-    if (!isset($this->aTypesNodes[$sNamespace][$sName])) {
+    if (!isset($this->types[$namespace][$name])) {
 
-      if ($bDebug) $this->launchException("Cannot find type $sNamespace:$sName");
-      $result = null;
+      if ($debug) {
+
+        $this->launchException("Cannot find type $namespace:$name");
+      }
+      else {
+
+        $result = null;
+      }
     }
     else {
 
-      $result = $this->aTypesNodes[$sNamespace][$sName];
+      $result = $this->types[$namespace][$name];
     }
 
     return $result;
   }
 
-  protected function loadDefaultNamespace(dom\document $doc) {
+  public function getTypes() {
 
-    $this->setDefaultNamespace($doc->getRoot()->lookupNamespace());
-  }
+    $result = array();
 
-  public function addSchema(dom\document $doc, fs\file $file = null) {
+    foreach ($this->types as $namespace) {
 
-    //$sResult = '';
-    $sFile = $file ? (string) $file : null;
+      foreach ($namespace as $type) {
 
-    if (!$sFile || !in_array($sFile, $this->aFiles)) {
-
-      if ($file) {
-
-        $this->getRoot()->importDocument($doc, $file);
+        $result[] = $type;
       }
     }
-      $sNamespace = $this->parseTargetNamespace($doc);
 
-      $sResult = $this->browseSchemaChild($doc->getRoot(), $sNamespace);
+    return $result;
+  }
 
-      $this->aFiles[] = $sFile;
-/*    }
-    else {
+  public function importSchema($namespace) {
 
+    if (!isset($this->schemas[$namespace])) {
 
+      $this->launchException('Schema not found', get_defined_vars());
     }
+
+    $file = $this->getFile($this->schemas[$namespace]);
+    $this->addSchema($file);
+  }
+
+  public function addSchema(fs\file $file, $force = false) {
+//dsp($file);
+    $result = null;
+/*
+if (0 && (string) $file === '/sylma/modules/users/group.xql') {
+  dsp($this->getArguments());
+  $this->launchException ('test');
+}
 */
-    return $sResult;
-  }
+    if ($force || !in_array((string) $file, $this->files)) {
 
-  protected function addSchemaChild(dom\element $el, $sNamespace) {
+      $this->log($file->asToken());
+      $this->files[] = (string) $file;
 
-    $sName = '';
+      if (!$parent = $this->getParent(false)) {
 
-    switch ($el->getName()) {
+        $parent = $this;
+      }
 
-      case 'element' :
+      $doc = new static($this->getRoot(), $parent, $this->getSettings());
+      $result = $doc->parseFile($file);
 
-        $sName = $this->addSchemaElement($el, $sNamespace);
-        //$this->browseSchemaChild($el, $sNamespace);
-        break;
-
-      case 'complexType' :
-      case 'simpleType' :
-
-        $sName = $this->addSchemaType($el, $sNamespace);
-        break;
-
-      default :
-
-        $this->getDocument()->add($el);
+      $this->retrieveDocument($doc);
     }
 
-    return $sName;
+    return $result;
   }
 
-  protected function browseSchemaChild(dom\element $parent, $sNamespace) {
+  protected function retrieveDocument(Document $doc) {
 
-    $sResult = '';
+    $this->children = array_merge($this->children, $doc->children);
 
-    foreach ($parent->getChildren() as $child) {
+    foreach ($doc->elements as $ns) {
 
-      if ($child->getType() !== $child::COMMENT) {
+      foreach ($ns as $element) {
 
-        $sName = $this->addSchemaChild($child, $sNamespace);
-
-        if (!$sResult && $sName) {
-
-          $sResult = $sName;
-        }
+        $this->addElement($element);
       }
     }
 
-    return $sResult;
+    foreach ($doc->types as $ns) {
+
+      foreach ($ns as $type) {
+
+        $this->addType($type);
+      }
+    }
   }
 
-  protected function addSchemaElement(dom\element $el, $sNamespace) {
+  public function addSchemaDocument(dom\document $doc) {
 
-    $sName = $el->readx('@name');
+    if (!$parent = $this->getParent(false)) {
 
-    if (!isset($this->aElementsNodes[$sNamespace])) {
-
-      $this->aElementsNodes[$sNamespace] = array();
+      $parent = $this;
     }
 
-    if (isset($this->aElementsNodes[$sNamespace][$sName])) {
+    $schema = new static($this->getRoot(), $parent, $this->getSettings());
 
-      $this->throwException(sprintf('Element "%s" already exists', $sNamespace . ':' . $sName), $el->asToken());
-    }
+    $result = $schema->parseDocument($doc);
+    $this->retrieveDocument($schema);
 
-    $this->aElementsNodes[$sNamespace][$sName] = $this->getDocument()->add($el);
-
-    return $sName;
+    return $result;
   }
 
-  protected function addSchemaType(dom\element $el, $sNamespace) {
-
-    $sName = $el->readx('@name');
-
-    if (!isset($this->aTypesNodes[$sNamespace])) {
-
-      $this->aTypesNodes[$sNamespace] = array();
-    }
-
-    if (isset($this->aTypesNodes[$sNamespace][$sName])) {
-
-      $this->throwException(sprintf('Type "%s" already exists', $sNamespace . ':' . $sName), $el->asToken());
-    }
-
-    $this->aTypesNodes[$sNamespace][$sName] = $this->getDocument()->add($el);
+  public function asArray() {
+//dsp(count($this->children));
+//dsp($this->children);
+    return array(
+      'namespace' => $this->getNamespace(),
+      'root' => $this->children,
+    );
   }
 }
 

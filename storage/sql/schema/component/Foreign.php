@@ -1,7 +1,7 @@
 <?php
 
 namespace sylma\storage\sql\schema\component;
-use sylma\core, sylma\dom, sylma\schema, sylma\storage\sql;
+use sylma\core, sylma\dom, sylma\storage\fs, sylma\storage\sql;
 
 class Foreign extends Element implements sql\schema\foreign {
 
@@ -55,11 +55,19 @@ class Foreign extends Element implements sql\schema\foreign {
     return $this->sKey;
   }
 
-  protected function loadElementRef() {
+  protected function loadElementRef(fs\file $file = null) {
 
-    list($sNamespace, $sName) = $this->parseName($this->readx('@table', true));
+    if ($file) {
 
-    return $this->getHandler()->getElement($sName, $sNamespace, false);
+      $result = $this->getHandler()->addSchema($file, true);
+    }
+    else {
+
+      list($sNamespace, $sName) = $this->parseName($this->readx('@table', true));
+      $result = $this->getHandler()->getElement($sName, $sNamespace, false);
+    }
+
+    return $result;
   }
 
   protected function getElementRefFile() {
@@ -90,10 +98,9 @@ class Foreign extends Element implements sql\schema\foreign {
     if (!$result = $this->loadElementRef()) {
 
       $file = $this->getElementRefFile();
-      $this->getHandler()->addSchema($file->getDocument(), $file);
 
       if (!$result = $this->loadElementRef($file)) {
-        
+
         list($sNamespace, $sName) = $this->parseName($this->readx('@table', true));
         $this->launchException('Cannot find reference : ' . $sNamespace . ':' . $sName, get_defined_vars());
       }
@@ -220,9 +227,13 @@ class Foreign extends Element implements sql\schema\foreign {
 
     $this->getParser()->changeMode(static::JUNCTION_MODE);
 
-    $sElement = $this->getParser()->addSchema($doc);
+    $table = $this->getHandler()->addSchemaDocument($doc);
 
-    $table = $this->getParser()->getElement($sElement, $this->getNamespace());
+    if (!$table instanceof Table) {
+
+      //$table = current($this->getHandler()->getElements());
+      $this->launchException('Table element not found', get_defined_vars());
+    }
 
     $table->setParent($this);
     $table->isSub(true);

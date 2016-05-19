@@ -5,6 +5,12 @@ sylma.xml.Document = new Class({
 
   onLoad : function() {
 
+    this.init();
+  },
+
+  init: function () {
+
+    this.element = this.objects.element[0];
   },
 
 });

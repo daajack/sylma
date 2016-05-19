@@ -1,19 +1,29 @@
 <?php
 
 namespace sylma\schema\xsd\component;
-use sylma\core, sylma\dom, sylma\parser\reflector, sylma\storage\fs;
+use sylma\core, sylma\dom, sylma\storage\fs, sylma\schema;
 
-class Import extends reflector\component\Foreigner {
+class Import extends schema\parser\component\Basic {
 
   public function parseRoot(dom\element $el) {
 
-    $file = $this->getSourceFile($el->read());
-    return $this->parseFile($file);
+    $this->setNode($el);
+
+    if (!$path = $this->readx('@schemaLocation', false)) {
+
+      $namespace = $this->readx('@namespace');
+      $this->getHandler()->importSchema($namespace);
+    }
+    else {
+
+      $file = $this->getSourceFile($path);
+      $this->parseFile($file);
+    }
   }
 
   public function parseFile(fs\file $file) {
 
-    return $this->getParser()->addSchema($file->getDocument(), $file);
+    $this->getParser()->addSchema($file);
   }
 }
 

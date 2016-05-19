@@ -3,13 +3,14 @@
 namespace sylma\schema\xsd\component;
 use sylma\core, sylma\dom, sylma\schema\parser, sylma\parser\reflector;
 
-class SimpleType extends parser\component\Simple {
+class SimpleType extends parser\component\Simple implements core\arrayable {
 
   public function parseRoot(dom\element $el) {
 
     $el = $this->setNode($el);
 
     $this->setName($this->readx('@name'));
+    $this->setNamespace($this->getHandler()->getTargetNamespace());
   }
 
   protected function parseDefine() {
@@ -52,4 +53,13 @@ class SimpleType extends parser\component\Simple {
     return parent::getDefine($bDebug);
   }
 
+  public function asArray() {
+
+    return array(
+      'element' => 'simpleType',
+      'namespace' => $this->getNamespace(),
+      'name' => $this->getName(),
+      'base' => $this->readx('@base')
+    );
+  }
 }

@@ -14,7 +14,7 @@ sylma.stepper.Directory = new Class({
   },
 
   createTest : function() {
-console.log(this);
+
     var result = this.addTest({}, true);
 
     result.toggleSelect(true);

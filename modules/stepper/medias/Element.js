@@ -154,7 +154,7 @@ sylma.stepper.Element = new Class({
       y : size.y - opt.size.y
     };
 
-    if (diff.x || diff.y) {
+    if (Math.abs(diff.x) > 1 || Math.abs(diff.y) > 1) {
 
       this.addDifference('size', el, diff);
       result = false;
@@ -167,7 +167,7 @@ sylma.stepper.Element = new Class({
       y : position.y - opt.position.y
     };
 
-    if (diff.x || diff.y) {
+    if (Math.abs(diff.x) > 1 || Math.abs(diff.y) > 1) {
 
       this.addDifference('position', el, diff);
       result = false;

@@ -27,7 +27,7 @@
   </group>
   <group name="template, view">
     <tester:module dummy="\sylma\action\test\Handler"/>
-    <tester:module dummy="\sylma\schema\test\grouped\Grouped"/>
+    <tester:module dummy="\sylma\schema\test\Handler"/>
     <tester:module dummy="\sylma\storage\sql\test\Handler"/>
     <tester:module dummy="\sylma\view\test\grouped\Grouped"/>
     <tester:module dummy="\sylma\storage\xml\test\Handler"/>

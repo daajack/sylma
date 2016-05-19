@@ -60,6 +60,7 @@
   <xs:group name="root">
     <xs:choice>
       <xs:element ref="import"/>
+      <xs:element ref="constant"/>
       <xs:element ref="template"/>
       <xs:element ref="view:schema"/>
       <xs:group ref="le:content"/>
@@ -262,7 +263,7 @@
     </xs:complexType>
   </xs:element>
 
-  <xs:attribute name="name" type="xs:string">
+  <xs:attribute name="name" type="xs:string" form="qualified">
     <xs:annotation>
       <xs:documentation>
         Set the name of the argument when sent with tpl:apply

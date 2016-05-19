@@ -10,10 +10,8 @@ class Handler extends reflector\handler\Elemented {
 
   protected $sDefaultNamespace = '';
 
-  protected $aElements = array();
-  protected $aTypes = array();
-
-  protected $aBaseTypes = array();
+  protected $elements = array();
+  protected $types = array();
 
   public function getTargetNamespace() {
 
@@ -30,21 +28,16 @@ class Handler extends reflector\handler\Elemented {
     return $this->sDefaultNamespace;
   }
 
-  public function loadElement($sName, $sNamespace) {
-
-    $result = null;
-
-    if (isset($this->aElements[$sNamespace][$sName])) {
-
-      $result = $this->aElements[$sNamespace][$sName];
-    }
-
-    return $result;
-  }
-
   protected function addElement(parser\element $element) {
 
-    $this->aElements[$element->getNamespace()][$element->getName()] = $element;
+    $sNamespace = $element->getNamespace();
+
+    if (!isset($this->elements[$sNamespace])) {
+
+      $this->elements[$sNamespace] = array();
+    }
+
+    $this->elements[$sNamespace][$element->getName()] = $element;
 
     return $element;
   }
@@ -55,45 +48,27 @@ class Handler extends reflector\handler\Elemented {
 
     foreach ($aTypes as $sType => $sNamespace) {
 
-      $aResult[$sNamespace][$sType] = $type = $this->loadSimpleComponent('component/baseType', $this);
+      $type = $this->loadSimpleComponent('component/baseType', $this);
+
       $type->setName($sType);
       $type->setNamespace($sNamespace, self::TYPE_PREFIX);
-
       $type->setNamespaces($this->getNS());
-    }
 
-    $this->aBaseTypes = $this->aBaseTypes + $aResult;
+      $this->children[] = $type;
+      $this->addType($type);
+    }
   }
-
-  protected function loadType($sName, $sNamespace) {
-
-    $result = null;
-
-    if (isset($this->aBaseTypes[$sNamespace][$sName])) {
-
-      $result = $this->aBaseTypes[$sNamespace][$sName];
-    }
-    else if (isset($this->aTypes[$sNamespace][$sName])) {
-
-      $result = $this->aTypes[$sNamespace][$sName];
-    }
-
-    return $result;
-  }
-
-  //abstract protected function lookupType($sName, $sNamespace = '');
 
   protected function addType(parser\type $type) {
 
     $sNamespace = $type->getNamespace();
 
-    if (!array_key_exists($sNamespace, $this->aTypes)) {
+    if (!array_key_exists($sNamespace, $this->types)) {
 
-      $this->aTypes[$sNamespace] = array();
+      $this->types[$sNamespace] = array();
     }
 
-    $this->aTypes[$sNamespace][$type->getName()] = $type;
-    //$type->setNamespaces($this->getNS());
+    $this->types[$sNamespace][$type->getName()] = $type;
 
     return $type;
   }

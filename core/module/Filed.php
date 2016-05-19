@@ -185,6 +185,8 @@ abstract class Filed extends Sessioned {
   protected function setFile(fs\file $file) {
 
     $this->file = $file;
+
+    return $file;
   }
 
   protected function createTempDirectory($sName = '') {

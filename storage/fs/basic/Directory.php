@@ -133,6 +133,11 @@ class Directory extends Resource implements fs\directory {
 
     $aDirectories = $this->getDirectories($aExcludes);
 
+    usort($aDirectories, function($a, $b) {
+
+      return ($a->getName()[0] < $b->getName()[0]) ? -1 : 1;
+    });
+
     if ($bDepth) {
 
       $aResult['directory'] = array();

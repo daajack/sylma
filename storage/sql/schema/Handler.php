@@ -3,7 +3,7 @@
 namespace sylma\storage\sql\schema;
 use sylma\core, sylma\dom, sylma\schema\xsd, sylma\parser\reflector;
 
-class Handler extends xsd\Elemented {
+class Handler extends xsd\Document {
 
   protected $argPaths;
   protected $argPrevious;
@@ -21,11 +21,17 @@ class Handler extends xsd\Elemented {
 
     $this->argPaths = $this->getScript('/#sylma/storage/sql/view/manager.xml');
 
-    $this->loadBaseTypes(array(
-      'foreign' => self::NS,
-      'reference' => self::NS,
-      'collection' => self::NS,
-    ));
+    if (!$parent) {
+
+      $this->loadBaseTypes(array(
+        'foreign' => self::NS,
+        'reference' => self::NS,
+        'collection' => self::NS,
+      ));
+
+      $import = $this->loadSimpleComponent('component/import');
+      $import->parseFile($this->getFile(self::SSD_TYPES));
+    }
   }
 
   public function changeMode($sMode) {
@@ -63,56 +69,33 @@ class Handler extends xsd\Elemented {
     return parent::setArguments($mArguments, $bMerge);
   }
 
-  protected function addSchemaChild(dom\element $el, $sNamespace) {
+  protected function addSchemaChild(dom\node $el) {
 
-    switch ($el->getName()) {
+    $child = null;
 
-      case 'table' :
+    if ($el instanceof dom\element) {
 
-        $sResult = $this->addSchemaElement($el, $sNamespace);
-        $new = $this->lookupElement($sResult, $sNamespace);
+      switch ($el->getName()) {
 
-        foreach ($el->getChildren() as $child) {
+        case 'table' :
 
-          if ($child->getType() === $child::COMMENT) continue;
+          $new = $this->parseComponent($el);
+          $this->addElement($new);
 
-          switch ($child->getName()) {
+          $child = $new;
+          break;
 
-            case 'foreign' :
+        case 'reference' :
 
-              $this->addNamespace($child->readx('@table'), $new, $el);
-              break;
+          $this->launchException('Should not be added (or should it ?)');
 
-            case 'reference' :
+        default :
 
-              $this->addNamespace($child->readx('@foreign'), $new, $el);
-              break;
-          }
-        }
-/*
-        $node = $this->lookupElement($sResult, $sNamespace);
-
-        foreach ($el->getx('@foreign | @table') as $child) {
-
-
-        }
-*/
-        //$this->browseSchemaChild($el, $sNamespace);
-        break;
-
-      case 'field' :
-      case 'foreign' :
-      case 'reference' :
-
-        $this->launchException('Should not be added (or should it ?)');
-
-      default :
-
-        $sResult = parent::addSchemaChild($el, $sNamespace);
+          $child = parent::addSchemaChild($el);
+      }
     }
 
-
-    return $sResult;
+    return $child;
   }
 
   protected function addNamespace($sValue, dom\element $el, dom\element $context) {

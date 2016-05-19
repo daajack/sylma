@@ -1,103 +1,325 @@
 
 @import "/sylma/modules/html/vars.less";
 
+@gray0: #666;
+@gray4: #ddd;
+
+@color-crud: purple;
+@color-le: blue;
+@color-view: green;
+@color-tpl: orange;
+
+@family: Arial;
+
+.less-fix-parse {}
+
 .document > .children > .element > .children > .element
 {
   margin-top: 1.5em;
   border-top: 1px dotted @gray3;
 }
 
-.element
+.editor
 {
-  clear: left;
-  overflow: hidden;
+  position: relative;
+  color: black;
 
-  .prefix
+  input
   {
-    color: @gray1;
+    box-sizing: border-box;
+    font-size: 1em;
+    font-family: @family;
+    border: 0;
+    background-color: transparent;
+    width: 5em;
+    float: left;
+    background-color: white;
+  }
 
-    &:not(:empty):after
+  .insert
+  {
+    overflow: hidden;
+    clear: left;
+    _width: 30em;
+    _border: 1px solid @gray3;
+    max-height: 0;
+    box-sizing: border-box;
+    _background-color: @gray4;
+    transition: max-height 0.2s;
+
+    input
     {
-      content : ":";
+      border-right: 3px solid @gray2;
+    }
+
+    &.visible
+    {
+      max-height: 2em;
+    }
+
+    & > *
+    {
+      margin-top: 0.25em;
+    }
+
+    .container
+    {
+      box-sizing: border-box;
+      width: 85%;
+      float: left;
+      white-space: nowrap;
+      overflow: hidden;
+      _padding: 0.25em;
+      padding-left: 0.25em;
+
+      .node
+      {
+        display: inline-block;
+        padding: 0.1em 0.25em;
+        _border: 1px solid @gray2;
+        background-color: @gray4;
+        margin: 0 0.25em;
+        cursor: pointer;
+
+        &:hover
+        {
+          background-color: @gray2;
+        }
+      }
+    }
+
+    .attribute
+    {
+      font-style: italic;
     }
   }
 
-  & > .fullname,
-  & > .attributes,
-  & > .children
+  .update
   {
-    float: left;
+    position: absolute;
+    z-index: 2;
+
+    &.attribute
+    {
+      margin-left: 0.5em;
+      margin-top: -0.1em;
+    }
+
+    input
+    {
+      width: 20em;
+    }
   }
 
-  & > .fullname
+  .element.real
   {
-    font-weight: bold;
-  }
+    clear: left;
+    overflow: hidden;
 
-  .attribute
-  {
-    display: inline-block;
-    margin-left: 0.5em;
-    color: @gray1;
-    font-style: italic;
+    & > .fullname
+    {
+      position: relative;
+      z-index: 1;
+
+      &:hover + .tools,
+      & + .tools:hover
+      {
+        max-width: 10em;
+
+        .wrapper
+        {
+          margin-left: 0em;
+          opacity: 1;
+        }
+      }
+    }
 
     .prefix
     {
-      color: @gray2;
+      &:not(:empty):after
+      {
+        content : ":";
+      }
     }
 
-    *
-    {
-      display: inline-block;
-    }
-
-    .content:before
-    {
-      content : "=";
-      color: @gray2;
-    }
-  }
-
-  .text
-  {
-    margin: 0;
-  }
-
-  & .children
-  {
-    overflow: hidden;
-  }
-
-  & > .children
-  {
-    padding-left: 1em;
-  }
-
-  &.format-complex > .children
-  {
-    float: none;
-    clear: left;
-    border-left: @gray3 1px solid;
-  }
-
-  &:hover
-  {
+    & > .fullname,
+    & > .attributes,
     & > .children
     {
-      border-color: @gray1;
+      float: left;
     }
 
     & > .fullname
     {
-      text-decoration: underline;
+      _font-weight: bold;
+      padding: 0 0.25em;
+
+      .prefix:not(:empty) + .name
+      {
+        color: @gray0;
+      }
     }
+
+    & > .tools
+    {
+      @s : 0.2s;
+
+      float: left;
+      padding: 0 0.25em;
+      max-width: 0;
+      transition: all @s;
+
+      span
+      {
+        background-color: @gray4;
+        font-weight: bold;
+        padding: 0 0.25em;
+        margin: 0 .1em;
+        cursor: pointer;
+
+        &:hover
+        {
+          background-color: @gray2;
+        }
+      }
+
+      .wrapper
+      {
+        opacity: 0;
+        margin-left: -100%;
+        transition: all @s;
+      }
+    }
+
+    .attributes
+    {
+      position: relative;
+      z-index: 1;
+
+      .attribute
+      {
+        display: inline-block;
+        padding: 0 0.25em;
+        color: @gray2;
+        font-style: italic;
+        cursor: pointer;
+
+        &:hover
+        {
+          background: @gray4;
+          
+          .value
+          {
+            color: @gray1;
+          }
+        }
+
+        .name
+        {
+          font-weight: bold;
+        }
+
+        *
+        {
+          display: inline-block;
+        }
+
+        .value
+        {
+          &:before
+          {
+            content : "=";
+            color: @gray2;
+          }
+        }
+      }
+    }
+
+    .text
+    {
+      margin: 0;
+      font-family: @family;
+
+      &:hover
+      {
+        background-color: @gray3;
+        cursor: pointer;
+      }
+    }
+
+    .comment
+    {
+      margin: 0;
+      color: @gray2;
+      font-style: italic;
+      border-left: 1px dotted @gray3;
+      padding-left: 0.5em;
+
+      &:hover
+      {
+        background-color: @gray3;
+      }
+    }
+
+    .children
+    {
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    & > .children
+    {
+      padding-left: 1em;
+    }
+
+    &.format-complex > .children
+    {
+      float: none;
+      clear: left;
+      border-left: @gray3 1px solid;
+    }
+
+    &.open,
+    &:hover
+    {
+      & > .children
+      {
+        border-color: @gray1;
+      }
+
+      & > .fullname
+      {
+        _background-color: @gray1;
+        background-color: @gray4;
+
+        .prefix + .name
+        {
+          _color: @gray3;
+        }
+      }
+
+      & > .attributes
+      {
+        .fullname
+        {
+          color: @gray1;
+        }
+
+        .content
+        {
+          color: @gray1;
+        }
+      }
+    }
+
   }
 
-  &.element-crud > .fullname .prefix { color: purple; }
-  &.element-le > .fullname .prefix { color: blue; }
-  &.element-view > .fullname .prefix { color: green; }
-  &.element-tpl > .fullname .prefix { color: orange; }
-
-  .attribute-js .prefix { color: red; }
+  .node- > .fullname .prefix { color: @gray2; }
+  .node-crud > .fullname .prefix { color: @color-crud; }
+  .node-le > .fullname .prefix { color: @color-le; }
+  .node-view > .fullname .prefix { color: @color-view; }
+  .node-tpl > .fullname .prefix { color: @color-tpl; }
+  .node-js > .fullname .prefix { color: red; }
 
 }

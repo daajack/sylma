@@ -71,6 +71,23 @@ class Event extends Method {
     return $this->sID;
   }
 
+  protected function loadValue(dom\element $el) {
+
+    $sContent = $el->read();
+/*
+    if (preg_match('/:relay/', $this->getName())) {
+
+    }
+*/
+    $aReplaces = array(
+      '/%([\w-_]+)%/' => '\$(this).retrieve(\'sylma-$1\')',
+      '/%([\w-_]+)\s*,\s*([^%]+)%/' => '\$(this).store(\'sylma-$1\', $2)');
+
+    $sResult = preg_replace(array_keys($aReplaces), $aReplaces, $sContent);
+
+    $this->sValue = $sResult;
+  }
+
   public function asArray() {
 
     //if (!$this->isBuilt()) {

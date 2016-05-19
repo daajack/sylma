@@ -31,6 +31,7 @@
     <tpl:template mode="explorer/resources">
 
       <js:include>/#sylma/ui/Template.js</js:include>
+      <js:include>/#sylma/ui/Loader.js</js:include>
       <js:include>/#sylma/ui/Extras.js</js:include>
       <js:include>/#sylma/ui/Locale.js</js:include>
       <js:include>/#sylma/ui/Date.js</js:include>
@@ -75,12 +76,15 @@
           <js:option name="datas">
             <crud:include path="getDirectory"/>
           </js:option>
+          <js:option name="file">
+            <le:get-argument name="file" optional="x"/>
+          </js:option>
           <js:option name="path">
             <crud:path path="getDirectory"/>
           </js:option>
           <tpl:apply select="root"/>
         </div>
-        <div class="view" js:class="sylma.ui.Container" js:name="view">
+        <div class="view" js:class="sylma.ui.Loader" js:name="view">
           <div js:script="/#sylma/modules/inspector/php/view" js:name="tab-inspector">
             <js:option name="sylma-inside">1</js:option>
           </div>
@@ -91,7 +95,7 @@
     </tpl:template>
 
     <tpl:template match="fs:root">
-      <div class="root" js:class="sylma.modules.explorer.Root" js:alias="root">
+      <div class="root hidder" js:class="sylma.modules.explorer.Root" js:alias="root">
         <h3 class="name">
           <tpl:read select="name"/>
         </h3>

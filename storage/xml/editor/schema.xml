@@ -2,6 +2,8 @@
 <collection
   xmlns="http://2013.sylma.org/modules/xmler"
 >
+  <insert/>
+  <history/>
   <document>
     <xmlns prefix="x" namespace="x"/>
     <element prefix="x" name="x">
@@ -9,6 +11,7 @@
       <children>
         <element/>
         <text/>
+        <comment/>
       </children>
     </element>
   </document>

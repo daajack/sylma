@@ -39,7 +39,7 @@
     </xs:documentation>
   </xs:annotation>
 
-  <xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="http://www.w3.org/2001/xml.xsd"/>
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="/sylma/storage/xml/xml.xsd"/>
 
   <xs:import namespace="http://2013.sylma.org/action"/>
   <xs:import namespace="http://2013.sylma.org/template"/>

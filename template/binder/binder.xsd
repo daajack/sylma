@@ -13,6 +13,14 @@
   <xs:import namespace="http://2013.sylma.org/schema/ssd" schemaLocation="../../schema/ssd/simple.xsd"/>
   <xs:import namespace="http://2013.sylma.org/template"/>
 
+  <xs:simpleType name="key">
+    <xs:restriction base="xs:string">
+      <xs:annotation>
+        Restricted to js object's property's key valid characters
+      </xs:annotation>
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:group name="content">
     <xs:choice>
       <xs:element ref="event"/>
@@ -153,7 +161,7 @@
     </xs:annotation>
     <xs:complexType mixed="true">
       <xs:group ref="anyContent" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:attribute name="name" use="required" form="unqualified">
+      <xs:attribute name="name" use="required" form="unqualified" type="key">
         <xs:annotation>
           <xs:documentation>
             Name of the options, can be multiple js properties separated by a dot.

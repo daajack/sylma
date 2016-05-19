@@ -1,9 +1,9 @@
 <?php
 
 namespace sylma\storage\sql\schema\component;
-use sylma\core, sylma\dom, sylma\storage\sql\schema;
+use sylma\core, sylma\dom, sylma\schema, sylma\storage\sql;
 
-class Table extends Element implements schema\table {
+class Table extends Element implements sql\schema\table {
 
   protected $sAlias = '';
 
@@ -11,20 +11,63 @@ class Table extends Element implements schema\table {
 
     $this->setNode($el);
     $this->setName($el->readx('@name'));
+    $this->loadNamespace();
 
-    $parser = $this->getParser();
-    $type = $this->loadSimpleComponent('component/complexType', $parser);
-    $type->loadIdentity();
-    $particle = $this->loadComponent('component/particle', $el, $parser);
+    $handler = $this->getHandler();
+    $type = $this->loadSimpleComponent('component/complexType', $handler);
+    $particle = $this->loadComponent('component/particle', $el, $handler);
 
-    $type->addParticle($particle);
+    $type->setParticle($particle);
+    $type->prepare();
+
     $this->setType($type);
   }
 
-  public function loadNamespace($sNamespace = '') {
+  public function getElement($name, $ns = null, $debug = true) {
 
-    parent::loadNamespace($sNamespace);
-    if ($this->getType(false)) $this->getType()->loadElements($this->getNamespace());
+    if (is_null($ns)) {
+
+      $ns = $this->getNamespace();
+    }
+
+    if (!$this->isComplex()) {
+
+      $this->launchException("Cannot get sub element of simple typed element $ns:$name", get_defined_vars());
+    }
+
+    if ($result = $this->getType()->getElement($name, $ns, $debug)) {
+
+      $this->loadChild($result);
+    }
+    else {
+
+      if ($debug) $this->launchException("Cannot find element $ns:$name", get_defined_vars());
+      $result = null;
+    }
+
+    return $result;
+  }
+
+  public function getElements() {
+
+    if (!$this->isComplex()) {
+
+      $this->launchException('Cannot get sub elements of simple type');
+    }
+
+    $result = $this->getType()->getElements();
+
+    foreach ($result as $child) {
+
+      $this->loadChild($child);
+    }
+
+    return $result;
+  }
+
+  protected function loadChild(schema\parser\element $child) {
+
+    $child->setParent($this);
   }
 
   public function getConnectionAlias() {

@@ -15,6 +15,9 @@ class Import extends Child implements common\arrayable, parser\component {
 
     $file = $this->getSourceFile($this->readx());
 
+    $sElement = $this->getNode()->asToken();
+    $this->log("Import : " . $file->asToken(), array('element' => $sElement));
+
     $this->getParser()->importFile($file);
   }
 

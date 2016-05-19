@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<crud:crud
+  xmlns:crud="http://2013.sylma.org/view/crud"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:js="http://2013.sylma.org/template/binder"
+  xmlns:builder="http://2013.sylma.org/parser/reflector/builder"
+
+  xmlns:sql="http://2013.sylma.org/storage/sql"
+>
+
+  <crud:global>
+
+
+
+  </crud:global>
+
+  <view:view internal="x" builder:return="result">
+
+    <view:schema>history.xql</view:schema>
+    <sql:resource multiple="x"/>
+
+    <sql:filter name="file">
+      <le:get-argument name="file"/>
+    </sql:filter>
+
+    <sql:order>!update</sql:order>
+    <sql:limit>1</sql:limit>
+
+    <tpl:template>
+      <tpl:apply select="*"/>
+    </tpl:template>
+
+    <tpl:template match="*">
+      <tpl:read select="update"/>
+    </tpl:template>
+
+  </view:view>
+
+  <view:view name="insert" mode="insert" internal="x" builder:return="result">
+
+    <view:schema>history.xql</view:schema>
+    <sql:resource/>
+
+    <tpl:template>
+      <tpl:apply select="* ^ id, update"/>
+    </tpl:template>
+
+    <tpl:template match="*">
+      <tpl:register/>
+    </tpl:template>
+
+  </view:view>
+
+</crud:crud>

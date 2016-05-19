@@ -62,11 +62,13 @@
 
       input
       {
-        width: 96%;
+        box-sizing: border-box;
+        width: 97%;
       }
 
       button
       {
+        box-sizing: border-box;
         width: 3%;
         float: right;
       }
@@ -81,7 +83,6 @@
       border: 0;
     }
   }
-
 
   .board,
   .actions
@@ -115,6 +116,7 @@
     top: 0;
     position: fixed;
     border-bottom: 2px solid #AAAAAA;
+    z-index: 1;
   }
 
   .actions button
@@ -161,12 +163,7 @@
   .test
   {
     margin: 2px;
-/*
-    & > h4
-    {
-      width: 55%;
-    }
-*/
+
     .delay.zoom,
     .name.zoom
     {
@@ -177,7 +174,8 @@
 
       input
       {
-        width: 96.5%; /* firefox update (06.2014) changed size */
+        box-sizing: border-box;
+        width: 100%;
       }
     }
 
@@ -245,7 +243,7 @@
               }
               input[type=text]
               {
-                width: 15%;
+                width: 10%;
               }
             }
           }

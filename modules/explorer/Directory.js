@@ -11,6 +11,6 @@ sylma.modules.explorer.Directory = new Class({
 
     this.getParent('tree').updateJSON({
       dir : this.get('path')
-    });
+    }, this.getNode().get('html') === '..');
   }
 });

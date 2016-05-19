@@ -43,7 +43,10 @@ abstract class Normalizer extends Basic {
     }
     else if ($val instanceof core\arrayable) {
 
-      $mResult = $val->asArray();
+      if ($aResult = $val->asArray()) {
+
+        $mResult = $this->normalizeArray($aResult, $iMode);
+      }
     }
     else if ($val instanceof core\stringable) {
 

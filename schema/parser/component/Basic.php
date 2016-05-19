@@ -62,5 +62,22 @@ class Basic extends reflector\component\Foreigner {
 
     return $this->getParser();
   }
+
+  public function getSourceFile($path = '', $element = true) {
+
+    $result = $this->getHandler()->getFile('', false);
+
+    if (!$result) {
+
+      $result = $this->getManager(static::FILE_MANAGER)->getFile($path);
+    }
+    else if ($path) {
+
+      $dir = $result->getDirectory();
+      $result = $this->getManager(static::FILE_MANAGER)->getFile($path, $dir);
+    }
+
+    return $result;
+  }
 }
 

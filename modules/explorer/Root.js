@@ -5,5 +5,6 @@ sylma.modules.explorer.Root = new Class({
 
   onLoad : function() {
 
+    this.show.delay(100, this);
   }
 });

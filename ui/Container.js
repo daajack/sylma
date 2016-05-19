@@ -247,6 +247,7 @@ sylma.ui.ContainerProps = {
       sylma.log('Create "' + alias + '" to [' + key + ']');
     }
 
+    //if (key >= 0) {
     if (result.sylma.splice) {
 
       ++key;

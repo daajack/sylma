@@ -3,7 +3,7 @@
 namespace sylma\dom\basic;
 use \sylma\dom, \sylma\core;
 
-class Comment extends \DOMComment implements dom\node {
+class Comment extends \DOMComment implements dom\node, dom\comment {
 
   public function getDocument() {
 
@@ -17,7 +17,7 @@ class Comment extends \DOMComment implements dom\node {
 
   public function getParent() {
 
-    return $this->ownerDocument;
+    return $this->parentNode;
   }
 
   public function getValue() {

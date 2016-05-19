@@ -19,7 +19,7 @@
       <ns0:watcher element="#tester &gt; div &gt; div:nth-child(2) &gt; div:nth-child(6) &gt; ul &gt; div:nth-child(7) &gt; li"/>
       <ns0:event name="click" element="#tester &gt; div &gt; div:nth-child(2) &gt; div:nth-child(6) &gt; ul &gt; div:nth-child(7) &gt; li &gt; button:nth-child(3)"/>
       <ns0:watcher element="#tester &gt; div &gt; div:nth-child(2) &gt; div:nth-child(6) &gt; ul &gt; div:nth-child(7) &gt; li">
-        <ns0:property name="height">93</ns0:property>
+        <ns0:property name="height">105</ns0:property>
       </ns0:watcher>
       <ns0:input element="#tester &gt; div &gt; div:nth-child(2) &gt; div:nth-child(6) &gt; ul &gt; div:nth-child(7) &gt; li &gt; form &gt; input:nth-child(3)">test</ns0:input>
       <ns0:input element="#tester &gt; div &gt; div:nth-child(2) &gt; div:nth-child(6) &gt; ul &gt; div:nth-child(7) &gt; li &gt; form &gt; input:nth-child(1)">/sylma/modules/stepper/test/samples/query01b.sql</ns0:input>

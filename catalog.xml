@@ -4,6 +4,10 @@
   <group prefer="public">
 
     <uri
+      name="http://www.w3.org/2001/XMLSchema"
+      uri="schema/xsd/xsd.xsd"/>
+
+    <uri
       name="http://2013.sylma.org/schema/ssd"
       uri="schema/ssd/simple.xsd"/>
 

@@ -3,6 +3,7 @@
 
 @gray0: #666;
 @gray4: #ddd;
+@gray5: #eee;
 
 @color-crud: purple;
 @color-le: blue;
@@ -10,19 +11,15 @@
 @color-tpl: orange;
 
 @family: Arial;
+@speed: 0.2s;
 
 .less-fix-parse {}
-
-.document > .children > .element > .children > .element
-{
-  margin-top: 1.5em;
-  border-top: 1px dotted @gray3;
-}
 
 .editor
 {
   position: relative;
   color: black;
+  user-select: none;
 
   input
   {
@@ -30,10 +27,10 @@
     font-size: 1em;
     font-family: @family;
     border: 0;
-    background-color: transparent;
+    background-color: #fdf5ce;
     width: 5em;
     float: left;
-    background-color: white;
+    _background-color: white;
   }
 
   .insert
@@ -45,7 +42,7 @@
     max-height: 0;
     box-sizing: border-box;
     _background-color: @gray4;
-    transition: max-height 0.2s;
+    transition: max-height @speed;
 
     input
     {
@@ -111,35 +108,77 @@
     }
   }
 
-  .element.real
+  .element
   {
-    clear: left;
-    overflow: hidden;
-
-    & > .fullname
-    {
-      position: relative;
-      z-index: 1;
-
-      &:hover + .tools,
-      & + .tools:hover
-      {
-        max-width: 10em;
-
-        .wrapper
-        {
-          margin-left: 0em;
-          opacity: 1;
-        }
-      }
-    }
-
     .prefix
     {
       &:not(:empty):after
       {
         content : ":";
       }
+    }
+  }
+
+  .element.real
+  {
+    clear: left;
+    overflow: hidden;
+    padding-left: 1em;
+    transition: opacity @speed;
+
+    &.moving
+    {
+      opacity: 0.35;
+    }
+
+    &.format-text > .spacing.self
+    {
+      display: none;
+    }
+
+    & > .spacing
+    {
+      display: block;
+      position: absolute;
+      background-color: @gray5;
+      width: 1.1em;
+      height: 1.1em;
+      margin-top: 1.1em;
+      _margin-left: -0.55em;
+      margin-left: 0em;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity @speed;
+      z-index: 1;
+      transform: scale(0.9, 0.9);
+
+      &.parent
+      {
+        _margin-left: -1.6em;
+        margin-left: -1.05em;
+        margin-top: 0.8em;
+      }
+
+      &.target
+      {
+        background-color: orange;
+      }
+
+      &:hover
+      {
+        background-color: @gray4;
+      }
+    }
+
+    &.format-complex > .spacing.parent
+    {
+      margin-top: -0.5em;
+    }
+
+    & > .fullname
+    {
+      position: relative;
+      z-index: 1;
     }
 
     & > .fullname,
@@ -162,12 +201,10 @@
 
     & > .tools
     {
-      @s : 0.2s;
-
       float: left;
       padding: 0 0.25em;
       max-width: 0;
-      transition: all @s;
+      transition: all @speed;
       overflow: hidden;
 
       span
@@ -188,7 +225,7 @@
       {
         opacity: 0;
         margin-left: -100%;
-        transition: all @s;
+        transition: all @speed;
       }
     }
 
@@ -203,17 +240,6 @@
         padding: 0 0.25em;
         color: @gray2;
         font-style: italic;
-        cursor: pointer;
-
-        &:hover
-        {
-          background: @gray4;
-
-          .value
-          {
-            color: @gray1;
-          }
-        }
 
         .name
         {
@@ -264,29 +290,46 @@
 
     .children
     {
-      position: relative;
+      _position: relative;
       z-index: 1;
       overflow: hidden;
     }
 
     & > .children
     {
-      padding-left: 1em;
+      _padding-left: 1em;
     }
 
     &.format-complex > .children
     {
       float: none;
       clear: left;
-      border-left: @gray3 1px solid;
+      border-left: @gray5 1px solid;
+      padding: 0.3em 0;
     }
 
+  }
+
+  .node- > .fullname { font-weight: bold; }
+  .node- > .fullname .prefix { color: @gray2; }
+  .node-crud > .fullname .prefix { color: @color-crud; }
+  .node-le > .fullname .prefix { color: @color-le; }
+  .node-view > .fullname .prefix { color: @color-view; }
+  .node-tpl > .fullname .prefix { color: @color-tpl; }
+  .node-js > .fullname .prefix { color: red; }
+  .node-sql > .fullname .prefix { color: indigo; }
+}
+
+.editor.edit
+{
+  .element.real
+  {
     &.open,
     &:hover
     {
       & > .children
       {
-        border-color: @gray1;
+        border-color: @gray4;
       }
 
       & > .fullname
@@ -314,13 +357,106 @@
       }
     }
 
+    & > .fullname
+    {
+      cursor: pointer;
+
+      &:hover + .tools,
+      & + .tools:hover
+      {
+        max-width: 10em;
+
+        .wrapper
+        {
+          margin-left: 0em;
+          opacity: 1;
+        }
+      }
+    }
+
+    .attributes .attribute
+    {
+      cursor: pointer;
+
+      &:hover
+      {
+        background: @gray4;
+
+        .value
+        {
+          color: @gray1;
+        }
+      }
+    }
+  }
+}
+
+.editor.edit,
+.editor.move
+{
+  .element.real
+  {
+    &.open,
+    &:hover
+    {
+      & > .spacing,
+      & > .children > .element > .spacing:last-child
+      {
+        opacity: 1;
+      }
+    }
+  }
+}
+
+.document > .children > .element
+{
+  & > .spacing
+  {
+    margin-top: 1 + 0.5em;
+
+    &.parent
+    {
+      display: none;
+    }
   }
 
-  .node- > .fullname .prefix { color: @gray2; }
-  .node-crud > .fullname .prefix { color: @color-crud; }
-  .node-le > .fullname .prefix { color: @color-le; }
-  .node-view > .fullname .prefix { color: @color-view; }
-  .node-tpl > .fullname .prefix { color: @color-tpl; }
-  .node-js > .fullname .prefix { color: red; }
+  & > .children > .element
+  {
+    margin-top: 1em;
+    border-top: 1px dotted @gray3;
 
+    & > .spacing.parent
+    {
+      margin-top: 1 + 0.3em;
+    }
+
+    &.format-complex > .spacing.parent
+    {
+      margin-top: -0.5em;
+    }
+
+  }
+}
+
+
+.editor .element.real.invalid
+{
+  &,
+  .name
+  {
+    color: @gray2 !important;
+  }
+
+  span { text-decoration: line-through !important; }
+}
+
+.editor-dummy
+{
+  position: fixed;
+  z-index: 1;
+  pointer-events: none;
+  margin-top: -1.5em;
+  background-color: white;
+  padding: 0 0.25em;
+  box-shadow: 2px 2px rgba(0, 0, 0, 0.2);
 }

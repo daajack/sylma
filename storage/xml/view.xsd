@@ -16,6 +16,7 @@
         Required element, it indicates the use of xml tree.
       </xs:documentation>
     </xs:annotation>
+    <xs:complexType/>
   </xs:element>
 
 </xs:schema>

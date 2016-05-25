@@ -11,6 +11,12 @@ sylma.xml.Editor = new Class({
 
     var options = this.options.document;
     var doc = container.add('document', options);
+    var history = this.getObject('history');
+
+    window.addEvent('unload', function() {
+
+      history.save();
+    });
 
     var root = this.options.schemas.root;
 
@@ -22,6 +28,18 @@ sylma.xml.Editor = new Class({
     this.schema = schema;
     this.file = this.options.file;
     this.updateTime = this.options.update;
+  },
+
+  startMove: function () {
+
+    this.getNode().removeClass('edit');
+    this.getNode().addClass('move');
+  },
+
+  stopMove: function () {
+
+    this.getNode().removeClass('move');
+    this.getNode().addClass('edit');
   },
 
 });

@@ -185,6 +185,11 @@ class Elemented extends schema\parser\Handler implements reflector\elemented, co
 
     if ($node->getType() !== $node::COMMENT) {
 
+      if ($node->getName() === 'notation') {
+
+        return null;
+      }
+
       $child = $this->parseComponent($node);
 
       switch ($node->getName()) {

@@ -135,7 +135,10 @@ class Directory extends Resource implements fs\directory {
 
     usort($aDirectories, function($a, $b) {
 
-      return ($a->getName()[0] < $b->getName()[0]) ? -1 : 1;
+      $aname = $a->getName();
+      $bname = $b->getName();
+      
+      return ($aname[0] < $bname[0]) ? -1 : 1;
     });
 
     if ($bDepth) {

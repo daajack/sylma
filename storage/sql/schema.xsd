@@ -5,7 +5,7 @@
   xmlns:ssd="http://2013.sylma.org/schema/ssd"
 
   targetNamespace="http://2013.sylma.org/storage/sql"
-  elementFormDefault="qualified"
+  elementFormDefault="unqualified"
 >
 
   <xs:import namespace="http://2013.sylma.org/schema/ssd"/>

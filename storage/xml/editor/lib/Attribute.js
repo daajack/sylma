@@ -35,31 +35,35 @@ console.log('Remove attribute', this);
     this.getParent('editor').getObject('history').addStep('remove', path, '', {
       type : 'attribute',
       namespace : this.namespace,
-      name : this.shortname,
+      name : this.name,
     });
 
     this.parent();
     this.destroy();
   },
 
-  updateValue: function (value) {
+  updateValue: function (value, callback) {
+
+    this.value = value;
+    this.getNode('value').set('html', value);
 
     if (!value) {
 
       this.remove();
+    }
+    else if (callback) {
+
+      callback();
     }
     else {
 
       var editor = this.getParent('editor');
       var path = this.parentElement.toPath(true);
 
-      this.value = value;
-      this.getNode('value').set('html', value);
-
       editor.getObject('history').addStep('update', path, this.value, {
         type : 'attribute',
-        namespace : this.namespace,
-        name : this.shortname,
+        //namespace : this.namespace,
+        name : this.shortname
       });
     }
   },

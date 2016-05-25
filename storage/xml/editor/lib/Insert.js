@@ -32,13 +32,14 @@ sylma.xml.Insert = new Class({
     this.previous = previous;
     this.attribute = attribute;
 
+    var input = this.getNode('input');
+    input.set('value');
+
 //console.log(previous);
     this.updateChildren();
-    this.show();
 
-    var input = this.getNode('input');
-    input.focus.delay(200, input);
-    input.select.delay(200, input);
+    this.show();
+    input.focus.delay(1000, input);
   },
 
   updateChildren: function () {
@@ -54,12 +55,33 @@ sylma.xml.Insert = new Class({
       var max = 10;
       //var max = Infinity;
       var input = this.getNode('input').get('value');
+      var children = [];
 
-      var children = this.schema.loadAttributes(element.ref.type);
+      if (this.attribute) {
 
-      if (!this.attribute) {
+        children = this.schema.loadAttributes(element.ref.type);
+      }
+      else {
 
-        children.push.apply(children, this.schema.loadChildren(element.ref.type));
+        var ref = element.ref;
+
+        if (ref.type.children) {
+
+          children = this.schema.loadChildren(ref.type);
+        }
+
+        if (ref.type.mixed) {
+
+          var text = new sylma.xsd.SimpleType(ref.schema, {
+            element: 'simpleType',
+            name: '_',
+          });
+
+          text.shortname = '(text)';
+          //text.name = '_';
+
+          children.push(text);
+        }
       }
 
       if (input) {
@@ -84,8 +106,9 @@ sylma.xml.Insert = new Class({
 
       result.sort(function(a, b) {
 
-        var diff = attribute ? a.element > b.element : a.element < b.element;
-        return a.element !== b.element ? diff : a.name > b.name;
+        //var diff = attribute ? a.element > b.element : a.element < b.element;
+        //return a.element !== b.element ? diff : a.name > b.name;
+        return a.name > b.name;
 
       });
 
@@ -124,6 +147,12 @@ sylma.xml.Insert = new Class({
     }
   },
 
+  hide: function () {
+
+    this.parent();
+    this.getNode().dispose.delay(500, this.getNode());
+  },
+
   addChild: function (node) {
 console.log('Add', node);
     this.hide();
@@ -148,6 +177,14 @@ console.log('Add', node);
 
         this.element.addAttribute(node);
         break;
+
+      case 'simpleType' :
+
+        this.element.addText(this.previous);
+        break;
+
+      default : throw 'Unknown element : ' + node.element;
+
     }
 
 

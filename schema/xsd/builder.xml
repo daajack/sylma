@@ -21,6 +21,7 @@
             <cls:class alias="anyAttribute" name="component\AnyAttribute"/>
             <cls:class alias="sequence" name="component\Sequence"/>
             <cls:class alias="choice" name="component\Choice"/>
+            <cls:class alias="all" name="component\All"/>
             <cls:class alias="element" name="component\Element"/>
             <cls:class alias="attributeGroup" name="component\AttributeGroup"/>
             <cls:class alias="attribute" name="component\Attribute"/>

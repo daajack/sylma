@@ -13,6 +13,8 @@ sylma.xml.Update = new Class({
 
   attachNode: function (node, target, callback) {
 
+    this.validated = false;
+    
     this.schema = this.getParent('editor').schema;
     this.callback = callback;
 
@@ -47,10 +49,13 @@ sylma.xml.Update = new Class({
 
   validate: function () {
 
-    this.element.updateValue(this.getNode('input').get('value'));
+    if (!this.validated) {
 
-    this.callback && this.callback();
-    this.hide();
+      this.validated = true;
+
+      this.element.updateValue(this.getNode('input').get('value'), this.callback);
+      this.hide();
+    }
   },
 
   pressKey : function (e) {

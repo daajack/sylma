@@ -96,6 +96,7 @@ sylma.xsd.Schema = new Class({
         case 'group' : child = new sylma.xsd.Group(schema, item); break;
         case 'sequence' : child = new sylma.xsd.Sequence(schema, item); break;
         case 'choice' : child = new sylma.xsd.Choice(schema, item); break;
+        case 'all' : child = new sylma.xsd.All(schema, item); break;
         case 'attributeGroup' : child = new sylma.xsd.AttributeGroup(schema, item); break;
         case 'anyAttribute' : child = new sylma.xsd.AnyAttribute(schema, item); break;
         case 'attribute' : child = new sylma.xsd.Attribute(schema, item); break;
@@ -250,10 +251,17 @@ sylma.xsd.Schema = new Class({
 
             if (child.type !== 'text') {
 
+              child.ref = null;
+
               this.lookupElement(child, type.children);
 
-              if (!child.ref) {
+              if (child.ref) {
 
+                child.getNode().removeClass('invalid');
+              }
+              else {
+
+                child.getNode().addClass('invalid');
                 console.log('Cannot attach', child);
               }
             }
@@ -380,6 +388,7 @@ sylma.xsd.Schema = new Class({
         case 'group' :
         case 'choice' :
         case 'sequence' :
+        case 'all' :
 
           item.prepare && item.prepare();
           result.push.apply(result, this.loadChildren(item));
@@ -428,6 +437,7 @@ sylma.xsd.Schema = new Class({
         case 'group' :
         case 'choice' :
         case 'sequence' :
+        case 'all' :
         case 'annotation' :
       }
     }, this);

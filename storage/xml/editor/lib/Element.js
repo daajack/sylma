@@ -85,9 +85,67 @@ sylma.xml.Element = new Class({
     child.parentElement = this;
   },
 
+  getChildren : function () {
+
+    var collection = this.getObject('children');
+    var children;
+
+    if (collection) {
+
+      children = collection[0];
+    }
+    else {
+
+      children = this.add('children');
+    }
+
+    return children;
+  },
+
+  addSibling : function () {
+
+    console.log('add sibling', this);
+  },
+
   addElement : function (element, previous) {
 
-    var container = this.getObject('children')[0];
+    var child = this.addChild({
+      prefix : element.prefix,
+      namespace : element.namespace,
+      name : element.name
+    }, 'element', previous);
+
+    var editor = this.getParent('editor');
+
+    editor.getObject('history').addStep('add', this.toPath(true), child.toXML(true), {
+      position : child.key,
+      type : 'element'
+    });
+
+    editor.schema.attachElement(child, element);
+  },
+
+  addText : function (previous) {
+
+    var child = this.addChild({
+      content : ''
+    }, 'text', previous);
+
+    var editor = this.getParent('editor');
+
+    child.openValue(function() {
+
+      editor.getObject('history').addStep('add', this.toPath(true), child.toXML(true), {
+        position : child.key,
+        type : child.element
+      });
+
+    }.bind(this));
+  },
+
+  addChild : function (options, type, previous) {
+
+    var container = this.getChildren();
     var key;
 
     if (previous) {
@@ -99,22 +157,28 @@ sylma.xml.Element = new Class({
       key = 0;//undefined;//container.tmp.length - 1;
     }
 
-    var child = container.add('element', {
-      prefix : element.prefix,
-      namespace : element.namespace,
-      name : element.name
-    }, key === container.tmp.length ? undefined : key);
+    var result = container.add(type, options, key === container.tmp.length ? undefined : key);
+    result.key = key;
 
     this.prepareChildren();
-    this.prepareChild(child);
+    this.prepareChild(result);
 
-    var editor = this.getParent('editor');
-    editor.schema.attachElement(child, element);
+    return result;
+  },
 
-    editor.getObject('history').addStep('add', this.toPath(true), child.toXML(true), {
-      position : key,
-      type : 'element'
+  remove : function () {
+console.log('Remove element', this);
+    this.getParent('editor').getObject('history').addStep('remove', this.toPath(true), '', {
+      type : 'element',
     });
+
+    var parent = this.parentElement;
+    this.sylma.key = parent.children.indexOf(this);
+
+    this.parent();
+    //this.destroy();
+
+    parent.prepareChildren();
   },
 
   addAttribute : function (attribute) {
@@ -150,19 +214,191 @@ sylma.xml.Element = new Class({
 //console.log(this.children);
   },
 
-  remove : function () {
-console.log('Remove element', this);
-    this.getParent('editor').getObject('history').addStep('remove', this.toPath(true), '', {
-      type : 'element',
+  initMove : function () {
+
+    var confirm = false;
+    var tests = this.getParent('editor').getNode().getElements('.spacing');
+    var editor = this.getParent('editor');
+    var enode = editor.getNode();
+    var cnode = this.getNode();
+
+    var spacings = tests.filter(function(item) {
+
+      return item.getParents().indexOf(cnode) === -1;
+
+    }).map(function(item) {
+
+      return [
+        item,
+        item.getPosition(enode).y
+      ];
     });
 
-    var parent = this.parentElement;
-    this.sylma.key = parent.children.indexOf(this);
+    var padding = editor.getNode().getPosition();
+    var dy = spacings[0][0].getSize().y / 2;
 
-    this.parent();
-    //this.destroy();
+    this.mousemove = function(e) {
+
+      if (!confirm) {
+
+        confirm = true;
+        this.confirmMove();
+      }
+      else {
+
+        var mouse = e.page;
+        tests.removeClass('target');
+
+        var closer = spacings.reduce(function(current, previous) {
+
+          var my = mouse.y - padding.y - dy;
+
+          return Math.abs(my - current[1]) < Math.abs(my - previous[1]) ? current : previous;
+        });
+
+        closer[0].addClass('target');
+        this.closer = closer[0];
+
+        this.dummy.setStyles({
+          left : e.client.x,
+          top : e.client.y
+        });
+      }
+
+    }.bind(this);
+
+    window.addEvent('mousemove', this.mousemove);
+  },
+
+  cancelMove : function () {
+
+    this.resetMove();
+  },
+
+  resetMove : function () {
+
+    this.dummy.dispose();
+    this.getNode().removeClass('moving');
+
+    window.removeEvent('mousemove', this.mousemove);
+    window.removeEvent('mouseup', this.mouseup);
+
+    var editor = this.getParent('editor');
+    editor.stopMove();
+  },
+
+  confirmMove : function () {
+
+    var editor = this.getParent('editor');
+    editor.startMove();
+
+    this.getNode().addClass('moving');
+
+    var dummy = this.toElement();
+    dummy.addClass('editor-dummy');
+    editor.getNode().grab(dummy);
+
+    this.mouseup = function(e) {
+
+      var target = this.closer;
+      //var target = e.target;
+
+      if (target) {
+
+        target.removeClass('target');
+        var obj = target.retrieve('sylma-object');
+        var el, previous;
+
+        if (target.hasClass('parent')) {
+
+          previous = obj;
+          el = obj.parentElement;
+        }
+        else {
+
+          el = obj;
+        }
+
+        this.validateMove(el, previous);
+      }
+      else {
+
+        this.cancelMove();
+      }
+
+    }.bind(this);
+
+    window.addEvent('mouseup', this.mouseup);
+
+    this.dummy = dummy;
+  },
+
+  validateMove : function (parent, previous) {
+
+console.log('Move', this);
+    var editor = this.getParent('editor');
+    var node = this.getNode();
+    var copy = node.clone(true);
+
+    this.resetMove();
+
+    node.grab(copy, 'after');
+    node.setStyle('height', 0);
+
+    var height = copy.getSize().y;
+    var options = {
+      duration: 200,
+      property: 'height',
+    };
+
+    var hide = new Fx.Tween(copy, options);
+    var show = new Fx.Tween(node, options);
+
+    var key = 0;
+
+    if (previous) {
+
+      node.inject(previous.getNode(), 'after');
+      key = previous.getPosition() + 1;
+    }
+    else {
+
+      node.inject(parent.getObject('children')[0].getNode(), 'top');
+    }
+
+    editor.getObject('history').addStep('move', this.toPath(true), '', {
+      position : key,
+      parent : parent.toPath(true),
+      type : 'element'
+    });
+
+    var children = this.parentElement.getObject('children')[0].tmp;
+    children.splice(this.getPosition(), 1);
+
+    this.parentElement.prepareChildren();
+
+    this.parentElement = parent;
+
+    var children = parent.getObject('children')[0].tmp;
+    children.splice(key, 0, this);
 
     parent.prepareChildren();
+
+    editor.schema.attachElement(parent, parent.ref);
+
+    hide.addEvent('complete', function(node) {
+
+      node.dispose();
+    });
+
+    hide.start(0);
+
+    show.addEvent('complete', function(node) {
+
+      node.setStyle('height');
+    })
+
+    show.start(height);
   },
 
   getShortName : function () {
@@ -191,6 +427,28 @@ console.log('Remove element', this);
   toString : function () {
 
     return this.namespace + ':' + this.name;
+  },
+
+  toElement : function() {
+
+    var prefix = this.prefix;
+    var start = prefix ? '<span class="prefix">' + prefix + '</span>' : '';
+    var element = this;
+    var insert = this.getParent('editor').getObject('insert');
+
+    var result = new Element('div', {
+      html : '<div class="fullname">' + start + this.name + '</div>',
+      'class' : 'node ' + this.element + ' node-' + prefix,
+      events : {
+        mousedown : function() {
+          insert.addChild(element);
+        }
+      }
+    });
+
+    result.store('ref', this);
+
+    return result;
   },
 
   toXML : function (first) {

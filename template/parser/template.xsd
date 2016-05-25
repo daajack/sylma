@@ -19,7 +19,8 @@
   <xs:import namespace="http://2013.sylma.org/schema/ssd" schemaLocation="../../schema/ssd/simple.xsd"/>
   <xs:import namespace="http://2013.sylma.org/action"/>
   <xs:import namespace="http://2013.sylma.org/storage/sql"/>
-  <xs:import namespace="http://2013.sylma.org/core/factory" schemaLocation="../../core/factory/parser/factory.xsd"/>
+  <xs:import namespace="http://2013.sylma.org/storage/xml"/>
+  <xs:import namespace="http://2013.sylma.org/core/factory"/>
   <xs:import namespace="http://2014.sylma.org/html"/>
   <xs:import namespace="http://2014.sylma.org/device"/>
   <xs:import namespace="http://2013.sylma.org/view/crud"/>

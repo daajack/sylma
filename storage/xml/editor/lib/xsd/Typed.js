@@ -117,7 +117,7 @@ sylma.xsd.Typed = new Class({
       html : '<div class="fullname">' + start + this.name + '</div>',
       'class' : 'node ' + this.element + ' node-' + prefix,
       events : {
-        click : function() {
+        mousedown : function() {
           insert.addChild(element);
         }
       }

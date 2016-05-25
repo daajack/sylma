@@ -3,12 +3,12 @@ sylma.xml.History = new Class({
 
   Extends : sylma.ui.Container,
   steps : [],
-  sendSpeed : 5000,
+  sendSpeed : 60000,
   sending : false,
 
   onLoad : function() {
 
-    this.sendSteps();
+    this.save();
   },
 
   addStep: function(type, path, content, args) {
@@ -21,10 +21,11 @@ sylma.xml.History = new Class({
     };
 
     this.steps.push(step);
+    this.save();
   },
 
-  sendSteps: function() {
-console.log('check steps', this.sending, this.steps.length);
+  save: function() {
+console.log('check steps');
     if (!this.sending && this.steps.length) {
 
       this.sending = true;
@@ -54,7 +55,7 @@ console.log('check steps', this.sending, this.steps.length);
       }.bind(this));
     }
 
-    window.setTimeout(this.sendSteps.bind(this), this.sendSpeed);
+    window.setTimeout(this.save.bind(this), this.sendSpeed);
   }
 
 });

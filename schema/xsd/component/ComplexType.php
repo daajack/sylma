@@ -39,13 +39,17 @@ class ComplexType extends parser\component\Complex implements core\arrayable {
 
     } else if ($content = $this->getx('self:complexContent', false)) {
 
-      $extension = $content->getx('self:extension');
-      $this->children = $this->loadChildren($extension);
-      $ns = $this->getHandler()->parseName($extension->readx('@base'));
-      $this->base = array(
-        'namespace' => $ns[0],
-        'name' => $ns[1],
-      );
+      $extension = $content->getx('self:extension | self:restriction', array(), false);
+
+      if ($extension) {
+
+        $this->children = $this->loadChildren($extension);
+        $ns = $this->getHandler()->parseName($extension->readx('@base'));
+        $this->base = array(
+          'namespace' => $ns[0],
+          'name' => $ns[1],
+        );
+      }
     }
     else {
 
@@ -72,6 +76,7 @@ class ComplexType extends parser\component\Complex implements core\arrayable {
         case 'group' :
         case 'sequence' :
         case 'choice' :
+        case 'all' :
 
           $this->setParticle($component);
           break;

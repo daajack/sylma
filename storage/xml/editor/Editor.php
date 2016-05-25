@@ -52,6 +52,7 @@ class Editor extends core\module\Domed {
       $aResult['attribute'][] = array(
         'prefix' => $attr->getPrefix(),
         'name' => $attr->getName(),
+        'namespace' => $attr->getNamespace(),
         'value' => (string) $attr,
       );
     }
@@ -100,7 +101,19 @@ class Editor extends core\module\Domed {
   public function getSchemas() {
 
     $this->setDirectory(__FILE__);
-    $result = $this->buildSchema($this->getFile('/#sylma/view/parser/crud.xsd'));
+
+    $ns = $this->getDocument()->getRoot()->getNamespace();
+    $this->setNamespace('urn:oasis:names:tc:entity:xmlns:xml:catalog', 'cat');
+
+    $doc = $this->getDocument('/#sylma/catalog.xml');
+    $uri = $doc->getRoot()->readx("//cat:uri[@name='$ns']/@uri", array(), false);
+
+    $result = null;
+
+    if ($uri) {
+
+      $result = $this->buildSchema($this->getFile('/#sylma/' . $uri));
+    }
 //dsp($result);
 //dsp(json_encode($result));
 
@@ -161,6 +174,8 @@ class Editor extends core\module\Domed {
       'view' => 'http://2013.sylma.org/view',
       'js' => 'http://2013.sylma.org/template/binder',
       'cls' => 'http://2013.sylma.org/core/factory',
+      'xl' => 'http://2013.sylma.org/storage/xml',
+      'xs' => 'http://www.w3.org/2001/XMLSchema',
     );
   }
 
@@ -233,13 +248,12 @@ class Editor extends core\module\Domed {
       $args = $this->createArgument(json_decode($step->read('arguments'), true));
 
       $this->run('history/insert', array(), $step->asArray());
-      $path = explode('/', $step->read('path'));
 
-      $el = $this->findElement($doc->getRoot(), $path);
+      $el = $this->findElement($doc->getRoot(), $step->read('path'));
 
       switch ($args->read('type')) {
 
-        case 'element' : $this->updateElement($el, $step, $args); break;
+        case 'element' : $this->updateElement($doc, $el, $step, $args); break;
         case 'text' : $this->updateText($el, $step, $args); break;
         case 'attribute' : $this->updateAttribute($el, $step, $args); break;
         default : $this->launchException('Unknown step type');
@@ -252,7 +266,7 @@ class Editor extends core\module\Domed {
     return true;
   }
 
-  protected function updateElement(dom\element $el, core\argument $step, core\argument $args) {
+  protected function updateElement(dom\document $doc, dom\element $el, core\argument $step, core\argument $args) {
 
     switch ($step->read('type')) {
 
@@ -272,6 +286,14 @@ class Editor extends core\module\Domed {
 
         break;
 
+      case 'move' :
+
+        $parent = $this->findElement($doc->getRoot(), $args->read('parent'));
+        $position = $args->read('position');
+
+        $parent->insert($el, $parent->getChildren()->item($position));
+        break;
+
       case 'remove' :
 
         $el->remove();
@@ -285,16 +307,24 @@ class Editor extends core\module\Domed {
 
     switch ($step->read('type')) {
 
+      case 'add' :
+
+        $position = $args->read('position');
+        $el->insert($step->read('content'), $el->getChildren()->item($position));
+        break;
+
       case 'update' :
 
-        $el->set($step->read('content'));
+        $position = $args->read('position');
+        $el->getChildren()->item($position)->nodeValue = $step->read('content');
         break;
-/*
+
       case 'remove' :
 
-        $el->set($step->read('value'));
+        $position = $args->read('position');
+        $el->getChildren()->item($position)->remove();
         break;
-*/
+
       default : $this->launchException('Unknown step type');
     }
   }
@@ -306,7 +336,8 @@ class Editor extends core\module\Domed {
       case 'add' :
       case 'update' :
 
-        //$el->createAttribute($args->read('name'), $args->read('value'), $args->read('namespace', false));
+        //$el->createAttribute($args->read('name'), $step->read('content'), $args->read('namespace', false));
+        //$el->setAttributeNS($args->read('namespace', false), $args->read('name'), $step->read('content'));
         $el->setAttribute($args->read('name'), $step->read('content'));
         break;
 
@@ -323,6 +354,7 @@ class Editor extends core\module\Domed {
 
   protected function findElement($result, $path) {
 
+    $path = explode('/', $path);
     $position = next($path);
 
     while ($result && $position !== false) {

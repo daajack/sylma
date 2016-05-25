@@ -11,6 +11,11 @@ sylma.xml.Text = new Class({
     this.value = this.getNode().get('html');
   },
 
+  getPosition: function () {
+
+    return this.parentElement.children.indexOf(this);
+  },
+
   openValue : function (callback) {
 
     this.getParent('editor').getObject('update').attachNode(this, this.getNode(), callback);
@@ -22,14 +27,17 @@ sylma.xml.Text = new Class({
 
     this.getParent('editor').getObject('history').addStep('remove', path, '', {
       type : 'text',
-      //position : this.parentElement.children.indexOf(this)
+      position : this.getPosition()
     });
 
     this.parent();
     this.destroy();
   },
 
-  updateValue: function (value) {
+  updateValue: function (value, callback) {
+
+    this.value = value;
+    this.getNode().set('html', value);
 
     if (!value) {
 
@@ -37,15 +45,20 @@ sylma.xml.Text = new Class({
     }
     else {
 
-      var editor = this.getParent('editor');
-      var path = this.parentElement.toPath(true);
+      if (callback) {
 
-      this.value = value;
-      this.getNode().set('html', value);
+        callback();
+      }
+      else {
 
-      editor.getObject('history').addStep('update', path, this.value, {
-        type : 'text',
-      });
+        var editor = this.getParent('editor');
+        var path = this.parentElement.toPath(true);
+
+        editor.getObject('history').addStep('update', path, this.value, {
+          type : 'text',
+          position : this.getPosition()
+        });
+      }
     }
   },
 

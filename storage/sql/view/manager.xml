@@ -31,6 +31,7 @@
         <cls:class alias="function" name="view\component\_Function"/>
         <cls:class alias="element" name="view\component\Element"/>
         <cls:class alias="group" name="view\component\GroupBy"/>
+        <cls:class alias="settings" name="view\component\Settings"/>
       </cls:classes>
     </component>
   </cls:classes>

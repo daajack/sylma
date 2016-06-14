@@ -24,6 +24,9 @@
           color: red;
         }
       </style>
+      <h3>
+        <xsl:value-of select="tpl:title"/>
+      </h3>
       <xsl:apply-templates select="tpl:component"/>
     </div>
   </xsl:template>

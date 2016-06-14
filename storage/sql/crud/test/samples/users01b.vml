@@ -18,8 +18,8 @@
 
     <view:schema>user01.xql</view:schema>
 
-    <tpl:template match="user:group" mode="filter/content">
-      <tpl:apply select="ref()/name" mode="filter/content"/>
+    <tpl:template match="user:group" mode="filter">
+      <tpl:apply select="ref()/name" mode="filter"/>
     </tpl:template>
 
     <tpl:template match="group:sylma_stepper_group01">

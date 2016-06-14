@@ -265,5 +265,17 @@ class Router extends View {
 
     return $result;
   }
+
+  protected function loadLog(dom\document $doc = null) {
+
+    $view = $this->getView();
+
+    if ($this->getLogger(false)) {
+
+      $this->getLogger()->setTitle($view->asPath()); // $view->getAlias()
+    }
+
+    return parent::loadLog($doc);
+  }
 }
 

@@ -5,16 +5,19 @@ use sylma\core, sylma\template, sylma\storage\xml;
 
 class Document  extends xml\tree\Argument implements template\parser\tree
 {
-  public function reflectApplyFunction($sName, array $aPath, $sMode, $bRead = false, $sArguments = '', array $aArguments = array()) {
+  public function reflectApplyFunction($sName, array $path, $sMode, $bRead = false, $sArguments = '', array $aArguments = array()) {
 
     $result = null;
 
     switch ($sName) {
 
       case 'url' : $result = $this->reflectFunctionURL(); break;
-      case 'root' : $result = $this->reflectFunctionRoot($aPath, $sMode, $bRead, $aArguments); break;
-      case 'sylma' : $result = $this->reflectFunctionSylma($aPath); break;
-      case 'argument' : $result = $this->reflectFunctionArgument($aPath); break;
+      case 'root' : $result = $this->reflectFunctionRoot($path, $sMode, $bRead, $aArguments); break;
+      case 'sylma' : $result = $this->reflectFunctionSylma($path); break;
+      case 'post' : $result = $this->reflectFunctionArgument('post', $path); break;
+      case 'get' :
+      // @deprecated, use 'get' instead
+      case 'argument' : $result = $this->reflectFunctionArgument('arguments', $path); break;
 
       default :
 
@@ -50,10 +53,19 @@ class Document  extends xml\tree\Argument implements template\parser\tree
     return $init->call('getURL');
   }
 
-  protected function reflectFunctionArgument(array $aPath) {
+  protected function reflectFunctionArgument($name, array $path, $mode = '') {
 
-    $arg = $this->getWindow()->getVariable('arguments');
+    $arg = $this->getWindow()->getVariable($name);
 
-    return $arg->call('read', $aPath);
+    if ($path) {
+
+      $result = $arg->call('read', $path);
+    }
+    else {
+
+      $result = $arg;
+    }
+
+    return $result;
   }
 }

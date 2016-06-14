@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<arg:argument
+  xmlns:arg="http://2013.sylma.org/core/argument"
+  xmlns="http://2013.sylma.org/schema/xsd"
+  xmlns:cls="http://2013.sylma.org/core/factory"
+>
+  <cls:classes>
+    <template>
+      <cls:classes>
+        <cls:base>\sylma\storage\sql</cls:base>
+        <cls:class alias="select" name="query\parser\Select">
+          <cls:classes>
+            <cls:class alias="where" name="crud\Where"/>
+          </cls:classes>
+        </cls:class>
+      </cls:classes>
+    </template>
+  </cls:classes>
+</arg:argument>

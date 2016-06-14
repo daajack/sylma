@@ -117,7 +117,7 @@
 
     <div class="foreign-value">
 
-      <tpl:apply mode="input/build">
+      <tpl:apply mode="input/build" xmode="foreign">
         <tpl:read tpl:name="alias" select="'{$alias}[{id}]'"/>
         <tpl:read tpl:name="type" select="'checkbox'"/>
         <tpl:read tpl:name="value" select="id"/>
@@ -202,7 +202,7 @@
       <tpl:apply mode="select-option-value"/>
     </option>
   </tpl:template>
-
+<!--
   <tpl:template match="sql:foreign" mode="input/single/boolean/update">
 
     <tpl:apply select="all()" mode="foreign/single/boolean/update">
@@ -210,7 +210,7 @@
       <tpl:read tpl:name="alias" select="alias('form')"/>
     </tpl:apply>
   </tpl:template>
-
+-->
   <tpl:template match="sql:foreign" mode="input/multiple/boolean/update">
 
     <tpl:argument name="values"/>
@@ -307,14 +307,44 @@
     </select>
   </tpl:template>
 
-  <tpl:template match="sql:foreign" mode="filter/content">
-    <div class="filter" js:class="sylma.crud.collection.Filter">
-      <tpl:apply mode="input"/>
+  <tpl:template match="sql:foreign" mode="filter">
+
+    <js:include>foreign/FilterContainer.js</js:include>
+    <js:include>foreign/Filter.js</js:include>
+
+    <div class="filter-container foreign" js:class="sylma.crud.foreign.FilterContainer">
+      <tpl:argument name="alias" default="alias('form')"/>
+      <input type="hidden" name="{$alias}[0][logic]" value="and"/>
+      <input type="hidden" name="{$alias}[0][operator]" value="=" js:node="operator"/>
+      <span class="label hidder visible" js:node="empty">show</span>
+      <tpl:apply mode="input/clear"/>
+      <tpl:apply select="all()" mode="filter/foreign">
+        <tpl:read select="'{$alias}[0][children]'" tpl:name="alias"/>
+      </tpl:apply>
+      <js:option name="name">
+        <tpl:read select="$alias"/>
+      </js:option>
     </div>
   </tpl:template>
 
+  <tpl:template match="*" mode="filter/foreign">
+    <tpl:argument name="alias"/>
+    <div class="filter hidder empty" data-key="{id}" js:class="sylma.crud.foreign.Filter">
+      <input type="hidden" name="{$alias}[{id}]" value="0"/>
+      <tpl:apply mode="foreign/multiple/boolean/empty" xmode="insert">
+        <tpl:read select="$alias" tpl:name="alias"/>
+      </tpl:apply>
+    </div>
+  </tpl:template>
+
+  <tpl:template match="sql:foreign" mode="filter/internal">
+    <sql:filter optional="x" op="array">
+      <tpl:read/>
+    </sql:filter>
+  </tpl:template>
+
   <tpl:template match="sql:foreign" mode="filter/text">
-    <div class="filter" js:class="sylma.crud.collection.Filter">
+    <div class="filter hidder template" js:class="sylma.crud.collection.Filter">
       <tpl:apply mode="input/build"/>
       <tpl:apply mode="input/clear"/>
     </div>

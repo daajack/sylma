@@ -14,12 +14,19 @@ abstract class Logger extends core\module\Domed {
 
   protected function loadLogger() {
 
-    if ($this->useLog()) $this->logger = $this->create('logger');
+    if ($this->useLog()) {
+
+      $this->logger = $this->create('logger');
+    }
   }
 
   protected function loadLog(dom\document $doc = null) {
 
-    if ($this->useLog() && (!$doc || $doc->readx('@debug', array(), false))) {
+    if ($this->useLog() &&
+        $this->getLogger(false) &&
+        (!$doc ||
+          $doc->readx('@debug', array(), false) ||
+          \Sylma::read('template/debug/log'))) {
 
       $this->getLogger()->asMessage();
     }

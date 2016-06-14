@@ -472,6 +472,28 @@ sylma.ui.BaseProps = {
     return result;
   },
 
+  getInstance : function(source, node) {
+
+    source = source || this.props;
+    node = node || this.getNode();
+
+    var props = Object.assign({}, source);
+
+    props.objects = {};
+    props.sylma.key = null;
+
+    props.node = node.clone(true);
+
+    var clone = sylma.ui.createObject(props);
+
+    return clone;
+  },
+
+  clone: function () {
+
+    return this.getInstance();
+  },
+
   destroy : function() {
 
     var parent = this.getParent();

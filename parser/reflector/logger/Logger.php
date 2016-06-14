@@ -1,7 +1,7 @@
 <?php
 
 namespace sylma\parser\reflector\logger;
-use sylma\core, sylma\dom;
+use sylma\core, sylma\storage\fs;
 
 class Logger extends core\module\Domed {
 
@@ -10,17 +10,34 @@ class Logger extends core\module\Domed {
   protected $root;
   protected $aComponents = array();
 
-  public function __construct() {
+  public function __construct(fs\file $file = null) {
 
     $this->setDirectory(__FILE__);
     $this->loadDefaultArguments();
     $this->setNamespace(self::NS);
+
+    if ($file) {
+
+      $this->setFile($file);
+    }
+
     $this->loadRoot();
   }
 
   protected function loadRoot() {
 
-    $this->root = $this->createArgument(array('log' => array('#component' => array())));
+    $file = $this->getFile('', false);
+
+    $this->root = $this->createArgument(array(
+      'log' => array(
+        '#component' => array(),
+      )
+    ));
+  }
+
+  public function setTitle($content) {
+
+    $this->root->set('log/title', $content);
   }
 
   protected function getRoot() {

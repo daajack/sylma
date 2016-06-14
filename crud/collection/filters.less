@@ -1,19 +1,33 @@
 
-@import url(list.less);
+@import '/sylma/modules/html/vars.less';
 
 .list
 {
+  @filter-h: 2.5em;
+
+  td
+  {
+    min-width: 4em;
+  }
 
   .filters
   {
-    overflow: hidden;
+    position: relative;
     width: 100%;
+    display: flex;
+    margin-bottom: 0.5em;
 
-    input,
+    input[type=text],
     select
     {
       box-sizing: border-box;
       width: 100%;
+      height: 2em;
+    }
+
+    input[type=text]
+    {
+      padding-left: 1em;
     }
 
     &.hidder
@@ -22,30 +36,64 @@
       max-height: 0;
     }
 
-    &.visible
-    {
-      max-height: 10em;
-    }
-
     .filter-container
     {
       box-sizing: border-box;
       padding: 0 0.1em;
-      border-bottom: 1px solid #ccc;
-      min-height: 3em;
-
+      min-height: 1px;
       float: left;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
 
       &.title a
       {
         display: inline;
-        ._title;
+      }
+
+      .add
+      {
+        @size: 2em;
+
+        width: @size;
+        height: @size;
+        position: absolute;
+        line-height: @size;
+        left: 50%;
+        transform: translate(-50%, 0);
+        opacity: 0;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 0;
+        font-size: 1em;
+
+        &:hover
+        {
+          background-color: #ec008c;
+        }
+
+        &:active
+        {
+          color: white;
+          background-color: #a6c6cb;
+        }
       }
 
       .filter
       {
-        clear: both;
         white-space: nowrap;
+        max-height: 0;
+
+        &.template
+        {
+          display: none;
+        }
+
+        &.visible
+        {
+          max-height: 3em;
+        }
 
         .field
         {
@@ -53,6 +101,23 @@
           float: none;
         }
 
+        .operator
+        {
+          position: absolute;
+          border-right: 1px solid @gray2;
+          line-height: @filter-h - 0.3em;
+          margin: 0.1em 0;
+          width: 1.3em;
+          padding-left: 0.2em;
+          text-align: center;
+          cursor: pointer;
+          color: @gray2;
+
+          &:hover
+          {
+            color: black;
+          }
+        }
       }
 
       .close
@@ -70,9 +135,132 @@
         }
       }
 
-      .date-container
+      .field-date
       {
-        display: inline-block;
+        margin: 0;
+      }
+
+      &.foreign
+      {
+
+        .label
+        {
+          display: inline-block;
+          line-height: 2.5em;
+          text-align: center;
+          color: @gray2;
+          max-height: 0;
+          overflow: hidden;
+          transition: max-height 0.5s, line-height 0.5s;
+        }
+
+        .close
+        {
+          display: block;
+          position: absolute;
+          margin: 0;
+          margin-top: -1.5em;
+          left: 0.55em;
+          opacity: 0;
+          visibility: hidden;
+          transition: opacity 0.5s, visibility 0.5s;
+          background-color: white;
+          padding: 0.2em;
+          line-height: initial;
+          z-index: 2;
+          color: @gray2;
+
+          &:hover
+          {
+            opacity: 1 !important;
+          }
+        }
+
+        .foreign-value
+        {
+          float: none;
+          margin: 0;
+        }
+
+        label
+        {
+          vertical-align: top;
+          line-height: 2em;
+        }
+
+        .filter
+        {
+          overflow: hidden;
+
+          &.visible
+          {
+            max-height: 2em;
+          }
+
+          &.empty
+          {
+            max-height: 0;
+          }
+
+          &:first-child
+          {
+            margin-top: 0.5em;
+          }
+
+          &:hover
+          {
+            position: relative;
+            width: -moz-fit-content;
+            width: -webkit-fit-content;
+            width: -ie-fit-content;
+            background-color: white;
+            z-index: 1;
+          }
+        }
+
+        &:hover
+        {
+          .close
+          {
+            opacity: 0.8;
+            visibility: visible;
+          }
+
+          .label.visible
+          {
+            max-height: 0;
+          }
+
+          .filter
+          {
+            height: auto;
+          }
+          .empty
+          {
+            opacity: 1;
+            visibility: visible;
+            max-height: 3em;
+          }
+        }
+      }
+    }
+
+    &.visible
+    {
+
+      .filter-container:hover
+      {
+        .add
+        {
+          opacity: 1;
+          transform: translate(-50%, -100%);
+        }
+      }
+
+      .foreign .label.visible
+      {
+        max-height: 2.5em;
+        line-height: 2.5em;
       }
     }
   }

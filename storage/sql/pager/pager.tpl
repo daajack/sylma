@@ -75,7 +75,7 @@
 
   </tpl:template>
 
-  <tpl:template mode="pager/count">10</tpl:template>
+  <tpl:template mode="pager/count">20</tpl:template>
 
   <tpl:template match="sql:pager">
 
@@ -98,7 +98,7 @@
 
   <tpl:template match="*" mode="pager/previous">
 
-    <a href="javascript:void(0)" title="Page précédente" class="button pager-previous previous">
+    <a href="javascript:void(0)" title="Page précédente" class="button previous">
       <tpl:if test="is-first()">
         <tpl:token name="class">form-disable</tpl:token>
       </tpl:if>
@@ -117,9 +117,9 @@
 
   <tpl:template match="*" mode="pager/current">
 
-    <span class="button pager-infos">
+    <span class="infos">
 
-      <a href="javascript:void(0)" title="Première page" class="pager-current">
+      <a href="javascript:void(0)" title="Première page" class="page current">
         <tpl:if test="is-first()">
           <tpl:token name="class">form-disable</tpl:token>
         </tpl:if>
@@ -129,9 +129,9 @@
         <tpl:read select="current"/>
       </a>
 
-      <span class="pager-separator">/</span>
+      <span class="separator">/</span>
 
-      <a href="javascript:void(0)" title="Dernière page" class="pager-total">
+      <a href="javascript:void(0)" title="Dernière page" class="page total">
         <tpl:if test="is-last()">
           <tpl:token name="class">form-disable</tpl:token>
         </tpl:if>
@@ -166,7 +166,7 @@
 
   <tpl:template match="*" mode="pager/next">
 
-    <a href="javascript:void(0)" title="Page suivante" class="button pager-next next">
+    <a href="javascript:void(0)" title="Page suivante" class="button next">
       <tpl:if test="is-last()">
         <tpl:token name="class">form-disable</tpl:token>
       </tpl:if>

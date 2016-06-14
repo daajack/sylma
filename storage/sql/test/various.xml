@@ -59,7 +59,7 @@
     </tst:node>
   </tst:test>
   <tst:test name="Required on table">
-    <!-- table is parsed before render and can return null although it has found a template -->
+    <!-- table is parsed before render and can return null although it founds a template -->
     <tst:document>
       <view:view sql:ns="ns">
         <sql:resource/>
@@ -139,5 +139,22 @@
       return true;
 
     </tst:expected>
+  </tst:test>
+  <tst:test name="Settings">
+    <tst:document>
+      <view:view>
+        <sql:resource/>
+        <sql:settings>samples/settings_simple.xml</sql:settings>
+        <view:schema>samples/user1.xql</view:schema>
+        <tpl:template>
+          <div>
+            <tpl:read select="name"/>
+          </div>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <div>root hello</div>
+    </tst:node>
   </tst:test>
 </tst:tests>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<arg:argument
+  xmlns:arg="http://2013.sylma.org/core/argument"
+  xmlns="http://2013.sylma.org/sql/template"
+  xmlns:cls="http://2013.sylma.org/core/factory"
+>
+  <cls:classes>
+    <cls:class alias="counter" name="do not works"/>
+    <component>
+      <cls:classes>
+        <cls:base>\sylma\storage\sql</cls:base>
+        <cls:class alias="field" name="test\samples\FieldSimple"/>
+      </cls:classes>
+    </component>
+  </cls:classes>
+</arg:argument>

@@ -164,15 +164,12 @@ h3
 
 .button {
   display: inline-block;
-  padding: 5px;
-  margin: 0 0 5px 5px;
+  padding: 0.5em;
   text-decoration: none !important;
-  border-radius: 7px;
   -webkit-border-radius: 7px;
   color: white;
   background-color: #a6c6cb;
   float: none;
-  box-shadow: 2px 2px #ddd;
 }
 
 button.button

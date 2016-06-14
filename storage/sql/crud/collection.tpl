@@ -33,44 +33,46 @@
     <tpl:read select="format()"/>
   </tpl:template>
 
+  <tpl:template match="sql:datetime" mode="label"/>
   <tpl:template match="sql:datetime" mode="filter">
+
+    <js:include>DateFilter.js</js:include>
+
     <tpl:argument name="alias" default="alias('form')"/>
-    <div class="filter-container"  js:class="sylma.crud.collection.FilterContainer">
-      <div class="filter" js:class="sylma.crud.collection.Filter">
+    <div class="filter-container" js:class="sylma.crud.collection.FilterContainer">
+      <js:option name="name">
+        <tpl:read select="$alias"/>
+      </js:option>
+      <js:option name="operators">
+        <le:array explode=",">&gt;,&lt;,=,!</le:array>
+      </js:option>
+
+      <tpl:register/>
+      <button type="button" class="add" data-name="{alias('form')}">
+        <js:event name="click">%object%.addEmptyFilter();</js:event>
+        +
+      </button>
+      <div class="filter hidder template" js:class="sylma.crud.DateFilter" js:parent-name="filter">
+        <input type="hidden" value="=" js:node="operator"/>
+        <span class="operator" js:node="operator_display">
+          <js:event name="click">%object%.toggleOperator();</js:event>
+        </span>
         <tpl:apply mode="date">
-          <tpl:read select="'{$alias}_from'" tpl:name="alias"/>
-          <tpl:read select="parent()/collection()/dummy()/default()" tpl:name="value">
-            <tpl:read select="'{$alias}_from'"/>
-          </tpl:read>
+          <tpl:read select="'{$alias}[0]'" tpl:name="alias"/>
         </tpl:apply>
-       <tpl:apply mode="input/clear"/>
+        <tpl:apply mode="input/clear"/>
       </div>
-      <!--
-      <div class="filter sylma-hidder" js:class="sylma.crud.collection.Filter">
-        <tpl:apply mode="date">
-          <tpl:read select="'{$alias}_to'" tpl:name="alias"/>
-          <tpl:read select="parent()/dummy()/default()" tpl:name="value">
-            <tpl:read select="'{$alias}_to'"/>
-          </tpl:read>
-        </tpl:apply>
-       <tpl:apply mode="input/clear"/>
-      </div>
-      -->
     </div>
   </tpl:template>
 
   <tpl:template match="sql:datetime" mode="input/value"/>
 
-  <tpl:template match="sql:datetime" mode="input/events">
-    <js:event name="change">
-      %parent%.update();
-    </js:event>
-  </tpl:template>
+  <tpl:template match="sql:datetime" mode="input/events"/>
 
   <tpl:template match="sql:datetime" mode="filter/internal">
-    <sql:filter optional="x" op="&gt;=">
+    <sql:filter optional="x" op="=">
       <tpl:read select="parent()/collection()/dummy()/default()" tpl:name="value">
-        <tpl:read select="'{alias()}_from'"/>
+        <tpl:read select="'{alias()}'"/>
       </tpl:read>
     </sql:filter>
     <!--

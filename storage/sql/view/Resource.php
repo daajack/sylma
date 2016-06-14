@@ -57,6 +57,13 @@ class Resource extends reflector\handler\Elemented implements reflector\elemente
 
     $this->getRoot()->addDependency($schema);
 
+    if ($args = $this->getSchemaSettings()) {
+
+      $set = $this->getArgument('classes/elemented');
+      $set->merge($args);
+      $this->setArgument('classes/elemented', $set);
+    }
+
     $builder = $this->getManager(self::PARSER_MANAGER)->loadBuilder($schema, null, $this->getArguments());
     $builder->setWindow($this->getWindow());
 
@@ -108,6 +115,20 @@ class Resource extends reflector\handler\Elemented implements reflector\elemente
     $this->getTree()->isRoot(true);
 
     return $schema;
+  }
+
+  protected function getSchemaSettings() {
+
+    $result = null;
+    $el = $this->getNode()->getDocument()->getRoot();
+
+    if ($settings = $el->getx('//sql:settings', array(), false)) {
+
+      $args = $this->parseElement($settings);
+      $result = $args->asArgument();
+    }
+
+    return $result;
   }
 
   /**

@@ -228,15 +228,14 @@ class Elemented extends template\parser\handler\Domed {
       $item->remove();
     }
 
-    $this->checkResource($result);
+    if (!$result instanceof resource) {
+
+      $this->launchException('Bad resource component', get_defined_vars());
+    }
+
     $result->setMode($sMode);
 
     return $result;
-  }
-
-  protected function checkResource(resource $resource) {
-
-    return $resource;
   }
 
   protected function loadSchema() {

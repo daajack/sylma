@@ -107,8 +107,14 @@ class Container extends core\module\Domed {
               array(
                 '@type' => 'button',
                 '@onclick' => "sylma.ui.send('/sylma/modules/rebuild/standalone', {path : '$file'}, null, true);",
+                'rebuild'
+              ),
+              array(
+                '@type' => 'button',
+                '@onclick' => "window.location = 'netbeans://" . $file->getSystemPath() . "'",
                 (string) $file,
               ),
+
               array(
                 '@type' => 'button',
                 '@onclick' => "sylma.ui.debugSource();",

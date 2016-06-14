@@ -220,6 +220,7 @@ template :
   debug :
     # add source to rendered elements, break tests.
     source : false
+    log : false
   # @todo : required attribute need refactoring to work
   required : false
 

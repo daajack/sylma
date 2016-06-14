@@ -159,6 +159,11 @@ class Basic extends sql\schema\Handler {
 
     list($sNamespace, $sName) = $this->parseName($sPath, $source);
 
+    if (!method_exists($source, 'getElement')) {
+
+      $this->launchException('Cannot use default path with this object');
+    }
+    
     $element = $source->getElement($sName, $sNamespace);
 
     if ($element) {

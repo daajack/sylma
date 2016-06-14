@@ -28,6 +28,8 @@
 
     <view:view name="list">
 
+      <sql:settings>crud/settings.xml</sql:settings>
+      
       <tpl:template>
         <tpl:apply mode="internal"/>
       </tpl:template>

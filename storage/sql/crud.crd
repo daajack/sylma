@@ -5,6 +5,8 @@
   xmlns="http://www.w3.org/1999/xhtml"
   xmlns:tpl="http://2013.sylma.org/template"
 
+  xmlns:sql="http://2013.sylma.org/storage/sql"
+
   extends="/#sylma/crud/full.crd"
 >
 
@@ -12,6 +14,7 @@
 
     <view:view name="list">
 
+      <sql:settings>crud/settings.xml</sql:settings>
       <tpl:import>pager/pager.tpl</tpl:import>
 
     </view:view>

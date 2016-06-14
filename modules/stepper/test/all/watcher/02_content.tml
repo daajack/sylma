@@ -56,7 +56,7 @@
       </ns0:watcher>
       <ns0:event name="click" element="#tester &gt; div &gt; div:nth-child(2) &gt; div:nth-child(6) &gt; ul &gt; div:nth-child(4) &gt; button"/>
       <ns0:watcher element="#tester &gt; div &gt; div:nth-child(2) &gt; div:nth-child(6) &gt; ul">
-        <ns0:property name="height">116</ns0:property>
+        <ns0:property name="height">120</ns0:property>
       </ns0:watcher>
       <ns0:input element="#tester &gt; div &gt; div:nth-child(2) &gt; div:nth-child(6) &gt; ul &gt; div:nth-child(4) &gt; div &gt; input">/sylma/modules/stepper/test/samples/sample04b</ns0:input>
       <ns0:event name="click" element="#tester &gt; div &gt; div:nth-child(2) &gt; div:nth-child(6) &gt; ul &gt; div:nth-child(4) &gt; button"/>
@@ -75,7 +75,7 @@
       <ns0:watcher element="#tester &gt; div:nth-child(2) &gt; iframe" delay="3000">
         <ns0:property name="iframe">1</ns0:property>
       </ns0:watcher>
-      <ns0:watcher element="#tester &gt; div &gt; div:nth-child(2) &gt; div:nth-child(6) &gt; ul &gt; div:nth-child(7) &gt; li">
+      <ns0:watcher element="#tester &gt; div &gt; div:nth-child(2) &gt; div:nth-child(6) &gt; ul &gt; div:nth-child(7) &gt; li" delay="2000">
         <ns0:property name="class">error</ns0:property>
       </ns0:watcher>
       <ns0:snapshot element="#tester &gt; div &gt; div:nth-child(2)">

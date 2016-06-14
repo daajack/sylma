@@ -2,12 +2,10 @@
 <tpl:collection
   xmlns:crud="http://2013.sylma.org/view/crud"
   xmlns:view="http://2013.sylma.org/view"
-  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns="http://2014.sylma.org/html"
   xmlns:tpl="http://2013.sylma.org/template"
-  xmlns:ssd="http://2013.sylma.org/schema/ssd"
   xmlns:js="http://2013.sylma.org/template/binder"
   xmlns:le="http://2013.sylma.org/action"
-  xmlns:ls="http://2013.sylma.org/parser/security"
   xmlns:cls="http://2013.sylma.org/core/factory"
 
   xmlns:sql="http://2013.sylma.org/storage/sql"
@@ -25,33 +23,67 @@
     <tpl:apply mode="list/filters/js"/>
     <tpl:apply mode="list/filters/css"/>
 
-    <div class="filters hidder clearfix" js:name="filters" js:parent-name="filters" js:class="sylma.crud.collection.Filters">
-      <div class="filter-container title" js:class="sylma.crud.collection.FilterContainer">
-        <tpl:apply mode="filters/corner"/>
-      </div>
+    <div class="filters clearfix" js:name="filters" js:parent-name="filters" js:class="sylma.crud.collection.Filters">
+      <js:option name="datas">
+        <tpl:read select="/root()/dummy()/query()"/>
+      </js:option>
+      <tpl:apply mode="filters/init"/>
       <tpl:apply mode="filters/content"/>
     </div>
 
   </tpl:template>
 
   <tpl:template match="*" mode="filters/content">
+    <div class="filter-container title" js:class="sylma.crud.collection.FilterContainer"/>
     <tpl:apply use="list-cols" mode="filter" xmode="update"/>
   </tpl:template>
-<!--
-  <tpl:template match="*" mode="filters/corner"> </tpl:template>
--->
+
   <tpl:template match="*" mode="filter">
     <div class="filter-container" js:class="sylma.crud.collection.FilterContainer">
+      <button type="button" class="add" data-name="{alias('form')}">
+        <js:event name="click">%object%.addEmptyFilter();</js:event>
+        +
+      </button>
+      <input type="hidden" name="{alias('form')}[0][logic]" value="or"/>
+      <tpl:apply mode="filter/init"/>
       <tpl:apply mode="filter/content"/>
+      <js:option name="name">
+        <tpl:read select="alias('form')"/>
+      </js:option>
     </div>
   </tpl:template>
 
   <tpl:template match="*" mode="filter/content">
-    <div class="filter" js:class="sylma.crud.collection.Filter">
+    <div class="filter hidder template" js:class="sylma.crud.collection.Filter">
       <tpl:register/>
-      <tpl:apply mode="input"/>
+      <input type="hidden" value="=" js:node="operator"/>
+      <span class="operator" js:node="operator_display">
+        <js:event name="click">%object%.toggleOperator();</js:event>
+      </span>
+      <input type="text" js:node="input">
+        <tpl:apply mode="input/events"/>
+      </input>
       <tpl:apply mode="input/clear"/>
     </div>
+  </tpl:template>
+
+  <tpl:template match="*" mode="filter/operator">
+    <input type="hidden" value="=" js:node="operator"/>
+    <span class="operator" js:node="operator_display">
+      <js:event name="click">%object%.toggleOperator();</js:event>
+    </span>
+  </tpl:template>
+
+  <tpl:template match="*" mode="filter/init">
+    <js:option name="operators">
+      <le:array explode=",">=,&gt;,&lt;,!</le:array>
+    </js:option>
+  </tpl:template>
+
+  <tpl:template match="xs:string" mode="filter/init">
+    <js:option name="operators">
+      <le:array explode=",">=,!</le:array>
+    </js:option>
   </tpl:template>
 
   <tpl:template match="*" mode="input/clear">
@@ -64,13 +96,30 @@
   </tpl:template>
 
   <tpl:template match="*" mode="input/events">
+<!--
+    <js:event name="change">
+      %object%.update();
+    </js:event>
+-->
+    <js:event name="focus">
+      %object%.enter();
+    </js:event>
     <js:event name="input">
+      %object%.update();
+    </js:event>
+    <js:event name="blur">
+      %object%.leave();
+    </js:event>
+  </tpl:template>
+
+  <tpl:template match="*" mode="input/events" xmode="foreign">
+    <js:event name="change">
       %object%.update();
     </js:event>
   </tpl:template>
 
   <tpl:template match="*" mode="filter/internal">
-    <sql:filter optional="x">
+    <sql:filter optional="x" op="in">
       <tpl:read/>
     </sql:filter>
   </tpl:template>

@@ -3,7 +3,7 @@
   <ns0:page url="/sylma/modules/tester/stepper?file=/sylma/modules/tester/test/stepper/module.tml">
     <ns0:steps>
       <ns0:snapshot element="#tester &gt; div:nth-child(1) &gt; div:nth-child(3)">
-        <ns0:content>{"name":"div","children":[{"name":"div","children":[{"name":"button","children":[{"name":"span","content":"▷","position":{"x":1248,"y":58},"size":{"x":13,"y":7}}],"position":{"x":1245,"y":54},"size":{"x":19,"y":16}},{"name":"button","children":[{"name":"span","content":"▶","position":{"x":1227,"y":58},"size":{"x":13,"y":7}}],"position":{"x":1224,"y":54},"size":{"x":19,"y":16}},{"name":"h4","content":"\\sylma\\modules\\tester\\test\\stepper\\Handler","position":{"x":1017,"y":54},"size":{"x":250,"y":39}},{"name":"div","children":[{"name":"span","content":".","position":{"x":0,"y":0},"size":{"x":0,"y":0}}],"position":{"x":1017,"y":92},"size":{"x":250,"y":0}}],"position":{"x":1017,"y":48},"size":{"x":250,"y":45}},{"name":"span","content":".","position":{"x":0,"y":0},"size":{"x":0,"y":0}}],"position":{"x":1017,"y":48},"size":{"x":250,"y":45}}</ns0:content>
+        <ns0:content>{"name":"div","children":[{"name":"div","children":[{"name":"button","children":[{"name":"span","content":"▷","position":{"x":1246,"y":58},"size":{"x":11,"y":7}}],"position":{"x":1243,"y":54},"size":{"x":17,"y":15}},{"name":"button","children":[{"name":"span","content":"▶","position":{"x":1227,"y":58},"size":{"x":11,"y":7}}],"position":{"x":1224,"y":54},"size":{"x":17,"y":15}},{"name":"h4","content":"\\sylma\\modules\\tester\\test\\stepper\\Handler","position":{"x":1013,"y":54},"size":{"x":250,"y":41}},{"name":"div","children":[{"name":"span","content":".","position":{"x":0,"y":0},"size":{"x":0,"y":0}}],"position":{"x":1013,"y":94},"size":{"x":250,"y":0}}],"position":{"x":1013,"y":48},"size":{"x":250,"y":47}},{"name":"span","content":".","position":{"x":0,"y":0},"size":{"x":0,"y":0}}],"position":{"x":1013,"y":48},"size":{"x":250,"y":47}}</ns0:content>
       </ns0:snapshot>
       <ns0:event name="click" element="#tester &gt; div:nth-child(1) &gt; div:nth-child(1) &gt; button:nth-child(2)"/>
       <ns0:watcher element="#tester &gt; div:nth-child(1) &gt; div:nth-child(3) &gt; div &gt; div &gt; div &gt; ul &gt; li:nth-child(1)">
@@ -13,7 +13,7 @@
         <ns0:property name="class">error</ns0:property>
       </ns0:watcher>
       <ns0:watcher element="#tester &gt; div:nth-child(1) &gt; div:nth-child(3) &gt; div">
-        <ns0:property name="height">103</ns0:property>
+        <ns0:property name="height">106</ns0:property>
       </ns0:watcher>
     </ns0:steps>
   </ns0:page>

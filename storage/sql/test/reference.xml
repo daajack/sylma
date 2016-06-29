@@ -589,7 +589,7 @@
   </tst:test>
   <tst:test name="Form insert simple with foreign multiple">
     <tst:prepare>
-/*
+
       $manager->runQuery( 'DROP TABLE IF EXISTS fm_user_tag;' .
                           'DROP TABLE IF EXISTS fm_user_group;' .
                           'DROP TABLE IF EXISTS fm_user;' .
@@ -609,7 +609,7 @@
       ));
 
       $manager->runQueryFile('samples/foreign-multiple.sql');
-*/
+
     </tst:prepare>
     <tst:document>
 

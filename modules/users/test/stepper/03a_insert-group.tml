@@ -9,10 +9,10 @@
   <ns0:page>
     <ns0:steps>
       <ns0:watcher element=" &gt; div:nth-child(1)">
-        <ns0:property name="height">48</ns0:property>
+        <ns0:property name="height">49</ns0:property>
       </ns0:watcher>
       <ns0:snapshot element=" &gt; div:nth-child(1)">
-        <ns0:content>{"name":"div","children":[{"name":"div","content":"Datas has been inserted","position":{"x":307,"y":26},"size":{"x":652,"y":34}}],"position":{"x":0,"y":0},"size":{"x":1267,"y":60}}</ns0:content>
+        <ns0:content>{"name":"div","children":[{"name":"div","content":"Datas has been inserted","position":{"x":306,"y":26},"size":{"x":650,"y":35}}],"position":{"x":0,"y":0},"size":{"x":1263,"y":61}}</ns0:content>
       </ns0:snapshot>
     </ns0:steps>
   </ns0:page>

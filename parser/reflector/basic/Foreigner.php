@@ -150,6 +150,11 @@ abstract class Foreigner extends Domed {
 
     return $mResult;
   }
+  
+  protected function parseAttributesForeign(dom\element $el, $content, array $aForeigns) {
+    
+    $this->launchException('Bad call');
+  }
 
   protected function getForeignAttributes(dom\element $source, dom\element $target = null, $bRemove = false) {
 

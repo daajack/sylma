@@ -122,6 +122,13 @@
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
+      <xs:attribute name="location" type="xs:string" fixed="tree">
+        <xs:annotation>
+          <xs:documentation>
+            Must be set if depending on tree values
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
     </xs:complexType>
   </xs:element>
 

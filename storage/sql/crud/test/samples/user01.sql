@@ -1,4 +1,4 @@
-INSERT INTO `sandbox`.`sylma_stepper_user01` (
+INSERT INTO `sylma_stepper_user01` (
 `id` ,
 `name` ,
 `group`

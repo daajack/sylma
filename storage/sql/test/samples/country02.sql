@@ -1,5 +1,5 @@
-TRUNCATE TABLE `sandbox`.`country01`;
-TRUNCATE TABLE `sandbox`.`city01`;
+TRUNCATE TABLE `country01`;
+TRUNCATE TABLE `city01`;
 
 INSERT INTO `country01` (`id`, `name`) VALUES
 (1, 'Turkey'),

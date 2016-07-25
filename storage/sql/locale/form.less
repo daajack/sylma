@@ -1,0 +1,101 @@
+
+@import "/sylma/modules/html/vars.less";
+
+.field-container.locale
+{
+  @size: 23px;
+  @space: 0.2em;
+  
+  position: relative;
+  
+  .actions-locale
+  {
+    box-sizing: border-box;
+    position: absolute;
+    display: inline-block;
+    z-index: 1;
+    text-transform: uppercase;
+    width: 30%;
+    left: 0;
+    pointer-events: none;
+    text-align: right;
+    padding-right: @space;
+
+    .action
+    {
+      position: relative;
+      box-sizing: border-box;
+      display: inline-block;
+      background-color: @gray4;
+      border: 1px solid @gray3;
+      color: @gray2;
+      height: @size;
+      width: @size;
+      line-height: @size;
+      text-align: center;
+      cursor: pointer;
+      pointer-events: initial;
+    }
+
+    .action.visible
+    {
+      background-color: white;
+      color: @gray1;
+      border: 1px solid @gray1;
+    }
+  }
+
+  &.string-long
+  {
+    .actions-locale
+    {
+      margin-top: 0.5em;
+      margin-left: 1px;
+      padding-right: 0;
+
+      .action
+      {
+        display: block;
+        clear: both;
+        border-right: 1px solid @gray1;
+        margin-right: 0;
+        margin-bottom: @space;
+        float: right;
+      }
+    }
+
+    .action.visible
+    {
+      border-right: 1px solid white;
+    }
+  }
+
+  .inputs
+  {
+    position: relative;
+    float: left;
+    width: 50%;
+  }
+  
+  .input
+  {
+    position: absolute;
+    opacity: 0;
+    visibility: hidden;
+    width: 100%;
+
+    transition: opacity 0.5s, visibility 0.5s, max-height 0.5s;
+    
+    .field
+    {
+      width: 100%;
+    }
+    
+    &.visible
+    {
+      opacity: 1;
+      visibility: visible;
+      position: relative;
+    }
+  }
+}

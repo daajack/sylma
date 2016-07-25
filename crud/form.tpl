@@ -33,10 +33,9 @@
 
       <js:include>/#sylma/ui/Clonable.js</js:include>
       <js:include>/#sylma/crud/Field.js</js:include>
+      
+      <tpl:apply mode="container/init"/>
 
-      <js:event name="change">
-        %object%.downlight();
-      </js:event>
       <js:name>
         <tpl:read select="$object"/>
       </js:name>

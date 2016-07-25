@@ -3,7 +3,7 @@
 namespace sylma\storage\sql\template\component;
 use sylma\core, sylma\storage\sql, sylma\parser\languages\common;
 
-abstract class Field extends sql\schema\component\Field implements sql\template\pathable {
+abstract class Field extends sql\locale\FieldTemplate implements sql\template\pathable {
 
   protected $parent;
   protected $query;
@@ -67,10 +67,8 @@ abstract class Field extends sql\schema\component\Field implements sql\template\
         $result = $this->getParser()->parsePathToken($this->getParent(), $aPath, $sMode, $bRead, $aArguments);
 
         break;
-
-      default :
-
-        $result = $this->getHandler()->getCurrentTemplate()->reflectApplyFunction($sName, $aPath, $sMode, $bRead, $sArguments, $aArguments);
+      
+      default : $result = parent::reflectApplyFunction($sName, $aPath, $sMode, $bRead, $sArguments, $aArguments);
     }
 
     return $result;

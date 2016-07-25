@@ -98,6 +98,8 @@ class Container extends core\module\Domed {
 
       $sDevice = $device->isDevice('tablet') ? 'tablet' : ($device->isDevice('mobile') ? 'mobile' : 'desktop');
     }
+    
+    $link = $file ? $file->getSystemPath() : '';
 
     $content = $this->createArgument(array(
       'ul' => array(
@@ -111,7 +113,7 @@ class Container extends core\module\Domed {
               ),
               array(
                 '@type' => 'button',
-                '@onclick' => "window.location = 'netbeans://" . $file->getSystemPath() . "'",
+                '@onclick' => "window.location = 'netbeans://" . $link . "'",
                 (string) $file,
               ),
 

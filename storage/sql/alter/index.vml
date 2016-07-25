@@ -56,7 +56,9 @@
   </tpl:template>
 
   <tpl:template mode="settings">
-    <tpl:text>builder.xml</tpl:text>
+    <le:string>
+      <le:file>../locale/alter.xml</le:file>
+    </le:string>
   </tpl:template>
 
 </view:view>

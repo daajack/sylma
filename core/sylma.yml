@@ -242,3 +242,10 @@ database :
 device :
   enable : false
   force : null
+
+locale :
+  default : en
+  translate : []
+  all :
+    en :
+      title : english

@@ -28,7 +28,11 @@
     </sql:filter>
   </tpl:template>
 
-  <tpl:template match="sql:string-long" mode="input">
+  <tpl:template match="sql:string-long" mode="container/init">
+    <tpl:token name="class">string-long</tpl:token>
+  </tpl:template>
+  
+  <tpl:template match="sql:string-long" mode="input/build">
     <tpl:argument name="class" default="'text'"/>
     <textarea id="form-{alias('form')}" name="{alias('form')}" class="field field-{$class}">
       <tpl:apply mode="input/value"/>

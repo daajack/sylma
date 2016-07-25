@@ -269,6 +269,32 @@
       <div class="test"/>
     </tst:node>
   </tst:test>
+  <tst:test name="Token in mode insert">
+    <tst:document>
+      <view:view mode="update">
+        <sql:resource>
+          <sql:id>2</sql:id>
+        </sql:resource>
+        <view:schema>samples/user1.xql</view:schema>
+        <tpl:template>
+          <div>
+            <tpl:apply mode="test"/>
+          </div>
+        </tpl:template>
+        <tpl:template mode="test">
+          <tpl:token name="class">test</tpl:token>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:expected>
+      
+      $result = $manager->read('result');
+      
+      $manager->assertEquals($result, '1');
+      return true;
+      
+    </tst:expected>
+  </tst:test>
   <tst:test name="Token multiple apply">
     <tst:document>
       <view:view user:ns="ns">

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ns0:test xmlns:ns0="http://2013.sylma.org/modules/stepper">
+  <ns0:page>
+    <ns0:steps>
+      <ns0:query creation="2014-03-23 12:03:12" connection="test">../../samples/locale/product.sql</ns0:query>
+      <ns0:call path="/sylma/storage/sql/test/alter?file=/sylma/storage/sql/crud/test/samples/locale/product.xql" method="get"/>
+      <ns0:call path="/sylma/storage/sql/test/rebuild?path=/sylma/storage/sql/crud/test/samples/locale/product.vml" method="get"/>
+    </ns0:steps>
+  </ns0:page>
+</ns0:test>

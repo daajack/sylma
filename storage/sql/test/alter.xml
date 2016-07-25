@@ -253,4 +253,46 @@
 
     </tst:expected>
   </tst:test>
+  <tst:test name="Create locale table">
+    <tst:prepare>
+
+      $manager->runQuery('DROP TABLE IF EXISTS locale_product', 2);
+      
+      $manager->getScript('/#sylma/storage/sql/test/alter/index.vml', array(
+        'file' => '/#sylma/storage/sql/test/samples/product_locale.xql',
+      ));
+
+    </tst:prepare>
+    <tst:expected>
+
+      $table = $manager->runQuery('DESCRIBE locale_product', 1);
+
+      $manager->assertEqual($table->asArray(), array(
+        array(
+          'Field' => 'name_fr',
+          'Type' => 'varchar(64)',
+          'Null' => 'NO',
+          'Key' => '',
+          'Extra' => '',
+        ),
+        array(
+          'Field' => 'name',
+          'Type' => 'varchar(64)',
+          'Null' => 'NO',
+          'Key' => '',
+          'Extra' => '',
+        ),
+        array(
+          'Field' => 'id',
+          'Type' => 'bigint(20) unsigned',
+          'Null' => 'NO',
+          'Key' => 'PRI',
+          'Extra' => 'auto_increment',
+        ),
+      ));
+
+      return true;
+
+    </tst:expected>
+  </tst:test>
 </tst:tests>

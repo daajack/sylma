@@ -214,6 +214,12 @@ class Sylma {
         $result = new storage\sql\Manager(new core\argument\Readable(self::get('database')->query()));
 
       break;
+
+      case 'locale' :
+
+        $result = new sylma\locale\Manager(self::get('locale'));
+
+      break;
     }
 
     if ($result) {

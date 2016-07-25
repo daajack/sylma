@@ -1,6 +1,6 @@
-TRUNCATE TABLE `sandbox`.`user7`;
+TRUNCATE TABLE `user7`;
 
-INSERT INTO `sandbox`.`user7` (
+INSERT INTO `user7` (
 `id` ,
 `name` ,
 `group_main`,

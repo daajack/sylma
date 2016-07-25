@@ -1,0 +1,19 @@
+
+database :
+  common :
+    host : localhost
+    user : common
+    password : 1234
+    database : common
+  test :
+    host : localhost
+    user : sylma
+    password : 1234
+    database : sylma
+    
+locale :
+  translate : [en, fr]
+  all :
+    fr :
+      title : français
+      

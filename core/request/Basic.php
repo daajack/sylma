@@ -8,6 +8,7 @@ class Basic extends core\module\Filed implements core\request, core\tokenable {
   const FILE_MANAGER = 'fs';
 
   private $sPath = '';
+  protected $sourcePath = '';
 
   protected $sExtension = '';
   protected $aExtensions = array();
@@ -33,11 +34,20 @@ class Basic extends core\module\Filed implements core\request, core\tokenable {
     //$this->setSettings($arg);
     $this->loadSettings();
     $this->setArguments($aArguments);
+    
+    $this->sourcePath = $sPath;
 
     //if (!$aExtensions) $aExtensions = $this->getManager('init')->getExtensions();
     //$this->setExtensions($aExtensions);
 
     if ($bParse) $this->parse();
+  }
+  
+  /**
+   * Must be overrided to custom paths
+   */
+  public function prepare() {
+    
   }
 
   public function setPath($sPath) {
@@ -285,7 +295,7 @@ class Basic extends core\module\Filed implements core\request, core\tokenable {
     return parent::getArguments();
   }
 
-  protected function getPath($bArray = false) {
+  public function getPath($bArray = false) {
 
     $mResult = null;
 
@@ -306,6 +316,11 @@ class Basic extends core\module\Filed implements core\request, core\tokenable {
     }
 
     return $mResult;
+  }
+  
+  public function getSourcePath() {
+    
+    return $this->sourcePath;
   }
 
   protected function throwException($sMessage, $mSender = array(), $iOffset = 2) {

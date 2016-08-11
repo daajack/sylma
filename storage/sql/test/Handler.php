@@ -6,6 +6,7 @@ use sylma\core, sylma\modules\tester;
 class Handler extends tester\Formed implements core\argumentable {
 
   protected $sTitle = 'SQL';
+  protected static $sArgumentClass = 'sylma\core\argument\Filed';
 
   public function __construct() {
 
@@ -26,6 +27,18 @@ class Handler extends tester\Formed implements core\argumentable {
     $builder = $this->getManager(self::PARSER_MANAGER)->loadBuilder($file, $this->getExportDirectory());
 
     return $builder->getSchema();
+  }
+  
+  public function initConfig() {
+    
+    $sylma = $this->createArgument('/#sylma/core/sylma.yml');
+    $core = $this->createArgument('/#sylma/core/test.yml');
+    $config = $this->createArgument('/#sylma/storage/sql/test/config.yml');
+    
+    $sylma->merge($core);
+    $sylma->merge($config);
+    
+    \Sylma::setSettings($sylma);
   }
 }
 

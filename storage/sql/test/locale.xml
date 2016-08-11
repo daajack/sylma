@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tst:tests
+  xmlns:tst="http://www.sylma.org/modules/tester/parser"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns:tpl="http://2013.sylma.org/template"
+  
+  xmlns:xl="http://2013.sylma.org/storage/xml"
+  xmlns:sql="http://2013.sylma.org/storage/sql"
+>
+  <tst:test name="Create locale table">
+    <tst:prepare>
+
+      $manager->runQuery('DROP TABLE IF EXISTS locale_product', 2);
+      
+      $manager->getScript('/#sylma/storage/sql/test/alter/index.vml', array(
+        'file' => '/#sylma/storage/sql/test/samples/product_locale.xql',
+      ));
+
+    </tst:prepare>
+    <tst:expected>
+
+      $table = $manager->runQuery('DESCRIBE locale_product', 1);
+
+      $manager->assertEqual($table->asArray(), array(
+        array(
+          'Field' => 'name_fr',
+          'Type' => 'varchar(64)',
+          'Null' => 'NO',
+          'Key' => '',
+          'Extra' => '',
+        ),
+        array(
+          'Field' => 'name',
+          'Type' => 'varchar(64)',
+          'Null' => 'NO',
+          'Key' => '',
+          'Extra' => '',
+        ),
+        array(
+          'Field' => 'id',
+          'Type' => 'bigint(20) unsigned',
+          'Null' => 'NO',
+          'Key' => 'PRI',
+          'Extra' => 'auto_increment',
+        ),
+      ));
+
+      return true;
+
+    </tst:expected>
+  </tst:test>
+  <tst:test name="Insert content">
+    <tst:prepare>
+      
+      $manager->runQuery('DROP TABLE IF EXISTS locale_product', 2);
+      
+      $manager->getScript('/#sylma/storage/sql/test/alter/index.vml', array(
+        'file' => '/#sylma/storage/sql/test/samples/product_locale.xql',
+      ));
+      
+      $manager->initConfig();
+      
+    </tst:prepare>
+    <tst:document>
+      <view:view mode="insert">
+        <sql:resource/>
+        <view:schema>samples/product_locale.xql</view:schema>
+        <tpl:template>
+          <div>
+            <tpl:apply select="name/translations()"/>
+          </div>
+        </tpl:template>
+        <tpl:template match="*">
+          <tpl:register/>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:load>
+      
+      return array('post' => $manager->createArgument(array(
+        'name' => 'hello',
+        'name_fr' => 'bonjour',
+      )));
+      
+    </tst:load>
+    <tst:expected>
+      
+      $result = $manager->read('result');
+      $manager->assertEquals($result, '1');
+      
+      return true;
+      
+    </tst:expected>
+  </tst:test>
+  <tst:test name="Read current language">
+    <tst:prepare>
+      
+      $manager->initConfig();
+      
+      $locale = $manager->getManager('locale');
+      $locale->setLanguage('fr');
+      
+    </tst:prepare>
+    <tst:document>
+      <view:view>
+        <sql:resource/>
+        <view:schema>samples/product_locale.xql</view:schema>
+        <sql:filter name="id">1</sql:filter>
+        <tpl:template>
+          <div>
+            <tpl:read select="name/translate()"/>
+          </div>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <div>bonjour</div>
+    </tst:node>
+  </tst:test>
+  <tst:test name="Translate component empty">
+    <tst:prepare>
+      
+      $manager->initConfig();
+
+      $manager->runQuery('DROP TABLE IF EXISTS locale', 2);
+      
+      $manager->getScript('/#sylma/storage/sql/test/alter/index.vml', array(
+        'file' => '/#sylma/storage/sql/locale/locale.xql',
+      ));
+      
+      $locale = $manager->getManager('locale');
+      $locale->setLanguage('fr');
+      
+    </tst:prepare>
+    <tst:document>
+      <view:view>
+        <xl:resource/>
+        <tpl:template>
+          <div>
+            <sql:translate>hello</sql:translate>
+          </div>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <div>hello</div>
+    </tst:node>
+  </tst:test>
+  <tst:test name="Translate component filled">
+    <tst:prepare>
+      
+      $manager->initConfig();
+      
+      $manager->runQuery('TRUNCATE TABLE locale', 2);
+      $manager->runQuery("INSERT INTO locale (id, content, content_fr, page) VALUES (1, 'hello', 'bonjour', '/test')", 2);
+      
+      $locale = $manager->getManager('locale');
+      $locale->setLanguage('fr');
+      
+    </tst:prepare>
+    <tst:document>
+      <view:view>
+        <xl:resource/>
+        <tpl:template>
+          <div>
+            <sql:translate>hello</sql:translate>
+          </div>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <div>bonjour</div>
+    </tst:node>
+  </tst:test>
+  <tst:test name="Translate component html" disabled="true">
+    <tst:prepare>
+      
+      $manager->initConfig();
+      
+    </tst:prepare>
+    <tst:document>
+      <view:view>
+        <xl:resource/>
+        <tpl:template>
+          <div>
+            <sql:translate>hello<sup>2</sup></sql:translate>
+          </div>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <div>hello<sup>2</sup></div>
+    </tst:node>
+  </tst:test>
+</tst:tests>

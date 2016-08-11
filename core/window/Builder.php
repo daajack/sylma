@@ -62,7 +62,14 @@ class Builder extends core\module\Domed {
   }
 
   public function buildWindow(core\request $path, core\argument $exts, core\argument $fusion, $bUpdate = null, $bRun = true) {
-
+    
+    if (\Sylma::read('locale/enable')) {
+      
+      $this->getManager('locale')->loadRequest($path);
+    }
+    
+    $path->prepare();
+    
     $this->setSettings($exts);
 
     $sExtension = strtolower($path->getExtension());
@@ -70,7 +77,7 @@ class Builder extends core\module\Domed {
 
     $settings = $this->get($sExtension);
     $sCurrent = (string) $path;
-
+    
     $path->parse();
 
     $aPaths = $this->buildWindowStack($settings, $sCurrent);

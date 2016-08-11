@@ -217,7 +217,7 @@ class Sylma {
 
       case 'locale' :
 
-        $result = new sylma\locale\Manager(self::get('locale'));
+        $result = new sylma\storage\sql\locale\Manager(self::get('locale'));
 
       break;
     }

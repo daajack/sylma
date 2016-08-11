@@ -244,8 +244,10 @@ device :
   force : null
 
 locale :
+  enable : false
   default : en
   translate : []
   all :
     en :
       title : english
+  alias : []

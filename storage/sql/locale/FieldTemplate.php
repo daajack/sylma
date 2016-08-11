@@ -10,7 +10,8 @@ class FieldTemplate extends Field {
     switch ($sName) {
       
       case 'is-translated' : $result = $this->isTranslated(); break;
-      case 'translations' : $result = $this->reflectApplyTranslations($sName, $aPath, $sMode, $bRead, $sArguments, $aArguments); break;
+      case 'translations' : $result = $this->reflectApplyTranslations($sMode, $aArguments); break;
+      case 'translate' : $result = $this->reflectApplyTranslate(); break;
       case 'language' : $result = $this->language; break;
       case 'default-language' : $result = $this->default_language ? 1 : 0; break;
 
@@ -22,7 +23,7 @@ class FieldTemplate extends Field {
     return $result;
   }
   
-  protected function reflectApplyTranslations($sName, array $aPath, $sMode, $bRead = false, $sArguments = '', array $aArguments = array()) {
+  protected function reflectApplyTranslations($sMode, array $aArguments = array()) {
     
     $locale = $this->getManager('locale');
     $default = $locale->getDefault();
@@ -53,6 +54,20 @@ class FieldTemplate extends Field {
   protected function reflectApplySelf($sMode = '', array $aArguments = array()) {
     
     $this->launchException('Should not be called');
+  }
+  
+  protected function reflectApplyTranslate() {
+    
+    $query = $this->getTable()->getQuery();
+
+    $window = $this->getHandler()->getWindow();
+    $locale = $window->addManager('locale');
+    $alias = array($this->getParent()->asString(), '.`', $this->getName(), $locale->call('getSuffix'), "`");
+    
+    $content = array($alias, ' AS ', $this->getName());
+    $query->setColumn($content);
+    
+    return $this->reflectSelf();
   }
 }
 

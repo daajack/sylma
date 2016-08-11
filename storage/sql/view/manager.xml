@@ -32,6 +32,7 @@
         <cls:class alias="element" name="view\component\Element"/>
         <cls:class alias="group" name="view\component\GroupBy"/>
         <cls:class alias="settings" name="view\component\Settings"/>
+        <cls:class alias="translate" name="locale\Translate"/>
       </cls:classes>
     </component>
   </cls:classes>

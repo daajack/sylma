@@ -268,4 +268,15 @@
     </xs:complexType>
   </xs:element>
 
+  <xs:element name="translate">
+    <xs:annotation>
+      <xs:documentation>
+        Translate content
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType mixed="true">
+      <xs:group ref="content"/>
+    </xs:complexType>
+  </xs:element>
+
 </xs:schema>

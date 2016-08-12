@@ -60,8 +60,8 @@ class Builder extends core\module\Domed {
     $window->setFile($file);
     return $window->asString();
   }
-
-  public function buildWindow(core\request $path, core\argument $exts, core\argument $fusion, $bUpdate = null, $bRun = true) {
+  
+  protected function prepareRequest(core\request $path) {
     
     if (\Sylma::read('locale/enable')) {
       
@@ -69,9 +69,13 @@ class Builder extends core\module\Domed {
     }
     
     $path->prepare();
+  }
+  
+  public function buildWindow(core\request $path, core\argument $exts, core\argument $fusion, $bUpdate = null, $bRun = true) {
     
+    $this->prepareRequest($path);
     $this->setSettings($exts);
-
+    
     $sExtension = strtolower($path->getExtension());
     if (!$sExtension) $sExtension = self::EXTENSION_DEFAULT;
 
@@ -242,6 +246,8 @@ class Builder extends core\module\Domed {
 
   public function loadObject(core\request $path, $window, core\argument $fusion) {
 
+    $this->prepareRequest($path);
+    
     $path->parse();
     $window->setScript($path, $this->prepareContexts($fusion));
 

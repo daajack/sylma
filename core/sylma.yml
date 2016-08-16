@@ -39,6 +39,9 @@ render :
     html :
       prefix : null
       uri : http://www.w3.org/1999/xhtml
+    xml :
+      prefix : xml
+      uri : http://www.w3.org/XML/1998/namespace
     shtml :
       prefix : null
       uri : http://2014.sylma.org/html
@@ -154,6 +157,8 @@ initializer :
       name : \sylma\template\binder\context\JSON
     profiler :
       name : \sylma\modules\profiler\XHProf
+    locale :
+      name : \sylma\storage\sql\locale\Manager
     builder :
       name : \sylma\device\Windower
       classes :
@@ -245,9 +250,14 @@ device :
 
 locale :
   enable : false
+  classes :
+    tree :
+      name : \sylma\storage\sql\locale\Tree
   default : en
   translate : []
-  all :
+  domains : []
+  languages :
     en :
       title : english
   alias : []
+  redirect : []

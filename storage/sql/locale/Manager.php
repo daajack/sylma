@@ -6,49 +6,68 @@ use sylma\core, sylma\parser\languages\common;
 class Manager extends core\module\Domed
 {
   protected $translations = array();
-  protected $usePrefix = false;
   protected $language;
+  
+  protected $redirect = array();
+  protected $redirectKeys = array();
   
   public function __construct(core\argument $args) {
     
     $this->setDirectory(__FILE__);
     $this->setSettings($args);
+    $this->setLanguage($this->getDefault());
     
     $this->loadTranslations();
-    $this->loadUserLanguage();
+    $this->loadRedirects($this->get('redirect'));
     $this->loadAliases($this->get('alias'));
   }
   
-  protected function loadTranslations() {
-    
-    $translations = $this->get('translate');
-    $all = $this->get('all');
-    
-    foreach ($translations as $key) {
-      
-      $this->translations[$key] = $all->get($key);
-    }
+  public function getDefault() {
+
+    return $this->read('default');
   }
   
-  public function loadRequest(core\request $path) {
-
-    $subs = $path->getPath(true);
+  public function setLanguage($suffix) {
     
-    if ($subs) {
-      
-      $languages = array();
-      
-      foreach ($this->getTranslations() as $key => $translation) {
-        
-        $languages[] = $key;
-      }
+    $this->language = $suffix;
+  }
+  
+  public function getLanguage() {
+    
+    return $this->language;
+  }
+  
+  /** Url **/
+  
+  public function loadRequest(core\request $request) {
+    
+    $this->loadDomainLanguage();
 
-      if (in_array($subs[0], $languages)) {
+    $result = (string) $request;
+    
+    foreach ($this->aliasKeys as $key => $alias) {
+      
+      $exp = "`$key`";
+
+      if (preg_match($exp, $result)) {
+
+        $result = preg_replace($exp, $alias, $result);
+        break;
+      }
+    }
+    
+    $request->setPath($result);
+  }
+  
+  public function loadDomainLanguage() {
+    
+    $domain = $_SERVER['SERVER_NAME'];
+    
+    foreach ($this->get('domains') as $key => $match) {
+      
+      if (preg_match("`$match`", $domain)) {
         
-        $this->usePrefix = true;
-        $this->setLanguage($subs[0]);
-        array_shift($subs);
-        $path->setPath('/' . implode('/', $subs));
+        $this->setLanguage($key);
       }
     }
   }
@@ -72,49 +91,114 @@ class Manager extends core\module\Domed
     $this->alias = $aliases;
   }
   
-  public function getDefault() {
+  protected function loadRedirects(core\argument $redirects) {
 
-    return $this->read('default');
+    $redirects = $redirects->asArray();
+    $all = array();
+
+    foreach ($redirects as $alias => $translations) {
+      
+      $all[$alias] = $alias;
+      
+      foreach ($translations as $translation) {
+        
+        $all[$translation] = $alias;
+      }
+    }
+    
+    $this->redirectKeys = $all;
+    $this->redirect = $redirects;
+  }
+  
+  protected function lookupPage($page, $language) {
+    
+    $result = null;
+
+    foreach ($this->redirectKeys as $key => $alias) {
+      
+      if ($key === $page) {
+        
+        if ($language === $this->getDefault()) {
+          
+          $result = $alias;
+        }
+        else {
+          
+          $result = $this->redirect[$alias][$language];
+        }
+        
+        break;
+      }
+    }
+    
+    if (!$result) {
+
+      foreach ($this->aliasKeys as $key => $alias) {
+
+        $exp = "`$key`";
+
+        if (preg_match($exp, $page)) {
+
+          if ($language === $this->getDefault()) {
+
+            $content = $alias;
+          }
+          else {
+
+            $content = $this->alias[$alias][$language];
+          }
+
+          $result = preg_replace($exp, $content, $page);
+          break;
+        }
+      }
+    }
+    
+    return $result;
+  }
+
+  public function getCurrentPage($language) {
+    
+    $path = (string) $this->getManager('path')->getSourcePath();
+    $result = $this->lookupPage($path, $language);
+
+    if (!$result) {
+      
+      $result = $path;
+    }
+    
+    return '//' . $this->read('domains/' . $language) . $result;
+  }
+  
+  public function getPage($path) {
+
+    $language = $this->getLanguage();
+    $result = $this->lookupPage($path, $language);
+    
+    if (!$result) {
+      
+      $this->launchException('Cannot find page : ' . $path);
+    }
+    
+    return $result;
+  }
+  
+  /** DB **/
+  
+  protected function loadTranslations() {
+    
+    $translations = $this->get('translate');
+    $all = $this->get('languages');
+    
+    foreach ($translations as $key) {
+      
+      $this->translations[$key] = $all->get($key);
+    }
   }
   
   public function getTranslations() {
     
     return $this->translations;
-  }
-  
-  public function getLanguage() {
-    
-    return $this->language;
-  }
-  
-  public function setLanguage($suffix) {
-    
-    $this->language = $suffix;
-  }
-  
-  protected function loadUserLanguage() {
-
-    $locales = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
-    $languages = array_keys($this->getTranslations());
-    $suffix = '';
-
-    foreach ($locales as $locale) {
-      
-      $language = substr($locale, 0, 2);
-      
-      if (in_array($language, $languages)) {
-        
-        $suffix = $language;
-        break;
-      }
-    }
-
-    if (!$suffix) {
-      
-      $suffix = $this->getDefault();
-    }
-    
-    $this->setLanguage($suffix);
   }
   
   public function getTranslation($value, $page) {
@@ -146,66 +230,6 @@ class Manager extends core\module\Domed
     if ($this->language !== $this->getDefault()) {
       
       $result = '_' . $this->language;
-    }
-    
-    return $result;
-  }
-  
-  public function getURLPrefix() {
-    
-    return $this->usePrefix ? '/' . $this->language : '';
-  }
-  
-  public function getPage($language) {
-    
-    $path = (string) $this->getManager('path')->getSourcePath();
-    $result = $path;
-
-    foreach ($this->aliasKeys as $key => $alias) {
-      
-      if ($key === $path) {
-        
-        if ($language === $this->getDefault()) {
-          
-          $result = $alias;
-        }
-        else {
-          
-          $result = $this->alias[$alias][$language];
-        }
-        
-        break;
-      }
-    }
-
-    return $result === '/' ? '' : $result;
-  }
-  
-  public function reflectApplyPath(common\_window $window, array $paths) {
-    
-    $path = array_shift($paths);
-    $locale = $window->addManager('locale');
-    
-    switch ($path) {
-      
-      case 'language' : 
-        
-        $result = $locale->call('getLanguage');
-        break;
-      
-      case 'prefix' :
-        
-        $result = $locale->call('getURLPrefix');
-        break;
-      
-      case 'page' :
-        
-        $result = $locale->call('getPage', $paths);
-        break;
-      
-      default :
-        
-        $this->launchException('Unknown locale path');
     }
     
     return $result;

@@ -10,7 +10,8 @@
 >
   <tst:test name="Create locale table">
     <tst:prepare>
-
+      
+      \Sylma::setManager('locale', null);
       $manager->runQuery('DROP TABLE IF EXISTS locale_product', 2);
       
       $manager->getScript('/#sylma/storage/sql/test/alter/index.vml', array(
@@ -53,6 +54,7 @@
   <tst:test name="Insert content">
     <tst:prepare>
       
+      \Sylma::setManager('locale', null);
       $manager->runQuery('DROP TABLE IF EXISTS locale_product', 2);
       
       $manager->getScript('/#sylma/storage/sql/test/alter/index.vml', array(
@@ -97,6 +99,7 @@
     <tst:prepare>
       
       $manager->initConfig();
+      \Sylma::setManager('locale', null);
       
       $locale = $manager->getManager('locale');
       $locale->setLanguage('fr');
@@ -122,6 +125,7 @@
     <tst:prepare>
       
       $manager->initConfig();
+      \Sylma::setManager('locale', null);
 
       $manager->runQuery('DROP TABLE IF EXISTS locale', 2);
       
@@ -151,6 +155,7 @@
     <tst:prepare>
       
       $manager->initConfig();
+      \Sylma::setManager('locale', null);
       
       $manager->runQuery('TRUNCATE TABLE locale', 2);
       $manager->runQuery("INSERT INTO locale (id, content, content_fr, page) VALUES (1, 'hello', 'bonjour', '/test')", 2);

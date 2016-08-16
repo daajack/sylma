@@ -18,7 +18,7 @@ class Document  extends xml\tree\Argument implements template\parser\tree
       case 'get' :
       // @deprecated, use 'get' instead
       case 'argument' : $result = $this->reflectFunctionArgument('arguments', $path); break;
-      case 'locale' : $result = $this->reflectFunctionLocale($path); break;
+      case 'locale' : $result = $this->reflectFunctionLocale($path, $sMode, $bRead, $aArguments); break;
 
       default :
 
@@ -69,11 +69,14 @@ class Document  extends xml\tree\Argument implements template\parser\tree
     return $result;
   }
   
-  protected function reflectFunctionLocale(array $path) {
+  protected function reflectFunctionLocale(array $aPath, $sMode, $bRead = false, array $aArguments = array()) {
     
-    $locale = $this->getManager('locale');
-    $window = $this->getWindow();
+    $tree = $this->getManager('locale')->create('tree');
+    $pather = $this->getParser()->getCurrentTemplate()->getPather();
     
-    return $locale->reflectApplyPath($window, $path);
+    $tree->init($pather, $this->getWindow());
+    $pather->setSource($tree);
+
+    return $pather->parsePathToken($aPath, $sMode, $bRead, $aArguments);
   }
 }

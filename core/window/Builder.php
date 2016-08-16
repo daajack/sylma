@@ -67,8 +67,6 @@ class Builder extends core\module\Domed {
       
       $this->getManager('locale')->loadRequest($path);
     }
-    
-    $path->prepare();
   }
   
   public function buildWindow(core\request $path, core\argument $exts, core\argument $fusion, $bUpdate = null, $bRun = true) {
@@ -247,8 +245,8 @@ class Builder extends core\module\Domed {
   public function loadObject(core\request $path, $window, core\argument $fusion) {
 
     $this->prepareRequest($path);
-    
     $path->parse();
+    
     $window->setScript($path, $this->prepareContexts($fusion));
 
     return $window->asString();

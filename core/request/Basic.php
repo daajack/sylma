@@ -43,13 +43,6 @@ class Basic extends core\module\Filed implements core\request, core\tokenable {
     if ($bParse) $this->parse();
   }
   
-  /**
-   * Must be overrided to custom paths
-   */
-  public function prepare() {
-    
-  }
-
   public function setPath($sPath) {
 
     $sPath = str_replace('__', '..', $sPath); // tmp until parseGet ^ available

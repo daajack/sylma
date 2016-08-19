@@ -31,15 +31,9 @@ class Basic extends core\module\Filed implements core\request, core\tokenable {
       $this->setDirectory($dir);
     }
 
-    //$this->setSettings($arg);
     $this->loadSettings();
     $this->setArguments($aArguments);
     
-    $this->sourcePath = $sPath;
-
-    //if (!$aExtensions) $aExtensions = $this->getManager('init')->getExtensions();
-    //$this->setExtensions($aExtensions);
-
     if ($bParse) $this->parse();
   }
   
@@ -311,11 +305,6 @@ class Basic extends core\module\Filed implements core\request, core\tokenable {
     return $mResult;
   }
   
-  public function getSourcePath() {
-    
-    return $this->sourcePath;
-  }
-
   protected function throwException($sMessage, $mSender = array(), $iOffset = 2) {
 
     $mSender[] = '@path ' . $this->getPath();

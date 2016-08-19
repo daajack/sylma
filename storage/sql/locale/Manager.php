@@ -135,7 +135,7 @@ class Manager extends core\module\Domed
 
       foreach ($this->aliasKeys as $key => $alias) {
 
-        $exp = "`$key`";
+        $exp = "`^$key`";
 
         if (preg_match($exp, $page)) {
 
@@ -159,7 +159,7 @@ class Manager extends core\module\Domed
 
   public function getCurrentPage($language) {
     
-    $path = (string) $this->getManager('path')->getSourcePath();
+    $path = $_SERVER['REQUEST_URI'];
     $result = $this->lookupPage($path, $language);
 
     if (!$result) {

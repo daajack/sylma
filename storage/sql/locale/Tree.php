@@ -24,14 +24,21 @@ class Tree extends core\module\Domed implements template\parser\tree
     
     $window = $this->window;
     $locale = $window->addManager('locale');
-
+    $pather = $this->pather;
+    $arguments = $pather->parseArguments($sArguments);
+    
     switch ($sName) {
       
       case 'page' :
-        
-        $pather = $this->pather;
-        $arguments = $pather->parseArguments($sArguments);
+
         $result = $locale->call('getPage', $arguments);
+        break;
+      
+      
+      case 'translate' :
+        
+        $arguments[] = (string) $pather->getSourceFile();
+        $result = $locale->call('getTranslation', $arguments);
         break;
       
       default :

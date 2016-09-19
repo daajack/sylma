@@ -98,7 +98,7 @@ class Elemented extends template\parser\handler\Domed {
     $this->sMode = $sMode;
   }
 
-  protected function getMode() {
+  public function getMode() {
 
     return $this->sMode;
   }

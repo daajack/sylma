@@ -202,15 +202,14 @@
       <tpl:apply mode="select-option-value"/>
     </option>
   </tpl:template>
-<!--
-  <tpl:template match="sql:foreign" mode="input/single/boolean/update">
 
+  <tpl:template match="sql:foreign" mode="input/single/boolean/update">
     <tpl:apply select="all()" mode="foreign/single/boolean/update">
-      <tpl:read tpl:name="value" select="$value"/>
+      <tpl:read tpl:name="value"/>
       <tpl:read tpl:name="alias" select="alias('form')"/>
     </tpl:apply>
   </tpl:template>
--->
+
   <tpl:template match="sql:foreign" mode="input/multiple/boolean/update">
 
     <tpl:argument name="values"/>
@@ -227,11 +226,11 @@
 
     <tpl:argument name="value"/>
     <tpl:argument name="alias"/>
-
+    
     <tpl:apply mode="foreign/boolean/update">
       <tpl:read tpl:name="type" select="'radio'"/>
-      <tpl:read tpl:name="value" select="id = $value"/>
-      <tpl:read tpl:name="alias" select="{$alias}[]"/>
+      <tpl:read tpl:name="value" select="(id = $value)"/>
+      <tpl:read tpl:name="alias" select="$alias"/>
       <tpl:read tpl:name="id" select="'{$alias}_{id}'"/>
     </tpl:apply>
 

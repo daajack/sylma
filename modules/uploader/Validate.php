@@ -51,13 +51,12 @@ class Validate extends core\module\Domed implements core\stringable {
       $this->set('extension', $sExtension);
       $this->set('path', $this->read('tmp_name'));
       $this->set('size', ceil($this->read('size') / 1000));
+      
+      $name = uniqid('sylma') . '.' . $sExtension;
 
-      $file = $this->getManager('fs/root')->getFile($this->read('tmp_name'));
-      $sName = uniqid('sylma') . '.' . $sExtension;
+      if (rename($this->read('tmp_name'), $this->getDirectory()->getSystemPath() . '/' . $name)) {
 
-      if ($this->moveFile($file, $sName)) {
-
-        $this->set('path', $sName);
+        $this->set('path', $name);
         $this->addMessage("File <em>{$this->read('name')}</em> added");
       }
       else {

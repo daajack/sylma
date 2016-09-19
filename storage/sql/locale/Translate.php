@@ -26,6 +26,17 @@ class Translate extends sql\view\component\Basic implements common\arrayable
   
   public function asArray() {
     
-    return $this->build();
+    $mode = $this->getHandler()->getView()->getMode();
+
+    if ($mode !== 'insert' && $mode !== 'update') {
+      
+      $result = $this->build();
+    }
+    else {
+      
+      $result = array();
+    }
+    
+    return $result;
   }
 }

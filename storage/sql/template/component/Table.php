@@ -11,7 +11,6 @@ class Table extends Dummed implements sql\template\pathable, schema\parser\eleme
 
   protected $bBuilded = false;
   protected $aColumns = array();
-  protected $bSub = false;
   protected $bStatic = false;
   protected $bMultiple = true;
 
@@ -100,13 +99,6 @@ class Table extends Dummed implements sql\template\pathable, schema\parser\eleme
     if (is_bool($bValue)) $this->bMultiple = $bValue;
 
     return $this->bMultiple;
-  }
-
-  public function isSub($bVal = null) {
-
-    if (is_bool($bVal)) $this->bSub = $bVal;
-
-    return $this->bSub;
   }
 
   public function getQuery($bReset = false) {

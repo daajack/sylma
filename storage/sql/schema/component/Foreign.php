@@ -224,9 +224,9 @@ class Foreign extends Element implements sql\schema\foreign {
 
       $handler->asString();
     }
-
-    $this->getParser()->changeMode(static::JUNCTION_MODE);
-
+    
+    //$this->getParser()->changeMode(static::JUNCTION_MODE);
+    
     $table = $this->getHandler()->addSchemaDocument($doc);
 
     if (!$table instanceof Table) {
@@ -241,7 +241,7 @@ class Foreign extends Element implements sql\schema\foreign {
     $current = $table->getElement($sCurrent);
     $target = $table->getElement($sTarget);
 
-    $this->getParser()->resetMode();
+    //$this->getParser()->resetMode();
 
     return array($table, $current, $target);
   }

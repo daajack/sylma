@@ -6,6 +6,7 @@ use sylma\core, sylma\dom, sylma\schema, sylma\storage\sql;
 class Table extends Element implements sql\schema\table {
 
   protected $sAlias = '';
+  protected $bSub = false;
 
   public function parseRoot(dom\element $el) {
 
@@ -78,6 +79,13 @@ class Table extends Element implements sql\schema\table {
   protected function getCharset() {
 
     return $this->readx('@charset');
+  }
+
+  public function isSub($bVal = null) {
+
+    if (is_bool($bVal)) $this->bSub = $bVal;
+
+    return $this->bSub;
   }
 
   public function setAlias($sValue) {

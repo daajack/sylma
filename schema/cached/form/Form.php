@@ -105,6 +105,9 @@ class Form extends core\module\Domed {
     return parent::get($sPath, $bDebug);
   }
 
+  /**
+   * @return Type
+   */
   public function getElement($sName, $bDebug = true) {
 
     $mResult = null;

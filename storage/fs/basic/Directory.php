@@ -506,9 +506,9 @@ class Directory extends Resource implements fs\directory {
 
   public function getRealPath() {
 
-    return $this->getParent() ?
-           $this->getParent()->getRealPath() . '/' . $this->getName() :
-           $this->getManager()->getPath() . $this->getName();
+  return $this->getParent() ?
+      $this->getParent()->getRealPath() . '/' . $this->getName() :
+      $this->getManager()->getPath() . $this->getName();
   }
 
   public function asToken() {

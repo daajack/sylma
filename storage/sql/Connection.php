@@ -134,12 +134,16 @@ class Connection extends core\module\Argumented {
     return $result;
   }
 
-  public function read($sQuery, $bDebug = true) {
+  public function read($sQuery, $bDebug = true, $log = true) {
 
     try {
 
       $stat = $this->getDatabase()->query($sQuery);
-      $this->logQuery($sQuery);
+      
+      if ($log) {
+        
+        $this->logQuery($sQuery);
+      }
 
       if (!$stat) {
 

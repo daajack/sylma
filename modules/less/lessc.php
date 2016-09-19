@@ -106,9 +106,19 @@ class lessc {
 		// don't import if it ends in css
 		if (substr_compare($url, '.css', -4, 4) === 0) return false;
 
-		$realPath = $this->findImport($url);
-
-		if ($realPath === null) return false;
+                if (!preg_match('`//`', $url)) {
+                  
+                  $realPath = $this->findImport($url);
+                  
+                  if (!$realPath) {
+                  
+                    throw new Exception('Less error : Cannot find ' . $url);
+                  }
+                }
+                else {
+                  
+                  return false;
+                }
 
 		if ($this->importDisabled) {
 			return array(false, "/* import disabled */");

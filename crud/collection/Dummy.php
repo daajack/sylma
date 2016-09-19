@@ -54,13 +54,13 @@ class Dummy extends core\module\Domed {
 
       $this->setSettings(array(), false);
       $this->loadDefaults();
-
+      
       $this->setSettings($this->getSession());
     }
 
     $this->setSettings($current);
   }
-
+  
   protected function getToken() {
 
     return $this->sToken;

@@ -21,6 +21,7 @@ class Handler extends sql\alter\Handler {
     $sylma->merge($config);
     
     \Sylma::setSettings($sylma);
+    \Sylma::setManager('locale', null);
   }
 }
 

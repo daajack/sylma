@@ -61,7 +61,7 @@ class Foreign extends sql\template\component\Foreign {
     $val = $window->createVariable('', 'php-null');
     $key = $window->createVariable('', 'php-integer');
     $loop = $window->createLoop($collection, $val, $key);
-
+    
     $junction->init($key, $this->getParent()->getDummy(false));
     $junction->addElement($source, $this->reflectKey());
     $junction->addElement($target, $val);
@@ -75,8 +75,10 @@ class Foreign extends sql\template\component\Foreign {
   public function reflectRegister($content = null, $sReflector = '', $sMode = '') {
 
     if ($this->getMaxOccurs(true)) {
-
+      
+      $this->getParser()->changeMode('insert');
       list($junction, $source, $target) = $this->loadJunction();
+      $this->getParser()->resetMode();
 
       if ($this->getParent()->isSub()) {
 

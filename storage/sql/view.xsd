@@ -149,7 +149,7 @@
     </xs:complexType>
   </xs:element>
 
-  <xs:element name="group-by">
+  <xs:element name="group">
     <xs:annotation>
       <xs:documentation>
         Add GROUP BY clause to query

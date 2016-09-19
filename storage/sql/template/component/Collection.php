@@ -214,7 +214,9 @@ class Collection extends Dummed implements sql\template\pathable {
 
       case 'count-distinct' :
 
-        $result = $this->getCounter()->setDistinct($this->getWindow()->parse($aArguments));
+        $this->getCounter()->setDistinct($this->getWindow()->parse($aArguments));
+        $result = $this->getCount();
+        
         break;
 
       case 'pager' :

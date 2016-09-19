@@ -26,12 +26,14 @@ sylma.ui.ContainerProps = {
   },
 
   update : function(callback, options) {//path, inside, callback, get, show) {
-
+    
     if (arguments.length >= 2 && typeOf(options) !== 'object') {
 
       this.updateDeprecated.apply(this, arguments);
     }
     else {
+
+      options = options || {};
 
       var success = function(response) {
 
@@ -40,12 +42,13 @@ sylma.ui.ContainerProps = {
       }.bind(this);
 
       var path = this.get('path') || options.url;
+      var data = options.data || {};
 
       options = Object.append({
         onSuccess : success,
         url : path + '.json',
         method : 'get',
-        data : this.get('arguments') || {}
+        data : this.get('arguments') || data
       }, options);
 
       new Request.JSON(options).send();
@@ -59,6 +62,11 @@ sylma.ui.ContainerProps = {
     args = args || this.get('arguments');
 
     path = path || this.get('path');
+    
+    if (!path) {
+      
+      throw 'No path defined';
+    }
 
     var req = new Request.JSON({
       data : args,

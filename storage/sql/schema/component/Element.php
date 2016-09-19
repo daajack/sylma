@@ -100,10 +100,10 @@ class Element extends schema\xsd\component\Element implements common\stringable 
   }
 
   protected function isSub() {
-
+    
     return $this->getParent(false) && $this->getParent()->isSub();
   }
-
+        
   public function useAlias($bVal = null) {
 
     if (is_bool($bVal)) $this->bAlias = $bVal;

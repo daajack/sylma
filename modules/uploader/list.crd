@@ -53,6 +53,9 @@
       <tpl:import>/#sylma/modules/uploader/form.tpl</tpl:import>
 
       <tpl:template>
+        
+        <tpl:apply mode="file/resources"/>
+        
         <div class="form hidder" js:class="sylma.ui.Container" js:name="form" js:parent-name="container">
           <div js:class="sylma.uploader.MainList" js:parent-name="uploader-container">
 
@@ -84,6 +87,7 @@
 
     <tpl:template>
 
+      <tpl:apply mode="file/resources"/>
       <tpl:apply mode="file/form"/>
 
     </tpl:template>

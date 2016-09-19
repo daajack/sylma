@@ -207,7 +207,7 @@ class Manager extends core\module\Domed
     $suffix = $this->getSuffix();
     $value = trim($value);
     
-    $result = $db->read("SELECT content$suffix FROM locale WHERE content = {$db->escape($value)};", false);
+    $result = $db->read("SELECT content$suffix FROM locale WHERE content = {$db->escape($value)};", true, false);
     
     if ($result === false) {
       

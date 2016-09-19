@@ -21,7 +21,7 @@ class Main extends modules\rebuild\Main {
     $sylma->merge($config);
     
     \Sylma::setSettings($sylma);
-//dsp($sylma->get('locale'));
+    \Sylma::setManager('locale', null);
   }
 }
 

@@ -16,7 +16,7 @@
     </tpl:variable>
 
     <form js:class="sylma.crud.Form" class="sylma-form" action="{$action}" method="post" js:name="form" js:parent-name="form">
-
+      
       <tpl:apply mode="form/content"/>
 
     </form>
@@ -31,6 +31,7 @@
 
     <form class="sylma-form" action="{$action}" js:parent-name="form" method="post" js:class="sylma.crud.FormAjax">
 
+      <js:include>/#sylma/crud/Form.js</js:include>
       <js:include>/#sylma/crud/FormAjax.js</js:include>
 
       <js:name>
@@ -131,13 +132,13 @@
           <js:event name="click">
             %object%.deleteConfirm();
           </js:event>
-          <tpl:text>yes</tpl:text>
+          <tpl:apply mode="form/delete/yes"/>
         </button>
         <button type="button" class="no">
           <js:event name="click">
             %object%.deleteCancel();
           </js:event>
-          <tpl:text>no</tpl:text>
+          <tpl:apply mode="form/delete/no"/>
         </button>
       </div>
     </div>
@@ -154,6 +155,8 @@
 
   <tpl:template match="*" mode="form/save/content">save</tpl:template>
   <tpl:template match="*" mode="form/delete/content">delete</tpl:template>
+  <tpl:template match="*" mode="form/delete/yes">yes</tpl:template>
+  <tpl:template match="*" mode="form/delete/no">no</tpl:template>
   <tpl:template match="*" mode="form/cancel/content">cancel</tpl:template>
 
   <tpl:template match="sql:table">

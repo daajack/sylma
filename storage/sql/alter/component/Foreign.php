@@ -4,7 +4,7 @@ namespace sylma\storage\sql\alter\component;
 use sylma\core, sylma\storage\sql, sylma\parser\languages\common, sylma\schema\parser;
 
 class Foreign extends sql\schema\component\Foreign implements sql\alter\alterable {
-
+  
   public function asUpdate() {
 
     return $this->getParent()->fieldAsUpdate($this, $this->getPrevious());
@@ -59,9 +59,14 @@ class Foreign extends sql\schema\component\Foreign implements sql\alter\alterabl
 //if (!$ref instanceof Field) dsp($ref);
     //$sType = $ref->getType()->asString();
     //$sType = $ref instanceof Field ? $ref->asType() : $ref->getType()->asString();
-    $sType = $ref->asType();
+    $sType = $this->refAsString($ref);
 
     return $sType . $sContent;
+  }
+  
+  protected function refAsString(Field $ref) {
+    
+    return $ref->asType();
   }
 
   public function asString() {

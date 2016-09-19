@@ -350,7 +350,7 @@ class Basic extends \Exception implements core\exception {
     }
     catch (core\exception $e) {
 
-
+      //echo $e->getMessage();
     }
 
     if (!$bResult) {

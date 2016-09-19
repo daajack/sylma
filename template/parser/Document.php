@@ -17,7 +17,7 @@ class Document  extends xml\tree\Argument implements template\parser\tree
       case 'post' : $result = $this->reflectFunctionArgument('post', $path); break;
       case 'get' :
       // @deprecated, use 'get' instead
-      case 'argument' : $result = $this->reflectFunctionArgument('arguments', $path); break;
+      case 'argument' : $result = $this->reflectFunctionArgument('arguments', $path, $sArguments); break;
       case 'locale' : $result = $this->reflectFunctionLocale($path, $sMode, $bRead, $aArguments); break;
 
       default :
@@ -53,17 +53,22 @@ class Document  extends xml\tree\Argument implements template\parser\tree
     return $init->call('getURL');
   }
 
-  protected function reflectFunctionArgument($name, array $path, $mode = '') {
-
+  protected function reflectFunctionArgument($name, array $path, $arguments) {
+    
     $arg = $this->getWindow()->getVariable($name);
-
+    
     if ($path) {
 
       $result = $arg->call('read', $path);
     }
+    else if ($arguments) {
+
+      $pather = $this->getParser()->getCurrentTemplate()->getPather();
+      $result = $arg->call('read', $pather->parseArguments($arguments));
+    }
     else {
 
-      $result = $arg;
+      $this->launchException('Argument name is missing');
     }
 
     return $result;

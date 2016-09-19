@@ -125,7 +125,7 @@ class Resource extends reflector\handler\Elemented implements reflector\elemente
     if ($settings = $el->getx('//sql:settings', array(), false)) {
 
       $args = $this->parseElement($settings);
-      $result = $args->asArgument();
+      $result = $args->build();
     }
 
     return $result;

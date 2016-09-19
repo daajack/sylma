@@ -3,7 +3,7 @@
 namespace sylma\storage\sql\view\component;
 use sylma\core, sylma\dom, sylma\parser\languages\common, sylma\storage\sql;
 
-class Settings extends Basic implements common\argumentable {
+class Settings extends Basic implements common\arrayable {
 
   public function parseRoot(dom\element $el) {
 
@@ -11,7 +11,7 @@ class Settings extends Basic implements common\argumentable {
     $el->remove();
   }
 
-  protected function build() {
+  public function build() {
 
     $file = $this->getSourceFile($this->readx());
     $args = $this->getScriptFile($file);
@@ -23,9 +23,9 @@ class Settings extends Basic implements common\argumentable {
     return $args;
   }
 
-  public function asArgument() {
+  public function asArray() {
 
-    return $this->build();
+    return array();
   }
 }
 

@@ -14,6 +14,5 @@
   <tpl:import>types.tpl</tpl:import>
   <tpl:import>foreign.tpl</tpl:import>
   <tpl:import>reference.tpl</tpl:import>
-  <tpl:import>../locale/form.tpl</tpl:import>
 
 </tpl:collection>

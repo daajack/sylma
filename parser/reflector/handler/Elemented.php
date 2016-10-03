@@ -14,7 +14,8 @@ class Elemented extends Logger implements reflector\elemented {
 
   protected $allowComponent = true;
   protected $root;
-
+  public $preserveWhitespaces = false;
+  
   public function __construct(reflector\documented $root, reflector\elemented $parent = null, core\argument $arg = null) {
 
     $this->setRoot($root);

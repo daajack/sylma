@@ -37,6 +37,7 @@ class Domed extends Templated implements reflector\elemented, template\parser\ha
     }
 
     $this->aNamespaces = $aNS;
+    $this->preserveWhitespaces = $el->readx('@preserve-whitespaces', array(), false);
   }
 
   public function parseFromChild(dom\element $el) {
@@ -234,16 +235,28 @@ class Domed extends Templated implements reflector\elemented, template\parser\ha
     return $aResult;
   }
 
-  public function lookupPrefix($sNamespace) {
-
+  public function lookupPrefix($sNamespace, $sCurrent = '') {
+    
+    $sResult = '';
+    
     if (!array_key_exists($sNamespace, $this->aNamespaces)) {
-
-      $this->launchException("Namespace '$sNamespace' is not allowed", get_defined_vars());
+      
+      if (!$this->readx('@allow-all')) {
+      
+        $this->launchException("Namespace '$sNamespace' is not allowed", get_defined_vars());
+      }
+      else if ($sCurrent) {
+        
+        $this->registerNamespace($sNamespace, $sCurrent);
+        $sResult = $sCurrent;
+      }
     }
-
-    $sResult = $this->aNamespaces[$sNamespace];
-    $this->registerNamespace($sNamespace, $sResult);
-
+    else {
+      
+      $sResult = $this->aNamespaces[$sNamespace];
+      $this->registerNamespace($sNamespace, $sResult);
+    }
+    
     return $sResult;
   }
 

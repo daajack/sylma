@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<view:view
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:js="http://2013.sylma.org/template/binder"
+  xmlns:builder="http://2013.sylma.org/parser/reflector/builder"
+
+  xmlns:xl="http://2013.sylma.org/storage/xml"
+  
+  builder:class="\sylma\samples\Dummy"
+  builder:output="result"
+>
+
+  <xl:resource/>
+
+  <tpl:template>
+
+    <tpl:template match="*">
+
+      <le:array>
+        <tpl:read select="'hello'"/>
+        <tpl:read select="'world'"/>
+      </le:array>
+
+    </tpl:template>
+
+  </tpl:template>
+
+</view:view>

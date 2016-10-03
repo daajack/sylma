@@ -306,7 +306,11 @@ abstract class Basic extends core\module\Managed {
 
         $container = $doc->getContainer();
         $sResult = $el ? $container->saveXML($doc->getRoot()) : $container->saveXML();
-        //echo $sResult;
+        
+        if ($iMode & dom\handler::STRING_HEAD) {
+        
+          $sResult = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n" . $sResult;
+        }
       }
       else {
 

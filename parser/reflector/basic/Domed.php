@@ -234,7 +234,7 @@ abstract class Domed extends Componented {
       $this->throwException('Text node not allowed here', array($node->asToken()));
     }
 
-    return $bTrim ? $this->trimString($node->getValue()) : $node->getValue();
+    return $bTrim && !$this->getParser()->preserveWhitespaces ? $this->trimString($node->getValue()) : $node->getValue();
   }
 
   protected function trimString($sValue) {

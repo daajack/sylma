@@ -164,7 +164,7 @@ class Tokened extends Attributed implements common\arrayable, common\argumentabl
 
     $aResult[] = $aBefore;
 
-    $sName = $this->buildName($el->getName(), $el->getNamespace());
+    $sName = $this->buildName($el->getName(), $el->getNamespace(), $el->getPrefix());
 
     if ($bRoot) {
 
@@ -197,7 +197,7 @@ class Tokened extends Attributed implements common\arrayable, common\argumentabl
 
     $aResult = array();
 
-    $sName = $this->buildName($el->getName(), $el->getNamespace());
+    $sName = $this->buildName($el->getName(), $el->getNamespace(), $el->getPrefix());
 
     if (!$this->getRoot()->getCurrentElement(false)) {
 

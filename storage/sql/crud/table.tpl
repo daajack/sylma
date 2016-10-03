@@ -50,7 +50,7 @@
     <sql:filter name="id">
       <le:get-argument name="id"/>
     </sql:filter>
-    <input type="hidden" name="{id/alias()}" value="{id/value()}"/>
+    <tpl:apply select="id" mode="container"/>
     <tpl:apply mode="title"/>
   </tpl:template>
 

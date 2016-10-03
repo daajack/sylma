@@ -3,12 +3,12 @@
   xmlns:view="http://2013.sylma.org/view"
   xmlns="http://2014.sylma.org/html"
   xmlns:tpl="http://2013.sylma.org/template"
-  xmlns:xl="http://2013.sylma.org/storage/xml"
   xmlns:js="http://2013.sylma.org/template/binder"
   xmlns:le="http://2013.sylma.org/action"
   xmlns:ls="http://2013.sylma.org/parser/security"
-
   xmlns:builder="http://2013.sylma.org/parser/reflector/builder"
+  
+  xmlns:xl="http://2013.sylma.org/storage/xml"
 
   builder:return="result"
 >
@@ -29,7 +29,7 @@
         </div>
       </div>
     </div>
-
+    
     <div id="sidebar">
       <tpl:apply mode="sidebar/content"/>
     </div>

@@ -26,7 +26,7 @@ sylma.crud.Form = new Class({
 
   getID : function() {
 
-    return this.getObject('id').getValue();
+    return this.getObject('id') && this.getObject('id').getValue();
   },
 
   showMask : function() {

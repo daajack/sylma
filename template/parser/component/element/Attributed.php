@@ -26,7 +26,7 @@ abstract class Attributed extends Domed {
 
       if (!in_array($attr->getNamespace(), $this->aAvoidNamespaces)) {
 
-        $sName = $this->buildName($attr->getName(), $attr->getNamespace());
+        $sName = $this->buildName($attr->getName(), $attr->getNamespace(), $attr->getPrefix());
         $this->setDefaultAttribute($sName, $attr->getValue());
       }
     }

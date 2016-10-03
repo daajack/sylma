@@ -149,7 +149,7 @@ class Foreigner extends reflector\basic\Reflector implements reflector\component
 
     $aParsers = array();
     $aResult = array();
-
+    
     foreach ($aForeigns as $sNamespace => $bVal) {
 
       $parser = $this->validateParser($sNamespace, 'attribute');
@@ -165,7 +165,7 @@ class Foreigner extends reflector\basic\Reflector implements reflector\component
       else {
 
         $this->getHandler()->lookupPrefix($sNamespace); // check valid
-        $aResult[] = $content;
+        $aResult = array($content);
       }
     }
 

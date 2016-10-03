@@ -18,4 +18,10 @@
 
   </crud:global>
   
+  <crud:group name="view">
+    
+    <tpl:import>/#sylma/storage/sql/locale/form.tpl</tpl:import>
+    
+  </crud:group>
+  
 </crud:crud>

@@ -76,13 +76,13 @@ abstract class Domed extends template\parser\component\Unknowned implements temp
     return $this->getRoot()->stopElement();
   }
 
-  protected function buildName($sName, $sNamespace) {
-
+  protected function buildName($sName, $sNamespace, $sCurrent) {
+    
     $sPrefix = '';
 
     if ($sNamespace) {
-
-      $sPrefix = $this->getHandler()->lookupPrefix($sNamespace);
+      
+      $sPrefix = $this->getHandler()->lookupPrefix($sNamespace, $sCurrent);
     }
 
     return ($sPrefix ? $sPrefix . ':' : '') . $sName;

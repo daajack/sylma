@@ -46,12 +46,12 @@ class _String extends _Scalar implements common\_instance, core\tokenable, commo
 
     return array($this->getValue());
   }
-
+  
   public function asArgument() {
 
     $mVal = $this->mValue;
     $mVal = $mVal instanceof core\stringable ? $mVal->asString() : $mVal;
-
+    
     return $this->getControler()->createArgument(array(
       'string' => is_string($mVal) ? $this->formatString($mVal) : $mVal,
     ));

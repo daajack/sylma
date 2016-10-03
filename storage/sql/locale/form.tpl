@@ -73,21 +73,6 @@
 
   </tpl:template>
 
-  <tpl:template match="*" mode="label/value">
-    <tpl:argument name="title"/>
-    <sql:translate>
-      <tpl:read select="$title"/>
-    </sql:translate>
-  </tpl:template>
-  
-  <tpl:template match="*" mode="fieldset/legend">
-    <legend>
-      <sql:translate>
-        <tpl:read select="title()"/>
-      </sql:translate>
-    </legend>
-  </tpl:template>
-
   <tpl:template match="*" mode="locale/action">
 
     <span class="action" js:class="sylma.ui.Base">

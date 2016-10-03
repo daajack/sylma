@@ -23,7 +23,7 @@ interface handler {
   /**
    * @return string
    */
-  function lookupPrefix($sNamespace);
+  function lookupPrefix($sNamespace, $sCurrent);
 
   /**
    * @return array The list of xmlns attributes

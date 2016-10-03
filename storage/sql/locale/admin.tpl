@@ -8,6 +8,16 @@
   
   xmlns:sql="http://2013.sylma.org/storage/sql"
 >
+  
+  <!-- collection -->
+  
+  <tpl:template match="*" mode="head/cell/title">
+    <sql:translate>
+      <tpl:apply mode="head/cell/title"/>
+    </sql:translate>
+  </tpl:template>
+  
+  <!-- form -->
 
   <tpl:template match="*" mode="label/value">
     <tpl:argument name="title"/>
@@ -36,12 +46,16 @@
     <sql:translate>no</sql:translate>
   </tpl:template>
   
-  <tpl:template match="*" mode="head/cell/title">
-    <sql:translate>
-      <tpl:apply mode="head/cell/title"/>
-    </sql:translate>
+  <tpl:template match="*" mode="fieldset/legend">
+    <legend>
+      <sql:translate>
+        <tpl:read select="title()"/>
+      </sql:translate>
+    </legend>
   </tpl:template>
-
+  
+  <!-- tab -->
+  
   <tpl:template mode="tab/content">
 
     <tpl:argument name="title"/>

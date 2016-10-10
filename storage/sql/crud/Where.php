@@ -30,8 +30,16 @@ class Where extends sql\cached\Where
         if ($op === 'array') {
 
           $op = $group['operator'] === '=' ? 'in' : 'not in';
-          $vals = array_filter($group['children']);
-
+          
+          if (isset($group['children'])) {
+            
+            $vals = array_filter($group['children']);
+          }
+          else {
+            
+            $vals = array();
+          }
+          
           if ($vals) {
 
             $this->addStatic("$val1 $op ( " . implode(", ", $vals) . ')');
@@ -70,7 +78,7 @@ class Where extends sql\cached\Where
           );
 
           $first = true;
-
+          
           foreach ($group['children'] as $val) {
 
             if ($val['value']) {
@@ -94,7 +102,7 @@ class Where extends sql\cached\Where
               $vals[] = $start . $val1 . ' ' . $op . ' ' . $val;
             }
           }
-
+          
           if ($vals) {
 
             $this->addStatic('(' . implode('', $vals) . ')');

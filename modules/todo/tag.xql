@@ -17,7 +17,6 @@
 
     <field name="name" type="sql:string-short"/>
     <foreign name="project" occurs="0..1" table="proj:todo_project" import="project.xql"/>
-    <foreign name="todo" occurs="1..1" table="todo:todo" import="todo.xql"/>
 
   </table>
 

@@ -44,8 +44,7 @@
     <foreign name="delegate" occurs="1..1" table="group:group" import="/#sylma/modules/users/group.xql"/>
     -->
     <foreign name="parent" occurs="0..1" table="todo:todo" import="schema.xql"/>
-
-    <reference name="tags" table="tag:todo_tag" foreign="tag:todo" import="tag.xql"/>
+    <foreign name="tags" occurs="0..n" table="tag:todo_tag" import="tag.xql" junction="todo_tag_junction"/>
 
   </table>
 

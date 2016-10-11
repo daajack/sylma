@@ -51,6 +51,8 @@ class Counter extends reflector\component\Foreigner implements reflector\compone
     if ($this->isUsed()) {
 
       $query = $this->getQuery();
+      
+      $query->setGroup(null);
 
       $query->clearColumns();
       $query->clearLimit();

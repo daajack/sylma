@@ -50,7 +50,7 @@
                   <cls:base>\sylma\schema\cached\view</cls:base>
                   <cls:classes>
                     <cls:class alias="numeric" name="Numeric"/>
-                    <cls:class alias="float" name="Float"/>
+                    <cls:class alias="float" name="_Float"/>
                     <cls:class alias="string" name="_String"/>
                     <cls:class alias="price" name="Price"/>
                     <cls:class alias="date" name="Datetime"/>

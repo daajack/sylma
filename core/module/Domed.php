@@ -130,7 +130,7 @@ abstract class Domed extends Filed {
       }
 
       $aArguments = $path->getArguments()->query();
-      $file = $path->asFile();
+      $file = $path->asFile(true);
     }
 
     $aArguments = $this->buildScriptArguments($aArguments, $aContexts, $aPosts);

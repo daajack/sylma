@@ -57,7 +57,7 @@ class Resource extends reflector\handler\Elemented implements reflector\elemente
 
     $this->getRoot()->addDependency($schema);
 
-    if ($args = $this->getSchemaSettings()) {
+    foreach ($this->getSchemaSettings() as $args) {
 
       $set = $this->getArgument('classes/elemented');
       $set->merge($args);
@@ -118,14 +118,14 @@ class Resource extends reflector\handler\Elemented implements reflector\elemente
   }
 
   protected function getSchemaSettings() {
-
-    $result = null;
+    
+    $result = array();
     $el = $this->getNode()->getDocument()->getRoot();
 
-    if ($settings = $el->getx('//sql:settings', array(), false)) {
+    foreach ($el->queryx('//sql:settings', array(), false) as $settings) {
 
       $args = $this->parseElement($settings);
-      $result = $args->build();
+      $result[] = $args->build();
     }
 
     return $result;

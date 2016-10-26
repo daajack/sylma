@@ -3,7 +3,7 @@
 namespace sylma\schema\cached\view;
 use sylma\core;
 
-class Float extends Numeric {
+class _Float extends Numeric {
 
   protected $sValue;
 

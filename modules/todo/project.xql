@@ -6,6 +6,7 @@
 
   xmlns:stat="http://2013.sylma.org/modules/todo/statut"
   xmlns:task="http://2013.sylma.org/modules/todo"
+  xmlns:tag="http://2013.sylma.org/modules/todo/tag"
 
   targetNamespace="http://2013.sylma.org/modules/todo/project"
 >
@@ -21,6 +22,7 @@
     <foreign name="statut" title="statut" occurs="0..1" table="stat:todo_statut" import="statut.xql" default="1"/>
 
     <reference name="tasks" table="task:todo" foreign="task:project" import="schema.xql"/>
+    <reference name="tags" table="tag:todo_tag" foreign="tag:project" import="tag.xql"/>
 
   </table>
 

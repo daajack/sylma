@@ -14,8 +14,8 @@
   <table name="todo_tag" connection="common">
 
     <field name="id" type="sql:id"/>
-
     <field name="name" type="sql:string-short"/>
+    
     <foreign name="project" occurs="0..1" table="proj:todo_project" import="project.xql"/>
 
   </table>

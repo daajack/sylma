@@ -40,15 +40,15 @@
 
   <tpl:template match="*" mode="filter">
     <div class="filter-container" js:class="sylma.crud.collection.FilterContainer">
-      <button type="button" class="add" data-name="{alias('form')}">
+      <button type="button" class="add" data-name="{alias()}">
         <js:event name="click">%object%.addEmptyFilter();</js:event>
         +
       </button>
-      <input type="hidden" name="{alias('form')}[0][logic]" value="or"/>
+      <input type="hidden" name="{alias()}[0][logic]" value="or"/>
       <tpl:apply mode="filter/init"/>
       <tpl:apply mode="filter/content"/>
       <js:option name="name">
-        <tpl:read select="alias('form')"/>
+        <tpl:read select="alias()"/>
       </js:option>
     </div>
   </tpl:template>

@@ -38,7 +38,7 @@
 
     <js:include>DateFilter.js</js:include>
 
-    <tpl:argument name="alias" default="alias('form')"/>
+    <tpl:argument name="alias" default="alias()"/>
     <div class="filter-container" js:class="sylma.crud.collection.FilterContainer">
       <js:option name="name">
         <tpl:read select="$alias"/>
@@ -71,7 +71,7 @@
 
   <tpl:template match="sql:datetime" mode="filter/internal">
     <sql:filter optional="x" op="=">
-      <tpl:read select="parent()/collection()/dummy()/default()" tpl:name="value">
+      <tpl:read select="/root()/dummy()/default()" tpl:name="value">
         <tpl:read select="'{alias()}'"/>
       </tpl:read>
     </sql:filter>

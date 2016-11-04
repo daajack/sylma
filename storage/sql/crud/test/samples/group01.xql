@@ -8,8 +8,12 @@
 >
 
   <table name="sylma_stepper_group01" connection="test">
+    
     <field name="id" type="sql:id"/>
     <field name="name" type="sql:string-short"/>
+    
+    <reference name="users" table="user:user" foreign="user:group" import="user01.xql"/>
+    
   </table>
 
 </schema>

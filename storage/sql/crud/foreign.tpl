@@ -312,7 +312,7 @@
     <js:include>foreign/Filter.js</js:include>
 
     <div class="filter-container foreign" js:class="sylma.crud.foreign.FilterContainer">
-      <tpl:argument name="alias" default="alias('form')"/>
+      <tpl:argument name="alias" default="alias()"/>
       <input type="hidden" name="{$alias}[0][logic]" value="and"/>
       <input type="hidden" name="{$alias}[0][operator]" value="=" js:node="operator"/>
       <span class="label hidder visible" js:node="empty">show</span>
@@ -344,7 +344,9 @@
 
   <tpl:template match="sql:foreign" mode="filter/text">
     <div class="filter hidder template" js:class="sylma.crud.collection.Filter">
-      <tpl:apply mode="input/build"/>
+      <tpl:apply mode="input/build">
+        <tpl:read tpl:name="alias" select="alias()"/>
+      </tpl:apply>
       <tpl:apply mode="input/clear"/>
     </div>
   </tpl:template>

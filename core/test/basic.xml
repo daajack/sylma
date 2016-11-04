@@ -141,7 +141,7 @@
     </tst:node>
   </tst:test>
 
-  <tst:test name="Import multiple resources">
+  <tst:test name="Add multiple resources">
     <tst:prepare>
 
       /* Admin build */
@@ -195,8 +195,8 @@
 
     </tst:expected>
   </tst:test>
-
-  <tst:test name="Import multiple resources with fusion">
+  
+  <tst:test name="Add multiple resources with fusion">
     <tst:prepare>
 
       /* Admin build */
@@ -259,7 +259,63 @@
 
     </tst:expected>
   </tst:test>
+  
+  <tst:test name="Update imported resources" disabled="true">
+    <tst:node>
+      <div>hello</div>
+    </tst:node>
+    <tst:expected>
+      
+      $script = $manager->copyFile('samples/resources_import.vml');
+      $css1 = $manager->copyFile('samples/style_import.less');
+      $css2 = $manager->copyFile('samples/style01.css');
 
+      $manager->buildScript('/sylma/core/test/samples/window01.vml');
+      $manager->buildScript('/sylma/core/test/samples/container01.vml');
+      $manager->buildScript('/test/resources_import.vml');
+      
+      /* Test start */
+
+      $init = $manager->create('init');
+      $user = $manager->createUser('tester01');
+      $manager->clearSylma($init, $user);
+
+      $settings = $init->loadSettings(\Sylma::ROOT . '/sylma/core/test/samples/config02.yml', \Sylma::ROOT . \Sylma::PATH . \Sylma::PATH_OPTIONS);
+      $init->setGET('/test/resources_import');
+      $init->run($settings->get('initializer'), false);
+
+      $fs = $manager->getManager('fs/tmp');
+      $tmp = $fs->getFile('23dfc531.css');
+
+      $manager->assertEquals(preg_replace('/\s+/', ' ', $tmp->read()), '@import "style01.css"; .style01 { height: 20px; } ', 'content 1');
+      
+      $time1 = $tmp->getUpdateTime();
+
+      sleep(1);
+      $init->run($settings->get('initializer'), false);
+
+      $manager->assertEquals($time1, $tmp->getUpdateTime(), 'no update');
+
+      sleep(1);
+      $css2 = $manager->copyFile('samples/style01b.css', 'style01.css');
+      touch($css2->getRealPath());
+      clearstatcache();
+
+      $content = $init->run($settings->get('initializer'), false);
+
+      $tmp = $fs->getFile('23dfc531.css');
+      
+      $manager->assertEquals(preg_replace('/\s+/', ' ', $tmp->read()), '@import "style01.css"; .style01 { height: 10px; } ', 'content 2');
+      $manager->assertTrue($tmp->getUpdateTime() > $time1, 'updated');
+      
+      $result = $manager->createDocument($content);
+      $manager->compareNodes($result, $manager->get('node'));
+
+      return true;
+
+    </tst:expected>
+  </tst:test>
+  
   <tst:test name="Resource in container">
     <tst:prepare>
 

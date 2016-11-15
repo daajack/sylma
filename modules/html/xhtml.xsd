@@ -492,6 +492,10 @@
   <xs:group name="inline">
     <xs:choice>
       <xs:element ref="a"/>
+      <xs:element ref="video"/>
+      <xs:element ref="audio"/>
+      <xs:element ref="time"/>
+      <xs:element ref="figure"/>
       <xs:group ref="special"/>
       <xs:group ref="fontstyle"/>
       <xs:group ref="phrase"/>
@@ -550,6 +554,12 @@
       <xs:element ref="p"/>
       <xs:group ref="heading"/>
       <xs:element ref="div"/>
+      <xs:element ref="section"/>
+      <xs:element ref="main"/>
+      <xs:element ref="article"/>
+      <xs:element ref="aside"/>
+      <xs:element ref="nav"/>
+      <xs:element ref="footer"/>
       <xs:group ref="lists"/>
       <xs:group ref="blocktext"/>
       <xs:element ref="fieldset"/>
@@ -872,6 +882,187 @@
     </xs:complexType>
   </xs:element>
 
+  <xs:annotation>
+    <xs:documentation>
+    =================== HTML 5 =======================================
+    </xs:documentation>
+  </xs:annotation>
+
+
+  <xs:element name="section">
+    <xs:annotation>
+      <xs:documentation>
+      This tag defines sections in a document, such as chapters, headers, footers, or any other sections of the document.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType mixed="true">
+      <xs:complexContent>
+        <xs:extension base="Flow">
+          <xs:attributeGroup ref="attrs"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="main">
+    <xs:annotation>
+      <xs:documentation>
+      This tag specifies the main content of a document.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType mixed="true">
+      <xs:complexContent>
+        <xs:extension base="Flow">
+          <xs:attributeGroup ref="attrs"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+ 
+  <xs:element name="article">
+    <xs:annotation>
+      <xs:documentation>
+      This tag specifies independent, self-contained content.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType mixed="true">
+      <xs:complexContent>
+        <xs:extension base="Flow">
+          <xs:attributeGroup ref="attrs"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="aside">
+    <xs:annotation>
+      <xs:documentation>
+      This tag defines some content aside from the content it is placed in.
+      The aside content should be related to the surrounding content.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType mixed="true">
+      <xs:complexContent>
+        <xs:extension base="Flow">
+          <xs:attributeGroup ref="attrs"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="nav">
+    <xs:annotation>
+      <xs:documentation>
+      This tag defines a set of navigation links
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType mixed="true">
+      <xs:complexContent>
+        <xs:extension base="Flow">
+          <xs:attributeGroup ref="attrs"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="footer">
+    <xs:annotation>
+      <xs:documentation>
+      This tag defines a footer for a document or section.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType mixed="true">
+      <xs:complexContent>
+        <xs:extension base="Flow">
+          <xs:attributeGroup ref="attrs"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="header">
+    <xs:annotation>
+      <xs:documentation>
+      This element represents a container for introductory content or a set of navigational links.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType mixed="true">
+      <xs:complexContent>
+        <xs:extension base="Flow">
+          <xs:attributeGroup ref="attrs"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>    
+                                                                               
+  <xs:complexType name="media" mixed="true">
+    <xs:sequence >
+      <xs:element name="source" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:attribute name="src" type="URI"/>
+          <xs:attribute name="type" type="xs:string"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+    
+  <xs:element name="video">
+    <xs:annotation>
+      <xs:documentation>
+      This tag specifies video, such as a movie clip or other video streams.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="media"/>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="audio">
+    <xs:annotation>
+      <xs:documentation>
+      This tag defines sound, such as music or other audio streams.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="media"/>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+       
+  <xs:element name="time">
+    <xs:annotation>
+      <xs:documentation>
+      This tag defines a human-readable date/time.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="string">
+          <xs:attributeGroup ref="attrs"/>
+          <xs:attribute name="datetime" type="Datetime"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>   
+
+  <xs:element name="figure">
+    <xs:annotation>
+      <xs:documentation>
+      This tag specifies self-contained content, like illustrations, diagrams, photos, code listings, etc.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType mixed="true">
+      <xs:complexContent>
+        <xs:extension base="Flow">
+          <xs:attributeGroup ref="attrs"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
   <xs:annotation>
     <xs:documentation>
     =================== Paragraphs =======================================

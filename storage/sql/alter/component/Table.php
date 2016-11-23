@@ -51,6 +51,8 @@ class Table extends sql\schema\component\Table implements sql\alter\alterable {
     foreach ($this->getElements() as $element) {
 
       if ($element instanceof sql\schema\reference) continue;
+      if ($element instanceof sql\schema\foreign && $element->getMaxOccurs(true)) continue;
+      
       $aChildren[] = $this->updateChild($element);
     }
 

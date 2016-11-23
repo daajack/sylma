@@ -147,6 +147,31 @@
       </div>
     </tst:node>
   </tst:test>
+  <tst:test name="Join multiple">
+    <tst:document>
+      <view:view>
+        <sql:resource>
+          <sql:id>1</sql:id>
+        </sql:resource>
+        <view:schema>samples/foreign-multiple-tag.xql</view:schema>
+        <tpl:template>
+          <div>
+            <h2><tpl:read select="name"/></h2>
+            <tpl:apply select="users/join()" mode="user"/>
+          </div>
+        </tpl:template>
+        <tpl:template match="*" mode="user">
+          <li><tpl:read select="name"/></li>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <div> 
+        <h2>red</h2> 
+        <li>test_foreign01</li> 
+      </div>
+    </tst:node>
+  </tst:test>
   <tst:test name="Simple filter">
     <tst:document>
       <view:view user:ns="ns" group:ns="ns">

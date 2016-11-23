@@ -11,13 +11,8 @@ class Reference extends sql\template\component\Reference {
 
     switch ($sName) {
 
-      case 'collection' :
-
-        $result = $this->getParser()->parsePathToken($this->getCollection(), $aPath, $sMode, $aArguments);
-        break;
-
+      case 'collection' : $result = $this->getParser()->parsePathToken($this->getCollection(), $aPath, $sMode, $aArguments); break;
       case 'extract' : $result = $this->reflectFunctionExtract($aPath, $sMode, $aArguments, $bRead); break;
-
       case 'join' : $result = $this->reflectFunctionJoin($aPath, $sMode, $aArguments); break;
 
       default :
@@ -34,7 +29,21 @@ class Reference extends sql\template\component\Reference {
 
     if ($foreign->getMaxOccurs(true)) {
 
-      $this->launchException('Not implemented');
+      list($junctionTable, $junctionCurrent, $junctionTarget) = $foreign->loadJunction();
+      
+      $targetTable = $foreign->getElementRef();
+      $parent = $foreign->getParent();
+      $currentTable = $this->getParent();
+      $query = $currentTable->getQuery();
+      
+      $parent->setSource($currentTable->getSource());
+      $parent->setQuery($query);
+      $parent->insertQuery(false);
+      
+      $query->addJoin($junctionTable, $junctionTarget, $currentTable->getElement('id'));
+      $query->addJoin($parent, $parent->getElement('id'), $junctionCurrent);
+      
+      $result = $this->getParser()->parsePathToken($parent, $aPath, $sMode, false, $aArguments);
     }
     else {
 
@@ -48,9 +57,11 @@ class Reference extends sql\template\component\Reference {
       $targetTable->insertQuery(false);
 
       $query->addJoin($targetTable, $foreign, $currentTable->getElement('id'));
+      
+      $result = $this->getParser()->parsePathToken($targetTable, $aPath, $sMode, false, $aArguments);
     }
 
-    return $this->getParser()->parsePathToken($targetTable, $aPath, $sMode, false, $aArguments);
+    return $result;
   }
 
   protected function getCollection($bReset = false) {

@@ -156,7 +156,7 @@ class Foreign extends Element implements sql\schema\foreign {
   /**
    * @return array A an array containing element of the junction table : (table, current foreign, target foreign)
    */
-  protected function loadJunction() {
+  public function loadJunction() {
 
     if (!$this->aJunction) {
 

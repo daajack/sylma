@@ -15,9 +15,7 @@
 
     <crud:import>/#sylma/crud/all.tpl</crud:import>
     <crud:import>/#sylma/storage/sql/crud/all.tpl</crud:import>
-<!--
-    <view:schema>user01.xql</view:schema>
--->
+
     <tpl:constant name="form-cols">* ^ id</tpl:constant>
 
     <tpl:template mode="init/action">
@@ -38,12 +36,6 @@
 
     <view:view mode="view" groups="view">
 
-      <tpl:template mode="form/token">
-        <sql:token>
-          <tpl:apply mode="form/token/content"/>
-        </sql:token>
-      </tpl:template>
-
       <tpl:template mode="form/build">
         <tpl:apply mode="js"/>
         <tpl:apply mode="form/build" xmode="update"/>
@@ -51,14 +43,14 @@
 
     </view:view>
 
-    <view:view name="do" mode="update" _debug="x">
+    <view:view name="do" mode="update">
 
       <sql:filter name="id">
         <le:get-argument name="id" source="post"/>
       </sql:filter>
 
       <tpl:template>
-        <tpl:apply mode="form" xmode="update"/>
+        <tpl:apply mode="form" xmode="insert"/>
       </tpl:template>
 
     </view:view>

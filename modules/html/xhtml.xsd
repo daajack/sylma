@@ -1927,15 +1927,16 @@
       </xs:documentation>
     </xs:annotation>
     <xs:complexType>
+      <xs:group ref="sylma" minOccurs="0" maxOccurs="unbounded"/>
       <xs:attributeGroup ref="attrs"/>
       <xs:attributeGroup ref="focus"/>
       <xs:attribute name="type" default="text" type="InputType"/>
       <xs:attribute name="name">
-	<xs:annotation>
-	  <xs:documentation>
+      <xs:annotation>
+        <xs:documentation>
           the name attribute is required for all but submit &amp; reset
-          </xs:documentation>
-	</xs:annotation>
+        </xs:documentation>
+      </xs:annotation>
       </xs:attribute>
       <xs:attribute name="value"/>
       <xs:attribute name="checked">
@@ -1980,6 +1981,7 @@
       <xs:choice maxOccurs="unbounded">
         <xs:element ref="optgroup"/>
         <xs:element ref="option"/>
+        <xs:group ref="sylma"/>
       </xs:choice>
       <xs:attributeGroup ref="attrs"/>
       <xs:attribute name="name"/>
@@ -2034,6 +2036,7 @@
       </xs:documentation>
     </xs:annotation>
     <xs:complexType mixed="true">
+      <xs:group ref="sylma" minOccurs="0" maxOccurs="unbounded"/>
       <xs:attributeGroup ref="attrs"/>
       <xs:attribute name="selected">
         <xs:simpleType>
@@ -2061,6 +2064,7 @@
       </xs:documentation>
     </xs:annotation>
     <xs:complexType mixed="true">
+      <xs:group ref="sylma" minOccurs="0" maxOccurs="unbounded"/>
       <xs:attributeGroup ref="attrs"/>
       <xs:attributeGroup ref="focus"/>
       <xs:attribute name="name"/>

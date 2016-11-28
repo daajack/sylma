@@ -18,7 +18,7 @@
       </xs:documentation>
     </xs:annotation>
     <xs:complexType>
-      <xs:sequence>
+      <xs:sequence minOccurs="0">
         <xs:element name="propagate" type="security" minOccurs="0">
           <xs:annotation>
             <xs:documentation>
@@ -32,6 +32,20 @@
               Define current directory security values.
             </xs:documentation>
           </xs:annotation>
+        </xs:element>
+        <xs:element name="file" minOccurs="0" maxOccurs="unbounded">
+          <xs:annotation>
+            <xs:documentation>
+              Define a specific file security values.
+            </xs:documentation>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:complexContent>
+              <xs:extension base="security">
+                <xs:attribute name="name" type="ssd:file" use="required"/>
+              </xs:extension>
+            </xs:complexContent>
+          </xs:complexType>
         </xs:element>
       </xs:sequence>
     </xs:complexType>

@@ -34,8 +34,8 @@ class Reflector extends xml\tree\Argument {
     $element->loadNamespace($tree->getNamespace());
     $element->setParent($tree);
 
-    $particle = current($tree->getType()->getParticles());
-    $particle->addElement($element);
+    $particle = $tree->getType()->particle;
+    $particle->addChild($element);
 
     $this->setElement($element);
   }

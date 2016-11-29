@@ -1,9 +1,9 @@
 <?php
 
 namespace sylma\schema\xsd\component;
-use sylma\core, sylma\dom, sylma\schema\parser;
+use sylma\core, sylma\dom, sylma\schema;
 
-abstract class Particle extends parser\component\Particle implements core\arrayable  {
+abstract class Particle extends schema\parser\component\Particle implements core\arrayable  {
 
   public function parseRoot(dom\element $el) {
 
@@ -14,6 +14,11 @@ abstract class Particle extends parser\component\Particle implements core\arraya
   public function prepare() {
 
     $this->buildChildren();
+  }
+  
+  public function addChild($element) {
+    
+    $this->children[] = $element;
   }
 
   protected function buildChildren() {
@@ -31,11 +36,6 @@ abstract class Particle extends parser\component\Particle implements core\arraya
 
         $child = $this->getParser()->parseComponent($el);
         $this->children[] = $child;
-
-        if ($child instanceof schema\element) {
-
-          $this->addElement($child);
-        }
       }
     }
   }

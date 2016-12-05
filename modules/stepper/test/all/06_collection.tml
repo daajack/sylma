@@ -16,6 +16,9 @@
         <ns0:property name="display">1224;54;17;15</ns0:property>
       </ns0:watcher>
       <ns0:event name="click" element="#tester &gt; div &gt; div:nth-child(1) &gt; button:nth-child(8)"/>
+      <ns0:watcher element="#tester &gt; div:nth-child(1) &gt; div:nth-child(3) &gt; div:nth-child(1) &gt; div &gt; div &gt; div:nth-child(6) &gt; ul">
+        <ns0:property name="height">84</ns0:property>
+      </ns0:watcher>
       <ns0:event name="click" element="#tester &gt; div:nth-child(2) &gt; iframe;#content"/>
       <ns0:watcher element="#tester &gt; div:nth-child(1) &gt; div:nth-child(3) &gt; div:nth-child(1) &gt; div">
         <ns0:property name="height">139</ns0:property>

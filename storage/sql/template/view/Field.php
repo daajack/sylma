@@ -52,11 +52,9 @@ class Field extends sql\template\component\Field implements sql\template\pathabl
 
         break;
 
-      case 'text' :
-
-        $result = $this->reflectText();
-        break;
-
+      case 'text' : $result = $this->reflectText(); break;
+      case 'translate' : $result = $this->reflectApplyTranslate(); break;
+      
       default :
 
         $result = parent::reflectApplyFunction($sName, $aPath, $sMode, $bRead, $sArguments, $aArguments);
@@ -77,6 +75,21 @@ class Field extends sql\template\component\Field implements sql\template\pathabl
     $this->addToQuery();
 
     return parent::reflectRegister();
+  }
+
+  protected function reflectApplyTranslate() {
+    
+    $this->addToQuery(); // TODO : add multiple columns to query
+    $query = $this->getTable()->getQuery();
+
+    $window = $this->getHandler()->getWindow();
+    $locale = $window->addManager('locale');
+    $alias = array($this->getParent()->asString(), '.`', $this->getName(), $locale->call('getSuffix'), "`");
+    
+    $content = array($alias, ' AS ', $this->getAlias());
+    $query->setColumn($content);
+    
+    return $this->reflectSelf();
   }
 }
 

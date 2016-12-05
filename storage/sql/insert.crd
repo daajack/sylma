@@ -11,25 +11,22 @@
 
   <crud:global>
 
+    <tpl:constant name="form-cols">* ^ id</tpl:constant>
+
+  </crud:global>
+
+  <crud:group name="crud">
+
     <sql:resource/>
 
     <crud:import>/#sylma/crud/all.tpl</crud:import>
     <crud:import>/#sylma/storage/sql/crud/form.tpl</crud:import>
 
-    <tpl:constant name="form-cols">* ^ id</tpl:constant>
-
     <tpl:template mode="init/action">
       <crud:path path="do"/>.json
     </tpl:template>
 
-    <tpl:template mode="form/token/content">
-      <crud:path/>
-      <tpl:text>/insert/do</tpl:text>
-    </tpl:template>
-
-  </crud:global>
-
-  <crud:group name="crud"/>
+  </crud:group>
 
   <crud:route groups="crud">
 
@@ -38,12 +35,6 @@
       <tpl:template>
         <tpl:apply mode="js"/>
         <tpl:apply/>
-      </tpl:template>
-
-      <tpl:template mode="form/token">
-        <sql:token>
-          <tpl:apply mode="form/token/content"/>
-        </sql:token>
       </tpl:template>
 
     </view:view>

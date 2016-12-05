@@ -31,10 +31,27 @@ class Manager extends modules\users\test\Tester implements core\stringable {
   }
 
   public function checkConfig() {
+    
+    $config = array(
+      'debug/enable' =>  false,
+      'debug/public' =>  false,
+      'exception/break' => false,
+    );
+    
+    $error = false;
 
-    if (\Sylma::read('debug/enable')) {
-
-      $this->launchException('Cannot test in debug mode');
+    foreach ($config as $key => $val) {
+      
+      if (\Sylma::read($key) !== $val) {
+        
+        $error = true;
+        break;
+      }
+    }
+    
+    if ($error) {
+      
+      $this->launchException('Exception configuration error');
     }
 
     $this->checkUser();

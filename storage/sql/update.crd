@@ -9,14 +9,18 @@
   xmlns:sql="http://2013.sylma.org/storage/sql"
 >
 
+  <crud:global>
+    
+    <tpl:constant name="form-cols">* ^ id</tpl:constant>
+
+  </crud:global>
+  
   <crud:group name="crud">
     
     <sql:resource/>
 
     <crud:import>/#sylma/crud/all.tpl</crud:import>
     <crud:import>/#sylma/storage/sql/crud/all.tpl</crud:import>
-
-    <tpl:constant name="form-cols">* ^ id</tpl:constant>
 
     <tpl:template mode="init/action">
       <crud:path/>/default/do.json

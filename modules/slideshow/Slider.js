@@ -118,6 +118,21 @@ sylma.slideshow.SliderProps = {
   },
 
   updateSlide : function(key, notransition) {
+    
+    var offset = this.tmp.length / 2;
+    var children = this.getContainer().getChildren();
+    var _class = 'active';
+    
+    children.each(function(node) {
+      node.removeClass(_class);
+    });
+
+    children[key].addClass(_class);
+    
+    if (key < offset) {
+      
+      children[key + offset].addClass(_class);
+    }
 
     this.updateSlideMargin(-key * this.width, notransition);
   },

@@ -32,7 +32,7 @@
 
   <crud:route>
 
-    <view:view mode="view" groups="view, crud">
+    <view:view mode="view" groups="crud, view">
 
       <tpl:template mode="form/build">
         <tpl:apply mode="js"/>

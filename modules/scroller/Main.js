@@ -37,6 +37,8 @@ sylma.modules.scroller.Main = new Class({
       }
 
     }.bind(this));
+    
+    callback();
   },
 
   loadAnchors: function (nodes) {
@@ -63,7 +65,7 @@ sylma.modules.scroller.Main = new Class({
 
     nodes.each(function(node) {
 
-      var name = node.get('href').substr(1);
+      var name = node.get('href').replace(/\/?#/, '');
       var menu = {
         node : node
       };
@@ -90,7 +92,7 @@ sylma.modules.scroller.Main = new Class({
 
     links.each(function(link) {
 
-      var name = link.getAttribute('href').substr(1);
+      var name = link.getAttribute('href').replace(/\/?#/, '');
 
       link.store('name', name);
       //anchors[name].links.push(link);

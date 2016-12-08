@@ -10,8 +10,8 @@
   xmlns:cap="http://2013.sylma.org/modules/captcha"
 >
 
-  <tpl:template match="*" mode="captcha/view">
-    <tpl:apply reflector="Reflector"/>
+  <tpl:template match="*" mode="captcha">
+    <tpl:apply reflector="Reflector" mode="captcha/view"/>
   </tpl:template>
 
   <tpl:template match="*" mode="captcha/register">
@@ -22,7 +22,7 @@
     <tpl:register/>
   </tpl:template>
 
-  <tpl:template match="cap:root">
+  <tpl:template match="*" mode="captcha/view">
     <div id="sylma-captcha">
       <img alt="Test visuel">
         <tpl:token name="src">

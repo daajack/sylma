@@ -43,6 +43,11 @@ class Pather extends template\parser\Pather {
 
         $this->launchException('No valid path for exclusion', get_defined_vars());
       }
+      
+      if (!method_exists($this->getSource(), 'reflectApplyAllExcluding')) {
+        
+        $this->launchException('Cannot apply all (*) on that object');
+      }
 
       $aResult = $this->getSource()->reflectApplyAllExcluding(array_map('trim', explode(',', $aMatch[1])), $sMode, $aArguments);
     }

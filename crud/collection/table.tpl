@@ -86,20 +86,7 @@
 
     <div class="actions" js:class="sylma.ui.Base">
       <tpl:apply mode="actions/insert"/>
-      <!--
-      <a class="button" href="javascript:void(0)">
-        <js:event name="click">
-          %parent%.getObject('filters').toggleShow();
-        </js:event>
-        <tpl:text>Filters</tpl:text>
-      </a>
-      <a class="button" ls:owner="root" ls:group="admin" ls:mode="700">
-        <tpl:token name="href">
-          <le:path>/sylma/storage/sql/alter</le:path>?path=<view:get-schema/>
-        </tpl:token>
-        Structure
-      </a>
-      -->
+      <tpl:apply mode="actions/export"/>
     </div>
 
   </tpl:template>
@@ -112,7 +99,14 @@
       Insert
     </a>
   </tpl:template>
-
+<!--
+  <tpl:template mode="actions/export">
+    <tpl:variable name="url">
+      <crud:path path="export"/>
+    </tpl:variable>
+    <a href="javascript:void(0)" class="button" onclick="document.location = '{$url}.txt';">Export</a>
+  </tpl:template>
+-->
   <tpl:template match="*" mode="actions/insert/href">
     <le:path/>/insert
   </tpl:template>

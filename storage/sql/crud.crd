@@ -2,14 +2,14 @@
 <crud:crud
   xmlns:crud="http://2013.sylma.org/view/crud"
   xmlns:view="http://2013.sylma.org/view"
-  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns="http://2014.sylma.org/html"
   xmlns:tpl="http://2013.sylma.org/template"
   xmlns:le="http://2013.sylma.org/action"
   xmlns:builder="http://2013.sylma.org/parser/reflector/builder"
 
   xmlns:sql="http://2013.sylma.org/storage/sql"
 
-  extends="/#sylma/crud/full.crd"
+  extends="/#sylma/crud/full.crd, export.crd"
 >
 
   <crud:route>
@@ -34,33 +34,5 @@
     <tpl:import>crud/collection.tpl</tpl:import>
 
   </crud:group>
-  
-  <view:view
-    name="export"
-
-    builder:class="\sylma\storage\sql\crud\Export"
-    builder:output="result"
-  >
-    
-    <sql:resource/>
-    
-    <tpl:template>
-      <le:array>
-        <tpl:read select="name()" le:name="name"/>
-        <crud:script path="export_view" crud:name="content"/>
-      </le:array>
-    </tpl:template>
-    
-  </view:view>
-  
-  <view:view name="export_view" groups="crud" allow-all="x" _debug="x">
-    
-    <sql:resource multiple="x"/>
-    
-    <tpl:import>/#sylma/crud/collection/root.tpl</tpl:import>
-    <tpl:import>/#sylma/storage/sql/crud/collection.tpl</tpl:import>
-    <tpl:import>crud/export.tpl</tpl:import>
-    
-  </view:view>
 
 </crud:crud>

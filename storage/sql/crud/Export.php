@@ -13,7 +13,10 @@ class Export extends core\module\Domed
     $this->setDirectory(__FILE__);
 
     $this->name = $args['name'];
-    $content = $args['content'];
+    $path = $args['path'];
+    
+    $doc = $this->getScript($path);
+    $content = $doc->asString(dom\handler::STRING_HEAD | dom\handler::STRING_INDENT);
 
     $source = $this->getFile('default.xlsx');
     $file = $source->copy($this->getManager('fs/cache')->getDirectory(), uniqid('export-'));
@@ -22,7 +25,7 @@ class Export extends core\module\Domed
 //dsp($content);
     if ($zip->open($file->getRealPath()) === TRUE) {
 
-      $zip->addFromString('xl/worksheets/sheet1.xml', iconv("UTF-8","Windows-1252//IGNORE",$content));
+      $zip->addFromString('xl/worksheets/sheet1.xml', $content);
       $zip->close();
       
     } else {

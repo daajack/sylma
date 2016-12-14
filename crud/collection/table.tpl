@@ -99,14 +99,7 @@
       Insert
     </a>
   </tpl:template>
-<!--
-  <tpl:template mode="actions/export">
-    <tpl:variable name="url">
-      <crud:path path="export"/>
-    </tpl:variable>
-    <a href="javascript:void(0)" class="button" onclick="document.location = '{$url}.txt';">Export</a>
-  </tpl:template>
--->
+
   <tpl:template match="*" mode="actions/insert/href">
     <le:path/>/insert
   </tpl:template>

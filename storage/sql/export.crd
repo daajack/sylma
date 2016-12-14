@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<crud:crud
+  xmlns:crud="http://2013.sylma.org/view/crud"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:builder="http://2013.sylma.org/parser/reflector/builder"
+
+  xmlns:sql="http://2013.sylma.org/storage/sql"
+>
+  
+  <crud:global>
+    
+    <tpl:template mode="actions/export">
+      <tpl:variable name="url">
+        <crud:path path="export"/>
+      </tpl:variable>
+      <a href="javascript:void(0)" class="button" onclick="document.location = '{$url}.txt';">Export</a>
+    </tpl:template>
+    
+  </crud:global>
+   
+  <crud:group name="crud"/>
+  <crud:group name="collection"/>
+  
+  <view:view
+    name="export"
+    
+    groups="crud, collection"
+
+    builder:class="\sylma\storage\sql\crud\Export"
+    builder:output="result"
+  >
+    
+    <sql:resource/>
+    
+    <tpl:template>
+      <le:array>
+        <tpl:read select="name()" le:name="name"/>
+        <crud:path path="export_view" le:name="path"/>
+      </le:array>
+    </tpl:template>
+    
+  </view:view>
+  
+  <view:view name="export_view" groups="crud, collection" allow-all="x" _debug="x">
+    
+    <sql:resource multiple="x"/>
+    
+    <tpl:import>crud/collection.tpl</tpl:import>
+    <tpl:import>crud/export.tpl</tpl:import>
+
+  </view:view>
+
+</crud:crud>

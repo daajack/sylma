@@ -72,6 +72,7 @@
   </tpl:template>
   
   <tpl:template match="*" mode="export/row">
+    <tpl:apply mode="row/filter"/>
     <m:row>
       <tpl:apply use="list-cols" mode="export/cell"/>
     </m:row>

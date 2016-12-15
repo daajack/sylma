@@ -16,7 +16,7 @@ class Export extends core\module\Domed
     $path = $args['path'];
     
     $doc = $this->getScript($path);
-    $content = $doc->asString(dom\handler::STRING_HEAD | dom\handler::STRING_INDENT);
+    $content = $doc->asString(dom\handler::STRING_HEAD); // | dom\handler::STRING_INDENT
 
     $source = $this->getFile('default.xlsx');
     $file = $source->copy($this->getManager('fs/cache')->getDirectory(), uniqid('export-'));

@@ -144,18 +144,25 @@ class View extends Variabled {
 
     $file = $this->buildResourceFile($this->getSourceFile(), $sAlias);
     //$this->includeFile($file, $window);
+    
+    $context = $doc->readx('@context', array(), false) !== 'none';
 
-    $condition = $window->createCondition($window->getVariable('bSylmaExternal'));
-    $condition->addContent($this->callScript($file, $window, null, false));
-
-    $window->add($condition);
-
+    if ($context) {
+    
+      $condition = $window->createCondition($window->getVariable('bSylmaExternal'));
+      $condition->addContent($this->callScript($file, $window, null, false));
+      
+      $window->add($condition);
+    }
+    
     $content = $this->reflectMain($doc, $this->getFile(), $window);
-
     $return = $this->buildInstanciation($content, $window);
+    
+    if ($context) {
 
-    $resources = $resourceWindow->asDOM();
-    $this->createFile($file, $resources);
+      $resources = $resourceWindow->asDOM();
+      $this->createFile($file, $resources);
+    }
 
     return $return;
   }

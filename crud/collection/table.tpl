@@ -243,6 +243,7 @@
   <tpl:template match="*" mode="row">
 
     <tr js:class="sylma.crud.collection.Row">
+      <tpl:apply mode="row/filter"/>
       <tpl:apply mode="row/init"/>
       <js:event name="click">
         %object%.onClick(e);
@@ -253,6 +254,8 @@
       <tpl:apply use="list-cols" mode="cell"/>
     </tr>
   </tpl:template>
+  
+  <tpl:template match="*" mode="row/filter"/>
 
   <tpl:template match="*" mode="row/action">
     <a title="Editer" class="button">

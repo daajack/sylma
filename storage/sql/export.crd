@@ -22,12 +22,14 @@
   </crud:global>
    
   <crud:group name="crud"/>
+  <crud:group name="list"/>
   <crud:group name="collection"/>
   
   <view:view
     name="export"
     
     groups="crud, collection"
+    context="none"
 
     builder:class="\sylma\storage\sql\crud\Export"
     builder:output="result"
@@ -43,12 +45,14 @@
     </tpl:template>
     
   </view:view>
-  
-  <view:view name="export_view" groups="crud, collection" allow-all="x" _debug="x">
-    
-    <sql:resource multiple="x"/>
-    
-    <tpl:import>crud/collection.tpl</tpl:import>
+   
+  <view:view
+    name="export_view"
+    groups="crud, list, collection"
+    context="none"
+    allow-all="x"
+  >
+
     <tpl:import>crud/export.tpl</tpl:import>
 
   </view:view>

@@ -1,7 +1,7 @@
 <?php
 
 namespace sylma\storage\sql\crud;
-use sylma\core, sylma\dom;
+use sylma\core, sylma\dom, sylma\storage\fs;
 
 class Export extends core\module\Domed
 {
@@ -19,7 +19,10 @@ class Export extends core\module\Domed
     $content = $doc->asString(dom\handler::STRING_HEAD); // | dom\handler::STRING_INDENT
 
     $source = $this->getFile('default.xlsx');
-    $file = $source->copy($this->getManager('fs/cache')->getDirectory(), uniqid('export-'));
+    
+    $dir = $this->getManager('fs/cache')->getDirectory();
+    $file = $dir->getFile(uniqid('export-'), fs\file::DEBUG_EXIST);
+    $file->saveText($source->execute());
     
     $zip = new \ZipArchive;
 //dsp($content);
@@ -46,7 +49,7 @@ class Export extends core\module\Domed
 
     $file = $this->file;
     
-    $content = $file->read();
+    $content = $file->execute();
     $file->delete();
 
     return $content;

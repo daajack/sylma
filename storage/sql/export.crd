@@ -53,6 +53,8 @@
     allow-all="x"
   >
 
+    <sql:settings>crud/settings.xml</sql:settings>
+    
     <tpl:import>crud/export.tpl</tpl:import>
 
   </view:view>

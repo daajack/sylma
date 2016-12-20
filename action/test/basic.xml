@@ -155,6 +155,30 @@
       return true;
     </tst:expected>
   </tst:test>
+  <tst:test name="Context disabled">
+    <tst:document>
+      <view:view context="none">
+        <xl:resource/>
+        <le:context name="title">test</le:context>
+        <tpl:template>
+          <div>hello</div>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node>
+      <div>hello</div>
+    </tst:node>
+    <tst:expected>
+
+      $context = new \sylma\modules\html\context\JS;
+
+      $content = $manager->loadScript();
+
+      $manager->compareNodes($content, $manager->get('node'));
+
+      return true;
+    </tst:expected>
+  </tst:test>
   <tst:test name="Simple array" run="false">
     <tst:document>
       <view:view>

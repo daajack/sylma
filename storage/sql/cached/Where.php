@@ -8,6 +8,7 @@ class Where extends core\module\Managed {
   protected $db;
   protected $aValues = array();
   protected $sCollation = '';
+  protected $group = null;
 
   public function __construct(sql\Connection $db, $sCollation = 'utf8_general_ci') {
 
@@ -82,10 +83,27 @@ class Where extends core\module\Managed {
 
     return $this->aValues;
   }
+  
+  public function setGroup($element) {
+    
+    $this->group = $element;
+  }
 
   public function __toString() {
+    
+    $result = '';
+    
+    if ($this->getValues()) {
+    
+      $result .= ' WHERE ' . implode(' AND ', $this->getValues());
+    }
 
-    return $this->getValues() ? ' WHERE ' . implode(' AND ', $this->getValues()) : '';
+    if ($this->group) {
+      
+      $result .= ' GROUP BY ' . $this->group;
+    }
+    
+    return $result;
   }
 }
 

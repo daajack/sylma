@@ -239,15 +239,27 @@ class Select extends Ordered {
 
       $clone->setGroup($group);
     }
+
+    if ($where = $this->getDynamicWhere()) {
+
+      $this->addDynamicWhereCall($where->call('setGroup', array($group)));
+    }
   }
 
   protected function getGroup() {
 
-    return $this->group ? array(' GROUP BY ', $this->group) : null;
+    $result = null;
+
+    if ($this->group and !$this->getDynamicWhere()) {
+
+      $result = array(' GROUP BY ', $this->group);
+    }
+    
+    return $result;
   }
 
   public function getString() {
-
+    
     $aQuery = array(
       'SELECT ',
       $this->parseColumns(),

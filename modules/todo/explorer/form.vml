@@ -128,5 +128,8 @@
     </tpl:template>
 
   </view:view>
+  
+  <view:view name="export" disabled="true"/>
+  <view:view name="export_view" disabled="true"/>
 
 </crud:crud>

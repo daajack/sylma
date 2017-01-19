@@ -23,8 +23,11 @@ class Mailer extends core\module\Domed {
 
       $sEmail = \Sylma::read('debug/email/default');
     }
-
-    $this->getManager(self::PARSER_MANAGER)->getContext('messages')->add(array('content' => 'Mail sent to ' . $sEmail));
+    
+    if ($messages = $this->getManager(self::PARSER_MANAGER)->getContext('messages', false))
+    {
+      $messages->add(array('content' => 'Mail sent to ' . $sEmail));
+    }
 
     return mail($sEmail, $sSubject, $sMessage, $sHeaders);
   }

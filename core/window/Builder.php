@@ -114,7 +114,7 @@ class Builder extends core\module\Domed {
     $window = $this->getFile($sMain);
 
     $args = $path->getArguments();
-    $post = $this->createArgument(array());
+    $post = \Sylma::getManager('init')->loadPost(true);
     $contexts = $this->prepareContexts($fusion);
 
     $args->set('sylma-paths', $aPaths);

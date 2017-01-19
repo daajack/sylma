@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<crud:crud
+  xmlns:crud="http://2013.sylma.org/view/crud"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:js="http://2013.sylma.org/template/binder"
+
+  xmlns:sql="http://2013.sylma.org/storage/sql"
+  xmlns:report="sylma:report"
+
+  extends="/#sylma/storage/sql/insert.crd"
+>
+
+  <crud:global report:ns="ns">
+
+    <sql:resource/>
+    <view:schema>report.xql</view:schema>
+    
+    <tpl:constant name="form-cols">email, url, description</tpl:constant>
+
+    <le:context name="js">
+      <le:file>//www.google.com/recaptcha/api.js?hl=fr</le:file>
+    </le:context>
+    
+    <tpl:template match="report:url" mode="input">
+      <tpl:apply mode="input/build">
+        <le:get-argument name="url" tpl:name="value" optional="x"/>
+      </tpl:apply>
+    </tpl:template>
+
+    <tpl:template match="*" mode="form" xmode="insert">
+      <tpl:apply mode="form"/>
+      <div class="g-recaptcha" data-sitekey="6LeFbRIUAAAAAOyk71VHllL-4oHW8RMfyaZKVw9E" style="padding-left: 30%"></div>
+    </tpl:template>
+
+  </crud:global>
+  
+  <crud:route>
+    
+    <view:view name="do">
+      
+      <tpl:template>
+
+        <tpl:apply/>
+        
+        <sql:trigger>
+
+          <tpl:variable name="content">
+            <tpl:apply mode="email">
+              <sql:result tpl:name="id"/>
+              <le:get-argument name="description" source="post" tpl:name="message"/>
+            </tpl:apply>
+          </tpl:variable>
+          
+          <le:script path="/#sylma/modules/mailer/send">
+            <tpl:read select="'webmaster@pronoxa.ch'" le:name="from"/>
+            <tpl:read select="'support@lemon.ch'" le:name="to"/>
+            <tpl:text le:name="subject">Bug pronoxa.ch</tpl:text>
+            <tpl:read select="$content" le:name="content"/>
+          </le:script>
+             
+        </sql:trigger>
+
+      </tpl:template>
+      
+      <tpl:template mode="email">
+        <tpl:argument name="id"/>
+        <tpl:argument name="message"/>
+  <tpl:variable name="br">
+  </tpl:variable>
+        <tpl:read select="'{/url()}/admin/general/report/update?id={$id}{$br, $br}'"/>
+        <tpl:read select="$message"/>
+      </tpl:template>
+
+    </view:view>
+    
+  </crud:route>
+
+</crud:crud>

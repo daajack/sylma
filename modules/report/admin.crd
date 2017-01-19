@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<crud:crud
+  xmlns:crud="http://2013.sylma.org/view/crud"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:js="http://2013.sylma.org/template/binder"
+
+  xmlns:sql="http://2013.sylma.org/storage/sql"
+
+  extends="/#sylma/storage/sql/crud.crd"
+>
+
+  <crud:global sql:ns="ns">
+
+    <sql:resource/>
+    
+    <view:schema>report.xql</view:schema>
+    
+    <tpl:constant name="form-cols">* ^ id</tpl:constant>
+    <tpl:constant name="list-cols">* ^ id, infos</tpl:constant>
+
+    <tpl:template match="sql:string-long">
+      <tpl:read select="format(length=100)"/>
+    </tpl:template>
+    
+  </crud:global>
+
+</crud:crud>

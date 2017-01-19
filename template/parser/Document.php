@@ -14,7 +14,7 @@ class Document  extends xml\tree\Argument implements template\parser\tree
       case 'url' : $result = $this->reflectFunctionURL(); break;
       case 'root' : $result = $this->reflectFunctionRoot($path, $sMode, $bRead, $aArguments); break;
       case 'sylma' : $result = $this->reflectFunctionSylma($path); break;
-      case 'post' : $result = $this->reflectFunctionArgument('post', $path); break;
+      case 'post' : $result = $this->reflectFunctionArgument('post', $path, $sArguments); break;
       case 'get' :
       // @deprecated, use 'get' instead
       case 'argument' : $result = $this->reflectFunctionArgument('arguments', $path, $sArguments); break;

@@ -139,6 +139,11 @@ class Select extends Ordered {
     }
     else if ($this->getDynamicWhere() && $this->insertDynamicWhere()) {
 
+      if ($this->group) {
+
+        $this->addDynamicWhereCall($this->getDynamicWhere()->call('setGroup', array($this->group)));
+      }
+      
       $aResult = parent::buildDynamicWhere();
     }
     else {
@@ -239,19 +244,14 @@ class Select extends Ordered {
 
       $clone->setGroup($group);
     }
-
-    if ($where = $this->getDynamicWhere()) {
-
-      $this->addDynamicWhereCall($where->call('setGroup', array($group)));
-    }
   }
 
   protected function getGroup() {
 
     $result = null;
 
-    if ($this->group and !$this->getDynamicWhere()) {
-
+    if ($this->group && !$this->getDynamicWhere()) {
+      
       $result = array(' GROUP BY ', $this->group);
     }
     

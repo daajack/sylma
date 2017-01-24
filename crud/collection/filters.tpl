@@ -138,4 +138,6 @@
     </sql:filter>
   </tpl:template>
 
+  <tpl:template match="*" mode="date/clear"/>
+
 </tpl:collection>

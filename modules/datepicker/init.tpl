@@ -29,7 +29,7 @@
 
     </le:context>
     <le:context name="css">
-      <le:file>arian/datepicker_jqui/datepicker_jqui.css</le:file>
+      <le:file>arian/datepicker_bootstrap/datepicker_bootstrap.css</le:file>
     </le:context>
   </tpl:template>
 

@@ -70,7 +70,14 @@
       <tpl:read tpl:name="type" select="'hidden'"/>
       <tpl:read tpl:name="id" select="''"/>
     </tpl:apply>
+    <tpl:apply mode="date/clear"/>
+  </tpl:template>
 
+  <tpl:template match="*" mode="date/clear">
+    <span class="clear">
+      <js:event name="click">%object%.clear()</js:event>
+      <tpl:text>✕</tpl:text>
+    </span>
   </tpl:template>
 
 </tpl:collection>

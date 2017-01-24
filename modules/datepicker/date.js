@@ -26,7 +26,7 @@ sylma.crud.Date = new Class({
 
     var options = {
 
-      pickerClass : 'datepicker_jqui',
+      pickerClass : 'datepicker_bootstrap',
       format : showFormat,
       yearsPerPage : 16,
       //columns : 5,
@@ -37,5 +37,13 @@ sylma.crud.Date = new Class({
     };
 
     new Picker.Date(el, Object.merge(options, this.get('date')));
+  },
+
+  clear: function () {
+    
+    var el = this.getNode().getElement('input[type=text]');
+    
+    el.set('value');
+    el.getNext().set('value');
   }
 });

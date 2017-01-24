@@ -154,7 +154,8 @@ class lessc {
 
 		$pi = pathinfo($realPath);
 		$dir = $pi["dirname"];
-
+        
+        //dsp('import ' . $realPath . ' from ' . $this->parser->sourceName); // $root->props[] = array('comment', 'test');
 		list($top, $bottom) = $this->sortProps($root->props, true);
 		$this->compileImportedProps($top, $parentBlock, $out, $parser, $dir);
 

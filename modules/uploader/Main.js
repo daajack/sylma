@@ -18,7 +18,6 @@ sylma.uploader.Main = new Class({
 
     var body = frame.contentWindow.document.body;
     var content = document.all ? body.innerText : body.textContent;
-    var result = null;
 
     if (content) {
 
@@ -26,7 +25,6 @@ sylma.uploader.Main = new Class({
 
       sylma.ui.parseMessages(response);
       this.sendComplete(response);
-
     }
   },
 
@@ -53,7 +51,7 @@ sylma.uploader.Main = new Class({
 
   sendComplete : function(response) {
 
-    this.input.remove();
+    this.input.dispose();
     this.fieldset.getObject('template').sendComplete(response);
   }
 

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<view:view
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:dvc="http://2014.sylma.org/device"
+  
+  xmlns:xl="http://2013.sylma.org/storage/xml"
+>
+
+  <xl:resource/>
+
+  <tpl:template>
+    <le:context name="css">.test { color: green; }</le:context>
+    <dvc:assert test="desktop">
+      <le:context name="css">.desktop { color: blue; }</le:context>
+    </dvc:assert>
+    <dvc:assert test="mobile">
+      <le:context name="css">.mobile { color: red; }</le:context>
+    </dvc:assert>
+  </tpl:template>
+</view:view>

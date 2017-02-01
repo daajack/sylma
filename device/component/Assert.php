@@ -15,12 +15,19 @@ class Assert extends reflector\component\Foreigner implements common\arrayable {
   }
 
   public function asArray() {
-
+    
     $window = $this->getWindow();
-
-    $test = $this->parseTest();
+    $resourceWindow = $this->getRoot()->getResourceWindow();
+    
+    $test = $this->parseTest($resourceWindow);
+    $resourceCondition = $resourceWindow->createCondition($test);
+    $resourceWindow->add($resourceCondition);
+    
+    $test = $this->parseTest($window);
+    $resourceWindow->setScope($resourceCondition);
     $result = $window->createCondition($test, $this->parseContent());
-
+    $resourceWindow->stopScope();
+    
     return array($result);
   }
 
@@ -31,9 +38,7 @@ class Assert extends reflector\component\Foreigner implements common\arrayable {
     return $content;
   }
 
-  protected function parseTest() {
-
-    $window = $this->getWindow();
+  protected function parseTest(common\_window $window) {
 
     $return = $this->createDummy('dummy', array(), null, false);
     $manager = $window->addManager('device', null, $return);

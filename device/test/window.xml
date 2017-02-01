@@ -20,8 +20,7 @@
       $manager->buildScript('/sylma/device/test/samples/window02.vml');
 
       $manager->buildScript('/sylma/device/test/samples/sample01.vml');
-
-
+      
     </tst:prepare>
     <tst:node name="mobile">
       <app>
@@ -59,6 +58,40 @@
 
       return true;
 
+    </tst:expected>
+  </tst:test>
+  <tst:test name="Contexts">
+    <tst:expected>
+
+      $context = new \sylma\modules\html\context\CSS;
+      $manager->set('context', $context);
+      
+      $manager->setDevice('mobile');
+      
+      $manager->getScript('samples/context.vml', array(), array(
+        'css' => $context,
+      ));
+      
+      $manager->assertEquals($context->asArray(), array(
+        '.test { color: green; }',
+        '.mobile { color: red; }'
+      ), 'mobile');
+      
+      $context = new \sylma\modules\html\context\CSS;
+      $manager->set('context', $context);
+      
+      $manager->setDevice('desktop');
+      
+      $manager->getScript('samples/context.vml', array(), array(
+        'css' => $context,
+      ));
+      
+      $manager->assertEquals($context->asArray(), array(
+        '.test { color: green; }',
+        '.desktop { color: blue; }'
+      ), 'desktop');
+
+      return true;
     </tst:expected>
   </tst:test>
 

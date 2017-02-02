@@ -88,6 +88,11 @@
   </tst:test>
   <tst:test name="Table in default charset">
     <tst:expected>
+      
+      $db = $manager->runQuery("SELECT DATABASE() AS name;", $manager::MODE_READ);
+      $charset = $manager->runQuery("SELECT default_character_set_name AS charset FROM information_schema.SCHEMATA WHERE schema_name = '$db';", $manager::MODE_READ);
+      
+      $manager->assertEquals($charset, 'utf8', 'default charset');
 
       $tests = $manager->runQuery("SELECT id, name, email FROM test1 WHERE name COLLATE UTF8_GENERAL_CI like '%te%'", 0);
       $manager->runQuery('DROP TABLE test1', 2);

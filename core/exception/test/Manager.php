@@ -44,6 +44,7 @@ class Manager extends modules\users\test\Tester implements core\stringable {
       
       if (\Sylma::read($key) !== $val) {
         
+        dsp('Bad key : ' . $key);
         $error = true;
         break;
       }

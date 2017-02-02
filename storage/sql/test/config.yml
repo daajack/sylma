@@ -2,19 +2,7 @@
 database :
   default :
     host : localhost
-    user : sylma
-    password : 1234
-    database : sylma
-  common :
-    host : localhost
-    user : common
-    password : 1234
-    database : common
-  test :
-    host : localhost
-    user : sylma
-    password : 1234
-    database : sylma
+    database : test
     
 locale :
   translate : [en, fr]

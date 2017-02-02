@@ -154,11 +154,13 @@ initializer :
     path :
       name : \sylma\core\request\Basic
     json :
-      name : \sylma\template\binder\context\JSON
+      name : \sylma\device\JSON
     profiler :
       name : \sylma\modules\profiler\XHProf
     locale :
       name : \sylma\storage\sql\locale\Manager
+    device :
+      name : \sylma\device\Dummy
     builder :
       name : \sylma\device\Windower
       classes :
@@ -166,8 +168,6 @@ initializer :
           name : \sylma\core\window\classes\Image
         window :
           name : \sylma\core\window\classes\File
-        device :
-          name : \sylma\device\Dummy
 
   session :
     lifetime : 403200

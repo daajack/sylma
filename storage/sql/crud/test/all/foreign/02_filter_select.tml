@@ -9,7 +9,6 @@
       <ns0:watcher element="#content &gt; div:nth-child(2) &gt; form &gt; div:nth-child(3)">
         <ns0:property name="height">28</ns0:property>
       </ns0:watcher>
-      <ns0:input element="#form-group">2</ns0:input>
       <ns0:event name="click" element="#content &gt; div:nth-child(2) &gt; form &gt; div:nth-child(3) &gt; div:nth-child(4) &gt; div:nth-child(6) &gt; div &gt; input"/>
       <ns0:watcher element="#content &gt; div:nth-child(2) &gt; form &gt; table &gt; tbody">
         <ns0:property name="reload"/>

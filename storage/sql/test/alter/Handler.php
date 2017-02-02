@@ -13,15 +13,14 @@ class Handler extends sql\alter\Handler {
     
     $this->setDirectory(__FILE__);
     
-    $sylma = $this->createArgument('/#sylma/core/sylma.yml');
-    $test = $this->createArgument('/#sylma/core/test.yml');
+    $this->initConfig();
+  }
+
+  public function initConfig() {
+    
     $config = $this->createArgument('/#sylma/storage/sql/test/config.yml');
     
-    $sylma->merge($test);
-    $sylma->merge($config);
-    
-    \Sylma::setSettings($sylma);
-    \Sylma::setManager('locale', null);
+    \Sylma::getSettings()->merge($config);
   }
 }
 

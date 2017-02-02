@@ -93,27 +93,23 @@ class Condition extends common\basic\Structured implements common\argumentable, 
   public function asArgument() {
 
     $sArgument = null;
-    $window = $this->getControler();
-/*
-    if ($this->useTemplate()) {
-
-      $insert = $window->createInsert($window->argToInstance(true), '', null, false);
-      $sArgument = $insert->getKey();
-      $this->addContent($insert);
-      $window->add($window->createInsert($window->argToInstance(false), '', $insert->getKey(), false));
-    }
-*/
+    
     list($aBefore, $test) = $this->parseTest();
-
-    return  $this->getWindow()->createArgument(array(
-      $aBefore,
-      'condition' => array(
+    
+    $content = $this->getContent();
+    $result = array($aBefore);
+    
+    if ($content) {
+      
+      $result['condition'] = array(
         //'@context' => $window->getContext(),
         '@argument' => $sArgument,
         'test' => $test,
-        'content' => $this->getContent(),
+        'content' => $content,
         'else' => $this->aElse ? $this->aElse : null,
-      ),
-    ));
+      );
+    }
+
+    return $this->getWindow()->createArgument($result);
   }
 }

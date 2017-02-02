@@ -13,7 +13,7 @@
       <ns0:input element="#tester &gt; div &gt; div:nth-child(2) &gt; div:nth-child(6) &gt; ul &gt; div:nth-child(4) &gt; div &gt; input">/sylma/modules/stepper/test/samples/sample03a</ns0:input>
       <ns0:event name="click" element="#tester &gt; div &gt; div:nth-child(2) &gt; div:nth-child(6) &gt; ul &gt; div:nth-child(4) &gt; button"/>
       <ns0:watcher element="#tester &gt; div &gt; div:nth-child(2)">
-        <ns0:property name="height">182</ns0:property>
+        <ns0:property name="height">180</ns0:property>
       </ns0:watcher>
       <ns0:event name="click" element="#tester &gt; div &gt; div:nth-child(1) &gt; button:nth-child(2)"/>
       <ns0:watcher element="#tester &gt; div:nth-child(2) &gt; iframe" delay="3000">

@@ -31,14 +31,9 @@ class Handler extends tester\Formed implements core\argumentable {
   
   public function initConfig() {
     
-    $sylma = $this->createArgument('/#sylma/core/sylma.yml');
-    $core = $this->createArgument('/#sylma/core/test.yml');
     $config = $this->createArgument('/#sylma/storage/sql/test/config.yml');
     
-    $sylma->merge($core);
-    $sylma->merge($config);
-    
-    \Sylma::setSettings($sylma);
+    \Sylma::getSettings()->merge($config);
   }
 }
 

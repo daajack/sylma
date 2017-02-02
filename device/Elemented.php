@@ -18,6 +18,15 @@ class Elemented extends reflector\handler\Elemented implements reflector\element
 
   protected function loadContent(view\parser\Elemented $parser, dom\collection $children) {
 
-    return $parser->getCurrentTemplate()->parseChildren($children);
+    if ($template = $parser->getCurrentTemplate(false)) {
+      
+      $result = $template->parseChildren($children);
+    }
+    else {
+      
+      $result = $parser->parseChildren($children);
+    }
+    
+    return $result;
   }
 }

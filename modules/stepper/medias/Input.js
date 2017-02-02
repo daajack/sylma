@@ -28,7 +28,8 @@ sylma.stepper.Input = new Class({
     var el = this.getElement();
 
     if (!el) {
-
+      
+      this.addError('input', 'Element not found');
       this.log('Element not found');
     }
     else {

@@ -20,7 +20,7 @@ class Windower extends window\Builder {
 
     if ($args->read('enable', false)) {
 
-      $device = $this->create('device');
+      $device = $this->getManager('init')->create('device');
       \Sylma::setManager('device', $device);
 
       $device->setSettings($args);

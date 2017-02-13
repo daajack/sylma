@@ -12,8 +12,10 @@ class _String extends Basic {
     if (isset($aSettings['length'])) {
 
       $iLength = $aSettings['length'];
-
-      $sValue = mb_strlen($sValue) > $iLength ? htmlspecialchars(mb_substr(htmlspecialchars_decode($sValue), 0, $iLength)) . ' ...' : $sValue;
+      if (mb_strlen($sValue) > $iLength)
+      {
+        $sValue = htmlspecialchars(preg_replace('/\s+?(\S+)?$/', '', substr(htmlspecialchars_decode($sValue), 0, $iLength))) . ' ...';
+      }
     }
 
     if (isset($aSettings['nl2br']) && $aSettings['nl2br']) {

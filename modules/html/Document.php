@@ -113,17 +113,8 @@ class Document extends core\window\classes\Container {
         break;
 
       case 'title' :
-
-        if ($context && $context->query()) {
-
-          if (!$title = $this->getHead()->getx('//html:title', array(), false)) {
-
-            $title = $this->getHead()->addElement('title');
-          }
-
-          $title->add(' - ' . $context->read(0));
-        }
-
+        
+        $this->buildTitle($context);
         break;
 
       default :
@@ -144,6 +135,19 @@ class Document extends core\window\classes\Container {
     }
   }
 
+  protected function buildTitle(core\argument $context) {
+
+    if ($context && $context->query()) {
+
+      if (!$title = $this->getHead()->getx('//html:title', array(), false)) {
+
+        $title = $this->getHead()->addElement('title');
+      }
+
+      $title->add(' - ' . $context->read(0));
+    }
+  }
+  
   protected function buildInfos(dom\handler $doc) {
 
     $body = $doc->getx('//html:body');

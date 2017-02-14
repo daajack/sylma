@@ -135,7 +135,7 @@ class Document extends core\window\classes\Container {
     }
   }
 
-  protected function buildTitle(core\argument $context) {
+  protected function buildTitle($context) {
 
     if ($context && $context->query()) {
 

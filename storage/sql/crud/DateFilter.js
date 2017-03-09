@@ -45,7 +45,7 @@ sylma.crud.DateFilter = new Class({
 
     var options = {
 
-      pickerClass : 'datepicker_jqui',
+      pickerClass : 'datepicker_bootstrap',
       format : this.showFormat,
       yearsPerPage : 16,
       //columns : 5,

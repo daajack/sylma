@@ -6,18 +6,36 @@
   xmlns:xl="http://2013.sylma.org/storage/xml"
   xmlns:js="http://2013.sylma.org/template/binder"
   xmlns:le="http://2013.sylma.org/action"
+  xmlns:builder="http://2013.sylma.org/parser/reflector/builder"
 
   xmlns:menus="http://2013.sylma.org/modules/menus"
+  
+  builder:return="result"
 >
 
   <tpl:import>/#sylma/modules/menus/main.tpl</tpl:import>
 
   <tpl:template match="menus:menus">
+    <div>
+    <span class="title-page"><tpl:read select="title"/></span>
+    <a href="javascript:void(0)" class="menus-toggler" js:class="sylma.ui.Base">
+      <js:event name="click">
+        document.body.toggleClass('menus-open');
+      </js:event>
+      <div class="wrapper">
+        <span class="line1"/>
+        <span class="line2"/>
+        <span class="line3"/>
+      </div>
+    </a>
     <ul id="{@id}" class="clearfix">
       <tpl:apply select="*"/>
-    </ul>
+    </ul> 
+    </div>
   </tpl:template>
-
+  
+  <tpl:template match="menus:title"/>
+  
   <tpl:template match="menus:menu" mode="content">
     <a href="{@href}">
       <span class="title"><tpl:read select="@title"/></span>

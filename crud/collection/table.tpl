@@ -48,13 +48,11 @@
 
     <tpl:apply mode="actions"/>
 
-    <tpl:apply select="static()" mode="init"/>
-
     <table js:node="table" class="sql-{static()/name()}">
       <tpl:apply select="static()" mode="head/row"/>
       <tpl:apply mode="list/content"/>
     </table>
-
+      
   </tpl:template>
 
   <tpl:template mode="list/path">
@@ -63,12 +61,6 @@
 
   <tpl:template mode="list/content">
     <crud:include path="list"/>
-  </tpl:template>
-
-  <tpl:template match="*" mode="init">
-
-    <tpl:apply mode="filters"/>
-
   </tpl:template>
 
   <tpl:template match="*" mode="order">
@@ -110,6 +102,7 @@
         <tpl:apply mode="head/corner"/>
         <tpl:apply use="list-cols" mode="head/cell"/>
       </tr>
+      <tpl:apply mode="filters"/>
     </thead>
   </tpl:template>
 
@@ -122,9 +115,10 @@
   <tpl:template match="*" mode="head/corner/content"/>
 
   <tpl:template match="*" mode="head/corner/content">
-    <a href="javascript:void(0)" class="button">
-      <tpl:text>F</tpl:text>
+    <a href="javascript:void(0)" class="button fa">
+      
       <js:event name="click">
+        %object%.getParent('table').toggleShow();
         %object%.getParent('table').getObject('filters').toggleShow();
       </js:event>
     </a>
@@ -258,11 +252,11 @@
   <tpl:template match="*" mode="row/filter"/>
 
   <tpl:template match="*" mode="row/action">
-    <a title="Editer" class="button">
+    <a title="Editer" class="button fa">
       <tpl:token name="href">
         <tpl:apply mode="row/action/href"/>
-      </tpl:token>
-      E
+      </tpl:token>   
+      
     </a>
   </tpl:template>
 

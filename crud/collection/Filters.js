@@ -68,11 +68,11 @@ sylma.crud.collection.Filters = new Class({
   },
 
   updateSize : function() {
-
+return;
     var filters = this.tmp;
     var table = this.getParent('table').getNode('table');
 
-    table.getElements('thead tr > *').each(function(td, key) {
+    table.getElements('thead tr:nth-child(1) > *').each(function(td, key) {
 
       var w = td.getStyle('width').toInt() + td.getStyle('padding-left').toInt() + td.getStyle('padding-right').toInt();
 

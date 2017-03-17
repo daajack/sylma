@@ -23,34 +23,36 @@
     <tpl:apply mode="list/filters/js"/>
     <tpl:apply mode="list/filters/css"/>
 
-    <div class="filters clearfix" js:name="filters" js:parent-name="filters" js:class="sylma.crud.collection.Filters">
+    <tr class="filters" js:name="filters" js:parent-name="filters" js:class="sylma.crud.collection.Filters">
       <js:option name="datas">
         <tpl:read select="/root()/dummy()/query()"/>
       </js:option>
       <tpl:apply mode="filters/init"/>
       <tpl:apply mode="filters/content"/>
-    </div>
+    </tr>
 
   </tpl:template>
 
   <tpl:template match="*" mode="filters/content">
-    <div class="filter-container title" js:class="sylma.crud.collection.FilterContainer"/>
+    <th class="filter-container title" js:class="sylma.crud.collection.FilterContainer"/>
     <tpl:apply use="list-cols" mode="filter" xmode="update"/>
   </tpl:template>
 
   <tpl:template match="*" mode="filter">
-    <div class="filter-container" js:class="sylma.crud.collection.FilterContainer">
-      <button type="button" class="add" data-name="{alias()}">
-        <js:event name="click">%object%.addEmptyFilter();</js:event>
-        +
-      </button>
-      <input type="hidden" name="{alias()}[0][logic]" value="or"/>
-      <tpl:apply mode="filter/init"/>
-      <tpl:apply mode="filter/content"/>
-      <js:option name="name">
-        <tpl:read select="alias()"/>
-      </js:option>
-    </div>
+    <th>
+      <div class="filter-container" js:class="sylma.crud.collection.FilterContainer">
+        <input type="hidden" name="{alias()}[0][logic]" value="or"/>
+        <tpl:apply mode="filter/init"/>
+        <tpl:apply mode="filter/content"/>
+        <js:option name="name">
+          <tpl:read select="alias()"/>
+        </js:option>
+        <button type="button" class="add" data-name="{alias()}">
+          <js:event name="click">%object%.addEmptyFilter();</js:event>
+          +
+        </button>
+      </div>    
+    </th>
   </tpl:template>
 
   <tpl:template match="*" mode="filter/content">

@@ -20,6 +20,7 @@
 
   <tpl:template match="menus:menu" mode="title">
     <tpl:if test="@href = '/'">
+      <span class="fa"></span>
       <tpl:apply mode="title/website"/>
       <tpl:else>
         <tpl:read select="@title"/>
@@ -35,7 +36,7 @@
       <ul class="clearfix menu">
         <tpl:apply select="*"/>
         <li class="empty">.</li>
-        <a id="lemonav-logout" title="Logout" href="/sylma/modules/users/logout.redirect"/>
+        <a id="lemonav-logout" title="Logout" href="/sylma/modules/users/logout.redirect">Déconnexion <span class="fa"> </span></a>
         <tpl:apply mode="shortcuts"/>
       </ul>
     </div>

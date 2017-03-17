@@ -1,19 +1,30 @@
 
+@import "../vars.less";
+@import url('https://fonts.googleapis.com/css?family=Expletus+Sans');
+
+body
+{
+  background: url(/html/desktop/Plan de travail 13.png) no-repeat;
+  background-position: 0px -64px;
+  background-size: cover;
+}
+
+@height : 28 * @rem;
+
 #lemonav
 {
   width: 100%;
-  background: url('background.gif') repeat-x;
-  font-family: Helvetica;
+  background-color: @noir;
   font-weight: normal;
+  font-family: 'Expletus Sans', cursive;
   z-index: 20;
-
+  font-size: 12 * @rem;
+  
   & > ul
   {
     & > li
     {
 
-      font-size: 15px;
-      text-shadow:#333333 -1px -1px;
       text-transform: uppercase;
       display: block;
       float: left;
@@ -26,14 +37,22 @@
       {
         border-right: 0;
         text-indent: -9999px;
-        height: 42px;
+        height: @height;
       }
 
       a
       {
         display: block;
-        height: 30px; /* 42 - p */
-        padding: 12px 20px 0;
+        height: @height;
+        padding: 0px 20px;
+        line-height: @height;
+        letter-spacing: 1 * @rem;
+        .fa
+        {
+          margin-right: 5 * @rem;
+          color: @orange;
+          font-size: 10 * @rem;
+        }
       }
 
       a, a:hover
@@ -43,23 +62,27 @@
 
       &:not(.sylma-highlight) a:hover
       {
-        background-color: #4D4D4D
+        background-color: @rose;
+        color: @white;
       }
 
       &.sylma-highlight
       {
-        background-color: #f4f4f4;
-        border-color: #f4f4f4;
+        background-color: @black;
+        border-color: @white;
 
         a
         {
-          color: #333333;
-          text-shadow: #FFFFFF 1px 1px;
+          color: @white;
+          &:first-child
+          {
+            color: @orange;
+          }
         }
       }
 
       &:first-child.sylma-highlight {
-        background-color: white;
+        background-color: @white;
       }
     }
 
@@ -68,16 +91,20 @@
 
 #lemonav-logout
 {
-  background: url(logout.png) no-repeat;
-  width: 44px;
-  height: 42px;
   display: block;
   float: right;
+  text-transform: uppercase;
+  line-height: @height;
+  height: @height;
+  color: @gris;
+  padding: 0 26.5px;
+  letter-spacing: 1 * @rem;
 }
 
 #lemonav-logout:hover
 {
-  background-position: 0 -42px;
+  background-color: @rose;
+  color: @white;
 }
 
 @media screen and (max-width: 700px)

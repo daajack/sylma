@@ -1,30 +1,16 @@
+@import "../../html/vars.less";
 
 #sylma-todo-widget
 {
-  @height : 42px;
-  @width : 53px;
+  @height : 28 * @rem;
+  @width : 94px;
 
-  height: 0;
-  width: @width;
-  background: url("setting_tools.png") no-repeat right 13px top 8px;
-  /* background: url("setting_tools.png") no-repeat scroll right 13px top 8px / 27px auto; */
-  padding-top: @height;
+  height: @height;
   float:right;
   overflow: hidden;
   right: 42px;
   z-index: 3;
   font-size: 12px;
-
-  &:hover,
-  &.sylma-highlight
-  {
-    height: auto;
-    background-color: #4D4D4D;
-    overflow: visible;
-    position: absolute;
-    width: 300px;
-    margin-right: 2px;
-  }
 
   .content
   {
@@ -73,15 +59,32 @@
   .count
   {
     color: white;
+    background-color: @orange;
     display: block;
     float: right;
-    font-size: 22px;
-    margin-top: -@height;
-    padding-top: 9px;
+    font-size: 12 * @rem;
+    text-transform: uppercase;
     text-align: center;
-    text-shadow: 1px 1px black;
-    width: @width;
     height: @height;
+    line-height: @height;
+    padding: 0 20px;
+    letter-spacing: 1 * @rem;
+    &:hover
+    {
+      background-color: @rose;
+    }
+    
+    span:not(:empty)
+    {
+      border-radius: 50%;
+      background-color: @white;
+      height: 20 * @rem;
+      width: 20 * @rem;
+      color: @orange;
+      display: inline-block;
+      line-height: 20 * @rem;
+      margin-left: 5px;
+    }
   }
 
   ul

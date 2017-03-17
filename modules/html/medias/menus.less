@@ -1,0 +1,307 @@
+
+@import "../vars.less";
+
+@menus-wrapper: 21;
+@menus-blink: 3;
+@arrow-speed: 0.3s;
+@menus-speed: 0.2s;
+@height: 72px;
+@width: 30 * @rem;
+@menu-height: 28 * @rem;
+@keyframes blink {
+  0%, 100% {
+    left: 50%;
+  }
+  50% {
+    left: 45%
+  }
+}
+
+#containerWrapper
+{
+  margin-left: @width;
+}
+
+#sidebar
+{
+  float: left;
+  width: @width;
+  margin-left: -100%;
+  background-color: #EBEBEB;
+  position: relative;
+  overflow: hidden;
+  
+  .madewith
+  {
+    bottom: 0;
+    position: absolute;
+    
+    span
+    {
+      float: left;
+      height: 33px;
+      line-height: 33px;
+      font-size: 13 * @rem;
+      margin-left: 10px;
+      margin-right: 10px;
+      text-transform: uppercase;
+      color: @gray3;
+      letter-spacing: 1 * @rem;
+    }
+    a
+    {
+      background: url(/sylma/modules/html/medias/logo.png) no-repeat;
+      width: 80px;
+      height: 33px;
+      background-size: 100% auto;
+      float: right;
+      margin-left: 10px;
+      margin-right: 10px;
+      &:hover
+      {
+        background-position: 0% 100%;
+      }
+    }
+  }
+}
+
+#sidebar .title-page
+{
+  padding: 14px 10px 16px 15px;
+  display: block;
+  overflow: hidden;
+  color: #FFFFFF;
+  background-color: #0075B3;
+  width: 100%;
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  box-sizing: border-box;
+  padding-right: 2em;
+  height: @height;
+  &:first-letter {
+    text-transform: uppercase;
+  }
+}
+
+.menus-toggler
+{
+  display: block;
+  border: 0;
+  height: @height;
+  background-color: @blue1;
+  overflow: hidden;
+  position: absolute;
+  z-index: 10;
+  margin: 0;
+  left: 0;
+  width: @width;
+  top: 0;
+  
+  .wrapper
+  {
+    width: 15 * @rem;
+    height: 14 * @rem;
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    span
+    {
+      display: inline-block;
+      position: absolute;
+      width: 100%;
+      height: 2 * @rem;
+      background-color: white;
+      left: 0;
+      transition: width @arrow-speed, transform @arrow-speed, left @arrow-speed, top @menus-speed, bottom @menus-speed;
+    }
+
+    .line1
+    {
+      top: 0;
+    }
+
+    .line2
+    {
+      top: 6 * @rem;
+    }
+
+    .line3
+    {
+      bottom: 0;
+    }
+  }
+
+  &:active
+  {
+    background-color: white;
+
+    span
+    {
+      background-color: @blue;
+    }
+  }
+  &:hover
+  {
+    .line1
+    {
+      top: -3 * @em;
+    }
+
+    .line3
+    {
+      bottom: -3 * @em;
+    }
+  }
+}
+.menus-open 
+{
+  #sidebar
+  {
+    width: 201px;
+    background-color: @gris1;
+  }
+  .menus-toggler
+  {
+    right: 0;
+    left: inherit;
+    
+    &:hover
+    {
+      .wrapper
+      {
+        animation: blink 0.5s 2 ease-in-out;
+      }
+    }
+
+    .line1
+    {
+      top: 2 * @rem;
+    }
+
+    .line3
+    {
+      bottom: 2 * @rem;
+    }
+
+    .line1,
+    .line3
+    {
+      width: 1em;
+      left: -3 * @rem;
+    }
+
+    .line1
+    {
+      transform: rotate(-45deg);
+    }
+
+    .line3
+    {
+      transform: rotate(45deg);
+    }
+  }
+  #menu-content a
+  {
+    white-space: normal;
+    padding-left: 15 * @rem;
+    
+    .description,
+    .title
+    {
+      visibility:visible;
+    }
+  }
+  #containerWrapper
+  {
+    margin-left: 200px;
+  }
+}
+
+
+/*** Menu contenu ***/
+
+#menu-content a
+{
+  display: block;
+  padding: 10px 10px 10px 11px;
+  border: 0 solid @white;
+  border-top-width: 1px;
+  border-right-width: 0;
+  background-color: #EBEBEB;
+  white-space: nowrap;
+}
+
+#menu-content li:last-child a
+{
+  border-bottom-width: 1px;
+}
+
+#menu-content li.sylma-highlight a
+{
+  background-color: #00CA94;
+  z-index: 1;
+  position: relative;
+  border-right: 0;
+  
+  &:before
+  {
+    pointer-events: none;
+    position: absolute;
+    z-index: -1;
+    content: '';
+    border-style: solid;
+    transition-duration: 0.3s;
+    transition-property: transform;
+    top: calc(~"50% - 10px");
+    right: 0;
+    border-width: 10px 10px 10px 0;
+    border-color: transparent @white transparent transparent;
+  }
+}
+
+#menu-content a .title
+{
+  text-transform: uppercase;
+  display:block;
+  color: #999999;
+  font-size: 14px;
+  font-weight: bold;
+  visibility:hidden;
+  letter-spacing: 1 * @rem;
+  
+  &:first-letter {
+    visibility:visible;
+  }
+}
+
+#menu-content a:hover .title
+{
+  color: #005568;
+}
+
+#menu-content li.sylma-highlight .title
+{
+  color: #FFFFFF;
+}
+
+#menu-content a .description
+{
+  color: #999999;
+  font-size: 14px;
+  visibility:hidden;
+}
+
+#menu-content a:hover .description
+{
+  color: #333333;
+}
+
+#menu-content li.sylma-highlight .description
+{
+  color: #FFFFFF;
+}
+
+

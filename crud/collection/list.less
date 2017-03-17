@@ -8,7 +8,12 @@
     overflow: hidden;
     margin-bottom: 1em;
   }
-
+  
+  div.actions .button
+  {
+    border: 1px solid;
+  }
+  
   table
   {
     border-collapse: collapse;
@@ -18,12 +23,26 @@
     {
       &:first-child
       {
-        padding: 0.5em;
         text-align: center;
-
+        height: 100%;
+        background-color: @orange;
+        
+        &:not(.filter-container):hover
+        {
+          background-color: @rose !important;
+        }
         .button
         {
-          padding: 0.7em 1em;
+          height: 100%;
+          width: 100%;
+          box-sizing: border-box;
+          padding: 0.5em;
+          color: @white;
+          line-height: 16 * @rem;
+          &:hover
+          {
+            background-color: inherit !important;
+          }
         }
       }
 
@@ -31,9 +50,8 @@
       {
         display: block;
         color: #000000;
-        font-weight: normal;
-        padding: 1em 1em;
-        text-transform: uppercase;
+        font-weight: bold;
+        padding: 6px 6px;
 
         &:first-letter {
           text-transform: uppercase;
@@ -41,7 +59,7 @@
 
         &.sylma-highlight
         {
-          color: #ec008c;
+          color: @green;
           background: url('arrows.png') no-repeat;
           background-position: 100% 16px;
         }
@@ -62,7 +80,7 @@
       td
       {
         padding: 0.2em 0.5em;
-        border-bottom: 1px solid #d6d6d6;
+        border-bottom: 1px solid @gris1;
 
         &:first-child
         {
@@ -73,7 +91,13 @@
       tr
       {
         transition: background 0.1s;
-
+        color: @gris;
+        
+        &:nth-child(2n+0)
+        {
+          background-color: #fcfcfc;
+        }
+        
         &:hover
         {
           background-color: #e4f4f4;
@@ -88,13 +112,11 @@
       &.actions .button
       {
         font-size: 0.9em;
-        padding: 0.2em 0.5em;
-      }
-
-      .actions a:hover
-      {
-        color: white;
-        background-color: #ec008c;
+        &:hover
+        {
+          color: @rose !important;
+          background-color: inherit !important;
+        }
       }
     }
   }
@@ -111,8 +133,14 @@
 
     &.form-disable
     {
-      background-color: @gray3 !important;
-      cursor: default;
+      border: none;
+      pointer-events: none;
+      color: @gris;
+    }
+    &:hover
+    {
+      background-color: inherit !important;
+      color: @rose !important;
     }
   }
 
@@ -125,7 +153,6 @@
   .infos
   {
     display: inline-block;
-    float: left;
     line-height: 2.5em;
     height: 2.5em;
   }

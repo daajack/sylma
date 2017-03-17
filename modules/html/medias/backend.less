@@ -1,9 +1,13 @@
 
+@import "../vars.less";
+@import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700');
+
+
 body
 {
-  font-size: 12px;
-  font-family: Arial;
-  background-color: #f4f4f4;
+  font-size: 14px;
+  font-family: 'Source Sans Pro', sans-serif;
+  background-color: @white;
 }
 
 a
@@ -11,69 +15,10 @@ a
   text-decoration: none;
 }
 
-#sidebar
+.admin-container
 {
-  float: left;
-  padding-top: 139px;
-  width: 201px;
-  margin-left: -100%;
-  background: url('logo.png') no-repeat 20px 19px;
-}
-
-/*** Menu contenu ***/
-
-#menu-content a
-{
-  display: block;
-  padding: 14px 10px 14px 20px;
-  border: 0 solid #CBCBCB;
-  border-top-width: 1px;
-  border-right-width: 1px;
-}
-
-#menu-content li:last-child a
-{
-  border-bottom-width: 1px;
-}
-
-#menu-content li.sylma-highlight a
-{
-  background-color: white;
-  z-index: 1;
-  position: relative;
-  border-right: 0;
-}
-
-#menu-content a .title
-{
-  text-transform: uppercase;
-  display:block;
-  color: #333333;
-}
-
-#menu-content a:hover .title
-{
-  color: #005568;
-}
-
-#menu-content li.sylma-highlight .title
-{
-  color: #005568;
-}
-
-#menu-content a .description
-{
-  color: #CBCBCB;
-}
-
-#menu-content a:hover .description
-{
-  color: #333333;
-}
-
-#menu-content li.sylma-highlight .description
-{
-  color: #333333;
+  display: flex;
+  min-height: calc(~"100vh - 28px");
 }
 
 /*** Content ***/
@@ -88,18 +33,13 @@ a
   float: left;
   width: 100%;
 }
-#containerWrapper
-{
-  margin-left: 200px;
-}
 
 #content
 {
   position: relative;
   z-index: 0;
-  padding: 22px 17px;
+  padding: 2px 29px;
   background-color: white;
-  border: 1px solid #CBCBCB;
   min-height: 600px;
 }
 
@@ -110,11 +50,11 @@ a
 
 #content a:hover
 {
-  color: #ec008c;
+  color: @rose;
 }
 
 #intro {
-  margin-bottom: 3em;
+  margin-bottom: 2em;
 }
 
 h3
@@ -123,11 +63,16 @@ h3
   font-weight: normal;
   display:block;
   color: #005568;
+  letter-spacing: 1 * @rem;
 }
 
 #intro h3
 {
   margin-bottom: 0;
+  color: #00CA94;
+  font-size: 14px;
+  font-weight: bold;
+  
 }
 
 #intro h3 + *
@@ -166,9 +111,9 @@ h3
   display: inline-block;
   padding: 0.5em;
   text-decoration: none !important;
-  color: white;
-  background-color: #a6c6cb;
+  color: #FC7C58;
   float: none;
+  text-transform: uppercase;
 }
 
 button.button
@@ -180,7 +125,7 @@ button.button
 #content a.button:hover
 {
   color: white;
-  background-color: #ec008c;
+  background-color: @rose;
 }
 
 #content a.button:active

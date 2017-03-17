@@ -39,7 +39,7 @@
     <js:include>DateFilter.js</js:include>
 
     <tpl:argument name="alias" default="alias()"/>
-    <div class="filter-container" js:class="sylma.crud.collection.FilterContainer">
+    <th class="filter-container" js:class="sylma.crud.collection.FilterContainer">
       <js:option name="name">
         <tpl:read select="$alias"/>
       </js:option>
@@ -48,10 +48,6 @@
       </js:option>
 
       <tpl:register/>
-      <button type="button" class="add" data-name="{alias('form')}">
-        <js:event name="click">%object%.addEmptyFilter();</js:event>
-        +
-      </button>
       <div class="filter hidder template" js:class="sylma.crud.DateFilter" js:parent-name="filter">
         <input type="hidden" value="=" js:node="operator"/>
         <span class="operator" js:node="operator_display">
@@ -62,7 +58,11 @@
         </tpl:apply>
         <tpl:apply mode="input/clear"/>
       </div>
-    </div>
+      <button type="button" class="add" data-name="{alias('form')}">
+        <js:event name="click">%object%.addEmptyFilter();</js:event>
+        +
+      </button>
+    </th>
   </tpl:template>
 
   <tpl:template match="sql:datetime" mode="input/value"/>

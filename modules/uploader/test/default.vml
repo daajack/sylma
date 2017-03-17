@@ -2,7 +2,7 @@
 <crud:crud
   xmlns:crud="http://2013.sylma.org/view/crud"
   xmlns:view="http://2013.sylma.org/view"
-  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns="http://2014.sylma.org/html"
   xmlns:tpl="http://2013.sylma.org/template"
   xmlns:js="http://2013.sylma.org/template/binder"
   xmlns:le="http://2013.sylma.org/action"
@@ -69,5 +69,8 @@
     </tpl:template>
 
   </view:view>
+  
+  <view:view name="export" disabled="true"/>
+  <view:view name="export_view" disabled="true"/>
 
 </crud:crud>

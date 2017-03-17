@@ -90,55 +90,32 @@ abstract class Basic extends core\module\Namespaced implements core\argument {
 
     foreach($aTo as $sKey => $mVal) {
 
-      if (0 && is_integer($sKey)) {
+      if (array_key_exists($sKey, $aFrom)) {
 
-        $aFrom[] = $mVal;
-      }
-      else {
+        if (is_string($aFrom[$sKey]) && is_array($mVal)) {
 
-        if (array_key_exists($sKey, $aFrom)) {
+          $aFrom[$sKey] = $this->parseValue($aFrom[$sKey], $aPath);
+        }
 
-          if (is_string($aFrom[$sKey]) && is_array($mVal)) {
+        if (is_array($aFrom[$sKey]) && is_array($mVal)) {
 
-            $aFrom[$sKey] = $this->parseValue($aFrom[$sKey], $aPath);
-          }
-
-          if (is_array($aFrom[$sKey]) && is_array($mVal)) {
-
-            $aFrom[$sKey] = $this->mergeArrays($aFrom[$sKey], $mVal, $aPath + array($sKey));
-          }
-          else {
-
-            $aFrom[$sKey] = $mVal;
-          }
+          $aFrom[$sKey] = $this->mergeArrays($aFrom[$sKey], $mVal, $aPath + array($sKey));
+        }
+        else if ($aFrom[$sKey] instanceof core\argument && $mVal instanceof core\argument)
+        {
+          $aFrom[$sKey]->merge($mVal);
         }
         else {
 
           $aFrom[$sKey] = $mVal;
         }
       }
+      else {
+
+        $aFrom[$sKey] = $mVal;
+      }
     }
 
     return $aFrom;
   }
-
-/*
-  public function __toString() {
-
-    $sResult = '';
-
-    if ($this->aArray && count($this->aArray) == 1) {
-
-      list(,$val) = each($this->aArray);
-      $sResult = is_object($val) && method_exists($val, '__toString') ? (string) $val : gettype($val);
-    }
-    else {
-
-      $sResult = '[error] Cannot render an argument as a string';
-      //$this->throwException(sprintf('Cannot render an array as a string'));
-    }
-
-    return $sResult;
-  }
- */
 }

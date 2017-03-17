@@ -88,9 +88,9 @@ class Where extends core\module\Managed {
     
     $this->group = $element;
   }
+  
+  public function asString($type = '') {
 
-  public function __toString() {
-    
     $result = '';
     
     if ($this->getValues()) {
@@ -98,12 +98,16 @@ class Where extends core\module\Managed {
       $result .= ' WHERE ' . implode(' AND ', $this->getValues());
     }
 
-    if ($this->group) {
+    if ($this->group && $type !== 'count') {
       
       $result .= ' GROUP BY ' . $this->group;
     }
     
     return $result;
+  }
+
+  public function __toString() {
+    
   }
 }
 

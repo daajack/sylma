@@ -8,6 +8,7 @@ abstract class Wherer extends Basic {
   protected $bDynamicWhere = true;
   protected $dynamicWhere;
   protected $aDynamicWhereCalls = array();
+  public $type = '';
 
   protected function getCollation($sCharset) {
 
@@ -104,10 +105,19 @@ abstract class Wherer extends Basic {
     }
   }
 
+  protected function callWhere(common\_var $where) {
+    
+    return $where->call('asString', array($this->type));
+  }
+  
   protected function getWheres() {
 
-    if (!$result = $this->getDynamicWhere()) {
-
+    if ($where = $this->getDynamicWhere())
+    {
+      $result = $this->callWhere($where);
+    }
+    else
+    {
       $result = parent::getWheres();
     }
 

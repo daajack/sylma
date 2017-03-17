@@ -13,7 +13,7 @@
       
       \Sylma::setManager('locale', null);
       $manager->runQuery('DROP TABLE IF EXISTS locale_product', 2);
-      
+
       $manager->getScript('/#sylma/storage/sql/test/alter/index.vml', array(
         'file' => '/#sylma/storage/sql/test/samples/product_locale.xql',
       ));

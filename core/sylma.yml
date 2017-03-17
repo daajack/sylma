@@ -27,6 +27,7 @@ debug :
     show : true
   xml :
     import : false
+  test : false
 
 namespaces :
   html : http://www.w3.org/1999/xhtml
@@ -238,10 +239,20 @@ directory :
   tmp : tmp
 
 database :
+  default :
+    host : localhost
+    user : tester
+    password : 12345
+    database : test
   test :
     host : localhost
     user : tester
-    password : 1234
+    password : 12345
+    database : test
+  common :
+    host : localhost
+    user : tester
+    password : 12345
     database : test
 
 device :

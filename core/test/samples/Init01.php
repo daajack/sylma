@@ -7,9 +7,9 @@ class Init01 extends core\Initializer {
 
   protected $aGET = array();
 
-  public function loadSettings($sServer, $sSylma) {
+  public function loadSettings($sServer, $sSylma, $test = false) {
 
-    $result = parent::loadSettings($sServer, $sSylma);
+    $result = parent::loadSettings($sServer, $sSylma, true);
 
     \Sylma::setSettings($result);
     return $result;

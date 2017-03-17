@@ -8,8 +8,12 @@ class Controler extends core\module\Domed {
   const NS = 'http://www.sylma.org/modules/formater';
 
   public function __construct() {
-
-    $this->setDirectory(__file__);
+    
+//    if (\Sylma::getManager('fs/file', false, false))
+//    {
+      $this->setDirectory(__file__);
+//    }
+    
     $this->setNamespace(self::NS);
     $this->loadDefaultArguments();
   }
@@ -209,10 +213,14 @@ class Controler extends core\module\Domed {
 
     if ($arg = $this->createArgument($aResult)) {
 
-      if ($doc = $arg->asDOM()) {
+      if ($this->getDirectory('', false) and $doc = $arg->asDOM()) {
 
         $template = $this->getTemplate('default.xsl');
         $result = $template->parseDocument($doc);
+      }
+      else
+      {
+        $result = '[Cannot show vars]';
       }
     }
 

@@ -155,12 +155,12 @@ class Select extends Ordered {
 
     return $aResult;
   }
-
+  
   protected function getWheres() {
 
     if ($this->getMain() && $this->getMain()->getDynamicWhere()) {
-
-      $result = $this->getMain()->getDynamicWhere();
+      
+      $result = $this->callWhere($this->getMain()->getDynamicWhere());
     }
     else {
 

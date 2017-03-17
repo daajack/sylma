@@ -17,7 +17,7 @@ class Handler extends sql\alter\Handler {
   }
 
   public function initConfig() {
-    
+
     $config = $this->createArgument('/#sylma/storage/sql/test/config.yml');
     
     \Sylma::getSettings()->merge($config);

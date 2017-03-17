@@ -192,7 +192,8 @@
       <tpl:apply select="dummy()/save()"/>
 
       <tpl:if test="has-children()">
-
+        
+        <!--<tpl:apply mode="counter"/>-->
         <tpl:apply mode="list/internal/content"/>
 
         <tpl:else>
@@ -212,6 +213,19 @@
 
   <tpl:template mode="list/internal/content">
     <tpl:apply select="*" mode="row"/>
+  </tpl:template>
+
+  <tpl:template mode="counter">
+
+    <tr class="count">
+      <td/>
+      <td colspan="99">
+        <span class="value">
+          <tpl:read select="count()"/>
+        </span> result(s)
+      </td>
+    </tr>
+
   </tpl:template>
 
   <tpl:template mode="pager">

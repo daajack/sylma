@@ -72,19 +72,18 @@ class Sylma {
     catch (core\exception $e) {
 
       $e->save();
-      self::get('render')->set('gzip', false);
+      
+      if (self::get('render')) 
+      {
+        self::get('render')->set('gzip', false);
+      }
 
       self::$result = 'An error occured<br/><a href="/">Click here to go to homepage</a>';
       header('HTTP/1.0 404 Not Found');
 
-      if (!self::isAdmin()) {
+      if (self::isAdmin()) {
 
-
-        //self::$result = $init->getError();
-      }
-      else {
-
-
+        self::$result .= '<br/>' . $e;
       }
     }
 

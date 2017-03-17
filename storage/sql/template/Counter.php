@@ -13,6 +13,7 @@ class Counter extends reflector\component\Foreigner implements reflector\compone
 
     $query->isMultiple(false);
     $query->setMethod('read');
+    $query->type = 'count';
 
     $this->query = $query;
   }

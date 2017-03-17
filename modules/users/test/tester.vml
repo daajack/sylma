@@ -35,12 +35,4 @@
 
   </view:view>
 
-  <view:view name="complete">
-
-    <tpl:template>
-      <tpl:read select="complete()"/>
-    </tpl:template>
-
-  </view:view>
-
 </crud:crud>

@@ -97,7 +97,7 @@ class Tree extends reflector\component\Foreigner implements reflector\component,
     $collection->setLimit($var->call('getOffset'), $this->getCount());
   }
 
-  public function reflectApply($sMode) {
+  public function reflectApply($sMode, array $aArguments = array()) {
 
     if (!$result = $this->getParser()->lookupTemplate($this->getNode()->getName(), $this->getNamespace(), $sMode)) {
 
@@ -105,6 +105,7 @@ class Tree extends reflector\component\Foreigner implements reflector\component,
     }
 
     $result->setTree($this);
+    $result->sendArguments($aArguments);
 
     return $result;
   }

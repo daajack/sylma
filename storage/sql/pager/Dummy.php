@@ -68,9 +68,13 @@ class Dummy extends core\module\Exceptionable {
     return $this->getPage() + 1;
   }
 
-  public function getLast() {
-
-    return $this->getSize() ? ceil($this->getCount() / $this->getSize()) : 0;
+  public function getLast()
+  {
+    
+    $count = $this->getCount();
+    if (!$count) $count = 1;
+    
+    return $this->getSize() ? ceil($count / $this->getSize()) : 1;
   }
 
   public function getPrevious() {

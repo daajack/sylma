@@ -2,7 +2,7 @@
 <view:view
   xmlns:crud="http://2013.sylma.org/view/crud"
   xmlns:view="http://2013.sylma.org/view"
-  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns="http://2014.sylma.org/html"
   xmlns:tpl="http://2013.sylma.org/template"
   xmlns:ssd="http://2013.sylma.org/schema/ssd"
   xmlns:sql="http://2013.sylma.org/storage/sql"
@@ -84,9 +84,9 @@
     <div class="pager" js:class="sylma.crud.Pager" js:name="pager">
 
       <div class="clearfix">
-
+        
         <tpl:apply mode="pager/previous"/>
-        <tpl:apply mode="pager/current"/>
+        <tpl:apply mode="pager/pages"/>
         <tpl:apply mode="pager/next"/>
 
         <input type="hidden" name="sylma-page" value="{current}" js:node="input"/>
@@ -113,7 +113,7 @@
 
   </tpl:template>
 
-  <tpl:template match="*" mode="pager/previous/content">&lt;&lt;</tpl:template>
+  <tpl:template match="*" mode="pager/previous/content">←</tpl:template>
 
   <tpl:template match="*" mode="pager/current">
 
@@ -149,25 +149,70 @@
   </tpl:template>
 
   <tpl:template match="*" mode="pager/pages">
-    <div class="pages">
       <tpl:apply select="pages()" mode="pager/page"/>
-    </div>
   </tpl:template>
 
   <tpl:template match="*" mode="pager/page">
-    <a href="javascript:void(0)" class="page {(page = current ? 'active' : '')}" data-page="{page}">
+    <tpl:variable name="value">
+      <tpl:read select="page/value"/>
+    </tpl:variable>
+    <tpl:variable name="valuecurrent">
+      <tpl:read select="current/value"/>
+    </tpl:variable>
+    <tpl:variable name="valuemin"><tpl:read select="($valuecurrent - $value)"/></tpl:variable>
+    <tpl:variable name="compare"><tpl:read select="($value &lt;= $valuecurrent + 4 and $value >= $valuecurrent - 4)"/></tpl:variable>
+    <tpl:variable name="comparemin"><tpl:read select="($valuecurrent &lt; 5 and $value &lt;= 9)"/></tpl:variable>
+    <tpl:variable name="compareminend"><tpl:read select="($valuecurrent > last - 4 and page > last - 9)"/></tpl:variable>
+    <tpl:variable name="comparelast"><tpl:read select="(page = $valuecurrent + 4 and page != last and $value > 9)"/></tpl:variable>
+    <tpl:variable name="comparefirst"><tpl:read select="(page = $valuecurrent - 4 and page != 1 and $valuecurrent &lt; last - 4)"/></tpl:variable>
+    <tpl:variable name="comparelastmin"><tpl:read select="(page = 9 and $valuecurrent &lt;= 5)"/></tpl:variable>
+    <tpl:variable name="comparefirstmin"><tpl:read select="(page = last - 8 and $valuecurrent >= last - 4)"/></tpl:variable>
+    
+    <tpl:if test="last &lt;= 9 or $value = $valuecurrent or $comparemin or $compare or $compareminend">  
+      
+      <tpl:if test="$comparefirst or $comparefirstmin">
+        
+        <tpl:apply mode="pager/page/content">
+          <tpl:read select="'1'" tpl:name="page"/>
+        </tpl:apply>
+        <tpl:text>|</tpl:text>
+        <tpl:if test="page != 2">
+          <tpl:text> ... |</tpl:text>
+        </tpl:if>
+      </tpl:if> 
+      
+      <tpl:apply mode="pager/page/content"/>
+
+      <tpl:if test="page != last">|</tpl:if>
+      
+      <tpl:if test="$comparelast or $comparelastmin">
+        
+        <tpl:if test="page + 1 != last">
+          <tpl:text> ... |</tpl:text>
+        </tpl:if>  
+        
+        <tpl:apply mode="pager/page/content">
+          <tpl:read select="last" tpl:name="page"/>
+        </tpl:apply>
+      </tpl:if>
+      
+    </tpl:if>  
+  </tpl:template>
+  
+  <tpl:template match="*" mode="pager/page/content">
+    <tpl:argument name="page" default="page"/>
+    <a href="javascript:void(0)" class="page {($page = current ? 'current' : '')}" data-page="{$page}">
       <js:event name="click">
         %object%.goPage(this.get('data-page'), e);
       </js:event>
-      <tpl:read select="page"/>
+      <tpl:read select="$page"/>
     </a>
-    <tpl:if test="page != last">-</tpl:if>
   </tpl:template>
-
+        
   <tpl:template match="*" mode="pager/next">
 
     <a href="javascript:void(0)" title="Page suivante" class="button next">
-      <tpl:if test="is-last()">
+      <tpl:if test="is-last() or page = 0">
         <tpl:token name="class">form-disable</tpl:token>
       </tpl:if>
       <js:option name="next">
@@ -181,6 +226,6 @@
 
   </tpl:template>
 
-  <tpl:template match="*" mode="pager/next/content">&gt;&gt;</tpl:template>
+  <tpl:template match="*" mode="pager/next/content">→</tpl:template>
 
 </view:view>

@@ -83,7 +83,7 @@
           <js:option name="update">
             <crud:path path="update"/>
           </js:option>
-
+          <tpl:apply mode="table/init"/>
           <tpl:apply mode="list/container"/>
 
         </form>

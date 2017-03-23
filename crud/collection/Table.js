@@ -9,6 +9,14 @@ sylma.crud.collection.Table = new Class({
   obsolete : false,
   delay : 200,
 
+  onLoad : function()
+  {
+     if (this.options.show) {
+
+      this.toggleShow();
+    }
+  },
+
   update : function(reset, delay) {
 
     if (this.updating) {
@@ -40,7 +48,14 @@ sylma.crud.collection.Table = new Class({
       }.delay(this.delay, this);
     }
   },
-
+  
+  toggleShow: function (el, val) {
+    
+    this.getObject('filters').toggleShow(el, val);
+    
+    var val = this.parent(el, val);
+  },
+  
   submitReturn : function(response) {
 
     this.getObject('container').updateSuccess(response);

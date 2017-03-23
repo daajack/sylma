@@ -27,10 +27,6 @@ sylma.crud.collection.Filters = new Class({
       filter.init();
     });
 
-    if (this.options.show) {
-
-      this.toggleShow();
-    }
   },
 
   initFilters: function () {

@@ -27,14 +27,15 @@
       <js:option name="datas">
         <tpl:read select="/root()/dummy()/query()"/>
       </js:option>
-      <tpl:apply mode="filters/init"/>
       <tpl:apply mode="filters/content"/>
     </tr>
 
   </tpl:template>
 
   <tpl:template match="*" mode="filters/content">
-    <th class="filter-container title" js:class="sylma.crud.collection.FilterContainer"/>
+    <th class="thfirst">
+      <div class="filter-container title" js:class="sylma.crud.collection.FilterContainer"/>
+    </th>
     <tpl:apply use="list-cols" mode="filter" xmode="update"/>
   </tpl:template>
 

@@ -9,7 +9,7 @@
   
   &.visible 
   {
-    th:first-child
+    th:first-child,
     {
       background-color: @blue1;
     }
@@ -19,10 +19,19 @@
       background-color: @blue1;
       display: table-row;
       
+      th
+      {
+        border-top: 0;
+      }
+      .thfirst
+      {
+        background-color: @blue1;      
+      } 
       .filter-container
       {
-        margin-top: 8px;
-        margin-bottom: 8px;
+        min-width: 50 * @rem;
+        /*padding-top: 4px;*/
+        
         &:hover
         {
           .add
@@ -40,7 +49,7 @@
         .label.visible
         {
           max-height: @filter-h + 5 * @em;
-          line-height: 2.4em;
+          line-height: 25px;
         }
         label
         {
@@ -55,7 +64,15 @@
     width: 100%;
     margin-bottom: 0.5em;
     background-color: #f4f4f4;
-    
+    th
+    {
+      border-top: white 2px solid;
+      padding: 0;
+    }
+    .thfirst
+    {
+      border-top: 0;
+    }
     input[type=text]
     {
       box-sizing: border-box;
@@ -76,21 +93,26 @@
       opacity: 1;
       max-height: 0;
     }
-    
-    th.filter-container
+
+    th .filter-container
     {
       .filter.visible
       {
         margin-top: 4 * @rem;
       }
     }
-    
+    .thfirst
+    {
+      background-color: @orange;      
+    }  
     .filter-container
     {
       box-sizing: border-box;
       padding: 0 0.1em;
-      min-height: 1px;
+      /*min-height: 1px;*/
       position: relative;
+      vertical-align: top;  
+      
       &.title a
       {
         display: inline;
@@ -203,12 +225,10 @@
           display: block;
           position: absolute;
           margin: 0;
-          margin-top: -1.6em;
           right: 0;
           opacity: 0;
           visibility: hidden;
           transition: opacity 0.5s, visibility 0.5s;
-          background-color: white;
           padding: 0.2em;
           line-height: initial;
           z-index: 2;

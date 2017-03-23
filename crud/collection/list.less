@@ -26,10 +26,15 @@
         text-align: center;
         height: 100%;
         background-color: @orange;
+        vertical-align: middle;
+        min-width: 25 * @rem;
         
         &:not(.filter-container):hover
         {
-          background-color: @rose !important;
+          .button
+          {
+            color: @rose !important;
+          }
         }
         .button
         {
@@ -38,7 +43,8 @@
           box-sizing: border-box;
           padding: 0.5em;
           color: @white;
-          line-height: 16 * @rem;
+          display: inline;
+          
           &:hover
           {
             background-color: inherit !important;
@@ -181,8 +187,8 @@
 
   .current
   {
-    padding: @p1 @p1 @p1 @p2;
     font-weight: bold;
+    color: @orange;
   }
 
   .separator

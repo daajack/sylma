@@ -41,11 +41,9 @@
   </tpl:template>
 
   <tpl:template mode="intro">
-    <div id="intro">
-      <h3>
-       Welcome
-      </h3>
-    </div>
+    <h2>
+     Welcome
+    </h2>
   </tpl:template>
 
 </view:view>

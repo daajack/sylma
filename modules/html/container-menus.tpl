@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <view:view
   xmlns:view="http://2013.sylma.org/view"
-  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns="http://2014.sylma.org/html"
   xmlns:tpl="http://2013.sylma.org/template"
   xmlns:xl="http://2013.sylma.org/storage/xml"
   xmlns:js="http://2013.sylma.org/template/binder"
@@ -17,6 +17,14 @@
 
   <tpl:template match="menus:menus">
     <div>
+      <tpl:apply mode="toggler"/>
+      <ul id="{@id}" class="clearfix">
+        <tpl:apply select="*"/>
+      </ul> 
+    </div>
+  </tpl:template>
+  
+  <tpl:template match="*" mode="toggler">
     <span class="title-page"><tpl:read select="title"/></span>
     <a href="javascript:void(0)" class="menus-toggler" js:class="sylma.ui.Base">
       <js:event name="click">
@@ -28,12 +36,8 @@
         <span class="line3"/>
       </div>
     </a>
-    <ul id="{@id}" class="clearfix">
-      <tpl:apply select="*"/>
-    </ul> 
-    </div>
   </tpl:template>
-  
+      
   <tpl:template match="menus:title"/>
   
   <tpl:template match="menus:menu" mode="content">

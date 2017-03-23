@@ -39,29 +39,31 @@
     <js:include>DateFilter.js</js:include>
 
     <tpl:argument name="alias" default="alias()"/>
-    <th class="filter-container" js:class="sylma.crud.collection.FilterContainer">
-      <js:option name="name">
-        <tpl:read select="$alias"/>
-      </js:option>
-      <js:option name="operators">
-        <le:array explode=",">&gt;,&lt;,=,!</le:array>
-      </js:option>
+    <th>
+      <div class="filter-container" js:class="sylma.crud.collection.FilterContainer">
+        <js:option name="name">
+          <tpl:read select="$alias"/>
+        </js:option>
+        <js:option name="operators">
+          <le:array explode=",">&gt;,&lt;,=,!</le:array>
+        </js:option>
 
-      <tpl:register/>
-      <div class="filter hidder template" js:class="sylma.crud.DateFilter" js:parent-name="filter">
-        <input type="hidden" value="=" js:node="operator"/>
-        <span class="operator" js:node="operator_display">
-          <js:event name="click">%object%.toggleOperator();</js:event>
-        </span>
-        <tpl:apply mode="date">
-          <tpl:read select="'{$alias}[0]'" tpl:name="alias"/>
-        </tpl:apply>
-        <tpl:apply mode="input/clear"/>
-      </div>
-      <button type="button" class="add" data-name="{alias('form')}">
-        <js:event name="click">%object%.addEmptyFilter();</js:event>
-        +
-      </button>
+        <tpl:register/>
+        <div class="filter hidder template" js:class="sylma.crud.DateFilter" js:parent-name="filter">
+          <input type="hidden" value="=" js:node="operator"/>
+          <span class="operator" js:node="operator_display">
+            <js:event name="click">%object%.toggleOperator();</js:event>
+          </span>
+          <tpl:apply mode="date">
+            <tpl:read select="'{$alias}[0]'" tpl:name="alias"/>
+          </tpl:apply>
+          <tpl:apply mode="input/clear"/>
+        </div>
+        <button type="button" class="add" data-name="{alias('form')}">
+          <js:event name="click">%object%.addEmptyFilter();</js:event>
+          +
+        </button>
+      </div>  
     </th>
   </tpl:template>
 

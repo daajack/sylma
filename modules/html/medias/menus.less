@@ -4,7 +4,8 @@
 @menus-wrapper: 21;
 @menus-blink: 3;
 @arrow-speed: 0.3s;
-@menus-speed: 0.2s;
+@toggler-speed: 0.2s;
+@menus-speed: 0.3s;
 @height: 72px;
 @width: 30 * @rem;
 @menu-height: 28 * @rem;
@@ -20,6 +21,7 @@
 #containerWrapper
 {
   margin-left: @width;
+  transition: margin-left @menus-speed;
 }
 
 #sidebar
@@ -29,39 +31,21 @@
   margin-left: -100%;
   background-color: #EBEBEB;
   position: relative;
+  transition: width 0.6s;
   overflow: hidden;
+  
+  &> div
+  {
+    width: 201px;
+    &:not(.madewith)
+    {
+      margin-bottom: 50 * @rem;
+    }
+  }
   
   .madewith
   {
-    bottom: 0;
-    position: absolute;
-    
-    span
-    {
-      float: left;
-      height: 33px;
-      line-height: 33px;
-      font-size: 13 * @rem;
-      margin-left: 10px;
-      margin-right: 10px;
-      text-transform: uppercase;
-      color: @gray3;
-      letter-spacing: 1 * @rem;
-    }
-    a
-    {
-      background: url(/sylma/modules/html/medias/logo.png) no-repeat;
-      width: 80px;
-      height: 33px;
-      background-size: 100% auto;
-      float: right;
-      margin-left: 10px;
-      margin-right: 10px;
-      &:hover
-      {
-        background-position: 0% 100%;
-      }
-    }
+    display: none;
   }
 }
 
@@ -70,7 +54,6 @@
   padding: 14px 10px 16px 15px;
   display: block;
   overflow: hidden;
-  color: #FFFFFF;
   background-color: #0075B3;
   width: 100%;
   font-size: 18px;
@@ -79,6 +62,8 @@
   box-sizing: border-box;
   padding-right: 2em;
   height: @height;
+  color: #0075B3;
+  transition: color @menus-speed;
   &:first-letter {
     text-transform: uppercase;
   }
@@ -94,9 +79,11 @@
   position: absolute;
   z-index: 10;
   margin: 0;
-  left: 0;
+  left: 100%;
+  transform: translate(-100%);
   width: @width;
   top: 0;
+  transition: left @menus-speed;
   
   .wrapper
   {
@@ -115,7 +102,7 @@
       height: 2 * @rem;
       background-color: white;
       left: 0;
-      transition: width @arrow-speed, transform @arrow-speed, left @arrow-speed, top @menus-speed, bottom @menus-speed;
+      transition: width @arrow-speed, transform @arrow-speed, left @arrow-speed, top @toggler-speed, bottom @toggler-speed;
     }
 
     .line1
@@ -162,11 +149,55 @@
   {
     width: 201px;
     background-color: @gris1;
+    
+    .title-page
+    {
+      color: #FFFFFF;
+    }
+    .madewith
+    {
+      bottom: 0;
+      position: absolute;
+      display: block;
+
+      span
+      {
+        float: left;
+        height: 33px;
+        line-height: 33px;
+        font-size: 13 * @rem;
+        margin-left: 10px;
+        margin-right: 10px;
+        text-transform: uppercase;
+        color: @gray3;
+        letter-spacing: 1 * @rem;
+      }
+      a
+      {
+        background: url(/sylma/modules/html/medias/logo.png) no-repeat;
+        width: 80px;
+        height: 33px;
+        background-size: 100% auto;
+        float: right;
+        margin-left: 10px;
+        margin-right: 10px;
+        &:hover
+        {
+          background-position: 0% 100%;
+        }
+      }
+    }
+    #menu-content li.sylma-highlight a
+    {
+      &:before  
+      {
+        display: block;
+      }  
+    }
   }
+  
   .menus-toggler
   {
-    right: 0;
-    left: inherit;
     
     &:hover
     {
@@ -205,13 +236,16 @@
   }
   #menu-content a
   {
-    white-space: normal;
-    padding-left: 15 * @rem;
+    padding-left: 11 * @rem;
     
     .description,
     .title
     {
       visibility:visible;
+    }
+    .description
+    {
+      opacity: 1;
     }
   }
   #containerWrapper
@@ -231,7 +265,6 @@
   border-top-width: 1px;
   border-right-width: 0;
   background-color: #EBEBEB;
-  white-space: nowrap;
 }
 
 #menu-content li:last-child a
@@ -259,6 +292,7 @@
     right: 0;
     border-width: 10px 10px 10px 0;
     border-color: transparent @white transparent transparent;
+    display: none;
   }
 }
 
@@ -279,7 +313,7 @@
 
 #menu-content a:hover .title
 {
-  color: #005568;
+  color: @blue1;
 }
 
 #menu-content li.sylma-highlight .title
@@ -292,6 +326,8 @@
   color: #999999;
   font-size: 14px;
   visibility:hidden;
+  opacity: 0;
+  transition: opacity @menus-speed, visibility @menus-speed;
 }
 
 #menu-content a:hover .description

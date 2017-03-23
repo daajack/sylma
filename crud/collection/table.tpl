@@ -30,6 +30,7 @@
   <tpl:template mode="list/form">
 
     <form class="list" js:class="sylma.crud.collection.Table" action="" method="post" js:parent-name="table">
+      <tpl:apply mode="table/init"/>
       <tpl:apply mode="list/container"/>
     </form>
 
@@ -119,7 +120,6 @@
       
       <js:event name="click">
         %object%.getParent('table').toggleShow();
-        %object%.getParent('table').getObject('filters').toggleShow();
       </js:event>
     </a>
   </tpl:template>

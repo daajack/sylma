@@ -17,18 +17,25 @@ class Initializer extends module\Domed {
   /**
    * 2. Load global settings
    *
-   * @param type $sServer
-   * @param type $sSylma
+   * @param type $server
+   * @param type $sylmaPath
    * @return XArguments
    */
-  public function loadSettings($sServer, $sSylma) {
+  public function loadSettings($serverPath, $sylmaPath, $test = false) {
 
-    $result = new \sylma\core\argument\Filed($sSylma, array(\Sylma::NS));
+    $result = new \sylma\core\argument\Filed($sylmaPath, array(\Sylma::NS));
+    $server = new \sylma\core\argument\Filed($serverPath, array(\Sylma::NS));
 
-    if ($sServer) {
-
-      $server = new \sylma\core\argument\Filed($sServer, array(\Sylma::NS));
-
+    if (!$test && $server->read('debug/test', false))
+    {
+      $test = new \sylma\core\argument\Filed(\Sylma::ROOT . \Sylma::PATH . '/core/test.yml', array(\Sylma::NS));
+      //$server = new \sylma\core\argument\Filed('server_test.yml', array(\Sylma::NS));
+      
+      $result->merge($test);
+      //$result->merge($server);
+    }
+    else if ($server)
+    {
       foreach ($server->query('imports', false) as $sFile) {
 
         $result->mergeFile($sFile);

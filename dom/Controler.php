@@ -34,7 +34,11 @@ class Controler extends core\module\Domed {
 
   public function __construct() {
 
-    $this->setDirectory(__file__);
+    if (\Sylma::getManager('fs/file', false, false))
+    {
+      $this->setDirectory(__file__);
+    }
+    
     //$this->setArguments('settings.yml');
     $this->setArguments(include(self::SETTINGS));
     $this->setNamespace(self::NS);

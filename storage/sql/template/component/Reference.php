@@ -120,7 +120,7 @@ class Reference extends sql\schema\component\Reference implements sql\template\p
 
   public function reflectApplyDefault($sPath, array $aPath = array(), $sMode = '', $bRead = false, array $aArguments = array()) {
 
-    $this->launchException('Should not be called');
+    $this->launchException('Cannot get reference in this mode');
   }
 }
 

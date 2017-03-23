@@ -125,9 +125,4 @@ class Where extends sql\cached\Where
 
     return "$val1 $op $val2";
   }
-
-  public function _add($val1, $op, $val2, $sDefault = null) {
-
-
-  }
 }

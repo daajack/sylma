@@ -18,7 +18,8 @@
   {
     border-collapse: collapse;
     clear: both;
-
+    position: relative;
+    
     th
     {
       &:first-child
@@ -116,8 +117,14 @@
     {
       position: absolute;
       right: 0;
-      top: 2em;
+      top: -2em;
       border: 0;
+      
+      &:hover
+      {
+        background-color: inherit;
+        cursor: default;
+      }
       
       td
       {
@@ -127,7 +134,9 @@
       .value
       {
         font-weight: bold;
+        color: @blue1;
       }
+      
     }
 
     td

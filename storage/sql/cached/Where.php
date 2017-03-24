@@ -107,7 +107,7 @@ class Where extends core\module\Managed {
   }
 
   public function __toString() {
-    
+    return '';
   }
 }
 

@@ -187,7 +187,7 @@
 
       <tpl:if test="has-children()">
         
-        <!--<tpl:apply mode="counter"/>-->
+        <tpl:apply mode="counter"/>
         <tpl:apply mode="list/internal/content"/>
 
         <tpl:else>

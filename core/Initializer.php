@@ -29,10 +29,10 @@ class Initializer extends module\Domed {
     if (!$test && $server->read('debug/test', false))
     {
       $test = new \sylma\core\argument\Filed(\Sylma::ROOT . \Sylma::PATH . '/core/test.yml', array(\Sylma::NS));
-      //$server = new \sylma\core\argument\Filed('server_test.yml', array(\Sylma::NS));
-      
+      $server = new \sylma\core\argument\Filed('server_test.yml', array(\Sylma::NS));
+
       $result->merge($test);
-      //$result->merge($server);
+      $result->merge($server);
     }
     else if ($server)
     {

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ns0:test xmlns:ns0="http://2013.sylma.org/modules/stepper">
+  <ns0:page url="/sylma/modules/users/groups/insert">
+    <ns0:steps>
+      <ns0:input element="#form-name">sub1</ns0:input>
+      <ns0:event name="click" element="#content &gt; form &gt; div:nth-child(3) &gt; button:nth-child(2)"/>
+    </ns0:steps>
+  </ns0:page>
+  <ns0:page>
+    <ns0:steps>
+      <ns0:watcher element=" &gt; div:nth-child(1)">
+        <ns0:property name="height">49</ns0:property>
+      </ns0:watcher>
+      <ns0:snapshot element=" &gt; div:nth-child(1)">
+        <ns0:content>{"name":"div","children":[{"name":"div","content":"Datas has been inserted","position":{"x":306,"y":26},"size":{"x":650,"y":35}}],"position":{"x":0,"y":0},"size":{"x":1263,"y":61}}</ns0:content>
+      </ns0:snapshot>
+    </ns0:steps>
+  </ns0:page>
+  <ns0:page url="/sylma/modules/users/groups/insert">
+    <ns0:steps>
+      <ns0:input element="#form-name">sub2</ns0:input>
+      <ns0:event name="click" element="#content &gt; form &gt; div:nth-child(3) &gt; button:nth-child(2)"/>
+    </ns0:steps>
+  </ns0:page>
+  <ns0:page>
+    <ns0:steps>
+      <ns0:watcher element=" &gt; div:nth-child(1)">
+        <ns0:property name="height">49</ns0:property>
+      </ns0:watcher>
+      <ns0:snapshot element=" &gt; div:nth-child(1)">
+        <ns0:content>{"name":"div","children":[{"name":"div","content":"Datas has been inserted","position":{"x":306,"y":26},"size":{"x":650,"y":35}}],"position":{"x":0,"y":0},"size":{"x":1263,"y":61}}</ns0:content>
+      </ns0:snapshot>
+    </ns0:steps>
+  </ns0:page>
+  <ns0:page url="/sylma/modules/users/groups">
+    <ns0:steps>
+      <ns0:snapshot element="#content &gt; div:nth-child(2) &gt; form &gt; table &gt; tbody">
+        <ns0:content>{"name":"tbody","children":[{"name":"tr","children":[{"name":"td","children":[{"name":"a","content":"\n E\n ","position":{"x":239,"y":254},"size":{"x":17,"y":18}}],"position":{"x":218,"y":251},"size":{"x":60,"y":24}},{"name":"td","content":"1","position":{"x":278,"y":251},"size":{"x":60,"y":24}},{"name":"td","content":"admin","position":{"x":338,"y":251},"size":{"x":60,"y":24}},{"name":"td","content":"","position":{"x":398,"y":251},"size":{"x":78,"y":24}}],"position":{"x":218,"y":251},"size":{"x":258,"y":24}},{"name":"tr","children":[{"name":"td","children":[{"name":"a","content":"\n E\n ","position":{"x":239,"y":278},"size":{"x":17,"y":18}}],"position":{"x":218,"y":275},"size":{"x":60,"y":24}},{"name":"td","content":"2","position":{"x":278,"y":275},"size":{"x":60,"y":24}},{"name":"td","content":"sub1","position":{"x":338,"y":275},"size":{"x":60,"y":24}},{"name":"td","content":"","position":{"x":398,"y":275},"size":{"x":78,"y":24}}],"position":{"x":218,"y":275},"size":{"x":258,"y":24}},{"name":"tr","children":[{"name":"td","children":[{"name":"a","content":"\n E\n ","position":{"x":239,"y":302},"size":{"x":17,"y":18}}],"position":{"x":218,"y":300},"size":{"x":60,"y":24}},{"name":"td","content":"3","position":{"x":278,"y":300},"size":{"x":60,"y":24}},{"name":"td","content":"sub2","position":{"x":338,"y":300},"size":{"x":60,"y":24}},{"name":"td","content":"","position":{"x":398,"y":300},"size":{"x":78,"y":24}}],"position":{"x":218,"y":300},"size":{"x":258,"y":24}},{"name":"tr","children":[{"name":"td","children":[{"name":"div","children":[{"name":"div","children":[{"name":"a","content":"&lt;&lt;","position":{"x":279,"y":332},"size":{"x":38,"y":30}},{"name":"span","children":[{"name":"a","content":"1","position":{"x":317,"y":332},"size":{"x":24,"y":30}},{"name":"span","content":"/","position":{"x":344,"y":337},"size":{"x":5,"y":21}},{"name":"a","content":"1","position":{"x":352,"y":332},"size":{"x":24,"y":30}}],"position":{"x":317,"y":332},"size":{"x":58,"y":30}},{"name":"a","content":"&gt;&gt;","position":{"x":376,"y":332},"size":{"x":38,"y":30}},{"name":"input","content":"","position":{"x":0,"y":0},"size":{"x":0,"y":0}}],"position":{"x":279,"y":332},"size":{"x":134,"y":30}}],"position":{"x":224,"y":332},"size":{"x":246,"y":30}}],"position":{"x":218,"y":324},"size":{"x":258,"y":48}}],"position":{"x":218,"y":324},"size":{"x":258,"y":48}}],"position":{"x":218,"y":251},"size":{"x":258,"y":120}}</ns0:content>
+      </ns0:snapshot>
+      <ns0:event name="click" element="#content &gt; div:nth-child(2) &gt; form &gt; table &gt; tbody &gt; tr:nth-child(1) &gt; td:nth-child(2)"/>
+    </ns0:steps>
+  </ns0:page>
+  <ns0:page url="/sylma/modules/users/groups/update?id=1">
+    <ns0:steps>
+      <ns0:snapshot element="#content &gt; form">
+        <ns0:content>{"name":"form","children":[{"name":"div","children":[{"name":"input","content":"","position":{"x":0,"y":0},"size":{"x":0,"y":0}}],"position":{"x":440,"y":162},"size":{"x":600,"y":0}},{"name":"div","children":[{"name":"label","content":"name* :","position":{"x":440,"y":162},"size":{"x":180,"y":15}},{"name":"input","content":"","position":{"x":620,"y":162},"size":{"x":306,"y":23}}],"position":{"x":440,"y":162},"size":{"x":600,"y":23}},{"name":"fieldset","children":[{"name":"legend","content":"groups","position":{"x":450,"y":191},"size":{"x":59,"y":21}},{"name":"div","children":[{"name":"input","content":"","position":{"x":454,"y":225},"size":{"x":13,"y":13}},{"name":"label","content":"admin","position":{"x":470,"y":222},"size":{"x":17,"y":15}}],"position":{"x":450,"y":222},"size":{"x":57,"y":19}},{"name":"div","children":[{"name":"input","content":"","position":{"x":523,"y":225},"size":{"x":13,"y":13}},{"name":"label","content":"sub1","position":{"x":539,"y":222},"size":{"x":16,"y":15}}],"position":{"x":519,"y":222},"size":{"x":52,"y":19}},{"name":"div","children":[{"name":"input","content":"","position":{"x":587,"y":225},"size":{"x":13,"y":13}},{"name":"label","content":"sub2","position":{"x":603,"y":222},"size":{"x":16,"y":15}}],"position":{"x":583,"y":222},"size":{"x":52,"y":19}}],"position":{"x":440,"y":191},"size":{"x":600,"y":60}},{"name":"div","children":[{"name":"button","content":"cancel","position":{"x":440,"y":276},"size":{"x":70,"y":25}},{"name":"div","children":[{"name":"button","content":"delete","position":{"x":513,"y":276},"size":{"x":68,"y":25}},{"name":"div","children":[{"name":"span","content":"?","position":{"x":581,"y":283},"size":{"x":19,"y":14}},{"name":"button","content":"yes","position":{"x":603,"y":276},"size":{"x":47,"y":25}},{"name":"button","content":"no","position":{"x":654,"y":276},"size":{"x":42,"y":25}}],"position":{"x":581,"y":276},"size":{"x":0,"y":25}}],"position":{"x":513,"y":276},"size":{"x":68,"y":25}},{"name":"button","content":"save","position":{"x":983,"y":276},"size":{"x":56,"y":25}}],"position":{"x":440,"y":263},"size":{"x":600,"y":38}}],"position":{"x":440,"y":162},"size":{"x":600,"y":139}}</ns0:content>
+      </ns0:snapshot>
+      <ns0:event name="click" element="#content &gt; form &gt; fieldset &gt; div:nth-child(3) &gt; label"/>
+      <ns0:event name="click" element="#content &gt; form &gt; fieldset &gt; div:nth-child(4) &gt; label"/>
+      <ns0:event name="click" element="#content &gt; form &gt; div:nth-child(4) &gt; button:nth-child(3)"/>
+    </ns0:steps>
+  </ns0:page>
+  <ns0:page>
+    <ns0:steps>
+      <ns0:watcher element=" &gt; div:nth-child(1)">
+        <ns0:property name="height">49</ns0:property>
+      </ns0:watcher>
+      <ns0:snapshot element=" &gt; div:nth-child(1)">
+        <ns0:content>{"name":"div","children":[{"name":"div","content":"Datas has been updated","position":{"x":311,"y":26},"size":{"x":658,"y":35}}],"position":{"x":0,"y":0},"size":{"x":1280,"y":61}}</ns0:content>
+      </ns0:snapshot>
+    </ns0:steps>
+  </ns0:page>
+  <ns0:page url="/sylma/modules/users/groups">
+    <ns0:steps>
+      <ns0:snapshot element="#content &gt; div:nth-child(2) &gt; form &gt; table &gt; tbody">
+        <ns0:content>{"name":"tbody","children":[{"name":"tr","children":[{"name":"td","children":[{"name":"a","content":"\n E\n ","position":{"x":239,"y":254},"size":{"x":17,"y":18}}],"position":{"x":218,"y":251},"size":{"x":60,"y":24}},{"name":"td","content":"1","position":{"x":278,"y":251},"size":{"x":60,"y":24}},{"name":"td","content":"admin","position":{"x":338,"y":251},"size":{"x":60,"y":24}},{"name":"td","content":"sub1, sub2","position":{"x":398,"y":251},"size":{"x":78,"y":24}}],"position":{"x":218,"y":251},"size":{"x":258,"y":24}},{"name":"tr","children":[{"name":"td","children":[{"name":"a","content":"\n E\n ","position":{"x":239,"y":278},"size":{"x":17,"y":18}}],"position":{"x":218,"y":275},"size":{"x":60,"y":24}},{"name":"td","content":"2","position":{"x":278,"y":275},"size":{"x":60,"y":24}},{"name":"td","content":"sub1","position":{"x":338,"y":275},"size":{"x":60,"y":24}},{"name":"td","content":"","position":{"x":398,"y":275},"size":{"x":78,"y":24}}],"position":{"x":218,"y":275},"size":{"x":258,"y":24}},{"name":"tr","children":[{"name":"td","children":[{"name":"a","content":"\n E\n ","position":{"x":239,"y":302},"size":{"x":17,"y":18}}],"position":{"x":218,"y":300},"size":{"x":60,"y":24}},{"name":"td","content":"3","position":{"x":278,"y":300},"size":{"x":60,"y":24}},{"name":"td","content":"sub2","position":{"x":338,"y":300},"size":{"x":60,"y":24}},{"name":"td","content":"","position":{"x":398,"y":300},"size":{"x":78,"y":24}}],"position":{"x":218,"y":300},"size":{"x":258,"y":24}},{"name":"tr","children":[{"name":"td","children":[{"name":"div","children":[{"name":"div","children":[{"name":"a","content":"&lt;&lt;","position":{"x":279,"y":332},"size":{"x":38,"y":30}},{"name":"span","children":[{"name":"a","content":"1","position":{"x":317,"y":332},"size":{"x":24,"y":30}},{"name":"span","content":"/","position":{"x":344,"y":337},"size":{"x":5,"y":21}},{"name":"a","content":"1","position":{"x":352,"y":332},"size":{"x":24,"y":30}}],"position":{"x":317,"y":332},"size":{"x":58,"y":30}},{"name":"a","content":"&gt;&gt;","position":{"x":376,"y":332},"size":{"x":38,"y":30}},{"name":"input","content":"","position":{"x":0,"y":0},"size":{"x":0,"y":0}}],"position":{"x":279,"y":332},"size":{"x":134,"y":30}}],"position":{"x":224,"y":332},"size":{"x":246,"y":30}}],"position":{"x":218,"y":324},"size":{"x":258,"y":48}}],"position":{"x":218,"y":324},"size":{"x":258,"y":48}}],"position":{"x":218,"y":251},"size":{"x":258,"y":120}}</ns0:content>
+      </ns0:snapshot>
+    </ns0:steps>
+  </ns0:page>
+  <ns0:page>
+    <ns0:steps>
+      <ns0:call path="/sylma/modules/users/logout" method="get"/>
+      <ns0:call path="/sylma/modules/users/login-do?name=root&amp;password=12345" method="post"/>
+      <ns0:call path="/sylma/modules/users/test/tester/checkGroups" method="get"/>
+    </ns0:steps>
+  </ns0:page>
+</ns0:test>

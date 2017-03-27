@@ -7,19 +7,22 @@
   xmlns:sql="http://2013.sylma.org/storage/sql"
   xmlns:js="http://2013.sylma.org/template/binder"
   xmlns:le="http://2013.sylma.org/action"
-  xmlns:build="http://2013.sylma.org/parser/reflector/builder"
+  xmlns:builder="http://2013.sylma.org/parser/reflector/builder"
 
   xmlns:user="http://2013.sylma.org/core/user"
   xmlns:group="http://2013.sylma.org/core/user/group"
 >
-
-  <crud:route>
+  
+  <crud:global group:ns="ns">
+    
+  </crud:global>
+  
+  <crud:route group:ns="ns">
 
     <crud:local>
 
       <sql:resource/>
       <view:schema>schema.xql</view:schema>
-      <crud:import>/#sylma/storage/sql/crud/all.tpl</crud:import>
 
     </crud:local>
 
@@ -28,6 +31,8 @@
       <tpl:constant name="form-cols">name,password</tpl:constant>
 
       <le:context name="title">login</le:context>
+      
+      <crud:import>/#sylma/storage/sql/crud/all.tpl</crud:import>
 
       <tpl:template>
 
@@ -52,7 +57,7 @@
 
     </view:view>
 
-    <view:view name="check" internal="x" group:ns="ns">
+    <view:view name="check" internal="x">
 
       <tpl:template>
 
@@ -76,7 +81,28 @@
       </tpl:template>
 
     </view:view>
-
+    
   </crud:route>
+
+  <view:view name="group" internal="x" builder:return="result" builder:output="array">
+
+    <sql:resource/>
+    <view:schema>group.xql</view:schema>
+
+    <tpl:template>
+
+      <sql:filter name="name">
+        <le:get-argument source="post" name="name"/>
+      </sql:filter>
+
+      <tpl:apply select="groups/ref()" mode="group"/>
+
+    </tpl:template>
+
+    <tpl:template match="*" mode="group">
+      <tpl:read select="name"/>
+    </tpl:template>
+
+  </view:view>
 
 </crud:crud>

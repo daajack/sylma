@@ -9,6 +9,12 @@ abstract class Joined extends Wherer {
   protected $aJoinsElements = array();
   protected $aJoinsTables = array();
 
+  public function setTable(sql\template\component\Table $table) {
+    
+    $this->aJoinsTables[$table->getName()] = 1;
+    parent::setTable($table);
+  }
+  
   /**
    * @usedby sql\template\view\Foreign::reflectFunctionJoin()
    * @usedby sql\template\view\Foreign::buildSingle()
@@ -35,12 +41,16 @@ abstract class Joined extends Wherer {
 
         if (isset($this->aJoinsTables[$sName])) {
 
-          $result = clone $result;
-          $field = $result->getElement($field->getName());
-          //$field = clone $field; // @todo : not great, cloned but not referenced in table
-
+          $tmp = clone $result;
+          
+          if ($field->getParent() === $result)
+          {
+            $field = $tmp->getElement($field->getName());
+            $field->setParent($tmp);
+          }
+          
+          $result = $tmp;
           $result->setAlias($sName . $this->aJoinsTables[$sName]);
-          $field->setParent($result);
 
           $this->aJoinsTables[$sName]++;
         }

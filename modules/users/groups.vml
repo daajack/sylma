@@ -2,23 +2,51 @@
 <crud:crud
   xmlns:crud="http://2013.sylma.org/view/crud"
   xmlns:view="http://2013.sylma.org/view"
-  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns="http://2014.sylma.org/html"
   xmlns:tpl="http://2013.sylma.org/template"
   xmlns:sql="http://2013.sylma.org/storage/sql"
   xmlns:js="http://2013.sylma.org/template/binder"
   xmlns:le="http://2013.sylma.org/action"
 
-  xmlns:user="http://2013.sylma.org/core/user"
+  xmlns:group="http://2013.sylma.org/core/user/group"
 
   extends="/#sylma/storage/sql/crud.tpl"
 >
 
-  <crud:global>
+  <crud:global group:ns="ns">
 
     <view:schema>group.xql</view:schema>
     <tpl:constant name="list-cols">* ^ sql:reference</tpl:constant>
     <tpl:constant name="form-cols">* ^ id,sql:reference</tpl:constant>
+    
+    <tpl:template match="*" mode="select-option-value">
+      <tpl:read select="name"/>
+    </tpl:template>
+    
+    <tpl:template match="group:groups" mode="filter">
+      <tpl:apply select="join()/name" mode="filter"/>
+    </tpl:template>
+
+    <tpl:template match="group:groups" mode="filter/internal">
+      <tpl:apply select="join()/name" mode="filter/internal"/>
+    </tpl:template>
+    
+    <tpl:template match="group:groups" mode="cell/content">
+      <tpl:apply select="ref()" mode="group/value"/>
+    </tpl:template>
+    
+    <tpl:template match="*" mode="group/value">
+      <tpl:apply mode="select-option-value"/>
+      <tpl:if test="position() != length()">, </tpl:if>
+    </tpl:template>
 
   </crud:global>
+  
+  <crud:group name="list">
+    
+    <sql:group element="id"/>
+    
+  </crud:group>
+  
 
 </crud:crud>

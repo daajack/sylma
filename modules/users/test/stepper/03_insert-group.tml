@@ -3,7 +3,7 @@
   <ns0:page url="/sylma/modules/users/groups/insert">
     <ns0:steps>
       <ns0:input element="#form-name">admin</ns0:input>
-      <ns0:event name="click" element="#content &gt; form &gt; div:nth-child(2) &gt; button:nth-child(2)"/>
+      <ns0:event name="click" element="#content &gt; form &gt; div:nth-child(3) &gt; button:nth-child(2)"/>
     </ns0:steps>
   </ns0:page>
   <ns0:page>

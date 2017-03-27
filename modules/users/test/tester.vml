@@ -35,4 +35,12 @@
 
   </view:view>
 
+  <view:view name="checkGroups">
+
+    <tpl:template>
+      <tpl:read select="checkGroups()"/>
+    </tpl:template>
+
+  </view:view>
+
 </crud:crud>

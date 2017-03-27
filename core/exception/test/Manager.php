@@ -23,12 +23,27 @@ class Manager extends modules\users\test\Tester implements core\stringable {
 
   protected function checkUser() {
     
+    $this->setDirectory(__FILE__);
+    
     $user = $this->getManager('user');
     $db = $this->getManager('mysql')->getConnection();
     
     $password = $user->getManager()->crypt('12345');
     
-    $db->execute("TRUNCATE user");
+    $db->execute("DROP TABLE IF EXISTS group_group");
+    $db->execute("DROP TABLE IF EXISTS user_group");
+
+    $db->execute("DROP TABLE IF EXISTS `user`");
+    $db->execute("DROP TABLE IF EXISTS `group`");
+
+    $this->getScript('/#sylma/storage/sql/alter/index.vml', array(
+      'file' => '/#sylma/modules/users/group.xql',
+    ));
+    
+    $this->getScript('/#sylma/storage/sql/alter/index.vml', array(
+      'file' => '/#sylma/modules/users/schema.xql',
+    ));
+    
     $db->insert("INSERT INTO user (`name`, `password`) VALUES ('root', '$password')");
     
     $this->login();

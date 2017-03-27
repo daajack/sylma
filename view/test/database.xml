@@ -3,11 +3,14 @@
   xmlns="http://2013.sylma.org/view/test"
 >
   <script>
+    SET FOREIGN_KEY_CHECKS=0;
+    
     #DELETE IF EXISTS FROM `user`;
     DROP TABLE IF EXISTS `user`;
     DROP TABLE IF EXISTS `user7`;
 
     #DELETE IF EXISTS FROM `group`;
+    DROP TABLE IF EXISTS `group_group`;
     DROP TABLE IF EXISTS `group`;
 
     CREATE TABLE IF NOT EXISTS `group` (
@@ -142,5 +145,7 @@
     INSERT INTO `product` (`id`, `name`, `price`) VALUES
     (1, 'flower', 12.5),
     (2, 'card', 5);
+    
+    SET FOREIGN_KEY_CHECKS=1;
   </script>
 </arg:argument>

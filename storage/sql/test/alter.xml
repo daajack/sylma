@@ -183,8 +183,10 @@
   <tst:test name="Delete cascade disabled" catch="\sylma\core\exception">
     <tst:prepare>
 
+      $manager->runQuery('SET FOREIGN_KEY_CHECKS=0', 2);
       $manager->runQuery('DROP TABLE IF EXISTS user', 2);
       $manager->runQuery('DROP TABLE IF EXISTS `group`', 2);
+      $manager->runQuery('SET FOREIGN_KEY_CHECKS=1', 2);
 
       $manager->getScript('/#sylma/storage/sql/alter/index.vml', array(
         'file' => '/#sylma/storage/sql/test/samples/user-foreign.xql',
@@ -205,9 +207,12 @@
   </tst:test>
   <tst:test name="Delete cascade">
     <tst:prepare>
-
+      
+      $manager->runQuery('SET FOREIGN_KEY_CHECKS=0', 2);
       $manager->runQuery('DROP TABLE IF EXISTS user', 2);
+      $manager->runQuery('DROP TABLE IF EXISTS user_group', 2);
       $manager->runQuery('DROP TABLE IF EXISTS `group`', 2);
+      $manager->runQuery('SET FOREIGN_KEY_CHECKS=1', 2);
 
       $manager->getScript('/#sylma/storage/sql/alter/index.vml', array(
         'file' => '/#sylma/storage/sql/test/samples/user-foreign-cascade.xql',
@@ -219,8 +224,9 @@
 
     </tst:prepare>
     <tst:expected>
-
+      
       $manager->runQuery("DELETE FROM `group` WHERE id = 1", $manager::MODE_DELETE);
+      
       $count = $manager->runQuery("SELECT count(*) FROM user", $manager::MODE_READ);
 
       $manager->assertEquals($count, '0');

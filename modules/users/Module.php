@@ -61,18 +61,20 @@ class Module extends core\module\Domed {
   public function authenticate($sName, $sPassword) {
 
     $sResult = '';
-    $aGroups = array();
-    $contexts = $this->aContext['contexts'];
+    $groups = array();
+    $contexts = $this->aContext['contexts']->query();
 
     $doc = $this->getScript('login/default/check', array(), array(
       'name' => $sName,
-    ), $contexts->query());
+    ), $contexts);
 
     if (!$doc->isEmpty()) {
 
       list($sID, $sPasswordHash, $sGroups) = explode(' ', $doc->readx());
-      $aGroups = array_filter(explode(',', $sGroups));
+      $rgroups = array_filter(explode(',', $sGroups));
 
+      $this->getSubGroups($groups, $rgroups, $contexts);
+      
       // if (hash_equals($sPasswordHash, crypt($sPassword, $sPasswordHash))) {
       if ($sPasswordHash == crypt($sPassword, $sPasswordHash)) {
 
@@ -82,8 +84,28 @@ class Module extends core\module\Domed {
 
     return array(
       'id' => $sResult,
-      'groups' => $aGroups
+      'groups' => $groups
     );
+  }
+  
+  protected function getSubGroups(array &$groups, array $sgroups, array $contexts) {
+    
+    foreach ($sgroups as $group)
+    {
+      if (!in_array($group, $groups))
+      {
+        $groups[] = $group;
+
+        $ssgroups = $this->getScript('login/group', array(), array(
+          'name' => $group,
+        ), $contexts);
+        
+        if ($ssgroups)
+        {
+          $this->getSubGroups($groups, $ssgroups, $contexts);
+        }
+      }
+    }
   }
 
   public function logout() {

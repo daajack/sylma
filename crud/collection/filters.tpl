@@ -40,7 +40,7 @@
   </tpl:template>
 
   <tpl:template match="*" mode="filter">
-    <th>
+    <th valign="top">
       <div class="filter-container" js:class="sylma.crud.collection.FilterContainer">
         <input type="hidden" name="{alias()}[0][logic]" value="or"/>
         <tpl:apply mode="filter/init"/>

@@ -45,7 +45,11 @@
     </div>
   </tpl:template>
 
-  <tpl:template mode="todo/href">#</tpl:template>
+  <tpl:template mode="todo/href">
+    <tpl:apply mode="href/directory"/>
+    <tpl:text>/index/insert?url=</tpl:text>
+    <le:manager name="path"/>
+  </tpl:template>
 
   <tpl:template match="todo:todo">
     <li>

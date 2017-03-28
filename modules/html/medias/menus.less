@@ -243,6 +243,10 @@
     {
       visibility:visible;
     }
+    .title
+    {
+      letter-spacing: 1 * @rem;
+    }
     .description
     {
       opacity: 1;
@@ -303,12 +307,8 @@
   color: #999999;
   font-size: 14px;
   font-weight: bold;
-  visibility:hidden;
-  letter-spacing: 1 * @rem;
-  
-  &:first-letter {
-    visibility:visible;
-  }
+  letter-spacing: 2000 * @rem;
+  white-space: nowrap;
 }
 
 #menu-content a:hover .title

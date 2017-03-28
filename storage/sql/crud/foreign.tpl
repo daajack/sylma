@@ -310,21 +310,21 @@
 
     <js:include>foreign/FilterContainer.js</js:include>
     <js:include>foreign/Filter.js</js:include>
-    <th>
-      <div class="filter-container foreign" js:class="sylma.crud.foreign.FilterContainer">
-        <tpl:argument name="alias" default="alias()"/>
-        <input type="hidden" name="{$alias}[0][logic]" value="and"/>
-        <input type="hidden" name="{$alias}[0][operator]" value="=" js:node="operator"/>
-        <span class="label hidder visible" js:node="empty">show</span>
-        <tpl:apply mode="input/clear"/>
-        <tpl:apply select="all()" mode="filter/foreign">
-          <tpl:read select="'{$alias}[0][children]'" tpl:name="alias"/>
-        </tpl:apply>
-        <js:option name="name">
-          <tpl:read select="$alias"/>
-        </js:option>
-      </div>
-    </th>
+    
+    <div class="filter-container foreign" js:class="sylma.crud.foreign.FilterContainer">
+      <tpl:argument name="alias" default="alias()"/>
+      <input type="hidden" name="{$alias}[0][logic]" value="and"/>
+      <input type="hidden" name="{$alias}[0][operator]" value="=" js:node="operator"/>
+      <span class="label hidder visible" js:node="empty">show</span>
+      <tpl:apply mode="input/clear"/>
+      <tpl:apply select="all()" mode="filter/foreign">
+        <tpl:read select="'{$alias}[0][children]'" tpl:name="alias"/>
+      </tpl:apply>
+      <js:option name="name">
+        <tpl:read select="$alias"/>
+      </js:option>
+    </div>
+
   </tpl:template>
 
   <tpl:template match="*" mode="filter/foreign">

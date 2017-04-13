@@ -5,9 +5,6 @@ sylma.crud.collection.Filters = new Class({
 
   onLoad : function() {
 
-    this.updateSize();
-    this.getParent('table').addEvent('complete', this.updateSize.bind(this));
-
     var filters = this.initFilters();
 
     this.filters = filters;
@@ -60,19 +57,6 @@ sylma.crud.collection.Filters = new Class({
 
         if (!filter.getValue() && !filter.template) filter.toggleShow(null, show);
       });
-    });
-  },
-
-  updateSize : function() {
-return;
-    var filters = this.tmp;
-    var table = this.getParent('table').getNode('table');
-
-    table.getElements('thead tr:nth-child(1) > *').each(function(td, key) {
-
-      var w = td.getStyle('width').toInt() + td.getStyle('padding-left').toInt() + td.getStyle('padding-right').toInt();
-
-      filters[key].updateSize(w);
     });
   }
 });

@@ -80,17 +80,32 @@
     <div class="actions" js:class="sylma.ui.Base">
       <tpl:apply mode="actions/insert"/>
       <tpl:apply mode="actions/export"/>
+      <tpl:apply mode="actions/search"/>
     </div>
 
   </tpl:template>
 
   <tpl:template mode="actions/insert">
-    <a class="button">
+    <a class="button fa">
       <tpl:token name="href">
         <tpl:apply mode="actions/insert/href"/>
       </tpl:token>
-      Insert
+      <tpl:text>+</tpl:text>
     </a>
+  </tpl:template>
+
+  <tpl:template mode="actions/search">
+    
+    <js:include>Search.js</js:include>
+    
+    <div class="search" js:class="sylma.crud.collection.Search">
+      <input type="text" name="sylma-search" value="{/root()/dummy()/sylma-search}" js:node="input">
+        <js:event name="input">%object%.update()</js:event>
+      </input>
+      <tpl:apply mode="input/clear"/>
+      <span class="icon fa"></span>
+    </div>
+    
   </tpl:template>
 
   <tpl:template match="*" mode="actions/insert/href">
@@ -177,7 +192,9 @@
     <sql:order>
       <tpl:read select="dummy()/sylma-order"/>
     </sql:order>
-
+    
+    <tpl:apply mode="search/filter"/>
+    
     <tbody js:name="container" js:class="sylma.ui.Container">
 
       <tpl:apply mode="init-container"/>
@@ -205,6 +222,12 @@
 
   </tpl:template>
 
+  <tpl:template match="*" mode="search/filter">
+    <sql:filter optional="x" op="in">
+      <tpl:read select="dummy()/sylma-search"/>
+    </sql:filter>
+  </tpl:template>
+  
   <tpl:template mode="list/internal/content">
     <tpl:apply select="*" mode="row"/>
   </tpl:template>
@@ -280,7 +303,9 @@
 
   <tpl:template match="*" mode="cell">
     <td class="cell-{alias()}">
-      <tpl:apply mode="cell/content"/>
+      <div class="value">
+        <tpl:apply mode="cell/content"/>
+      </div>
     </td>
   </tpl:template>
 

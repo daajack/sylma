@@ -19,17 +19,16 @@
 
   <tpl:template>
     <div class="admin-container">
+      
       <div id="container">
         <div id="containerWrapper">
           <div id="content">
-            <!-- used by tests -->
-            <div id="main"/>
             <tpl:apply mode="intro"/>
             <le:get-argument name="content"/>
           </div>
         </div>
       </div>
-
+      
       <div id="sidebar">
         <tpl:apply mode="sidebar/content"/>
         <div class="madewith">
@@ -37,13 +36,8 @@
           <a href="http://sylma.org" target="_blank" alt="Sylma"/>
         </div>
       </div>
+      
     </div>  
-  </tpl:template>
-
-  <tpl:template mode="intro">
-    <h2>
-     Welcome
-    </h2>
   </tpl:template>
 
 </view:view>

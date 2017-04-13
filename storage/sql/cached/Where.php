@@ -89,6 +89,10 @@ class Where extends core\module\Managed {
     $this->group = $element;
   }
   
+  public function prepare() {
+    
+  }
+  
   public function asString($type = '') {
 
     $result = '';
@@ -107,6 +111,7 @@ class Where extends core\module\Managed {
   }
 
   public function __toString() {
+    
     return '';
   }
 }

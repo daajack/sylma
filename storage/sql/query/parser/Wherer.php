@@ -67,6 +67,7 @@ abstract class Wherer extends Basic {
 
       $aResult[] = $this->getDynamicWhere()->getInsert();
       $aResult[] = $this->getDynamicWhereCalls();
+      $aResult[] = $this->getDynamicWhere()->call('prepare');
     }
 
     return $aResult;

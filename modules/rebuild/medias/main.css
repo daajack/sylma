@@ -24,3 +24,8 @@
   color: red !important;
   text-decoration: line-through;
 }
+
+#sylma-rebuild .files
+{
+  columns: 3;
+}

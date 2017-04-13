@@ -5,10 +5,16 @@ use sylma\core, sylma\storage\sql;
 
 class Where extends sql\cached\Where
 {
+  protected $search = null;
+  protected $searches = array();
+  
+  public function add($val1, $op, $val2, $sDefault = null, $global = false) {
 
-  public function add($val1, $op, $val2, $sDefault = null) {
-
-    if ($val2) {
+    if ($val1 === '`[collection]`' && $val2)
+    {
+      $this->search = $val2;
+    }
+    else if ($val2) {
 
       $sql = $this->db;
       $vals = array();
@@ -63,8 +69,16 @@ class Where extends sql\cached\Where
           }
 
           if ($vals) {
-
-            $this->addStatic('(' . implode(" $logic ", $vals) . ')');
+            
+            if ($global)
+            {
+              $this->addSearch('(' . implode(" $logic ", $vals) . ')');
+            }
+            else
+            {
+              $this->addStatic('(' . implode(" $logic ", $vals) . ')');
+            }
+            
           }
         }
         else {
@@ -110,6 +124,26 @@ class Where extends sql\cached\Where
         }
       }
     }
+    
+    if (!$global && $this->search && $op === 'search')
+    {
+      $this->add($val1, $op, array(
+        array(
+          'logic' => 'or',
+          'children' => array(
+            array(
+              'value' => $this->search,
+              'operator' => '='
+            )
+          )
+        )
+      ), null, true);
+    }
+  }
+  
+  protected function addSearch($val) {
+    
+    $this->searches[] = $val;
   }
 
   protected function buildSearch($val1, $val2, $operator) {
@@ -124,5 +158,13 @@ class Where extends sql\cached\Where
     $val2 = $sql->escape($val2);
 
     return "$val1 $op $val2";
+  }
+  
+  public function prepare() {
+    
+    if ($this->search)
+    {
+      $this->addStatic('(' . implode(' OR ', $this->searches) . ')');
+    }
   }
 }

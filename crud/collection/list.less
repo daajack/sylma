@@ -6,12 +6,69 @@
   .actions
   {
     overflow: hidden;
-    margin-bottom: 1em;
+    margin-bottom: 0.5em;
   }
+  
+  @actions-height: 20 * @rem;
   
   div.actions .button
   {
+    box-sizing: border-box;
     border: 1px solid;
+    height: @actions-height;
+    line-height: @actions-height;
+    float: left;
+    margin-right: 0.5em;
+    padding: 0 0.5em;
+  }
+  
+  .search
+  {
+    position: relative;
+    float: left;
+    
+    input
+    {
+      width: 15em;
+      padding-left: 1.5em;
+    }
+    
+    .icon
+    {
+      position: absolute;
+      top: 0;
+      left: 0.3em;
+      opacity: 0.2;
+      height: @actions-height;
+      line-height: @actions-height;
+    }
+    
+    input:focus + .close + .icon
+    {
+      opacity: 1;
+      color: @orange;
+    }
+  }
+  
+  .value
+  {
+    max-height: 2.5em;
+  }
+  
+  .close
+  {
+    position: absolute;
+    font-weight: bold;
+    line-height: 22 * @rem;
+    top: 0;
+    right: 0.25em;
+    opacity: 0.15;
+
+    &:hover
+    {
+      opacity: 0.35;
+      cursor: pointer;
+    }
   }
   
   table
@@ -19,6 +76,7 @@
     border-collapse: collapse;
     clear: both;
     position: relative;
+    min-width: 30em;
     
     th
     {
@@ -95,17 +153,18 @@
           white-space: nowrap;
         }
       }
+      
       tr
       {
         transition: background 0.1s;
         color: @gris;
         
-        &:nth-child(2n+0)
+        &:nth-child(2n)
         {
           background-color: #fcfcfc;
         }
         
-        &:hover
+        &:nth-child(n):not(:last-child):hover
         {
           background-color: #e4f4f4;
           cursor: pointer;

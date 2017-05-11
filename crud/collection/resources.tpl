@@ -36,10 +36,4 @@
     <js:include>Filter.js</js:include>
   </tpl:template>
 
-  <tpl:template match="*" mode="list/filters/css">
-    <le:context name="css">
-      <le:file>filters.less</le:file>
-    </le:context>
-  </tpl:template>
-
 </tpl:collection>

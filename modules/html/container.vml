@@ -23,6 +23,7 @@
       <div id="container">
         <div id="containerWrapper">
           <div id="content">
+            <div id="main"/>
             <tpl:apply mode="intro"/>
             <le:get-argument name="content"/>
           </div>

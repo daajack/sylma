@@ -103,6 +103,10 @@
             <js:event name="click">%object%.getTest().getPage().addQuery();</js:event>
             <tpl:text>♦</tpl:text>
           </button>
+          <button>
+            <js:event name="click">%object%.getTest().getPage().addMessage();</js:event>
+            <tpl:text>✉</tpl:text>
+          </button>
         </div>
         <tpl:apply select="steps" mode="collection"/>
       </div>
@@ -121,25 +125,6 @@
     </div>
 
   </tpl:template>
-<!--
-  <tpl:template mode="error">
-    <div class="error" js:class="sylma.ui.Template" js:alias="error">
-      <strong>
-        <tpl:read select="type"/>
-      </strong> :
-      <tpl:read select="message"/>
-      <ul>
-        <tpl:apply mode="error/path"/>
-      </ul>
-    </div>
-  </tpl:template>
-
-  <tpl:template mode="error/path" js:class="sylma.ui.Template" js:alias="path">
-    <li>
-      <tpl:read select="value"/>
-    </li>
-  </tpl:template>
--->
 
   <tpl:template mode="path">
     <le:path>/</le:path>
@@ -480,6 +465,17 @@
         <input js:node="value" type="text" value="{read()}"/>
         <input js:node="creation" type="text" value="{@creation}"/>
         <input js:node="connection" type="text" value="{@connection}"/>
+      </form>
+    </li>
+  </tpl:template>
+
+  <tpl:template match="test:message">
+    <li js:class="sylma.stepper.Message" js:alias="message">
+      <tpl:apply mode="actions"/>
+      <tpl:apply mode="refresh"/>
+      <tpl:apply mode="title"/>
+      <form js:node="form" class="sylma-hidder zoom options">
+        <input js:node="value" type="text" value="{read()}"/>
       </form>
     </li>
   </tpl:template>

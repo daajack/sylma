@@ -113,12 +113,16 @@
   </tpl:template>
 
   <tpl:template match="*" mode="head/row">
+    <tpl:variable name="filters">
+      <tpl:apply mode="filters"/>
+    </tpl:variable>
     <thead>
-      <tr js:class="sylma.crud.collection.Sorter" js:name="head" js:parent-name="head">
+      <tpl:apply mode="head/group"/>
+      <tr class="orders" js:class="sylma.crud.collection.Sorter" js:name="head" js:parent-name="head">
         <tpl:apply mode="head/corner"/>
         <tpl:apply use="list-cols" mode="head/cell"/>
       </tr>
-      <tpl:apply mode="filters"/>
+      <tpl:read select="$filters"/>
     </thead>
   </tpl:template>
 
@@ -129,9 +133,9 @@
   </tpl:template>
 
   <tpl:template match="*" mode="head/corner/content"/>
-
+                        
   <tpl:template match="*" mode="head/corner/content">
-    <a href="javascript:void(0)" class="button fa">
+    <a href="javascript:void(0)" class="button fa" js:node="filter_toggle">
       
       <js:event name="click">
         %object%.getParent('table').toggleShow();

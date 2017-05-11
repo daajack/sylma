@@ -3,7 +3,7 @@
   <ns0:page url="/sylma/modules/users/index/insert">
     <ns0:steps>
       <ns0:snapshot element="#content">
-        <ns0:content>{"name":"div","children":[{"name":"div","content":"","position":{"x":218,"y":162},"size":{"x":1044,"y":0}},{"name":"form","children":[{"name":"div","children":[{"name":"label","content":"name* :","position":{"x":440,"y":162},"size":{"x":180,"y":15}},{"name":"input","content":"","position":{"x":620,"y":162},"size":{"x":306,"y":23}}],"position":{"x":440,"y":162},"size":{"x":600,"y":23}},{"name":"div","children":[{"name":"label","content":"password* :","position":{"x":440,"y":191},"size":{"x":180,"y":15}},{"name":"input","content":"","position":{"x":620,"y":191},"size":{"x":306,"y":23}}],"position":{"x":440,"y":191},"size":{"x":600,"y":23}},{"name":"div","children":[{"name":"label","content":"confirm password* :","position":{"x":440,"y":220},"size":{"x":180,"y":15}},{"name":"input","content":"","position":{"x":620,"y":220},"size":{"x":306,"y":23}}],"position":{"x":440,"y":220},"size":{"x":600,"y":23}},{"name":"fieldset","children":[{"name":"legend","content":"groups","position":{"x":450,"y":249},"size":{"x":59,"y":21}},{"name":"div","children":[{"name":"input","content":"","position":{"x":454,"y":283},"size":{"x":13,"y":13}},{"name":"label","content":"admin","position":{"x":470,"y":280},"size":{"x":17,"y":15}}],"position":{"x":450,"y":280},"size":{"x":57,"y":19}}],"position":{"x":440,"y":249},"size":{"x":600,"y":60}},{"name":"div","children":[{"name":"button","content":"cancel","position":{"x":440,"y":334},"size":{"x":70,"y":25}},{"name":"button","content":"save","position":{"x":983,"y":334},"size":{"x":56,"y":25}}],"position":{"x":440,"y":321},"size":{"x":600,"y":38}}],"position":{"x":440,"y":162},"size":{"x":600,"y":197}}],"position":{"x":200,"y":139},"size":{"x":1080,"y":646}}</ns0:content>
+        <ns0:content>{"name":"div","children":[{"name":"div","content":"","position":{"x":214,"y":42},"size":{"x":1052,"y":0}},{"name":"form","children":[{"name":"div","children":[{"name":"label","content":"name* :","position":{"x":440,"y":42},"size":{"x":180,"y":18}},{"name":"input","content":"","position":{"x":620,"y":42},"size":{"x":306,"y":23}}],"position":{"x":440,"y":42},"size":{"x":600,"y":23}},{"name":"div","children":[{"name":"label","content":"password* :","position":{"x":440,"y":72},"size":{"x":180,"y":18}},{"name":"input","content":"","position":{"x":620,"y":72},"size":{"x":306,"y":23}}],"position":{"x":440,"y":72},"size":{"x":600,"y":23}},{"name":"div","children":[{"name":"label","content":"confirm password* :","position":{"x":440,"y":102},"size":{"x":180,"y":18}},{"name":"input","content":"","position":{"x":620,"y":102},"size":{"x":306,"y":23}}],"position":{"x":440,"y":102},"size":{"x":600,"y":23}},{"name":"fieldset","children":[{"name":"legend","content":"groups","position":{"x":450,"y":132},"size":{"x":63,"y":26}},{"name":"div","children":[{"name":"input","content":"","position":{"x":454,"y":171},"size":{"x":13,"y":13}},{"name":"label","content":"admin","position":{"x":470,"y":168},"size":{"x":17,"y":18}}],"position":{"x":450,"y":168},"size":{"x":58,"y":19}}],"position":{"x":440,"y":132},"size":{"x":600,"y":65}},{"name":"div","children":[{"name":"button","content":"cancel","position":{"x":440,"y":226},"size":{"x":66,"y":34}},{"name":"button","content":"save","position":{"x":992,"y":226},"size":{"x":48,"y":34}}],"position":{"x":440,"y":211},"size":{"x":600,"y":49}}],"position":{"x":440,"y":42},"size":{"x":600,"y":218}}],"position":{"x":200,"y":28},"size":{"x":1080,"y":628}}</ns0:content>
       </ns0:snapshot>
       <ns0:input element="#form-name">root</ns0:input>
       <ns0:input element="#form-password">12345</ns0:input>
@@ -11,10 +11,10 @@
       <ns0:event name="click" element="#content &gt; form &gt; fieldset &gt; div &gt; input"/>
       <ns0:event name="click" element="#content &gt; form &gt; div:nth-child(5) &gt; button:nth-child(2)"/>
       <ns0:watcher element=" &gt; div:nth-child(1)">
-        <ns0:property name="height">49</ns0:property>
+        <ns0:property name="height">50</ns0:property>
       </ns0:watcher>
       <ns0:snapshot element=" &gt; div:nth-child(1)">
-        <ns0:content>{"name":"div","children":[{"name":"div","content":"Passwords do not match","position":{"x":311,"y":26},"size":{"x":658,"y":34}}],"position":{"x":0,"y":0},"size":{"x":1280,"y":60}}</ns0:content>
+        <ns0:content>{"name":"div","children":[{"name":"div","content":"Passwords do not match","position":{"x":311,"y":28},"size":{"x":658,"y":36}}],"position":{"x":0,"y":0},"size":{"x":1280,"y":64}}</ns0:content>
       </ns0:snapshot>
       <ns0:input element="#form-password_confirm">12345</ns0:input>
       <ns0:event name="click" element="#content &gt; form &gt; div:nth-child(5) &gt; button:nth-child(2)"/>
@@ -22,12 +22,7 @@
   </ns0:page>
   <ns0:page>
     <ns0:steps>
-      <ns0:watcher element=" &gt; div:nth-child(1)">
-        <ns0:property name="height">49</ns0:property>
-      </ns0:watcher>
-      <ns0:snapshot element=" &gt; div:nth-child(1)">
-        <ns0:content>{"name":"div","children":[{"name":"div","content":"Datas has been inserted","position":{"x":306,"y":26},"size":{"x":650,"y":35}}],"position":{"x":0,"y":0},"size":{"x":1263,"y":61}}</ns0:content>
-      </ns0:snapshot>
+      <ns0:message>Datas has been inserted</ns0:message>
     </ns0:steps>
   </ns0:page>
 </ns0:test>

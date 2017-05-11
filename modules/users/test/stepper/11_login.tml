@@ -2,8 +2,11 @@
 <ns0:test xmlns:ns0="http://2013.sylma.org/modules/stepper">
   <ns0:page url="/sylma/modules/users/login">
     <ns0:steps>
+      <ns0:watcher element="#content">
+        <ns0:property name="top">0</ns0:property>
+      </ns0:watcher>
       <ns0:snapshot element="#content">
-        <ns0:content>{"name":"div","children":[{"name":"div","content":"","position":{"x":218,"y":120},"size":{"x":1044,"y":0}},{"name":"form","children":[{"name":"div","children":[{"name":"label","content":"name* :","position":{"x":479,"y":180},"size":{"x":157,"y":15}},{"name":"input","content":"","position":{"x":635,"y":180},"size":{"x":267,"y":23}}],"position":{"x":479,"y":180},"size":{"x":522,"y":23}},{"name":"div","children":[{"name":"label","content":"password* :","position":{"x":479,"y":209},"size":{"x":157,"y":15}},{"name":"input","content":"","position":{"x":635,"y":209},"size":{"x":267,"y":23}}],"position":{"x":479,"y":209},"size":{"x":522,"y":23}},{"name":"div","children":[{"name":"input","content":"","position":{"x":479,"y":238},"size":{"x":87,"y":25}}],"position":{"x":479,"y":238},"size":{"x":522,"y":25}}],"position":{"x":479,"y":180},"size":{"x":522,"y":83}}],"position":{"x":200,"y":97},"size":{"x":1080,"y":646}}</ns0:content>
+        <ns0:content>{"name":"div","children":[{"name":"div","content":"","position":{"x":214,"y":14},"size":{"x":1052,"y":0}},{"name":"form","children":[{"name":"div","children":[{"name":"label","content":"name* :","position":{"x":477,"y":84},"size":{"x":158,"y":18}},{"name":"input","content":"","position":{"x":634,"y":84},"size":{"x":269,"y":23}}],"position":{"x":477,"y":84},"size":{"x":526,"y":23}},{"name":"div","children":[{"name":"label","content":"password* :","position":{"x":477,"y":114},"size":{"x":158,"y":18}},{"name":"input","content":"","position":{"x":634,"y":114},"size":{"x":269,"y":23}}],"position":{"x":477,"y":114},"size":{"x":526,"y":23}},{"name":"div","children":[{"name":"input","content":"","position":{"x":477,"y":144},"size":{"x":101,"y":34}}],"position":{"x":477,"y":144},"size":{"x":526,"y":34}}],"position":{"x":477,"y":84},"size":{"x":526,"y":94}}],"position":{"x":200,"y":0},"size":{"x":1080,"y":628}}</ns0:content>
       </ns0:snapshot>
       <ns0:input element="#form-name">root</ns0:input>
       <ns0:input element="#form-password">12345</ns0:input>
@@ -13,12 +16,7 @@
   </ns0:page>
   <ns0:page>
     <ns0:steps>
-      <ns0:watcher element=" &gt; div:nth-child(1)">
-        <ns0:property name="height">49</ns0:property>
-      </ns0:watcher>
-      <ns0:snapshot element=" &gt; div:nth-child(1)">
-        <ns0:content>{"name":"div","children":[{"name":"div","content":"Authentication successed","position":{"x":306,"y":26},"size":{"x":650,"y":35}}],"position":{"x":0,"y":0},"size":{"x":1263,"y":61}}</ns0:content>
-      </ns0:snapshot>
+      <ns0:message>Authentication successed</ns0:message>
     </ns0:steps>
   </ns0:page>
 </ns0:test>

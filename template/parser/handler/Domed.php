@@ -238,14 +238,14 @@ class Domed extends Templated implements reflector\elemented, template\parser\ha
   public function lookupPrefix($sNamespace, $sCurrent = '') {
     
     $sResult = '';
-    
+
     if (!array_key_exists($sNamespace, $this->aNamespaces)) {
       
       if (!$this->readx('@allow-all')) {
       
         $this->launchException("Namespace '$sNamespace' is not allowed", get_defined_vars());
       }
-      else if ($sCurrent) {
+      else {
         
         $this->registerNamespace($sNamespace, $sCurrent);
         $sResult = $sCurrent;

@@ -55,6 +55,7 @@
       <js:include>medias/Element.js</js:include>
       <js:include>medias/Selector.js</js:include>
       <js:include>medias/Query.js</js:include>
+      <js:include>medias/Message.js</js:include>
 
     </tpl:template>
 

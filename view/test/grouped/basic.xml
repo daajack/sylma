@@ -131,8 +131,8 @@ EOT;
       $doc = $manager->getScript('samples/foreign-ns.vml');
 
       $sValue = &lt;&lt;&lt;EOT
-&lt;s1:sample xmlns:s2="sample2" xmlns:s3="sample3" xmlns:s1="sample1"&gt;
-  &lt;s2:hello s2:abc="def" s3:ghi="jkl"/&gt;
+&lt;s1:sample xmlns="http:sample3" xmlns:s2="sample2" xmlns:s3="http:sample3" xmlns:s1="sample1"&gt;
+  &lt;s2:hello s2:abc="def" ghi="jkl"/&gt;
 &lt;/s1:sample&gt;
 EOT;
       $manager->assertEquals($sValue, $doc->asString($doc::STRING_INDENT));

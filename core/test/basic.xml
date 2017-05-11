@@ -35,24 +35,27 @@
         <head>
           <title>Sylma</title>
           <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-          <link href="/tmp/3ba2413c.css" type="text/css" media="all" rel="stylesheet"/>
+          <link href="/tmp/d41a2ca5.css" type="text/css" media="all" rel="stylesheet"/>
         </head>
-        <body>
-          <div id="sylma-messages"/>
-          <div id="messages"/>
-          <div id="container">
-            <div id="containerWrapper">
-              <div id="intro">
-                <h3>Welcome,</h3>
-                <p cmp:ignore="x"/>
-              </div>
-              <div id="content">
-                <div id="main"/>
-                <hello/>
-              </div>
-            </div>
+        <body class="menus-open">
+          <div id="sylma-messages"/> 
+          <div id="messages"/> 
+          <div class="admin-container"> 
+            <div id="container"> 
+              <div id="containerWrapper"> 
+                <div id="content"> 
+                  <div id="main"/> 
+                  <hello/> 
+                </div> 
+              </div> 
+            </div> 
+            <div id="sidebar"> 
+              <div class="madewith"> 
+                <span>Made with</span> 
+                <a href="http://sylma.org" target="_blank" alt="Sylma"/> 
+              </div> 
+            </div> 
           </div>
-          <div id="sidebar"/>
           <script type="text/javascript"> </script>
         </body>
       </html>
@@ -252,8 +255,9 @@
 
       $fs = $manager->getManager('fs/tmp');
       $tmp = $fs->getFile('5bb7f55e.css');
-
-      $manager->assertEqual($tmp->read(), $css->read());
+      
+      $string = preg_replace('~(*BSR_ANYCRLF)\R~', "\r\n", $tmp->read());
+      $manager->assertEqual($string, $css->read());
 
       return true;
 

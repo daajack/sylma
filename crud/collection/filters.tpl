@@ -33,9 +33,7 @@
   </tpl:template>
 
   <tpl:template match="*" mode="filters/content">
-    <th class="thfirst">
-      <div class="filter-container title" js:class="sylma.crud.collection.FilterContainer"/>
-    </th>
+    <th/>
     <tpl:apply use="list-cols" mode="filter/container" xmode="update"/>
   </tpl:template>
 

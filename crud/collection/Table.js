@@ -11,10 +11,19 @@ sylma.crud.collection.Table = new Class({
 
   onLoad : function()
   {
-     if (this.options.show) {
+    if (this.options.show) {
 
       this.toggleShow();
     }
+    
+    this.updateHead();
+  },
+  
+  updateHead: function () {
+
+    var button = this.getObject('head').getNode('filter_toggle');
+    button.setStyle('height', button.getParent().getSize().y);
+    button.setStyle('width', button.getParent().getSize().x);
   },
 
   update : function(reset, delay) {

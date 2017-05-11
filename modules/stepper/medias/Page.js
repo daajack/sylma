@@ -130,6 +130,17 @@ sylma.stepper.Page = new Class({
       return result;
     });
   },
+  
+  addMessage: function () {
+
+    return this.addStep(function(key, callback) {
+
+      var result = this.getSteps().add('message', {}, key);
+      callback && callback();
+
+      return result;
+    });
+  },
 
   getSteps : function() {
 

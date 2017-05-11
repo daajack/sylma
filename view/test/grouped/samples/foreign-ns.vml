@@ -13,7 +13,7 @@
 
   <view:template>
     <s1:sample xmlns:s1="sample1" xmlns:s2="sample2">
-      <s2:hello s2:abc="def" s3:ghi="jkl" xmlns:s3="sample3"/>
+      <s2:hello s2:abc="def" s3:ghi="jkl" xmlns:s3="http:sample3"/>
     </s1:sample>
   </view:template>
 

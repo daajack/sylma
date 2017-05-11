@@ -32,6 +32,9 @@
               <snapshot element="">
                 <exclude element=""/>
               </snapshot>
+              <message content="">
+                
+              </message>
             </steps>
           </page>
         </test>

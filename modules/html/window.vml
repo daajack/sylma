@@ -61,7 +61,6 @@
       <le:file>medias/base.less</le:file>
     </le:context>
     <link rel="stylesheet" type="text/css" media="all" href="/sylma/modules/html/medias/infos.css" ls:owner="root" ls:group="user" ls:mode="710"/>
-    <link rel="stylesheet" type="text/css" media="all" href="/sylma/modules/html/fonts/font-awesome.css"/>
     <tpl:apply mode="head/css/backend"/>
   </tpl:template>
 
@@ -73,6 +72,7 @@
     <le:context name="css">
       <le:file>medias/backend.less</le:file>
       <le:file>medias/menus.less</le:file>
+      <le:file>fonts/font-awesome.less</le:file>
     </le:context>
   </tpl:template>
 

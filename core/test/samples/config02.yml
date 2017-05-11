@@ -4,6 +4,7 @@ tester :
 
 debug :
   enable : false
+  public : false
 exception :
   show : true
 initializer :

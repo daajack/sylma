@@ -235,6 +235,11 @@ class Browser extends core\module\Domed {
         $aResult['timeshift'] = $step->read('@timeshift', false);
         $aResult['connection'] = $step->read('@connection', false);
         break;
+
+      case 'message' :
+
+        $aResult['value'] = $step->read();
+        break;
     }
 
     return $aResult;

@@ -49,7 +49,7 @@ initializer :
 
       stepper :
         action : /sylma/modules/stepper/test/window.vml
-        pattern : `^/(sylma/modules/stepper/test|sylma/modules/tester/stepper/standalone)`
+        pattern : `^/(sylma/modules/tester/stepper|sylma/modules/stepper/test|sylma/modules/tester/stepper/standalone)`
         weight : 10
 
       crud :

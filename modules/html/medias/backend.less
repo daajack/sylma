@@ -48,7 +48,7 @@ a
   color: #00AFAD;
 }
 
-#content a:hover
+a:hover
 {
   color: @rose;
 }
@@ -92,8 +92,9 @@ a
 
 /*** CRUD ***/
 
-.button,
-button
+a.button,
+button,
+input[type=submit]
 {
   display: inline-block;
   padding: 0.5em;
@@ -101,9 +102,24 @@ button
   color: #FC7C58;
   float: none;
   text-transform: uppercase;
+  cursor: pointer;
+  
+  &:hover
+  {
+    color: white;
+    background-color: @rose;
+  }
+  
+  &:active
+  {
+    color: @rose;
+    background-color: white;
+    box-shadow: 1px 1px #aaa;    
+  }
 }
 
-button
+button,
+input[type=submit]
 {
   border: 1px solid;
   background-color: @white;
@@ -117,24 +133,16 @@ button.button
   border: 0;
 }
 
-#content button:hover,
-#content a.button:hover
-{
-  color: white;
-  background-color: @rose;
-}
-
-#content button:active,
-#content a.button:active
-{
-  color: @rose;
-  background-color: white;
-  box-shadow: 1px 1px #aaa;
-}
 
 .button.sylma-highlight
 {
   cursor: default;
+}
+
+input
+{
+  border: 1px solid #aaa;
+  padding: 0;
 }
 
 /*** List ***/

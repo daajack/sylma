@@ -96,7 +96,10 @@ class Container extends template_ns\parser\template\Argumented {
           $iType = $this->getWeightType($type);
           $iResult = $iType > $iElement ? $iType : $iElement;
 
-          if ($this->getXMode() && $this->getXMode() === $sXMode) $iResult += 1;
+          if ($iElement && $this->getXMode() && $this->getXMode() === $sXMode)
+          {
+            $iResult += 1;
+          }
         }
         else {
 

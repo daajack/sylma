@@ -7,6 +7,8 @@
   xmlns:stat="http://2013.sylma.org/modules/todo/statut"
   xmlns:proj="http://2013.sylma.org/modules/todo/project"
   xmlns:tag="http://2013.sylma.org/modules/todo/tag"
+  xmlns:summary="http://2013.sylma.org/modules/todo/summary"
+  xmlns:comment="http://2013.sylma.org/modules/todo/comment"
 
   xmlns:user="http://2013.sylma.org/core/user"
   xmlns:group="http://2013.sylma.org/core/user/group"
@@ -30,6 +32,8 @@
     <field name="start_real" title="start (real)" type="sql:datetime" default="null"/>
     <field name="term" type="sql:datetime" default="null"/>
     <field name="term_real" title="term (real)" type="sql:datetime" default="null"/>
+    <foreign name="summary_type" occurs="0..1" title="summary type" table="summary:todo_summary" import="summary.xql" default="null"/>
+    <field name="summary_date" title="summary date" type="sql:datetime" default="null"/>
 
     <field name="update" type="sql:datetime"/>
     <field name="insert" type="sql:datetime" default="now()" alter-default="null"/>
@@ -45,6 +49,8 @@
     -->
     <foreign name="parent" occurs="0..1" table="todo:todo" import="schema.xql"/>
     <foreign name="tags" occurs="0..n" table="tag:todo_tag" import="tag.xql" junction="todo_tag_junction"/>
+
+    <!--<reference name="comments" table="comment:todo_comment" foreign="comment:todo" import="comment.xql"/>-->
 
   </table>
 

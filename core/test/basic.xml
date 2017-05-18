@@ -256,8 +256,7 @@
       $fs = $manager->getManager('fs/tmp');
       $tmp = $fs->getFile('5bb7f55e.css');
       
-      $string = preg_replace('~(*BSR_ANYCRLF)\R~', "\r\n", $tmp->read());
-      $manager->assertEqual($string, $css->read());
+      $manager->assertEqual($tmp->read(), $css->read());
 
       return true;
 

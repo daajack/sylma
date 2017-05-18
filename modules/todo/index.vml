@@ -11,12 +11,13 @@
   xmlns:todo="http://2013.sylma.org/modules/todo"
   xmlns:stat="http://2013.sylma.org/modules/todo/statut"
   xmlns:proj="http://2013.sylma.org/modules/todo/project"
+  xmlns:summary="http://2013.sylma.org/modules/todo/summary"
 
   extends="/#sylma/storage/sql/crud.crd"
 >
 
 
-  <crud:global todo:ns="ns" stat:ns="ns" proj:ns="ns">
+  <crud:global todo:ns="ns" stat:ns="ns" proj:ns="ns" summary:ns="ns">
 
     <le:context name="css">
       <le:file>medias/main.less</le:file>
@@ -36,6 +37,10 @@
 
     <tpl:template match="proj:todo_project" mode="select-option-value">
       <tpl:read select="name"/>
+    </tpl:template>
+    
+    <tpl:template match="summary:todo_summary" mode="select-option-value">
+      <tpl:read select="content"/>
     </tpl:template>
     
   </crud:global>

@@ -1,38 +1,59 @@
 
+@import "../html/vars.less";
+
+html,
+body
+{
+  overflow: hidden;
+  height: 100%;
+}
+
 .explorer
 {
+  position: relative;
+  display: flex;
   font-size: 1.2em;
   overflow: hidden;
   box-sizing: border-box;
   cursor: default;
+  height: calc(~"100% - " @lemonav-height);
 
   .loader
   {
     z-index: 5;
     pointer-events: none;
     position: absolute;
+    top: 0;
+    left: 0;
   }
 
-  h2
+  h2,
+  h3
   {
     margin-top: 0;
   }
 
-  .sidebar,
   .view
   {
+    position: relative;
     box-sizing: border-box;
-    min-height: 50em;
+    overflow: auto;
+    padding: 1rem;
   }
 
-  .sidebar
+  .view-1
   {
-    width: 10%;
+    flex: 1 15%;
+    min-width: 200px;
     border-right: 1px solid #ddd;
-    float: left;
-    position: relative;
-    height: 100%;
+    padding: 0;
 
+    & > .wrapper
+    {
+      position: relative;
+      margin: 1rem;
+    }
+    
     .root
     {
       position: absolute;
@@ -55,8 +76,6 @@
     .children
     {
       overflow-y: auto;
-      padding-right: 2%;
-      margin-right: 2%;
     }
 
     .open
@@ -94,13 +113,9 @@
     }
   }
 
-  .view
+  .view-2
   {
-    float: left;
-    padding-left: 2em;
-    width: 90%;
-    height: 100%;
-    position: relative;
+    flex: 1 85%;
 
     & > *:last-child
     {

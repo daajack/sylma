@@ -217,12 +217,6 @@ class Builder extends core\module\Domed {
 
       $iKey++;
     }
-/*
-    if (!$result) {
-
-      $this->launchException('No route found', get_defined_vars());
-    }
-*/
 
     return $result;
   }

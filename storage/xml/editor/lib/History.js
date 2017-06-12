@@ -44,13 +44,12 @@ console.log('check steps');
         if (response.content) {
 
           console.info('File saved');
-
-          this.sending = false;
         }
         else {
 
-          console.info('Error when sending');
         }
+        
+        this.sending = false;
 
       }.bind(this));
     }

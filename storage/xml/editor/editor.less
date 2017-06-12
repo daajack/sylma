@@ -12,6 +12,7 @@
 
 @family: Arial;
 @speed: 0.2s;
+@font-size: 0.9em;
 
 .less-fix-parse {}
 
@@ -20,11 +21,14 @@
   position: relative;
   color: black;
   user-select: none;
+  border-right: 1px solid #ddd;
+  margin-bottom: 4em;
+  font-size: @font-size;
 
   input
   {
     box-sizing: border-box;
-    font-size: 1em;
+    font-size: @font-size;
     font-family: @family;
     border: 0;
     background-color: #fdf5ce;
@@ -62,7 +66,7 @@
     .container
     {
       box-sizing: border-box;
-      width: 85%;
+      /*width: 85%;*/
       float: left;
       white-space: nowrap;
       overflow: hidden;
@@ -95,11 +99,12 @@
   {
     position: absolute;
     z-index: 2;
+    margin-top: 0rem;
 
     &.attribute
     {
       margin-left: 0.5em;
-      margin-top: -0.1em;
+      margin-top: 0;
     }
 
     input
@@ -166,7 +171,7 @@
 
       &:hover
       {
-        background-color: @gray4;
+        background-color: @gray3;
       }
     }
 
@@ -240,6 +245,10 @@
         padding: 0 0.25em;
         color: @gray2;
         font-style: italic;
+        max-width: 30em;
+        overflow: hidden;
+        height: 1.3em;
+        white-space: nowrap;
 
         .name
         {
@@ -300,14 +309,16 @@
       _padding-left: 1em;
     }
 
-    &.format-complex > .children
+    &.format-complex
     {
-      float: none;
-      clear: left;
-      border-left: @gray5 1px solid;
-      padding: 0.3em 0;
+      & > .children
+      {
+        float: none;
+        clear: left;
+        border-left: @gray5 1px solid;
+        padding: 0.1em 0;
+      }
     }
-
   }
 
   .node- > .fullname { font-weight: bold; }
@@ -329,7 +340,7 @@
     {
       & > .children
       {
-        border-color: @gray4;
+        border-color: @gray3;
       }
 
       & > .fullname
@@ -410,6 +421,8 @@
 
 .document > .children > .element
 {
+  padding-left: 0;
+  
   & > .spacing
   {
     margin-top: 1 + 0.5em;

@@ -11,7 +11,6 @@ debug :
   rights: false
   # WARNING : if TRUE exceptions and messages are showed to all users
   public : false
-  show : false
   # if TRUE : log parse component messages, require lot of memory, can reach memory limits
   parser : false
   dependency : false
@@ -147,6 +146,10 @@ initializer :
         sub :
           default :
             action : /#sylma/modules/html/container.vml
+      sylma :
+        action : /#sylma/modules/html/window.vml
+        pattern : `^/sylma`
+        weight: 4
   redirect :
     extension : redirect
   classes :

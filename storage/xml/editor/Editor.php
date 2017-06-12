@@ -194,23 +194,28 @@ class Editor extends core\module\Domed {
     $filepath = (string) $file;
 
     $id = $this->run('file', array(
-      'file' => $filepath,
+      'path' => $filepath,
     ));
 
     if (!$id) {
 
       $id = $this->run('file/insert', array(
-        'file' => $filepath,
+        'path' => $filepath,
       ));
     }
 
     $update = $this->run('history', array('file' => $id));
+    $messages = $this->getManager(self::PARSER_MANAGER)->getContext('messages');
 
-    if (!$this->run('file/locked', array('id' => $id))) {
+    if ($this->run('file/locked', array('id' => $id))) {
+      
+      $messages->add(array('content' => 'File locked'));
+    }
+    else {
 
       if ($this->read('update') < $update) {
 
-        dsp('Send new rows');
+        //dsp('Send new rows');
       }
       //if ($file->getUpdateTime() < $update) {
 
@@ -219,10 +224,15 @@ class Editor extends core\module\Domed {
       try {
 
         $result = $this->updateDocument($id, $file, $file->asDocument($this->getNS()));
+        
+        if (!$result) {
+          
+          dsp('Error on update');
+        }
       }
       catch (core\exception $e) {
 
-        //dsp($e->getMessage());
+        dsp($e->getMessage());
         throw $e;
       }
 
@@ -337,12 +347,22 @@ class Editor extends core\module\Domed {
       case 'update' :
 
         //$el->createAttribute($args->read('name'), $step->read('content'), $args->read('namespace', false));
-        //$el->setAttributeNS($args->read('namespace', false), $args->read('name'), $step->read('content'));
-        $el->setAttribute($args->read('name'), $step->read('content'));
+
+        if (strpos($args->read('name'), ':') !== false) {
+
+          $el->setAttributeNS($args->read('namespace'), $args->read('name'), $step->read('content'));
+        }
+        else {
+          
+          $el->setAttribute($args->read('name'), $step->read('content'));
+        }
+        
+        //$el->setAttribute($args->read('name'), $args->read('content'));
+
         break;
 
       case 'remove' :
-
+//dsp($step, $args);
         //$el->setAttribute($args->read('name'), '', $args->read('namespace', false));
         $attribute = $el->loadAttribute($args->read('name'), $args->read('namespace', false));
         $attribute->remove();

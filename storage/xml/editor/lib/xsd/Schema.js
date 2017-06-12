@@ -48,7 +48,7 @@ sylma.xsd.Schema = new Class({
         case 'complexType' : child = this.addChild(types, new sylma.xsd.ComplexType(schema, item)); break;
         case 'attribute' : child = this.addChild(attributes, new sylma.xsd.Attribute(schema, item)); break;
         case 'attributeGroup' : child = this.addChild(attributeGroups, new sylma.xsd.AttributeGroup(schema, item)); break;
-        default : throw 'Unknown element : ' + item.element;
+        default : throw new Error('Unknown element : ' + item.element);
       }
 
       children.push(child);
@@ -100,7 +100,7 @@ sylma.xsd.Schema = new Class({
         case 'attributeGroup' : child = new sylma.xsd.AttributeGroup(schema, item); break;
         case 'anyAttribute' : child = new sylma.xsd.AnyAttribute(schema, item); break;
         case 'attribute' : child = new sylma.xsd.Attribute(schema, item); break;
-        default : throw 'Unknown element : ' + item.element;
+        default : throw new Error('Unknown element : ' + item.element);
       }
 
       result.push(child);
@@ -123,7 +123,7 @@ sylma.xsd.Schema = new Class({
 
     if (!result) {
 
-      throw 'Cannot find ' + element + ' : ' + namespace + ':' + name;
+      throw new Error('Cannot find ' + element + ' : ' + namespace + ':' + name);
     }
 
     return result;
@@ -200,6 +200,7 @@ sylma.xsd.Schema = new Class({
     this.document = document;
 
     var root = document.element;
+
     var element = this.findElement(root.namespace, root.name);
 
     element.prepare();
@@ -209,15 +210,15 @@ sylma.xsd.Schema = new Class({
   attachElement: function (el, ref) {
 
     el.ref = ref;
-    //console.log('Attach ' + item, item);
-
+//console.log('Attach ' + el, el);
+//console.log(el, ref);
     if (ref.element === 'element') {
 
       var type = ref.type;
 
       if (!type) {
 
-        throw 'No type found';
+        throw new Error('No type found');
       }
 
       type.prepareChildren();
@@ -349,8 +350,9 @@ sylma.xsd.Schema = new Class({
           }
 
           break;
-
+        
         case 'group' :
+        case 'all' :
         case 'sequence' :
         case 'choice' : this.lookupElement(el, item.children); break;
 
@@ -362,7 +364,7 @@ sylma.xsd.Schema = new Class({
         case 'annotation' :
           break;
 
-        default : console.log(key, item); throw 'Unknown element : ' + item.element;
+        default : console.log(key, item); throw new Error('Unknown element : ' + item.element);
       }
     }
   },

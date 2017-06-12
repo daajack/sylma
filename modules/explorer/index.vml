@@ -71,8 +71,7 @@
       </tpl:variable>
 
       <div class="explorer" js:class="sylma.modules.explorer.Explorer" js:name="explorer" js:parent-name="explorer">
-        <h2>Explorer</h2>
-        <div class="sidebar" js:class="sylma.modules.explorer.Tree" js:name="sidebar" js:parent-name="tree">
+        <div class="view view-1" js:class="sylma.modules.explorer.Tree" js:name="sidebar" js:parent-name="tree">
           <js:option name="datas">
             <crud:include path="getDirectory"/>
           </js:option>
@@ -82,9 +81,11 @@
           <js:option name="path">
             <crud:path path="getDirectory"/>
           </js:option>
-          <tpl:apply select="root"/>
+          <div class="wrapper">
+            <tpl:apply select="root"/>
+          </div>
         </div>
-        <div class="view" js:class="sylma.ui.Loader" js:name="view">
+        <div class="view view-2" js:class="sylma.ui.Loader" js:name="view">
           <div js:script="/#sylma/modules/inspector/php/view" js:name="tab-inspector">
             <js:option name="sylma-inside">1</js:option>
           </div>

@@ -12,11 +12,12 @@ sylma.xml.Element = new Class({
   },
 
   onReady: function () {
-//return;
+//console.log(this.options);
     if (!this.sylma.template.classes) {
 
-      var el = this.getParent('element');
-//console.log(this.getParent('element').sylma, this.sylma);
+      //var el = this.getParent('element');
+      var el = this.getParent('document').elementTemplate;
+
       this.sylma = el.sylma;
       this.buildTemplate = el.buildTemplate.bind(this);
     }
@@ -201,11 +202,10 @@ console.log('Remove element', this);
 
     child.openValue(function() {
 
-      editor.getObject('history').addStep('add', path, '', {
+      editor.getObject('history').addStep('add', path, child.value, {
         type : 'attribute',
         namespace : attribute.namespace,
         name : attribute.shortname,
-        value : child.value
       });
 
     });
@@ -217,7 +217,10 @@ console.log('Remove element', this);
   initMove : function () {
 
     var confirm = false;
-    var tests = this.getParent('editor').getNode().getElements('.spacing');
+    
+    var doc = this.getParent('editor').getObject('container').getObject('document')[0];
+//console.log(doc);
+    var tests = doc.element.getNode().getElements('.spacing');
     var editor = this.getParent('editor');
     var enode = editor.getNode();
     var cnode = this.getNode();
@@ -335,7 +338,6 @@ console.log('Remove element', this);
 
   validateMove : function (parent, previous) {
 
-console.log('Move', this);
     var editor = this.getParent('editor');
     var node = this.getNode();
     var copy = node.clone(true);
@@ -424,9 +426,14 @@ console.log('Move', this);
     return (el ? el.toPath() : '') + position + (last ? '' : '/');
   },
 
+  valueOf : function () {
+    
+    return this.namespace + ':' + this.name;
+  },
+  
   toString : function () {
 
-    return this.namespace + ':' + this.name;
+    return this.valueOf();
   },
 
   toElement : function() {

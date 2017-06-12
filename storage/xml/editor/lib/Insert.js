@@ -85,8 +85,9 @@ sylma.xml.Insert = new Class({
       }
 
       if (input) {
-
-        var reg = new RegExp(input.toLowerCase());
+        
+        var val = input.toLowerCase().trim();
+        var reg = new RegExp(val);
 
         children = children.filter(function(item) {
 
@@ -150,11 +151,11 @@ sylma.xml.Insert = new Class({
   hide: function () {
 
     this.parent();
-    this.getNode().dispose.delay(500, this.getNode());
+    //this.getNode().dispose.delay(500, this.getNode());
   },
 
   addChild: function (node) {
-console.log('Add', node);
+//console.log('Add', node);
     this.hide();
 
     switch (node.element) {
@@ -183,7 +184,7 @@ console.log('Add', node);
         this.element.addText(this.previous);
         break;
 
-      default : throw 'Unknown element : ' + node.element;
+      default : throw new Error('Unknown element : ' + node.element);
 
     }
 

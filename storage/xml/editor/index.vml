@@ -14,7 +14,9 @@
 >
 
   <crud:global node:ns="ns">
+    
     <xl:resource file="schema.xml"/>
+    
     <tpl:settings>
       <cls:classes>
         <cls:class alias="tree">
@@ -70,53 +72,68 @@
       </tpl:apply>
 
       <div js:class="sylma.ui.Container">
-        <div class="editor edit" js:class="sylma.xml.Editor" js:parent-name="editor">
-          <js:option name="file" cast="x">
-            <tpl:read select="/root()/getFile()"/>
-          </js:option>
-          <js:option name="update">
-            <tpl:read select="/root()/getUpdate()"/>
-          </js:option>
-          <js:option name="rights">
-            <tpl:read select="/root()/getRights()"/>
-          </js:option>
-          <js:option name="document">
-            <tpl:read select="/root()/asJSON()"/>
-          </js:option>
-          <js:option name="schemas">
-            <tpl:read select="/root()/getSchemas()"/>
-          </js:option>
-          <js:option name="namespaces">
-            <tpl:read select="/root()/getNamespaces()"/>
-          </js:option>
-          <div class="insert hidder" js:class="sylma.xml.Insert" js:name="insert">
-            <input type="text" autocapitalize="off" autocorrect="off" js:node="input">
-              <js:event name="input">%object%.updateChildren();</js:event>
-              <js:event name="blur">%object%.hide();</js:event>
-              <js:event name="keyup">%object%.pressKey(e);</js:event>
-            </input>
-            <div class="container" js:node="container"/>
-          </div>
-          <div class="update hidder" js:class="sylma.xml.Update" js:name="update">
-            <input type="text" js:node="input">
-              <js:event name="input">%object%.updateValue();</js:event>
-              <js:event name="keyup">%object%.pressKey(e);</js:event>
-              <js:event name="blur">%object%.validate();</js:event>
-            </input>
-          </div>
-          <div class="history" js:class="sylma.xml.History" js:name="history">
-            <js:option name="path">
-              <crud:path path="update"/>
-            </js:option>
-          </div>
-          <div js:class="sylma.ui.Container" js:name="container">
-            <tpl:apply select="document"/>
-          </div>
-        </div>
+        <tpl:apply mode="editor"/>
       </div>
-
+      
     </tpl:template>
 
+    <tpl:template mode="editor">
+      <h3 class="name">
+        <tpl:read select="/root()/getFile()"/>
+      </h3>
+      <div class="editor edit" js:class="sylma.xml.Editor" js:parent-name="editor">
+        <tpl:apply mode="editor/init"/>
+      </div>
+    </tpl:template>
+
+    <tpl:template mode="editor/init">
+      <js:option name="file" cast="x">
+        <tpl:read select="/root()/getFile()"/>
+      </js:option>
+      <js:option name="update">
+        <tpl:read select="/root()/getUpdate()"/>
+      </js:option>
+      <js:option name="rights">
+        <tpl:read select="/root()/getRights()"/>
+      </js:option>
+      <js:option name="document">
+        <tpl:read select="/root()/asJSON()"/>
+      </js:option>
+      <js:option name="schemas">
+        <tpl:read select="/root()/getSchemas()"/>
+      </js:option>
+      <js:option name="namespaces">
+        <tpl:read select="/root()/getNamespaces()"/>
+      </js:option>
+      <tpl:apply mode="document/tools"/>
+      <div class="history" js:class="sylma.xml.History" js:name="history">
+        <js:option name="path">
+          <crud:path path="update"/>
+        </js:option>
+      </div>
+      <div js:class="sylma.ui.Container" js:name="container">
+        <tpl:apply select="document"/>
+      </div>
+    </tpl:template>
+    
+    <tpl:template match="*" mode="document/tools">
+      <div class="insert hidder" js:class="sylma.xml.Insert" js:name="insert">
+        <input type="text" autocapitalize="off" autocorrect="off" js:node="input">
+          <js:event name="input">%object%.updateChildren();</js:event>
+          <js:event name="blur">%object%.hide();</js:event>
+          <js:event name="keyup">%object%.pressKey(e);</js:event>
+        </input>
+        <div class="container" js:node="container"/>
+      </div>
+      <div class="update hidder" js:class="sylma.xml.Update" js:name="update">
+        <input type="text" js:node="input">
+          <js:event name="input">%object%.updateValue();</js:event>
+          <js:event name="keyup">%object%.pressKey(e);</js:event>
+          <js:event name="blur">%object%.validate();</js:event>
+        </input>
+      </div>
+    </tpl:template>
+    
     <tpl:template match="node:document">
       <div class="document" js:class="sylma.xml.Document" js:parent-name="document" js:alias="document">
         <div class="children">
@@ -138,7 +155,7 @@
       </pre>
     </tpl:template>
 
-    <tpl:template match="node:element">
+    <tpl:template match="node:element" mode="element/empty">
       <div class="element" js:class="sylma.xml.Element" js:alias="element">
         <tpl:read select="'--'"/>
         <tpl:read select="name"/>
@@ -147,31 +164,38 @@
 
     <tpl:template match="node:element">
       <div class="element node real node-{prefix} format-{format}" js:class="sylma.xml.Element" js:parent-name="element" js:alias="element">
-
-        <div class="fullname">
-          <js:event name="mousedown">%object%.initMove();</js:event>
-          <span class="prefix">
-            <tpl:read select="prefix"/>
-          </span>
-          <span class="name">
-            <tpl:read select="name"/>
-          </span>
-        </div>
-
-        <tpl:apply mode="tools"/>
-        <div class="attributes">
-          <tpl:apply select="attribute"/>
-        </div>
-        <div class="spacing self">
-          <js:event name="click">%object%.insert()</js:event>
-        </div>
-        <tpl:apply select="children"/>
-        <div class="spacing parent">
-          <js:event name="click">%object%.parentElement.insert(%object%)</js:event>
-        </div>
+        <tpl:apply mode="element/init"/>
       </div>
     </tpl:template>
 
+    <tpl:template match="node:element" mode="element/init">
+      <div class="fullname">
+        <js:event name="mousedown">%object%.initMove(e);</js:event>
+        <span class="prefix">
+          <tpl:read select="prefix"/>
+        </span>
+        <span class="name">
+          <tpl:read select="name"/>
+        </span>
+      </div>
+
+      <tpl:apply mode="tools"/>
+      <div class="attributes">
+        <tpl:apply mode="element/attributes"/>
+      </div>
+      <div class="spacing self">
+        <js:event name="click">%object%.insert()</js:event>
+      </div>
+      <tpl:apply select="children"/>
+      <div class="spacing parent">
+        <js:event name="click">%object%.parentElement.insert(%object%)</js:event>
+      </div>
+    </tpl:template>
+
+    <tpl:template match="*" mode="element/attributes">
+      <tpl:apply select="attribute"/>
+    </tpl:template>
+    
     <tpl:template match="*" mode="tools">
       <div class="tools" js:class="sylma.xml.Tools" js:alias="tools" js:autoload="x">
         <div class="wrapper">
@@ -201,28 +225,32 @@
 
     <tpl:template match="node:children">
       <div class="children" js:class="sylma.ui.Template" js:alias="children" js:all="x">
-        <tpl:apply select="element, text, comment"/>
+        <tpl:apply select="element" mode="element/empty"/>
+        <tpl:apply select="text, comment"/>
       </div>
     </tpl:template>
 
     <tpl:template match="node:attribute">
       <div class="attribute node-{prefix}" js:class="sylma.xml.Attribute" js:alias="attribute">
-        <js:event name="click">%object%.openValue()</js:event>
+        <tpl:apply mode="attribute/init"/>
+      </div>
+    </tpl:template>
+    
+    <tpl:template match="*" mode="attribute/init">
+      <js:event name="click">%object%.openValue()</js:event>
 
-        <div class="fullname">
-          <span class="prefix">
-            <tpl:read select="prefix"/>
-          </span>
-          <span class="name">
-            <tpl:read select="name"/>
-          </span>
-        </div>
-
-        <div class="value" js:node="value">
-          <tpl:read select="value"/>
-        </div>
+      <div class="fullname">
+        <span class="prefix">
+          <tpl:read select="prefix"/>
+        </span>
+        <span class="name">
+          <tpl:read select="name"/>
+        </span>
       </div>
 
+      <div class="value" js:node="value">
+        <tpl:read select="value"/>
+      </div>
     </tpl:template>
     
   </view:view>

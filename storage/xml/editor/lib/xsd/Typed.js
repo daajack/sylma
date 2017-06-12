@@ -75,7 +75,7 @@ sylma.xsd.Typed = new Class({
           case 'complexType' : type = new sylma.xsd.ComplexType(schema, type); break;
           case 'simpleType' : type = new sylma.xsd.SimpleType(schema, type); break;
           case 'baseType' : type = new sylma.xsd.BaseType(schema, type); break;
-          default : throw 'Unknown element : ' + type.element;
+          default : throw new Error('Unknown element : ' + type.element);
         }
       }
 

@@ -4,9 +4,16 @@ sylma.xml = {};
 sylma.xml.Editor = new Class({
 
   Extends : sylma.ui.Container,
+  
+  namespaces : {},
 
   onLoad : function () {
-
+    
+    this.prepareDocument();
+  },
+  
+  prepareDocument: function () {
+    
     var container = this.getObject('container');
 
     var options = this.options.document;
@@ -22,7 +29,7 @@ sylma.xml.Editor = new Class({
 
     var schema = new sylma.xsd.Schema(root, this.options.namespaces);
     schema.validate(doc);
-
+    
     schema.editor = this;
 
     this.schema = schema;

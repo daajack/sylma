@@ -13,9 +13,9 @@ sylma.xml.Attribute = new Class({
     this.sylma.splice = true;
 
     this.element = 'attribute';
-    this.namespace = this.options.namespace;
     this.name = this.options.name;
     this.prefix = this.options.prefix;
+    this.namespace = this.prefix ? this.options.namespace : '';
     this.shortname = (this.prefix ? this.prefix + ':' : '') + this.name;
     this.value = this.options.value;
     this.parentElement = this.getParent();
@@ -35,6 +35,7 @@ console.log('Remove attribute', this);
     this.getParent('editor').getObject('history').addStep('remove', path, '', {
       type : 'attribute',
       namespace : this.namespace,
+      //namespace : this.prefix ? this.namespace : '',
       name : this.name,
     });
 

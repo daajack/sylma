@@ -14,15 +14,21 @@ class Table extends sql\template\component\Table implements common\argumentable 
   }
 
   public function asArgument() {
-
-    $dummy = $this->getDummy();
-
-    //$content = $this->getWindow()->createGroup(array($this->getDummy()->call('asString')));
-    $aResult[] = $this->getQuery();
-    $aResult[] = $dummy->getInsert();
+    
+    $window = $this->getWindow();
+    
+    $aArguments = $this->loadDummyArguments();
+    $form = $this->buildReflector($aArguments);
+    $dummy = $window->createVar($form);
+    
     $content = array($dummy->call('asString'));
-    $aResult[] = $this->getHandler()->getView()->addToResult($content, false);
-
+    
+    $aResult[] = $dummy->getInsert();
+    $aResult[] = $window->createCondition($dummy->call('validate'), array(
+        $this->getQuery(),
+        $this->getHandler()->getView()->addToResult($content, false)
+    ));
+    
     return $this->getWindow()->createGroup($aResult);
   }
 }

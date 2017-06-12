@@ -1,5 +1,10 @@
 
-sylma.modules.explorer.Tree = new Class({
+if (!sylma.storage)
+{
+  sylma.storage = { fs : { explorer : {} } };
+}
+
+sylma.storage.fs.explorer.Tree = new Class({
 
   Extends : sylma.ui.Loader,
 
@@ -18,8 +23,36 @@ sylma.modules.explorer.Tree = new Class({
         this.openFile(null, file, ext[0]);
       }
     }
+console.log('ok');
   },
+  
+  build: function () {
 
+    var root = this.getObject('root')[0];
+    var files = root.getObject('file');
+    var current = 0;
+    var length = files.length;
+    var callback;
+    var container = root.getNode('children');
+    var top = container.offsetTop;
+
+    callback = function() {
+
+      if (current < length) {
+
+        var file = files[current];
+
+        file.open(callback);
+        container.scrollTop = file.getNode().offsetTop - top;
+//console.log(file.getNode().offsetTop);
+      }
+
+      current++;
+    };
+
+    callback(current);
+  },
+  
   openFile: function (callback, path, extension) {
 
     var explorer = this.getParent('explorer');

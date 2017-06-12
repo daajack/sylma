@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<explorer
+  xmlns="http://2014.sylma.org/modules/explorer/settings"
+>
+  <view type="sidebar">
+    <module name="storage/fs">
+      <path></path>
+    </module>
+  </view>
+  <view type="content">
+    <module name="inspector/php">
+      <path>/#sylma/modules/inspector/php/view</path>
+    </module>
+    <module name="xml/editor">
+      <path>/#sylma/storage/xml/editor</path>
+    </module>
+  </view>
+</explorer>

@@ -1,5 +1,5 @@
 
-sylma.modules.explorer.File = new Class({
+sylma.storage.fs.explorer.File = new Class({
 
   Extends : sylma.ui.Template,
 

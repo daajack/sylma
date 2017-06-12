@@ -9,7 +9,7 @@
   xmlns:cls="http://2013.sylma.org/core/factory"
   xmlns:builder="http://2013.sylma.org/parser/reflector/builder"
 
-  extends="/#sylma/modules/explorer/index.vml"
+  extends="/#sylma/storage/fs/explorer/sidebar.vml"
 >
 
   <view:view>

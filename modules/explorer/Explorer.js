@@ -11,34 +11,13 @@ sylma.modules.explorer.Explorer = new Class({
   onLoad : function() {
 
     //this.location = this.parseLocation(location.href);
+    this.getObject('sidebar').update();
   },
-
-  run : function() {
-
-    var root = this.getObject('sidebar').getObject('root')[0];
-    var files = root.getObject('file');
-    var current = 0;
-    var length = files.length;
-    var callback;
-    var container = root.getNode('children');
-    var top = container.offsetTop;
-
-    callback = function() {
-
-      if (current < length) {
-
-        var file = files[current];
-
-        file.open(callback);
-        container.scrollTop = file.getNode().offsetTop - top;
-//console.log(file.getNode().offsetTop);
-      }
-
-      current++;
-    };
-
-    callback(current);
-  },
+  
+//  run : function() {
+//
+//    this.getObject('sidebar').getObject('fs').update();
+//  },
 
   updateLocation : function(args) {
 

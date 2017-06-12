@@ -1,9 +1,9 @@
 <?php
 
-namespace sylma\modules\explorer;
+namespace sylma\storage\fs\explorer;
 use sylma\core;
 
-class Explorer extends core\module\Domed
+class Handler extends core\module\Domed
 {
   public function __construct() {
 

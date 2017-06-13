@@ -34,7 +34,7 @@
 
     <le:context name="css">
       <le:file>explorer.less</le:file>
-      <!--<le:file>../inspector/php/view/php.less</le:file>-->
+      <le:file>../inspector/php/view/php.less</le:file>
     </le:context>
 
     <tpl:template>
@@ -44,14 +44,20 @@
       <tpl:apply mode="explorer/resources"/>
 
       <div class="explorer" js:class="sylma.modules.explorer.Explorer" js:name="explorer" js:parent-name="explorer">
+        <js:option name="file">
+          <le:get-argument name="file" optional="x"/>
+        </js:option>
+        <js:option name="dir">
+          <le:get-argument name="dir" optional="x"/>
+        </js:option>
         <div class="view view-1" js:script="/#sylma/storage/fs/explorer/sidebar" js:name="sidebar">
           <js:option name="sylma-inside">1</js:option>
         </div>
         <div class="view view-2" js:class="sylma.ui.Loader" js:name="view">
-<!--          <div js:script="/#sylma/modules/inspector/php/view" js:name="tab-inspector">
+          <div class="tab" js:script="/#sylma/modules/inspector/php/view" js:name="tab-inspector">
             <js:option name="sylma-inside">1</js:option>
-          </div>-->
-          <div js:script="/#sylma/storage/xml/editor" js:name="tab-editor"/>
+          </div>
+          <div class="tab" js:script="/#sylma/storage/xml/editor" js:name="tab-editor"/>
         </div>
       </div>
 

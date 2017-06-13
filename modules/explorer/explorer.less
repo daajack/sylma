@@ -47,12 +47,6 @@ body
     min-width: 200px;
     border-right: 1px solid #ddd;
     padding: 0;
-
-    & > .wrapper
-    {
-      position: relative;
-      margin: 1rem;
-    }
   }
 
   .view-2
@@ -69,5 +63,21 @@ body
       }
     }
   }
+  
+  .tab
+  {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0.5s, opacity 0.5s;
+    box-sizing: border-box;
+    width: 100%;
+    max-height: 0;
 
+    &.open
+    {
+      visibility: visible;
+      opacity: 1;
+      max-height: auto;
+    }
+  }
 }

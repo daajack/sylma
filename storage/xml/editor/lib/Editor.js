@@ -47,6 +47,5 @@ sylma.xml.Editor = new Class({
 
     this.getNode().removeClass('move');
     this.getNode().addClass('edit');
-  },
-
+  }
 });

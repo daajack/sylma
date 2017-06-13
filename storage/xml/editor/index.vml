@@ -71,17 +71,17 @@
         </le:file>
       </tpl:apply>
 
-      <div js:class="sylma.ui.Container">
+      <div class="tab" js:class="sylma.ui.Container">
         <tpl:apply mode="editor"/>
       </div>
       
     </tpl:template>
 
     <tpl:template mode="editor">
-      <h3 class="name">
-        <tpl:read select="/root()/getFile()"/>
-      </h3>
       <div class="editor edit" js:class="sylma.xml.Editor" js:parent-name="editor">
+        <h3 class="name">
+          <tpl:read select="/root()/getFile()"/>
+        </h3>
         <tpl:apply mode="editor/init"/>
       </div>
     </tpl:template>

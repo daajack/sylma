@@ -23,7 +23,6 @@ sylma.storage.fs.explorer.Tree = new Class({
         this.openFile(null, file, ext[0]);
       }
     }
-console.log('ok');
   },
   
   build: function () {
@@ -55,63 +54,7 @@ console.log('ok');
   
   openFile: function (callback, path, extension) {
 
-    var explorer = this.getParent('explorer');
-    var view = explorer.getObject('view');
-
-    Object.each(view.objects, function(obj) {
-
-      obj.getNode().removeClass('open');
-    });
-
-    var container;
-
-    switch (extension) {
-
-      case 'php' :
-
-        container = view.getObject('tab-inspector');
-
-        break;
-
-      case 'crd' :
-      case 'vml' :
-      case 'tpl' :
-      case 'xml' :
-      case 'sml' :
-      case 'tml' :
-      case 'xql' :
-      case 'xsd' :
-
-        container = view.getObject('tab-editor');
-
-        break;
-
-      default :
-
-
-    }
-
-    if (container) {
-
-      view.startLoading();
-
-      container.update(function() {
-
-        container.getNode().addClass('open');
-        callback && callback();
-
-        view.stopLoading();
-
-      }, {
-        data : {
-          file : path
-        }
-      });
-    }
-    else {
-
-      sylma.ui.showMessage('No editor defined');
-    }
+    this.getParent('explorer').open(path, extension);
   },
 
   updateJSON : function(args, isParent) {

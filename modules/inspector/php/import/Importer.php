@@ -140,6 +140,7 @@ class Importer extends core\module\Domed
   protected function buildClass(\ReflectionClass $class) {
 
     $sFile = substr($class->getFileName(), $this->iSystem);
+    $sFile = str_replace('\\', '/', $sFile);
 
     $iFile = $this->getScript('update/file-id', array(
       'name' => $sFile,

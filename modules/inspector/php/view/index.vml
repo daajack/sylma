@@ -31,10 +31,6 @@
 
       <div class="inspector">
 
-        <em>
-          <tpl:apply select="file/ref()" mode="file"/>
-        </em>
-
         <h3>
 <!--
           <tpl:read select="namespace/name"/>\

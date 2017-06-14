@@ -18,8 +18,8 @@ sylma.xml.Editor = new Class({
 
     var options = this.options.document;
     var doc = container.add('document', options);
-    var history = this.getObject('history');
-
+    var history = this.getHistory();
+    
     window.addEvent('unload', function() {
 
       history.save();
@@ -36,6 +36,11 @@ sylma.xml.Editor = new Class({
     this.file = this.options.file;
     this.updateTime = this.options.update;
   },
+  
+  getHistory: function () {
+    
+    return this.getObject('history');
+  },
 
   startMove: function () {
 
@@ -47,5 +52,16 @@ sylma.xml.Editor = new Class({
 
     this.getNode().removeClass('move');
     this.getNode().addClass('edit');
+  },
+  
+  stepBackward : function()
+  {
+    var steps = this.getHistory().objects.step;
+    steps[steps.length - 1].undo();
+  },
+  
+  stepForward : function()
+  {
+    
   }
 });

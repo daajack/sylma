@@ -24,6 +24,49 @@
   border-right: 1px solid #ddd;
   margin-bottom: 4em;
   font-size: @font-size;
+  
+  .actions
+  {
+    position: absolute;
+    top: 0;    
+    right: 1rem;
+    
+    .button
+    {
+      @s: 2rem;
+      
+      display: inline-block;
+      float: left;
+      width: @s;
+      height: @s;
+      line-height: @s;
+      border: 1px solid @gray3;
+      margin-left: 0.5rem;
+      text-align: center;
+      cursor: pointer;
+      
+      &:hover
+      {
+        color: @gray1;
+        background-color: @gray3;
+      }
+    }
+  }
+  
+  .tree
+  {
+    display: flex;
+    
+    .container
+    {
+      flex: 1 85%
+    }
+
+    .history
+    {
+      flex: 1 15%;
+    }
+  }
 
   input
   {
@@ -329,6 +372,38 @@
   .node-tpl > .fullname .prefix { color: @color-tpl; }
   .node-js > .fullname .prefix { color: red; }
   .node-sql > .fullname .prefix { color: indigo; }
+  
+  .history
+  {
+    padding: 0 1rem;
+    box-sizing: border-box;
+    
+    .step
+    {
+      border-bottom: 1px solid @gray1;
+      overflow: hidden;
+      
+      .type
+      {
+        display: inline-block;
+        font-weight: bold;
+      }
+      
+      .path
+      {
+        display: inline-block;
+        float: right;
+      }
+      
+      .date
+      {
+        display: block;
+        font-size: 0.8em;
+        clear: both;
+        color: @gray1;
+      }
+    }
+  }
 }
 
 .editor.edit

@@ -29,6 +29,5 @@ sylma.xml.Document = new Class({
   init: function () {
 
     this.element = this.objects.element[0];
-  },
-
+  }
 });

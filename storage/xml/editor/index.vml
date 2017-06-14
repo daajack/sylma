@@ -39,6 +39,7 @@
       <js:include>/#sylma/ui/Template.js</js:include>
       <js:include>lib/Editor.js</js:include>
       <js:include>lib/History.js</js:include>
+      <js:include>lib/Step.js</js:include>
       <js:include>lib/Tools.js</js:include>
       <js:include>lib/Insert.js</js:include>
       <js:include>lib/Update.js</js:include>
@@ -79,9 +80,6 @@
 
     <tpl:template mode="editor">
       <div class="editor edit" js:class="sylma.xml.Editor" js:parent-name="editor">
-        <h3 class="name">
-          <tpl:read select="/root()/getFile()"/>
-        </h3>
         <tpl:apply mode="editor/init"/>
       </div>
     </tpl:template>
@@ -106,13 +104,26 @@
         <tpl:read select="/root()/getNamespaces()"/>
       </js:option>
       <tpl:apply mode="document/tools"/>
-      <div class="history" js:class="sylma.xml.History" js:name="history">
-        <js:option name="path">
-          <crud:path path="update"/>
-        </js:option>
+      <h3 class="name">
+        <tpl:read select="/root()/getFile()"/>
+      </h3>
+      <div class="actions">
+        <div class="button back">
+          <js:event name="click">%object%.stepBackward();</js:event>
+          <tpl:text>↶</tpl:text>
+        </div>
+        <div class="button back">
+          <js:event name="click">%object%.stepForward();</js:event>
+          <tpl:text>↷</tpl:text>
+        </div>
       </div>
-      <div js:class="sylma.ui.Container" js:name="container">
-        <tpl:apply select="document"/>
+      <div class="tree">
+        <div class="container" js:class="sylma.ui.Container" js:name="container">
+          <tpl:apply select="document"/>
+        </div>
+        <le:script path="history">
+          <le:get-argument name="file" le:name="file"/>
+        </le:script>
       </div>
     </tpl:template>
     

@@ -61,7 +61,7 @@ console.log('Remove attribute', this);
       var editor = this.getParent('editor');
       var path = this.parentElement.toPath(true);
 
-      editor.getObject('history').addStep('update', path, this.value, {
+      editor.getHistory().addStep('update', path, this.value, {
         type : 'attribute',
         //namespace : this.namespace,
         name : this.shortname

@@ -9,18 +9,52 @@
   xmlns:builder="http://2013.sylma.org/parser/reflector/builder"
 
   xmlns:sql="http://2013.sylma.org/storage/sql"
+  xmlns:xl="http://2013.sylma.org/storage/xml"
 >
 
-  <crud:global>
-
-
-
-  </crud:global>
-
-  <view:view internal="x" builder:return="result">
+  <crud:group name="sql">
 
     <view:schema>history.xql</view:schema>
     <sql:resource multiple="x"/>
+    
+  </crud:group>
+
+  <view:view builder:return="result">
+    
+    <xl:resource file="history.xml"/>
+    
+    <tpl:template>
+      <div class="history" js:class="sylma.xml.History" js:name="history">
+        <js:option name="path">
+          <le:path/>
+        </js:option>
+        <js:option name="pathUpdate">
+          <le:path>index/update</le:path>
+        </js:option>
+        <js:option name="steps">
+          <crud:include path="steps"/>
+        </js:option>
+        <tpl:apply select="*" mode="step"/>
+      </div>
+    </tpl:template>
+
+    <tpl:template match="*" mode="step">
+      <div class="step" js:class="sylma.xml.Step" js:alias="step">
+        <span class="type">
+          <tpl:read select="type"/>
+        </span>
+        <span class="path">
+          <tpl:read select="path"/>
+        </span>
+        <span class="date">
+          <tpl:read select="update"/>
+        </span>
+      </div>
+    </tpl:template>
+
+  </view:view>
+
+  <view:view name="last" groups="sql" internal="x" builder:return="result">
 
     <sql:filter name="file">
       <le:get-argument name="file"/>
@@ -38,7 +72,36 @@
     </tpl:template>
 
   </view:view>
+  
+  <view:view name="steps" groups="sql" builder:return="result" builder:output="array">
+    
+    <sql:order>!update</sql:order>
+    <sql:limit>10</sql:limit>
 
+    <tpl:template>
+      <tpl:apply select="*"/>
+    </tpl:template>
+    
+    <tpl:template match="*">
+      <tpl:apply select="file/ref()" mode="file/filter"/>
+      <le:array>
+        <tpl:read select="id" le:name="id"/>
+        <tpl:read select="type" le:name="type"/>
+        <tpl:read select="update" le:name="update"/>
+        <tpl:read select="path" le:name="path"/>
+        <tpl:read select="arguments/text()" le:name="arguments"/>
+        <tpl:read select="content" le:name="content"/>
+      </le:array>
+    </tpl:template>
+     
+    <tpl:template match="*" mode="file/filter">
+      <sql:filter name="path">
+        <le:get-argument name="file"/>
+      </sql:filter>
+    </tpl:template>
+    
+  </view:view>
+  
   <view:view name="insert" mode="insert" internal="x" builder:return="result">
 
     <view:schema>history.xql</view:schema>

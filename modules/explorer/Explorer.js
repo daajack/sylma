@@ -29,7 +29,7 @@ sylma.modules.explorer.Explorer = new Class({
     });
 
     var container;
-console.log(extension);
+    
     switch (extension) {
 
       case 'php' :

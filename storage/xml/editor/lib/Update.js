@@ -5,6 +5,7 @@ sylma.xml.Update = new Class({
 
   element : null,
   previous : null,
+  previousValue : '',
 
   onLoad : function () {
 
@@ -38,7 +39,7 @@ sylma.xml.Update = new Class({
 
     var input = this.getNode('input');
     input.set('value', node.value);
-
+    
     input.focus.delay(200, input);
     input.select.delay(200, input);
   },

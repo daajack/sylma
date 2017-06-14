@@ -204,7 +204,7 @@ class Editor extends core\module\Domed {
       ));
     }
 
-    $update = $this->run('history', array('file' => $id));
+    $update = $this->run('history/last', array('file' => $id));
     $messages = $this->getManager(self::PARSER_MANAGER)->getContext('messages');
 
     if ($this->run('file/locked', array('id' => $id))) {
@@ -257,7 +257,14 @@ class Editor extends core\module\Domed {
       $step->set('user', $user);
       $args = $this->createArgument(json_decode($step->read('arguments'), true));
 
-      $this->run('history/insert', array(), $step->asArray());
+      if ($step->read('type') === 'revert')
+      {
+        $this->run('history/load');
+      }
+      else
+      {
+        $this->run('history/insert', array(), $step->asArray());
+      }
 
       $el = $this->findElement($doc->getRoot(), $step->read('path'));
 

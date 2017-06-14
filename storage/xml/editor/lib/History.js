@@ -6,28 +6,39 @@ sylma.xml.History = new Class({
   sendSpeed : 60000,
   sending : false,
 
-  onLoad : function() {
-
-    this.save();
+  onLoad : function() 
+  {
+    var history = this;
+    
+    if (this.options.steps)
+    {
+      this.options.steps.each(function(step)
+      {
+        history.add('step', step);
+      });
+    }
   },
 
-  addStep: function(type, path, content, args) {
-
+  addStep: function(type, path, content, args) 
+  {
     var step = {
       type : type,
       path : path,
+      update : new Date,
       content : content,
-      arguments : JSON.stringify(args),
+      arguments : JSON.stringify(args)
     };
-
+    
+    this.add('step', step);
+    
     this.steps.push(step);
     this.save();
   },
 
-  save: function() {
-console.log('check steps');
-    if (!this.sending && this.steps.length) {
-
+  saveSteps: function() 
+  {
+    if (!this.sending && this.steps.length) 
+    {
       this.sending = true;
 
       var editor = this.getParent('editor');
@@ -35,7 +46,7 @@ console.log('check steps');
       var steps = this.steps;
       this.steps = [];
 
-      this.send(this.options.path, {
+      this.send(this.options.pathUpdate, {
         steps : steps,
         file : editor.file,
         update : editor.updateTime

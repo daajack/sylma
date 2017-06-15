@@ -107,16 +107,6 @@
       <h3 class="name">
         <tpl:read select="/root()/getFile()"/>
       </h3>
-      <div class="actions">
-        <div class="button back">
-          <js:event name="click">%object%.stepBackward();</js:event>
-          <tpl:text>↶</tpl:text>
-        </div>
-        <div class="button back">
-          <js:event name="click">%object%.stepForward();</js:event>
-          <tpl:text>↷</tpl:text>
-        </div>
-      </div>
       <div class="tree">
         <div class="container" js:class="sylma.ui.Container" js:name="container">
           <tpl:apply select="document"/>

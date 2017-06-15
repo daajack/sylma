@@ -204,10 +204,10 @@ class Editor extends core\module\Domed {
       ));
     }
 
-    $update = $this->run('history/last', array('file' => $id));
+    $update = $this->run('history/time', array('file' => $id));
     $messages = $this->getManager(self::PARSER_MANAGER)->getContext('messages');
 
-    if ($this->run('file/locked', array('id' => $id))) {
+    if (0 && $this->run('file/locked', array('id' => $id))) {
       
       $messages->add(array('content' => 'File locked'));
     }
@@ -242,28 +242,32 @@ class Editor extends core\module\Domed {
     return $result;
   }
 
-  protected function updateDocument($id, fs\file $file, dom\document $doc) {
-
-    //$this->set('file', $id);
-
+  protected function updateDocument($id, fs\file $file, dom\document $doc) 
+  {
     $steps = $this->get('steps');
     $user = (string) $this->getManager('user');
 
     $this->setNamespaces($this->getNamespaces());
-//dsp($this->getNS());
+    
     foreach ($steps as $step) {
 
       $step->set('file', $id);
       $step->set('user', $user);
-      $args = $this->createArgument(json_decode($step->read('arguments'), true));
-
-      if ($step->read('type') === 'revert')
+      
+      if ($step->read('type') === 'undo')
       {
-        $this->run('history/load');
+        $step = $this->undo($id, $step);
+        $args = $step->get('arguments');
+      }
+      else if ($step->read('type') === 'redo')
+      {
+        $step = $this->redo($id, $step);
+        $args = $step->get('arguments');
       }
       else
       {
         $this->run('history/insert', array(), $step->asArray());
+        $args = $this->createArgument(json_decode($step->read('arguments'), true));
       }
 
       $el = $this->findElement($doc->getRoot(), $step->read('path'));
@@ -276,11 +280,52 @@ class Editor extends core\module\Domed {
         default : $this->launchException('Unknown step type');
       }
     }
-//dsp('Save : ' . $file);
-//dsp($doc);
+    
     $doc->saveFile($file, true);
 
     return true;
+  }
+  
+  protected function undo($id, $step)
+  {
+    $pstep = $this->createArgument(current($this->run('history/last', array('file' => $id))));
+
+    switch ($pstep->read('type'))
+    {
+      case 'add' :
+
+        $step->set('type', 'remove'); 
+        $step->set('path', $pstep->read('path')); 
+        break;
+
+      case 'update' :
+
+        $args = $this->createArgument(json_decode($pstep->read('arguments'), true));
+
+        $step->set('arguments', $args);
+        $step->set('type', 'update');
+        $step->set('path', $pstep->read('path'));
+        $step->set('content', $args->read('previous'));
+        $step->set('arguments', $args);
+
+        $this->run('history/disable', array('id' => $pstep->read('id'), 'value' => 1));
+
+        break;
+    }
+    
+    return $step;
+  }
+  
+  protected function redo($id, $step)
+  {
+    $pstep = $this->createArgument(current($this->run('history/last', array('file' => $id))));
+    $args = $this->createArgument(json_decode($pstep->read('arguments'), true));
+    
+    $pstep->set('arguments', $args);
+
+    $this->run('history/disable', array('id' => $pstep->read('id'), 'value' => 0));
+    
+    return $pstep;
   }
 
   protected function updateElement(dom\document $doc, dom\element $el, core\argument $step, core\argument $args) {

@@ -25,34 +25,6 @@
   margin-bottom: 4em;
   font-size: @font-size;
   
-  .actions
-  {
-    position: absolute;
-    top: 0;    
-    right: 1rem;
-    
-    .button
-    {
-      @s: 2rem;
-      
-      display: inline-block;
-      float: left;
-      width: @s;
-      height: @s;
-      line-height: @s;
-      border: 1px solid @gray3;
-      margin-left: 0.5rem;
-      text-align: center;
-      cursor: pointer;
-      
-      &:hover
-      {
-        color: @gray1;
-        background-color: @gray3;
-      }
-    }
-  }
-  
   .tree
   {
     display: flex;
@@ -377,11 +349,43 @@
   {
     padding: 0 1rem;
     box-sizing: border-box;
+
+    .actions
+    {
+      margin: auto;
+      text-align: center;
+      margin-bottom: 1rem;
+
+      .button
+      {
+        @s: 2rem;
+
+        display: inline-block;
+        width: @s;
+        height: @s;
+        line-height: @s;
+        background-color: @gray4;
+        margin-left: 0.5rem;
+        text-align: center;
+        cursor: pointer;
+
+        &:hover
+        {
+          color: @gray1;
+          background-color: @gray3;
+        }
+      }
+    }
     
     .step
     {
       border-bottom: 1px solid @gray1;
       overflow: hidden;
+      
+      &.disabled
+      {
+        opacity: 0.5;
+      }
       
       .type
       {

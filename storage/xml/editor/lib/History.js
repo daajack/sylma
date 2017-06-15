@@ -35,7 +35,7 @@ sylma.xml.History = new Class({
     this.save();
   },
 
-  saveSteps: function() 
+  save: function() 
   {
     if (!this.sending && this.steps.length) 
     {
@@ -66,6 +66,34 @@ sylma.xml.History = new Class({
     }
 
     window.setTimeout(this.save.bind(this), this.sendSpeed);
-  }
+  },
+  
+  stepBackward : function()
+  {
+    var steps = this.objects.step;
+    var k = steps.length;
+    
+    do
+    {
+      k--;
+    }
+    while (k && steps[k].disabled);
 
+    steps[k].undo();
+  },
+  
+  stepForward : function()
+  {
+    var steps = this.objects.step;
+    var k = steps.length - 1;
+
+    while (k >= 0 && steps[k].disabled)
+    {
+      k--;
+    }
+
+    k++;
+
+    steps[k].redo();
+  }
 });

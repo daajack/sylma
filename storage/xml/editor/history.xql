@@ -18,6 +18,7 @@
     <field name="path" type="sql:string" default="null"/>
     <field name="content" type="sql:string-long" default="null"/>
     <field name="arguments" type="sql:string" default="null"/>
+    <field name="disabled" type="sql:boolean" default="0"/>
 
     <field name="update" type="sql:datetime"/>
 

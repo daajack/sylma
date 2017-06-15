@@ -6,6 +6,9 @@ sylma.xml.Step = new Class({
   onLoad: function () {
     
     this.arguments = JSON.parse(this.options.arguments);
+    this.disabled = this.options.disabled === '1';
+    
+    this.updateNode();
   },
   
   addTo : function(node) {
@@ -23,24 +26,54 @@ sylma.xml.Step = new Class({
   {
     switch (this.options.type)
     {
-      case 'add' : this.revertAdd(); break;
-      case 'update' : this.revertUpdate(); break;
-      case 'delete' : this.revertDelete(); break;
+      case 'add' : this.undoAdd(); break;
+      case 'update' : this.undoUpdate(); break;
+      case 'delete' : this.undoDelete(); break;
     }
+    
+    this.disabled = true;
+    this.updateNode();
   },
   
-  revertUpdate : function()
+  redo : function()
+  {
+    switch (this.options.type)
+    {
+      case 'add' : this.redoAdd(); break;
+      case 'update' : this.redoUpdate(); break;
+      case 'delete' : this.redoDelete(); break;
+    }
+    
+    this.disabled = false;
+    this.updateNode();
+  },
+  
+  undoUpdate : function()
   {
     var history = this.getParent();
     var el = this.findElement().children[0];
     
     el.updateValue(this.arguments.previous, function()
     {
-      var step = {
-        type : 'revert'
-      };
+      history.steps.push({
+        type : 'undo'
+      });
       
-      history.steps.push(step);
+      history.save();
+    });
+  },
+  
+  redoUpdate : function()
+  {
+    var history = this.getParent();
+    var el = this.findElement().children[0];
+    
+    el.updateValue(this.options.content, function()
+    {
+      history.steps.push({
+        type : 'redo'
+      });
+      
       history.save();
     });
   },
@@ -58,5 +91,10 @@ sylma.xml.Step = new Class({
     });
     
     return element;
+  },
+  
+  updateNode : function()
+  {
+    this.getNode().toggleClass('disabled', this.disabled);
   }
 });

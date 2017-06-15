@@ -52,16 +52,5 @@ sylma.xml.Editor = new Class({
 
     this.getNode().removeClass('move');
     this.getNode().addClass('edit');
-  },
-  
-  stepBackward : function()
-  {
-    var steps = this.getHistory().objects.step;
-    steps[steps.length - 1].undo();
-  },
-  
-  stepForward : function()
-  {
-    
   }
 });

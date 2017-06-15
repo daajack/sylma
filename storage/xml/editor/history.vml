@@ -17,8 +17,27 @@
     <view:schema>history.xql</view:schema>
     <sql:resource multiple="x"/>
     
+    <tpl:template match="*" mode="step">
+      <tpl:apply select="file/ref()" mode="file/filter"/>
+      <le:array>
+        <tpl:read select="id" le:name="id"/>
+        <tpl:read select="type" le:name="type"/>
+        <tpl:read select="update" le:name="update"/>
+        <tpl:read select="path" le:name="path"/>
+        <tpl:read select="arguments/text()" le:name="arguments"/>
+        <tpl:read select="content" le:name="content"/>
+        <tpl:read select="disabled" le:name="disabled"/>
+      </le:array>
+    </tpl:template>
+    
+    <tpl:template match="*" mode="file/filter">
+      <sql:filter name="path">
+        <le:get-argument name="file"/>
+      </sql:filter>
+    </tpl:template>
+    
   </crud:group>
-
+  
   <view:view builder:return="result">
     
     <xl:resource file="history.xml"/>
@@ -34,7 +53,19 @@
         <js:option name="steps">
           <crud:include path="steps"/>
         </js:option>
-        <tpl:apply select="*" mode="step"/>
+        <div class="actions">
+          <div class="button back">
+            <js:event name="click">%object%.stepBackward();</js:event>
+            <tpl:text>↶</tpl:text>
+          </div>
+          <div class="button back">
+            <js:event name="click">%object%.stepForward();</js:event>
+            <tpl:text>↷</tpl:text>
+          </div>
+        </div>
+        <div class="steps">
+          <tpl:apply select="*" mode="step"/>
+        </div>
       </div>
     </tpl:template>
 
@@ -54,50 +85,71 @@
 
   </view:view>
 
-  <view:view name="last" groups="sql" internal="x" builder:return="result">
+  <view:view name="steps" groups="sql" builder:return="result" builder:output="array">
+    
+    <sql:limit>10</sql:limit>
+    <sql:order>update</sql:order>
 
-    <sql:filter name="file">
-      <le:get-argument name="file"/>
-    </sql:filter>
+    <tpl:template>
+      <tpl:apply select="*" mode="step"/>
+    </tpl:template>
+    
+  </view:view>
+  
+  <view:view name="time" groups="sql" internal="x" builder:return="result">
 
     <sql:order>!update</sql:order>
     <sql:limit>1</sql:limit>
 
+    <sql:filter name="file">
+      <le:get-argument name="file"/>
+    </sql:filter>
+    
     <tpl:template>
       <tpl:apply select="*"/>
     </tpl:template>
 
     <tpl:template match="*">
+      <tpl:apply select="file/ref()" mode="file/filter"/>
       <tpl:read select="update"/>
     </tpl:template>
 
   </view:view>
-  
-  <view:view name="steps" groups="sql" builder:return="result" builder:output="array">
-    
-    <sql:order>!update</sql:order>
-    <sql:limit>10</sql:limit>
 
+  <view:view name="last" groups="sql" internal="x" builder:return="result" builder:output="array">
+
+    <sql:order>!update</sql:order>
+    <sql:limit>1</sql:limit>
+
+    <sql:filter name="file">
+      <le:get-argument name="file"/>
+    </sql:filter>
+    
     <tpl:template>
-      <tpl:apply select="*"/>
+      <tpl:apply select="*" mode="step"/>
+    </tpl:template>
+    
+    <tpl:template match="*" mode="file/filter"/>
+    
+  </view:view>
+
+  <view:view name="disable" groups="sql" internal="x" mode="update" builder:return="result">
+
+    <view:schema>history.xql</view:schema>
+    <sql:resource/>
+    
+    <sql:filter name="id">
+      <le:get-argument name="id"/>
+    </sql:filter>
+    
+    <tpl:template>
+      <tpl:apply select="disabled"/>
     </tpl:template>
     
     <tpl:template match="*">
-      <tpl:apply select="file/ref()" mode="file/filter"/>
-      <le:array>
-        <tpl:read select="id" le:name="id"/>
-        <tpl:read select="type" le:name="type"/>
-        <tpl:read select="update" le:name="update"/>
-        <tpl:read select="path" le:name="path"/>
-        <tpl:read select="arguments/text()" le:name="arguments"/>
-        <tpl:read select="content" le:name="content"/>
-      </le:array>
-    </tpl:template>
-     
-    <tpl:template match="*" mode="file/filter">
-      <sql:filter name="path">
-        <le:get-argument name="file"/>
-      </sql:filter>
+      <tpl:register>
+        <le:get-argument name="value"/>
+      </tpl:register>
     </tpl:template>
     
   </view:view>

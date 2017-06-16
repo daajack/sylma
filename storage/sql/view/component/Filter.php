@@ -16,7 +16,12 @@ class Filter extends reflector\component\Foreigner implements reflector\componen
   protected function build() {
 
     $tree = $this->getParser()->getCurrentTree();
-
+    
+    if (!method_exists($tree, 'getQuery'))
+    {
+      $this->launchException('No getQuery method on tree');
+    }
+    
     if (!$query = $tree->getQuery(false)) {
 
       $query = $tree->getParent()->getQuery();

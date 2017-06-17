@@ -88,7 +88,7 @@
   <view:view name="steps" groups="sql" builder:return="result" builder:output="array">
     
     <sql:limit>10</sql:limit>
-    <sql:order>update</sql:order>
+    <sql:order>!update</sql:order>
 
     <tpl:template>
       <tpl:apply select="*" mode="step"/>

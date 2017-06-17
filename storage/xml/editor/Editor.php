@@ -453,5 +453,10 @@ class Editor extends core\module\Domed {
 
     return $aResult;
   }
+  
+  public function asXML()
+  {
+    return (string) $this->getDocument();
+  }
 }
 

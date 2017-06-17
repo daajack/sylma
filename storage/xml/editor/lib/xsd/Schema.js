@@ -222,8 +222,8 @@ sylma.xsd.Schema = new Class({
       }
 
       type.prepareChildren();
-
-      el.attributes.each(function(item) {
+if (0) {
+      Object.values(el.attributes).each(function(item) {
 
         this.lookupAttribute(item, type.children);
 
@@ -231,8 +231,8 @@ sylma.xsd.Schema = new Class({
 
           console.log('Cannot attach', item);
         }
-      });
-
+      }.bind(this));
+}
       if (el.children.length === 1 && el.children[0].type === 'text') {
 
         if (type.element === 'complexType' && !type.mixed) {

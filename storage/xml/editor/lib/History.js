@@ -12,7 +12,7 @@ sylma.xml.History = new Class({
     
     if (this.options.steps)
     {
-      this.options.steps.each(function(step)
+      this.options.steps.reverse().each(function(step)
       {
         history.add('step', step);
       });

@@ -44,7 +44,15 @@ console.log('Remove attribute', this);
   },
 
   updateValue: function (value, callback) {
-
+    
+    var previous = this.value;
+    
+    if (value === previous)
+    {
+      callback && callback();
+      return;
+    }
+    
     this.value = value;
     this.getNode('value').set('html', value);
 
@@ -63,13 +71,14 @@ console.log('Remove attribute', this);
 
       editor.getHistory().addStep('update', path, this.value, {
         type : 'attribute',
-        //namespace : this.namespace,
-        name : this.shortname
+        namespace : this.namespace,
+        name : this.shortname,
+        previous : previous
       });
     }
   },
 
-  _toString: function () {
+  toString: function () {
 
     var prefix = this.prefix ? this.prefix + ':' : '';
 

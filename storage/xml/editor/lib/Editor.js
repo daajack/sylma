@@ -18,6 +18,7 @@ sylma.xml.Editor = new Class({
 
     var options = this.options.document;
     var doc = container.add('document', options);
+//    var doc = container.add('document', { options : { content : this.options.document }});
     var history = this.getHistory();
     
     window.addEvent('unload', function() {

@@ -51,9 +51,9 @@ sylma.xml.Step = new Class({
   undoUpdate : function()
   {
     var history = this.getParent();
-    var el = this.findElement().children[0];
+    var node = this.findNode();
     
-    el.updateValue(this.arguments.previous, function()
+    node.updateValue(this.arguments.previous, function()
     {
       history.steps.push({
         type : 'undo'
@@ -66,9 +66,9 @@ sylma.xml.Step = new Class({
   redoUpdate : function()
   {
     var history = this.getParent();
-    var el = this.findElement().children[0];
+    var node = this.findNode();
     
-    el.updateValue(this.options.content, function()
+    node.updateValue(this.options.content, function()
     {
       history.steps.push({
         type : 'redo'
@@ -78,8 +78,9 @@ sylma.xml.Step = new Class({
     });
   },
   
-  findElement: function () {
+  findNode: function () {
     
+    var result;
     var paths = this.options.path.split('/');
     paths.shift();
     
@@ -90,7 +91,16 @@ sylma.xml.Step = new Class({
       element = element.children[path];
     });
     
-    return element;
+    if (this.arguments.type === 'text')
+    {
+      result = element.children[0];
+    }
+    else
+    {
+      result = element.attributes[this.arguments.name];
+    }
+    
+    return result;
   },
   
   updateNode : function()

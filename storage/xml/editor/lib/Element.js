@@ -6,7 +6,7 @@ sylma.xml.Element = new Class({
   namespace : null,
   name : null,
   children : [],
-  attributes : [],
+  attributes : null,
   sylma : {
     splice : true
   },
@@ -70,14 +70,19 @@ sylma.xml.Element = new Class({
 
   prepareChildren : function () {
 
-    if (this.objects.children) {
-
+    if (this.objects.children) 
+    {
       this.children = this.objects.children[0].tmp;
     }
+    
+    this.attributes = {};
 
-    if (this.objects.attributes) {
-
-      this.attributes = this.objects.attributes[0].tmp;
+    if (this.objects.attribute)
+    {
+      this.objects.attribute.each(function(attribute)
+      {
+        this.attributes[attribute.shortname] = attribute;
+      }.bind(this));
     }
   },
 
@@ -469,7 +474,7 @@ console.log('Remove element', this);
     }
 
     var name = this.getShortName();
-    var attributes = this.attributes.join(' ');
+    var attributes = Object.values(this.attributes).join(' ');
     var content = '';
 
     if (this.children.length) {

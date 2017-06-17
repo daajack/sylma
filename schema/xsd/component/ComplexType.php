@@ -136,7 +136,7 @@ class ComplexType extends parser\component\Complex implements core\arrayable {
       'namespace' => $this->getNamespace(),
       'name' => $this->getName(),
       'base' => $this->base,
-      'mixed' => core\functions\strtobool($this->readx('@mixed')),
+      'mixed' => $this->readx('@mixed'),
       //'extends' => $this->get
       'content' => $content,
     );

@@ -52,6 +52,8 @@ body
   .view-2
   {
     flex: 1 75%;
+    height: 100%;
+    overflow: hidden;
 
     & > *:last-child
     {
@@ -77,12 +79,13 @@ body
     box-sizing: border-box;
     width: 100%;
     max-height: 0;
+    height: 100%;
 
     &.open
     {
       visibility: visible;
       opacity: 1;
-      max-height: auto;
+      max-height: none;
     }
   }
 }

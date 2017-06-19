@@ -89,35 +89,4 @@ sylma.xml.Update = new Class({
         break;
     }
   },
-
-  _addChild: function (node) {
-console.log('Update', node);
-    this.hide();
-
-    switch (node.element) {
-
-      case 'element' :
-
-        if (!this.element.objects.children) {
-
-          this.element.add('children');
-
-          var node = this.element.getNode();
-          node.removeClass('format-text').addClass('format-complex');
-        }
-
-        this.element.addElement(node, this.previous);
-
-        break;
-
-      case 'attribute' :
-
-        this.element.addAttribute(node);
-        break;
-    }
-
-
-
-
-  }
 });

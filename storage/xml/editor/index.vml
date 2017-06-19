@@ -95,7 +95,7 @@
         <tpl:read select="/root()/getRights()"/>
       </js:option>
       <js:option name="document">
-        <tpl:read select="/root()/asJSON()"/>
+        <tpl:read select="/root()/asXML()"/>
       </js:option>
       <js:option name="schemas">
         <tpl:read select="/root()/getSchemas()"/>
@@ -107,9 +107,11 @@
       <h3 class="name">
         <tpl:read select="/root()/getFile()"/>
       </h3>
-      <div class="tree">
-        <div class="container" js:class="sylma.ui.Container" js:name="container">
-          <tpl:apply select="document"/>
+      <div class="window">
+        <div class="tree">
+          <div class="container" js:class="sylma.ui.Container" js:name="container">
+            <tpl:apply select="document"/>
+          </div>
         </div>
         <le:script path="history">
           <le:get-argument name="file" le:name="file"/>

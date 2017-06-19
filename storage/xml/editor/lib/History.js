@@ -31,6 +31,27 @@ sylma.xml.History = new Class({
     
     this.add('step', step);
     
+    var steps = this.objects.step;
+    var k = steps.length;
+    var clear = false;
+//console.log(steps, k);
+    while (k)
+    {
+      k--;
+//console.log(k, steps[k].disabled, steps[k])
+      if (steps[k].disabled) 
+      {
+        steps[k].remove(); clear = true; 
+      }
+    }
+
+    if (clear)
+    {
+      this.steps.push({
+        type : 'clear'
+      });
+    }
+    
     this.steps.push(step);
     this.save();
   },

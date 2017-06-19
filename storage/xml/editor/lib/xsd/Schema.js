@@ -229,7 +229,7 @@ if (0) {
 
         if (!item.ref) {
 
-          console.log('Cannot attach', item);
+          console.log('Cannot attach', item.name);
         }
       }.bind(this));
 }
@@ -263,7 +263,7 @@ if (0) {
               else {
 
                 child.getNode().addClass('invalid');
-                console.log('Cannot attach', child);
+                console.log('Cannot attach', child.name);
               }
             }
 

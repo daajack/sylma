@@ -36,68 +36,6 @@ class Editor extends core\module\Domed {
     return parent::getFile($sPath, $bDebug);
   }
 
-  protected function buildElement(dom\element $el) {
-
-    $aResult = array(
-      '_alias' => 'element',
-      'namespace' => $el->getNamespace(),
-      'prefix' => $el->getPrefix(),
-      'name' => $el->getName(),
-      'attribute' => array(),
-      'format' => $el->isComplex() ? 'complex' : (strlen($el->read()) < 100 ? 'text' : 'complex'),
-    );
-
-    foreach ($el->getAttributes() as $attr) {
-
-      $aResult['attribute'][] = array(
-        'prefix' => $attr->getPrefix(),
-        'name' => $attr->getName(),
-        'namespace' => $attr->getNamespace(),
-        'value' => (string) $attr,
-      );
-    }
-
-    $aChildren = array();
-
-    \Sylma::load('core/functions/Global.php');
-
-    foreach ($el->getChildren() as $child) {
-
-      if ($child instanceof dom\element) {
-
-        $aChildren[] = $this->buildElement($child);
-      }
-      else if ($child instanceof \DOMComment) {
-
-        $aChildren[] = array(
-          '_alias' => 'comment',
-          'content' => \sylma\core\functions\xmlize($this->trim((string) $child)),
-        );
-      }
-      else {
-
-        $sContent = $this->trim((string) $child);
-        //$sContent = trim(preg_replace(array('/[\t ]+/', '/\n\s*/'), array(' ', "\n"), $sContent));
-
-        $aChildren[] = array(
-          '_alias' => 'text',
-          'content' => $sContent,
-        );
-      }
-    }
-
-    if ($aChildren) {
-
-      $aResult['children'] = array(
-        array(
-          '_all' => $aChildren
-        ),
-      );
-    }
-
-    return $aResult;
-  }
-
   public function getSchemas() {
 
     $this->setDirectory(__FILE__);
@@ -250,34 +188,41 @@ class Editor extends core\module\Domed {
     $this->setNamespaces($this->getNamespaces());
     
     foreach ($steps as $step) {
-
-      $step->set('file', $id);
-      $step->set('user', $user);
       
-      if ($step->read('type') === 'undo')
+      if ($step->read('type') === 'clear')
       {
-        $step = $this->undo($id, $step);
-        $args = $step->get('arguments');
-      }
-      else if ($step->read('type') === 'redo')
-      {
-        $step = $this->redo($id, $step);
-        $args = $step->get('arguments');
+        $this->run('history/clear', array('file' => $id));
       }
       else
       {
-        $this->run('history/insert', array(), $step->asArray());
-        $args = $this->createArgument(json_decode($step->read('arguments'), true));
-      }
+        $step->set('file', $id);
+        $step->set('user', $user);
 
-      $el = $this->findElement($doc->getRoot(), $step->read('path'));
+        if ($step->read('type') === 'undo')
+        {
+          $step = $this->undo($id, $step);
+          $args = $step->get('arguments');
+        }
+        else if ($step->read('type') === 'redo')
+        {
+          $step = $this->redo($id, $step);
+          $args = $step->get('arguments');
+        }
+        else
+        {
+          $this->run('history/insert', array(), $step->asArray());
+          $args = $this->createArgument(json_decode($step->read('arguments'), true));
+        }
+  //dsp($args);
+        $el = $this->findElement($doc->getRoot(), $step->read('path'));
+  //dsp($el, $args);
+        switch ($args->read('type')) {
 
-      switch ($args->read('type')) {
-
-        case 'element' : $this->updateElement($doc, $el, $step, $args); break;
-        case 'text' : $this->updateText($el, $step, $args); break;
-        case 'attribute' : $this->updateAttribute($el, $step, $args); break;
-        default : $this->launchException('Unknown step type');
+          case 'element' : $this->updateElement($doc, $el, $step, $args); break;
+          case 'text' : $this->updateText($el, $step, $args); break;
+          case 'attribute' : $this->updateAttribute($el, $step, $args); break;
+          default : $this->launchException('Unknown step type');
+        }
       }
     }
     
@@ -288,37 +233,75 @@ class Editor extends core\module\Domed {
   
   protected function undo($id, $step)
   {
-    $pstep = $this->createArgument(current($this->run('history/last', array('file' => $id))));
+    $last = $this->run('history/last', array('file' => $id, 'disabled' => 0));
+    
+    $pstep = $this->createArgument(current($last));
+    $args = $this->createArgument(json_decode($pstep->read('arguments'), true));
+    
+    $step->set('arguments', $args);
 
     switch ($pstep->read('type'))
     {
       case 'add' :
 
         $step->set('type', 'remove'); 
-        $step->set('path', $pstep->read('path')); 
+        
+        switch ($args->read('type'))
+        {
+          case 'element' : $step->set('path', $pstep->read('path') . '/' . $args->read('position')); break;
+          case 'attribute' : $step->set('path', $pstep->read('path')); break;
+        }
+        
         break;
 
       case 'update' :
 
-        $args = $this->createArgument(json_decode($pstep->read('arguments'), true));
-
-        $step->set('arguments', $args);
         $step->set('type', 'update');
         $step->set('path', $pstep->read('path'));
         $step->set('content', $args->read('previous'));
-        $step->set('arguments', $args);
-
-        $this->run('history/disable', array('id' => $pstep->read('id'), 'value' => 1));
-
         break;
+      
+      case 'remove' :
+        
+        switch ($args->read('type'))
+        {
+          case 'element' : 
+
+            $path = explode('/', $pstep->read('path'));
+            $position = (int) array_pop($path);
+
+            $args->set('position', $position);
+
+            $step->set('type', 'add');
+            $step->set('path', implode('/', $path));
+            $step->set('content', $pstep->read('content'));
+            break;
+          
+          case 'attribute' :
+            
+            $step->set('type', 'add');
+            $step->set('path', $pstep->read('path'));
+            $step->set('content', $pstep->read('content'));
+            break;
+          
+          default : $this->launchException('Uknown node type');
+        }
+        
+        break;
+      
+      default : $this->launchException('Uknown step type');
     }
-    
+
+    $this->run('history/disable', array('id' => $pstep->read('id'), 'value' => 1));
+
     return $step;
   }
   
   protected function redo($id, $step)
   {
-    $pstep = $this->createArgument(current($this->run('history/last', array('file' => $id))));
+    $last = $this->run('history/last', array('file' => $id, 'disabled' => 1));
+//dsp($last);
+    $pstep = $this->createArgument(current($last));
     $args = $this->createArgument(json_decode($pstep->read('arguments'), true));
     
     $pstep->set('arguments', $args);
@@ -416,7 +399,7 @@ class Editor extends core\module\Domed {
       case 'remove' :
 //dsp($step, $args);
         //$el->setAttribute($args->read('name'), '', $args->read('namespace', false));
-        $attribute = $el->loadAttribute($args->read('name'), $args->read('namespace', false));
+        $attribute = $el->loadAttribute($args->read('name'), $args->read('prefix', false) ? $args->read('namespace', false) : '');
         $attribute->remove();
         break;
 
@@ -445,15 +428,6 @@ class Editor extends core\module\Domed {
     return $result;
   }
 
-  public function asJSON() {
-
-    $doc = $this->getDocument();
-
-    $aResult = array('element' => array($this->buildElement($doc->getRoot())));
-
-    return $aResult;
-  }
-  
   public function asXML()
   {
     return (string) $this->getDocument();

@@ -7,9 +7,6 @@ sylma.xml.Document = new Class({
     
     //this.models = {};
     
-//    var parser = new DOMParser();
-//    var doc = parser.parseFromString(this.options.content, "text/xml");
-//console.log(doc);
     this.elementTemplate = this.buildObject('element');
     this.objects.element.shift();
   },
@@ -28,7 +25,7 @@ sylma.xml.Document = new Class({
     
     this.init();
   },
-
+  
   init: function () {
 
     this.element = this.objects.element[0];

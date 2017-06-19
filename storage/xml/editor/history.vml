@@ -15,6 +15,20 @@
   <crud:group name="sql">
 
     <view:schema>history.xql</view:schema>
+    <sql:resource/>
+    
+  </crud:group>
+  
+  <crud:group name="file">
+
+    <sql:filter name="file">
+      <le:get-argument name="file"/>
+    </sql:filter>
+    
+  </crud:group>
+  
+  <crud:group name="collection">
+
     <sql:resource multiple="x"/>
     
     <tpl:template match="*" mode="step">
@@ -25,7 +39,7 @@
         <tpl:read select="update" le:name="update"/>
         <tpl:read select="path" le:name="path"/>
         <tpl:read select="arguments/text()" le:name="arguments"/>
-        <tpl:read select="content" le:name="content"/>
+        <tpl:read select="content/text()" le:name="content"/>
         <tpl:read select="disabled" le:name="disabled"/>
       </le:array>
     </tpl:template>
@@ -85,7 +99,7 @@
 
   </view:view>
 
-  <view:view name="steps" groups="sql" builder:return="result" builder:output="array">
+  <view:view name="steps" groups="sql, collection" builder:return="result" builder:output="array">
     
     <sql:limit>10</sql:limit>
     <sql:order>!update</sql:order>
@@ -96,15 +110,11 @@
     
   </view:view>
   
-  <view:view name="time" groups="sql" internal="x" builder:return="result">
+  <view:view name="time" groups="sql, collection" internal="x" builder:return="result">
 
     <sql:order>!update</sql:order>
     <sql:limit>1</sql:limit>
 
-    <sql:filter name="file">
-      <le:get-argument name="file"/>
-    </sql:filter>
-    
     <tpl:template>
       <tpl:apply select="*"/>
     </tpl:template>
@@ -116,13 +126,13 @@
 
   </view:view>
 
-  <view:view name="last" groups="sql" internal="x" builder:return="result" builder:output="array">
+  <view:view name="last" groups="sql, file, collection" internal="x" builder:return="result" builder:output="array">
 
     <sql:order>!update</sql:order>
     <sql:limit>1</sql:limit>
 
-    <sql:filter name="file">
-      <le:get-argument name="file"/>
+    <sql:filter name="disabled">
+      <le:get-argument name="disabled"/>
     </sql:filter>
     
     <tpl:template>
@@ -135,9 +145,6 @@
 
   <view:view name="disable" groups="sql" internal="x" mode="update" builder:return="result">
 
-    <view:schema>history.xql</view:schema>
-    <sql:resource/>
-    
     <sql:filter name="id">
       <le:get-argument name="id"/>
     </sql:filter>
@@ -154,9 +161,16 @@
     
   </view:view>
   
-  <view:view name="insert" mode="insert" internal="x" builder:return="result">
+  <view:view name="clear" groups="sql, file" internal="x" mode="delete" builder:return="result">
+    
+    <sql:filter name="disabled">1</sql:filter>
+    
+    <tpl:template/>
+    
+  </view:view>
+  
+  <view:view name="insert" groups="sql" mode="insert" internal="x" builder:return="result">
 
-    <view:schema>history.xql</view:schema>
     <sql:resource/>
 
     <tpl:template>

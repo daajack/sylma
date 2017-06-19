@@ -163,6 +163,13 @@ sylma.xml.Element = new Class({
       key = 0;//undefined;//container.tmp.length - 1;
     }
 
+    return this.addIndexedChild(options, type, key);
+  },
+
+  addIndexedChild : function (options, type, key) {
+
+    var container = this.getChildren();
+
     var result = container.add(type, options, key === container.tmp.length ? undefined : key);
     result.key = key;
 
@@ -172,11 +179,16 @@ sylma.xml.Element = new Class({
     return result;
   },
 
-  remove : function () {
-console.log('Remove element', this);
-    this.getParent('editor').getObject('history').addStep('remove', this.toPath(true), '', {
-      type : 'element',
-    });
+  remove : function (save) 
+  {
+    save = save === undefined ? true : save;
+    
+    if (save)
+    {
+      this.getParent('editor').getObject('history').addStep('remove', this.toPath(true), this.toXML(true), {
+        type : 'element',
+      });
+    }
 
     var parent = this.parentElement;
     this.sylma.key = parent.children.indexOf(this);
@@ -187,22 +199,13 @@ console.log('Remove element', this);
     parent.prepareChildren();
   },
 
-  addAttribute : function (attribute) {
-
-    //var container = this.getObject('attribute')[0];
-
-    var child = this.add('attribute', {
-      prefix : attribute.prefix,
-      namespace : attribute.namespace,
-      name : attribute.name,
-      value : '',
-    });
-
-    this.prepareChildren();
-    this.prepareChild(child);
-
+  addAttributeFromType : function (attribute) {
+    
     var editor = this.getParent('editor');
+    var child = this.addAttribute(attribute.namespace, attribute.name, attribute.prefix, '');
+    
     editor.schema.attachAttribute(child, attribute);
+
     var path = this.toPath(true);
 
     child.openValue(function() {
@@ -212,11 +215,22 @@ console.log('Remove element', this);
         namespace : attribute.namespace,
         name : attribute.shortname,
       });
-
     });
-/*
-*/
-//console.log(this.children);
+  },
+  
+  addAttribute: function (namespace, name, prefix, value) 
+  {
+    var child = this.add('attribute', {
+      prefix : prefix,
+      namespace : namespace,
+      name : name,
+      value : value,
+    });
+
+    this.prepareChildren();
+    this.prepareChild(child);
+
+    return child;
   },
 
   initMove : function () {
@@ -465,25 +479,34 @@ console.log('Remove element', this);
 
   toXML : function (first) {
 
-    var xmlns = '';
+    var namespaces = {};
 
-    if (first) {
+    if (first || (this.parentElement && this.parentElement.namespace !== this.namespace)) {
 
-      var prefix = this.prefix ? ':' + this.prefix : '';
-      xmlns = ' xmlns' + prefix + '="' + this.namespace + '"';
+      namespaces[this.namespace] = this.prefix;
     }
 
     var name = this.getShortName();
-    var attributes = Object.values(this.attributes).join(' ');
+    
+    var attributes = Object.values(this.attributes);
+    
+    attributes.each(function(attr)
+    {
+      var ns = attr.namespace;
+      if (ns && !namespaces[ns])  namespaces[ns] = attr.prefix;
+    });
+    
+    var attributes = attributes.join(' ');
     var content = '';
 
     if (this.children.length) {
 
       content = '>' + this.children.map(function(item) { return item.toXML(); }).join('')
     }
-
+    
+    var xmlns = Object.values(Object.map(namespaces, function(prefix, ns) { return ' xmlns' + (prefix ? ':' + prefix : '') + '="' + ns + '"'; })).join(' ')
     var end = content ? '</' + name + '>' : '/>';
 
-    return '<' + name + xmlns + attributes + content + end;
+    return '<' + name + xmlns + (xmlns || attributes ? ' ' : '') + attributes + content + end;
   },
 });

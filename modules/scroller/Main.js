@@ -64,8 +64,9 @@ sylma.modules.scroller.Main = new Class({
     var menus = {};
 
     nodes.each(function(node) {
-
-      var name = node.get('href').replace(/\/?#/, '');
+      
+      var name = node.get('href').replace(/\/?.*#/, '');
+      
       var menu = {
         node : node
       };
@@ -91,9 +92,9 @@ sylma.modules.scroller.Main = new Class({
     });
 
     links.each(function(link) {
-
-      var name = link.getAttribute('href').replace(/\/?#/, '');
-
+      
+      var name = link.getAttribute('href').replace(/\/?.*#/, '');
+      
       link.store('name', name);
       //anchors[name].links.push(link);
     });
@@ -145,16 +146,22 @@ sylma.modules.scroller.Main = new Class({
     }
   },
 
-  activateMenu : function(menu) {
-
+  activateMenu : function(menu)
+  {
     Object.each(this.menus, function(menu) {
 
       menu.node.getParent().removeClass('active');
     });
 
-    if (menu) {
-
+    if (menu)
+    {
       menu.node.getParent().addClass('active');
+      var parent = menu.node.getParent('.sub-menu');
+
+      if (parent)
+      {
+        parent.getParent().addClass('active');
+      }
     }
   }
 });

@@ -220,6 +220,7 @@ modules :
     fonts : fonts/truetype/ttf-dejavu
     background : false
     session : sylma-captcha
+    key : undefined
   rebuild :
     exclude :
       run :

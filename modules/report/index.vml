@@ -32,7 +32,7 @@
 
     <tpl:template match="*" mode="form" xmode="insert">
       <tpl:apply mode="form"/>
-      <div class="g-recaptcha" data-sitekey="6LeFbRIUAAAAAOyk71VHllL-4oHW8RMfyaZKVw9E" style="padding-left: 30%"></div>
+      <div class="g-recaptcha" data-sitekey="{/sylma()/modules/captcha/key}" style="padding-left: 30%"></div>
     </tpl:template>
 
   </crud:global>

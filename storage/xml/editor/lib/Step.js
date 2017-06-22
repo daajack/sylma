@@ -30,6 +30,7 @@ sylma.xml.Step = new Class({
       case 'update' : this.undoUpdate(); break;
       case 'delete' : this.undoDelete(); break;
       case 'remove' : this.undoRemove(); break;
+      case 'move' : this.undoMove(); break;
       default : throw new Error('Unknown step type');
     }
     
@@ -45,6 +46,7 @@ sylma.xml.Step = new Class({
       case 'update' : this.redoUpdate(); break;
       case 'delete' : this.redoDelete(); break;
       case 'remove' : this.redoRemove(); break;
+      case 'move' : this.redoMove(); break;
       default : throw new Error('Unknown step type');
     }
     
@@ -101,13 +103,8 @@ sylma.xml.Step = new Class({
     history.save();
   },
   
-  redoAdd: function ()
-  {
-    this.undoRemove('redo');
-  },
-  
-  undoRemove: function (type) 
-  {
+  applyAdd: function (type, add) {
+    
     var history = this.getParent();
     var editor = this.getParent('editor');
     
@@ -115,11 +112,21 @@ sylma.xml.Step = new Class({
     {
       case 'element' :
         
-        var path = this.options.path.split('/');
-        var position = path.pop();
+        var path, position;
+        
+        if (add)
+        {
+          path = this.options.path;
+          position = this.arguments.position;
+        }
+        else
+        {
+          path = this.options.path.split('/');
+          position = path.pop();
+          path = path.join('/');
+        }
 
-        var node = this.findNode(path.join('/'));
-
+        var node = this.findNode(path);
         var doc = editor.parseDocument(this.options.content);
         var options = editor.buildElement(doc.documentElement);
         var child = node.addIndexedChild(options, this.arguments.type, parseInt(position));
@@ -139,10 +146,20 @@ sylma.xml.Step = new Class({
     }
     
     history.steps.push({
-      type : type || 'undo'
+      type : type
     });
 
     history.save();
+  },
+  
+  redoAdd: function ()
+  {
+    this.applyAdd('redo', true);
+  },
+  
+  undoRemove: function () 
+  {
+    this.applyAdd('undo', false);
   },
   
   redoRemove : function()
@@ -150,7 +167,7 @@ sylma.xml.Step = new Class({
     var history = this.getParent();
     var node = this.findNode(this.options.path);
     
-    node.remove(false)
+    node.remove(false);
     history.steps.push({
       type : 'redo'
     });
@@ -158,17 +175,50 @@ sylma.xml.Step = new Class({
     history.save();
   },
   
-  findNode: function (path, type) {
-    
+  undoMove: function ()
+  {
+    var history = this.getParent();
+
+    var node = this.findNode(this.options.path);
+    var to = this.arguments.from.split('/');
+    var from = this.options.path.split('/');
+    var len = to.length;
+    var k = 1;
+
+    while (k < len)
+    {
+      if (to[k] < from[k])
+      {
+        to[k]++;
+        break;
+      }
+      else if (to[k] > from[k])
+      {
+        break;
+      }
+
+      k++;
+    }
+
+    var position = to.pop();
+    var parent = this.findNode(to.join('/'));
+    var previous = parent.children[position];
+
+    node.validateMove(parent, previous, false);
+
+//    history.save();
+  },
+  
+  findNode: function (path, type)
+  {
     var result;
     var paths = path.split('/');
     paths.shift();
     
     var element = this.getParent('editor').getObject('container').getObject('document')[0].element;
-console.log(paths);
+
     paths.each(function(path)
     {
-console.log(path, element);
       element = element.children[path];
     });
     

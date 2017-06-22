@@ -299,7 +299,11 @@ sylma.xml.Element = new Class({
 
   resetMove : function () {
 
-    this.dummy.dispose();
+    if (this.dummy)
+    {
+      this.dummy.dispose();
+    }
+    
     this.getNode().removeClass('moving');
 
     window.removeEvent('mousemove', this.mousemove);
@@ -355,8 +359,10 @@ sylma.xml.Element = new Class({
     this.dummy = dummy;
   },
 
-  validateMove : function (parent, previous) {
-
+  validateMove : function (parent, previous, save) 
+  {
+    save = save === undefined ? true : save;
+    
     var editor = this.getParent('editor');
     var node = this.getNode();
     var copy = node.clone(true);
@@ -369,7 +375,7 @@ sylma.xml.Element = new Class({
     var height = copy.getSize().y;
     var options = {
       duration: 200,
-      property: 'height',
+      property: 'height'
     };
 
     var hide = new Fx.Tween(copy, options);
@@ -377,22 +383,19 @@ sylma.xml.Element = new Class({
 
     var key = 0;
 
-    if (previous) {
-
+    if (previous)
+    {
       node.inject(previous.getNode(), 'after');
       key = previous.getPosition() + 1;
     }
-    else {
-
+    else
+    {
       node.inject(parent.getObject('children')[0].getNode(), 'top');
     }
-
-    editor.getObject('history').addStep('move', this.toPath(true), '', {
-      position : key,
-      parent : parent.toPath(true),
-      type : 'element'
-    });
-
+    
+    var from = this.toPath(true);
+    var parentPath = parent.toPath(true);
+    
     var children = this.parentElement.getObject('children')[0].tmp;
     children.splice(this.getPosition(), 1);
 
@@ -407,21 +410,31 @@ sylma.xml.Element = new Class({
 
     editor.schema.attachElement(parent, parent.ref);
 
-    hide.addEvent('complete', function(node) {
-
+    hide.addEvent('complete', function(node)
+    {
       node.dispose();
     });
 
     hide.start(0);
 
-    show.addEvent('complete', function(node) {
-
+    show.addEvent('complete', function(node)
+    {
       node.setStyle('height');
-    })
+    });
 
     show.start(height);
+    
+    if (save)
+    {
+      editor.getObject('history').addStep('move', this.toPath(true), '', {
+        parent : parentPath,
+        position : key,
+        from : from,
+        type : 'element'
+      });
+    }
   },
-
+  
   getShortName : function () {
 
     return this.prefix ? this.prefix + ':' + this.name : this.name;

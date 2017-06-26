@@ -364,6 +364,24 @@ sylma.xml.Element = new Class({
     save = save === undefined ? true : save;
     
     var editor = this.getParent('editor');
+    var key = 0;
+//    var pp = 0;
+    
+    var from = this.toPath(true);
+    var parentPath = parent.toPath(true);
+    
+    this.applyMove(parent, previous);
+
+    editor.getObject('history').addStep('move', from, '', {
+      type : 'element',
+      parent : parentPath,
+      position : key
+    });
+  },
+  
+  applyMove : function (parent, previous) 
+  {
+    var editor = this.getParent('editor');
     var node = this.getNode();
     var copy = node.clone(true);
 
@@ -380,34 +398,56 @@ sylma.xml.Element = new Class({
 
     var hide = new Fx.Tween(copy, options);
     var show = new Fx.Tween(node, options);
-
-    var key = 0;
-
+ 
     if (previous)
     {
       node.inject(previous.getNode(), 'after');
-      key = previous.getPosition() + 1;
     }
     else
     {
       node.inject(parent.getObject('children')[0].getNode(), 'top');
     }
     
-    var from = this.toPath(true);
-    var parentPath = parent.toPath(true);
+    var source = this.toPathArray();
+    var target = previous.toPathArray();
+    var k = 0;
+    var len = source.length;
+    
+    while (k < len)
+    {
+      if (source[k] < target[k])
+      {
+console.log('inc source');
+    
+        if (k === len - 1) target[k]--;
+        break;
+      }
+      else if (target[k] > source[k])
+      {
+        break;
+      }
+
+      k++;
+    }
+    
+    var tk = target[target.length - 1];
+    
+    var children = parent.getObject('children')[0].tmp;
+    children.splice(tk, 0, this);
+    parent.prepareChildren();
+    
+    var sk = source[source.length - 1];
     
     var children = this.parentElement.getObject('children')[0].tmp;
-    children.splice(this.getPosition(), 1);
-
+    children.splice(sk, 1);
     this.parentElement.prepareChildren();
-
+    
     this.parentElement = parent;
-
-    var children = parent.getObject('children')[0].tmp;
-    children.splice(key, 0, this);
-
-    parent.prepareChildren();
-
+console.log('key', sk, tk);//, previous.getNode());
+parent.children.each(function(child, k)
+{
+  console.log('child', k, child.node);
+})
     editor.schema.attachElement(parent, parent.ref);
 
     hide.addEvent('complete', function(node)
@@ -423,16 +463,6 @@ sylma.xml.Element = new Class({
     });
 
     show.start(height);
-    
-    if (save)
-    {
-      editor.getObject('history').addStep('move', this.toPath(true), '', {
-        parent : parentPath,
-        position : key,
-        from : from,
-        type : 'element'
-      });
-    }
   },
   
   getShortName : function () {
@@ -445,6 +475,24 @@ sylma.xml.Element = new Class({
     return this.parentElement.children.indexOf(this);
   },
 
+  toPathArray : function (last) {
+
+    var el = this.parentElement;
+    var result;
+
+    if (el) {
+
+      result = el.toPathArray();
+      result.push(el.children.indexOf(this));
+    }
+    else
+    {
+      result = [];
+    }
+
+    return result;
+  },
+  
   toPath : function (last) {
 
     var el = this.parentElement;

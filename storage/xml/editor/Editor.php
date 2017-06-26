@@ -335,7 +335,8 @@ class Editor extends core\module\Domed {
 
         $parent = $this->findElement($doc->getRoot(), $args->read('parent'));
         $position = $args->read('position');
-
+        
+        $el->remove();
         $parent->insert($el, $parent->getChildren()->item($position));
         break;
 

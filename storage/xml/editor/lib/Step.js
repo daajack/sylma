@@ -175,24 +175,29 @@ sylma.xml.Step = new Class({
     history.save();
   },
   
-  undoMove: function ()
+  undoMove: function (sourcePath, targetPath)
   {
     var history = this.getParent();
 
-    var node = this.findNode(this.options.path);
-    var to = this.arguments.from.split('/');
-    var from = this.options.path.split('/');
-    var len = to.length;
-    var k = 1;
+    targetPath = targetPath || this.options.path;
+    sourcePath = sourcePath || this.arguments.parent + '/' + this.arguments.position;
+//console.log(sourcePath, targetPath);
+    var target = targetPath.split('/');
+    var source = sourcePath.split('/');
+    
+    var len = target.length;
+    var k = 0;
 
     while (k < len)
     {
-      if (to[k] < from[k])
+      if (source[k] < target[k])
       {
-        to[k]++;
+console.log('inc source');
+    
+        if (k === len - 1) target[k]--;
         break;
       }
-      else if (to[k] > from[k])
+      else if (target[k] > source[k])
       {
         break;
       }
@@ -200,13 +205,22 @@ sylma.xml.Step = new Class({
       k++;
     }
 
-    var position = to.pop();
-    var parent = this.findNode(to.join('/'));
-    var previous = parent.children[position];
-
-    node.validateMove(parent, previous, false);
-
+    var node = this.findNode(source.join('/'));
+    var position = target.pop();
+    var parent = this.findNode(target.join('/'));
+    var previous = position !== '0' ? parent.children[position] : null;
+//console.log(node.node);
+    node.applyMove(parent, previous, position);
+console.log(source, target, position);
 //    history.save();
+  },
+  
+  redoMove: function () 
+  {
+    var source = this.arguments.parent + '/' + this.arguments.position;
+    var target = this.options.path;
+
+    this.undoMove(target, source);
   },
   
   findNode: function (path, type)
@@ -215,13 +229,18 @@ sylma.xml.Step = new Class({
     var paths = path.split('/');
     paths.shift();
     
+    if (!paths.length) throw new Error('Path invalid');
+
     var element = this.getParent('editor').getObject('container').getObject('document')[0].element;
 
     paths.each(function(path)
     {
       element = element.children[path];
     });
-    
+//element.children.each(function(child, key)
+//{
+//  console.log(key, child.node);
+//})
     type = type || this.arguments.type;
     
     switch (type)

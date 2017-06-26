@@ -100,7 +100,8 @@ sylma.xml.History = new Class({
     }
     while (k && steps[k].disabled);
 
-    steps[k].undo();
+    if (steps[k]) steps[k].undo();
+    else sylma.ui.showMessage('No step');
   },
   
   stepForward : function()
@@ -115,6 +116,7 @@ sylma.xml.History = new Class({
 
     k++;
 
-    steps[k].redo();
+    if (steps[k]) steps[k].redo();
+    else sylma.ui.showMessage('No step');
   }
 });

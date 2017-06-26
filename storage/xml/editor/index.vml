@@ -210,14 +210,14 @@
             <js:event name="click">%parent%.insert(null, true);</js:event>
             <tpl:text>@</tpl:text>
           </span>
-          <span>
+<!--          <span>
             <js:event name="click">console.log('*');</js:event>
             <tpl:text>.</tpl:text>
           </span>
           <span>
             <js:event name="click">console.log('move');</js:event>
             <tpl:text>&gt;</tpl:text>
-          </span>
+          </span>-->
           <span>
             <js:event name="click">%parent%.remove();</js:event>
             <tpl:text>-</tpl:text>

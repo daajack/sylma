@@ -364,11 +364,10 @@ sylma.xml.Element = new Class({
     save = save === undefined ? true : save;
     
     var editor = this.getParent('editor');
-    var key = 0;
-//    var pp = 0;
     
     var from = this.toPath(true);
     var parentPath = parent.toPath(true);
+    var key = previous ? previous.getPosition() : 0;
     
     this.applyMove(parent, previous);
 
@@ -409,45 +408,59 @@ sylma.xml.Element = new Class({
     }
     
     var source = this.toPathArray();
-    var target = previous.toPathArray();
+
+    if (previous)
+    {
+      var target = previous.toPathArray();
+      target[target.length - 1]++;
+    }
+    else
+    {
+      var target = parent.toPathArray();
+      target.push(0);
+    }
+    
     var k = 0;
     var len = source.length;
     
     while (k < len)
     {
+console.log('check', source[k], target[k]);
       if (source[k] < target[k])
       {
-console.log('inc source');
-    
-        if (k === len - 1) target[k]--;
+console.log('inc', k === len - 1);
+//        if (k === len - 1) target[k]++;
         break;
       }
-      else if (target[k] > source[k])
+      else if (source[k] > target[k])
       {
+console.log('dec', k === len - 1);
+        if (k === len - 1) source[k]++;
         break;
       }
 
       k++;
     }
-    
+
     var tk = target[target.length - 1];
-    
+
     var children = parent.getObject('children')[0].tmp;
     children.splice(tk, 0, this);
     parent.prepareChildren();
-    
+
     var sk = source[source.length - 1];
     
     var children = this.parentElement.getObject('children')[0].tmp;
     children.splice(sk, 1);
     this.parentElement.prepareChildren();
-    
+
     this.parentElement = parent;
-console.log('key', sk, tk);//, previous.getNode());
+console.log('key', source, target);//, previous.getNode());
 parent.children.each(function(child, k)
 {
   console.log('child', k, child.node);
-})
+});
+
     editor.schema.attachElement(parent, parent.ref);
 
     hide.addEvent('complete', function(node)
@@ -463,6 +476,12 @@ parent.children.each(function(child, k)
     });
 
     show.start(height);
+
+    return
+    [
+      source.join('/'),
+      target.join('/')
+    ];
   },
   
   getShortName : function () {

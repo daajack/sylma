@@ -364,17 +364,14 @@ sylma.xml.Element = new Class({
     save = save === undefined ? true : save;
     
     var editor = this.getParent('editor');
-    
-    var from = this.toPath(true);
-    var parentPath = parent.toPath(true);
-    var key = previous ? previous.getPosition() : 0;
-    
-    this.applyMove(parent, previous);
+    var paths = this.applyMove(parent, previous);
+console.log(paths);
+    var position = paths[1].pop();
 
-    editor.getObject('history').addStep('move', from, '', {
+    editor.getObject('history').addStep('move', paths[0].join('/'), '', {
       type : 'element',
-      parent : parentPath,
-      position : key
+      parent : paths[1].join('/'),
+      position : position
     });
   },
   
@@ -429,30 +426,30 @@ console.log('check', source[k], target[k]);
       if (source[k] < target[k])
       {
 console.log('inc', k === len - 1);
-//        if (k === len - 1) target[k]++;
+        if (k === len - 1) target[k]--;
         break;
       }
       else if (source[k] > target[k])
       {
 console.log('dec', k === len - 1);
-        if (k === len - 1) source[k]++;
+//        if (k === len - 1) source[k]++;
         break;
       }
 
       k++;
     }
 
-    var tk = target[target.length - 1];
-
-    var children = parent.getObject('children')[0].tmp;
-    children.splice(tk, 0, this);
-    parent.prepareChildren();
-
     var sk = source[source.length - 1];
     
     var children = this.parentElement.getObject('children')[0].tmp;
     children.splice(sk, 1);
     this.parentElement.prepareChildren();
+
+    var tk = target[target.length - 1];
+
+    var children = parent.getObject('children')[0].tmp;
+    children.splice(tk, 0, this);
+    parent.prepareChildren();
 
     this.parentElement = parent;
 console.log('key', source, target);//, previous.getNode());
@@ -477,10 +474,9 @@ parent.children.each(function(child, k)
 
     show.start(height);
 
-    return
-    [
-      source.join('/'),
-      target.join('/')
+    return [
+      source,
+      target
     ];
   },
   

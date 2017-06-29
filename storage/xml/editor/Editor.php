@@ -162,6 +162,7 @@ class Editor extends core\module\Domed {
       try {
 
         $result = $this->updateDocument($id, $file, $file->asDocument($this->getNS()));
+//        $result = 1;
         
         if (!$result) {
           

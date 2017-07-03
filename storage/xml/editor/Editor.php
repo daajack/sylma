@@ -333,8 +333,9 @@ class Editor extends core\module\Domed {
         break;
 
       case 'move' :
-
-        $parent = $this->findElement($doc->getRoot(), $args->read('parent'));
+        
+        $path = $args->read('parent');
+        $parent = $path === '/' ? $doc->getRoot() : $this->findElement($doc->getRoot(), $path);
         $position = $args->read('position');
         
         $el->remove();

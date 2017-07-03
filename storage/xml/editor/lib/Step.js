@@ -192,13 +192,14 @@ sylma.xml.Step = new Class({
     {
       if (source[k] < target[k])
       {
-console.log('inc source');
+console.log('inc source', (k === len - 1));
     
         if (k === len - 1) target[k]--;
         break;
       }
-      else if (target[k] > source[k])
+      else if (source[k] > target[k])
       {
+//        if (k === len - 1) target[k]++;
         break;
       }
 
@@ -206,18 +207,18 @@ console.log('inc source');
     }
 
     var node = this.findNode(source.join('/'));
-    var position = target.pop();
+    var position = target.pop() - 0;
     var parent = this.findNode(target.join('/'));
-    var previous = position !== '0' ? parent.children[position] : null;
+    var previous = position !== 0 ? parent.children[position - 1] : null;
 //console.log(node.node);
-    node.applyMove(parent, previous, position);
+    node.applyMove(parent, previous);
 console.log(source, target, position);
 //    history.save();
   },
   
   redoMove: function () 
   {
-    var source = this.arguments.parent + '/' + this.arguments.position;
+    var source = this.arguments.parent + '/' + (this.arguments.position + 2);
     var target = this.options.path;
 
     this.undoMove(target, source);
@@ -229,18 +230,16 @@ console.log(source, target, position);
     var paths = path.split('/');
     paths.shift();
     
-    if (!paths.length) throw new Error('Path invalid');
-
     var element = this.getParent('editor').getObject('container').getObject('document')[0].element;
-
-    paths.each(function(path)
+    
+    if (paths.length) 
     {
-      element = element.children[path];
-    });
-//element.children.each(function(child, key)
-//{
-//  console.log(key, child.node);
-//})
+      paths.each(function(path)
+      {
+        if (path) element = element.children[path];
+      });
+    }
+    
     type = type || this.arguments.type;
     
     switch (type)

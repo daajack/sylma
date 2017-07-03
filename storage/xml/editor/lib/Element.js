@@ -368,9 +368,9 @@ sylma.xml.Element = new Class({
 console.log(paths);
     var position = paths[1].pop();
 
-    editor.getObject('history').addStep('move', paths[0].join('/'), '', {
+    editor.getObject('history').addStep('move', '/' + paths[0].join('/'), '', {
       type : 'element',
-      parent : paths[1].join('/'),
+      parent : '/' + paths[1].join('/'),
       position : position
     });
   },

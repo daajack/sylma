@@ -359,12 +359,43 @@ sylma.xml.Element = new Class({
     this.dummy = dummy;
   },
 
-  validateMove : function (parent, previous, save) 
+  validateMove : function (parent, previous) 
   {
-    save = save === undefined ? true : save;
-    
     var editor = this.getParent('editor');
-    var paths = this.applyMove(parent, previous);
+
+    var source = this.toPathArray();
+    var target;
+
+    if (previous)
+    {
+      var target = previous.toPathArray();
+      target[target.length - 1]++;
+    }
+    else
+    {
+      var target = parent.toPathArray();
+      target.push(0);
+    }
+
+    var k = 0;
+    var len = source.length;
+
+    while (k < len)
+    {
+      if (source[k] < target[k])
+      {
+        target[k]--;
+        if (k === len - 1) break;
+      }
+      else if (source[k] > target[k])
+      {
+        break;
+      }
+
+      k++;
+    }
+
+    var paths = this.applyMove(parent, previous, source, target);
 console.log(paths);
     var position = paths[1].pop();
 
@@ -375,7 +406,7 @@ console.log(paths);
     });
   },
   
-  applyMove : function (parent, previous) 
+  applyMove : function (parent, previous, source, target)
   {
     var editor = this.getParent('editor');
     var node = this.getNode();
@@ -401,42 +432,8 @@ console.log(paths);
     }
     else
     {
+      if (!parent.objects.children) parent.add('children');
       node.inject(parent.getObject('children')[0].getNode(), 'top');
-    }
-    
-    var source = this.toPathArray();
-
-    if (previous)
-    {
-      var target = previous.toPathArray();
-      target[target.length - 1]++;
-    }
-    else
-    {
-      var target = parent.toPathArray();
-      target.push(0);
-    }
-    
-    var k = 0;
-    var len = source.length;
-    
-    while (k < len)
-    {
-console.log('check', source[k], target[k]);
-      if (source[k] < target[k])
-      {
-console.log('inc', k === len - 1);
-        if (k === len - 1) target[k]--;
-        break;
-      }
-      else if (source[k] > target[k])
-      {
-console.log('dec', k === len - 1);
-//        if (k === len - 1) source[k]++;
-        break;
-      }
-
-      k++;
     }
 
     var sk = source[source.length - 1];
@@ -459,6 +456,8 @@ parent.children.each(function(child, k)
 });
 
     editor.schema.attachElement(parent, parent.ref);
+
+    parent.updateFormat();
 
     hide.addEvent('complete', function(node)
     {
@@ -488,6 +487,16 @@ parent.children.each(function(child, k)
   getPosition : function () {
 
     return this.parentElement.children.indexOf(this);
+  },
+
+  updateFormat : function()
+  {
+    var el = this.getNode();
+    var children = this.objects.children;
+    var complex = children && children.length;
+
+    el.toggleClass('format-text', !complex);
+    el.toggleClass('format-complex', complex);
   },
 
   toPathArray : function (last) {

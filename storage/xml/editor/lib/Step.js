@@ -174,54 +174,81 @@ sylma.xml.Step = new Class({
     
     history.save();
   },
-  
-  undoMove: function (sourcePath, targetPath)
-  {
-    var history = this.getParent();
 
-    targetPath = targetPath || this.options.path;
-    sourcePath = sourcePath || this.arguments.parent + '/' + this.arguments.position;
-//console.log(sourcePath, targetPath);
+  applyMove: function (source, target, type) {
+
+    var node = this.findNode(source.join('/'));
+    var position = target.pop() - 0;
+    var parent = this.findNode(target.join('/'));
+    var previous = position !== 0 ? parent.children[position - 1] : null;
+    
+    node.applyMove(parent, previous, source, target);
+
+    this.getParent().steps.push({
+      type : type
+    });
+
+    this.getParent().save();
+  },
+  
+  undoMove: function ()
+  {
+    var p = this.arguments.parent;
+    var sourcePath = (p !== '/' ? p + '/' : p) + this.arguments.position;
+    var targetPath = this.options.path;
+
     var target = targetPath.split('/');
     var source = sourcePath.split('/');
     
     var len = target.length;
-    var k = 0;
+    var k = 1;
 
     while (k < len)
     {
-      if (source[k] < target[k])
+      if (source[k] <= target[k])
       {
-console.log('inc source', (k === len - 1));
-    
-        if (k === len - 1) target[k]--;
-        break;
+        target[k]++;
+        if (k === len - 1) break;
       }
       else if (source[k] > target[k])
       {
-//        if (k === len - 1) target[k]++;
+        break;
+      }
+
+      k++;
+    }
+//console.log(source, target);
+    this.applyMove(source, target, 'undo');
+  },
+  
+  redoMove: function () 
+  {
+    var p = this.arguments.parent;
+    var targetPath = (p !== '/' ? p + '/' : p) + this.arguments.position;
+    var sourcePath = this.options.path;
+    
+    var target = targetPath.split('/');
+    var source = sourcePath.split('/');
+
+    var len = source.length;
+    var k = 0;
+    
+    while (k < len)
+    {
+      if (target[k] < source[k])
+      {
+        break;
+      }
+      else if (target[k] > source[k])
+      {
+        if (k === len - 1) target[k]++;
         break;
       }
 
       k++;
     }
 
-    var node = this.findNode(source.join('/'));
-    var position = target.pop() - 0;
-    var parent = this.findNode(target.join('/'));
-    var previous = position !== 0 ? parent.children[position - 1] : null;
-//console.log(node.node);
-    node.applyMove(parent, previous);
-console.log(source, target, position);
-//    history.save();
-  },
-  
-  redoMove: function () 
-  {
-    var source = this.arguments.parent + '/' + (this.arguments.position + 2);
-    var target = this.options.path;
-
-    this.undoMove(target, source);
+    this.applyMove(source, target, 'redo');
   },
   
   findNode: function (path, type)

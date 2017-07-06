@@ -210,6 +210,12 @@ sylma.xsd.Schema = new Class({
   attachElement: function (el, ref) {
 
     el.ref = ref;
+
+    if (!ref)
+    {
+      console.log('No ref given');
+      return;
+    }
 //console.log('Attach ' + el, el);
 //console.log(el, ref);
     if (ref.element === 'element') {

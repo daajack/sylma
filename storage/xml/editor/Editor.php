@@ -161,8 +161,8 @@ class Editor extends core\module\Domed {
 
       try {
 
-        $result = $this->updateDocument($id, $file, $file->asDocument($this->getNS()));
-//        $result = 1;
+//        $result = $this->updateDocument($id, $file, $file->asDocument($this->getNS()));
+        $result = 1;
         
         if (!$result) {
           
@@ -226,7 +226,8 @@ class Editor extends core\module\Domed {
         }
       }
     }
-    
+
+//    dsp($doc, $step);
     $doc->saveFile($file, true);
 
     return true;
@@ -289,7 +290,42 @@ class Editor extends core\module\Domed {
         }
         
         break;
-      
+
+      case 'move' :
+
+        $p = $args->read('parent');
+        $sourcePath = ($p !== '/' ? $p . '/' : $p) . $args->read('position');
+        $source = explode('/', $sourcePath);
+        $target = explode('/', $pstep->read('path'));
+
+        $len = count($target);
+        $k = 0;
+//dsp($source, $target);
+        while ($k < $len)
+        {
+          if ($source[$k] < $target[$k])
+          {
+            if ($k === $len - 1) $target[$k]++;
+            break;
+          }
+          else if ($source[$k] > $target[$k])
+          {
+            break;
+          }
+
+          $k++;
+        }
+
+        $position = array_pop($target);
+        
+//dsp($source, $target, $position);
+        $step->set('type', 'move');
+        $step->set('path', implode('/', $source));
+        $args->set('parent', implode('/', $target));
+        $args->set('position', $position);
+
+      break;
+
       default : $this->launchException('Uknown step type');
     }
 

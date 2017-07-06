@@ -79,6 +79,7 @@ sylma.xml.History = new Class({
         }
         else {
 
+          throw new Error('Bad request');
         }
         
         this.sending = false;

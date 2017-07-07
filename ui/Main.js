@@ -344,6 +344,10 @@ sylma.uiClass = {
 
         sylma.ui.parseMessages(response, null, redirect);
         if (callback) callback(response);
+      },
+      onError: function(response)
+      {
+        throw new Error('Request error');
       }
     });
 

@@ -160,5 +160,39 @@ sylma.xml.Editor = new Class({
 
     this.getNode().removeClass('move');
     this.getNode().addClass('edit');
+  },
+  
+  findNode: function (path, type)
+  {
+    var result;
+    var paths = path.split('/');
+//console.log(path, paths);
+    paths.shift();
+
+    var element = this.getObject('container').getObject('document')[0].element;
+
+    if (paths.length) 
+    {
+      paths.each(function(path)
+      {
+//console.log(element);
+        if (path) element = element.children[path];
+      });
+    }
+    
+    switch (type)
+    {
+      case 'element' : result = element; break;
+      case 'text' : result = element.children[0]; break;
+      case 'attribute' : result = element.attributes[this.arguments.name]; break;
+      default : throw new Error('Unknown step type');
+    }
+    
+    if (!result)
+    {
+      throw new Error('No node found with path ' + path);
+    }
+    
+    return result;
   }
 });

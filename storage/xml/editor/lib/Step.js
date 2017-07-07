@@ -94,8 +94,9 @@ sylma.xml.Step = new Class({
       case 'element' : node = this.findNode(this.options.path + '/' + this.arguments.position); break;
       case 'attribute' : node = this.findNode(this.options.path); break;
     }
-//console.log(node, this.options.path);
-    node.remove(false)
+    
+    node.remove(false);
+    
     history.steps.push({
       type : 'undo'
     });
@@ -175,14 +176,10 @@ sylma.xml.Step = new Class({
     history.save();
   },
 
-  applyMove: function (source, target, type) {
-
-    var node = this.findNode(source.join('/'));
-    var position = target.pop() - 0;
-    var parent = this.findNode(target.join('/'));
-    var previous = position !== 0 ? parent.children[position - 1] : null;
-    
-    node.applyMove(parent, previous, source, target);
+  applyMove: function (source, target, key, type) 
+  {
+    var node = this.findNode(source);
+    node.applyMove(target, key - 0);
 
     this.getParent().steps.push({
       type : type
@@ -193,91 +190,33 @@ sylma.xml.Step = new Class({
   
   undoMove: function ()
   {
-    var p = this.arguments.parent;
-    var sourcePath = (p !== '/' ? p + '/' : p) + this.arguments.position;
-    var targetPath = this.options.path;
-
-    var target = targetPath.split('/');
-    var source = sourcePath.split('/');
+    var position = this.arguments.position;
+    var p = this.arguments.parent
+    p += (p !== '/' ? '/' : '') + position;
     
-    var len = target.length;
-    var k = 1;
+    var target = this.options.path;
 
-    while (k < len)
-    {
-      if (source[k] <= target[k])
-      {
-        target[k]++;
-        if (k === len - 1) break;
-      }
-      else if (source[k] > target[k])
-      {
-        break;
-      }
-
-      k++;
-    }
-//console.log(source, target);
-    this.applyMove(source, target, 'undo');
+    var target = target.split('/');
+    var key = target.pop();
+    
+    this.applyMove(p, target.join('/'), key, 'undo');
   },
   
   redoMove: function () 
   {
     var p = this.arguments.parent;
     var targetPath = (p !== '/' ? p + '/' : p) + this.arguments.position;
-    var sourcePath = this.options.path;
+    var source = this.options.path;
     
     var target = targetPath.split('/');
-    var source = sourcePath.split('/');
+    var key = target.pop();
 
-    var len = source.length;
-    var k = 0;
-    
-    while (k < len)
-    {
-      if (target[k] < source[k])
-      {
-        break;
-      }
-      else if (target[k] > source[k])
-      {
-        if (k === len - 1) target[k]++;
-        break;
-      }
-
-      k++;
-    }
-
-    this.applyMove(source, target, 'redo');
+    this.applyMove(source, target.join('/'), key, 'redo');
   },
   
   findNode: function (path, type)
   {
-    var result;
-    var paths = path.split('/');
-    paths.shift();
-    
-    var element = this.getParent('editor').getObject('container').getObject('document')[0].element;
-    
-    if (paths.length) 
-    {
-      paths.each(function(path)
-      {
-        if (path) element = element.children[path];
-      });
-    }
-    
-    type = type || this.arguments.type;
-    
-    switch (type)
-    {
-      case 'element' : result = element; break;
-      case 'text' : result = element.children[0]; break;
-      case 'attribute' : result = element.attributes[this.arguments.name]; break;
-      default : throw new Error('Unknown step type');
-    }
-    
-    return result;
+    return this.getParent('editor').findNode(path, type || this.arguments.type);
   },
   
   updateNode : function()

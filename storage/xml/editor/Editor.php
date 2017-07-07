@@ -161,8 +161,8 @@ class Editor extends core\module\Domed {
 
       try {
 
-//        $result = $this->updateDocument($id, $file, $file->asDocument($this->getNS()));
-        $result = 1;
+        $result = $this->updateDocument($id, $file, $file->asDocument($this->getNS()));
+//        $result = 1;
         
         if (!$result) {
           
@@ -214,9 +214,9 @@ class Editor extends core\module\Domed {
           $this->run('history/insert', array(), $step->asArray());
           $args = $this->createArgument(json_decode($step->read('arguments'), true));
         }
-  //dsp($args);
+        
         $el = $this->findElement($doc->getRoot(), $step->read('path'));
-  //dsp($el, $args);
+        
         switch ($args->read('type')) {
 
           case 'element' : $this->updateElement($doc, $el, $step, $args); break;
@@ -298,27 +298,8 @@ class Editor extends core\module\Domed {
         $source = explode('/', $sourcePath);
         $target = explode('/', $pstep->read('path'));
 
-        $len = count($target);
-        $k = 0;
-//dsp($source, $target);
-        while ($k < $len)
-        {
-          if ($source[$k] < $target[$k])
-          {
-            if ($k === $len - 1) $target[$k]++;
-            break;
-          }
-          else if ($source[$k] > $target[$k])
-          {
-            break;
-          }
-
-          $k++;
-        }
-
         $position = array_pop($target);
         
-//dsp($source, $target, $position);
         $step->set('type', 'move');
         $step->set('path', implode('/', $source));
         $args->set('parent', implode('/', $target));
@@ -337,7 +318,6 @@ class Editor extends core\module\Domed {
   protected function redo($id, $step)
   {
     $last = $this->run('history/last', array('file' => $id, 'disabled' => 1));
-//dsp($last);
     $pstep = $this->createArgument(current($last));
     $args = $this->createArgument(json_decode($pstep->read('arguments'), true));
     
@@ -356,7 +336,6 @@ class Editor extends core\module\Domed {
 
         $position = $args->read('position');
         $content = $this->createDocument($step->read('content'));
-//dsp($step, $el);
         if ($position !== null) {
 
           $el->insert($content, $el->getChildren()->item($position));
@@ -371,11 +350,22 @@ class Editor extends core\module\Domed {
       case 'move' :
         
         $path = $args->read('parent');
+
+        $el->remove();
+        
         $parent = $path === '/' ? $doc->getRoot() : $this->findElement($doc->getRoot(), $path);
         $position = $args->read('position');
+
+        try
+        {
+          $parent->insert($el, $parent->getChildren()->item($position));
+        }
+        catch (\DOMException $e)
+        {
+          dsp($step, $el, $parent, $position);
+          $this->launchException($e->getMessage());
+        }
         
-        $el->remove();
-        $parent->insert($el, $parent->getChildren()->item($position));
         break;
 
       case 'remove' :

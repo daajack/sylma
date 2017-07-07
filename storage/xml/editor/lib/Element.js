@@ -362,52 +362,24 @@ sylma.xml.Element = new Class({
   validateMove : function (parent, previous) 
   {
     var editor = this.getParent('editor');
-
-    var source = this.toPathArray();
-    var target;
-
-    if (previous)
-    {
-      var target = previous.toPathArray();
-      target[target.length - 1]++;
-    }
-    else
-    {
-      var target = parent.toPathArray();
-      target.push(0);
-    }
-
-    var k = 0;
-    var len = source.length;
-
-    while (k < len)
-    {
-      if (source[k] < target[k])
-      {
-        target[k]--;
-        if (k === len - 1) break;
-      }
-      else if (source[k] > target[k])
-      {
-        break;
-      }
-
-      k++;
-    }
-
-    var paths = this.applyMove(parent, previous, source, target);
-console.log(paths);
-    var position = paths[1].pop();
-
-    editor.getObject('history').addStep('move', '/' + paths[0].join('/'), '', {
+    var source = this.toPath(true);
+    
+    var parentPath = this.applyMove(parent, previous);
+    
+    editor.getObject('history').addStep('move', source, '', {
       type : 'element',
-      parent : '/' + paths[1].join('/'),
-      position : position
+      parent : parentPath,
+      position : this.getPosition()
     });
   },
   
-  applyMove : function (parent, previous, source, target)
+  applyMove : function (parent, key)
   {
+    if (!this.parentElement)
+    {
+      throw new Error('Cannot move root');
+    }
+    
     var editor = this.getParent('editor');
     var node = this.getNode();
     var copy = node.clone(true);
@@ -425,36 +397,51 @@ console.log(paths);
 
     var hide = new Fx.Tween(copy, options);
     var show = new Fx.Tween(node, options);
- 
-    if (previous)
+    
+    var children = this.parentElement.getObject('children')[0].tmp;
+    children.splice(this.getPosition(), 1);
+    this.parentElement.prepareChildren();
+    
+    if (typeOf(parent) === 'string')
     {
+      parent = this.getParent('editor').findNode(parent, 'element');
+    }
+    
+    if (!parent.objects.children) 
+    {
+      parent.add('children');
+    }
+    
+    if (key !== undefined)
+    {
+      if (typeOf(key) !== 'number')
+      {
+        key = key.getPosition() + 1;
+      }
+    }
+    else
+    {
+      key = 0;
+    }
+    
+    var parentPath = parent.toPath(true);
+    
+    var children = parent.getObject('children')[0].tmp;
+    children.splice(key, 0, this);
+    parent.prepareChildren();
+
+    this.parentElement = parent;
+
+    if (key !== 0)
+    {
+      var previous = parent.children[key - 1];
       node.inject(previous.getNode(), 'after');
     }
     else
     {
-      if (!parent.objects.children) parent.add('children');
       node.inject(parent.getObject('children')[0].getNode(), 'top');
     }
-
-    var sk = source[source.length - 1];
     
-    var children = this.parentElement.getObject('children')[0].tmp;
-    children.splice(sk, 1);
-    this.parentElement.prepareChildren();
-
-    var tk = target[target.length - 1];
-
-    var children = parent.getObject('children')[0].tmp;
-    children.splice(tk, 0, this);
-    parent.prepareChildren();
-
-    this.parentElement = parent;
-console.log('key', source, target);//, previous.getNode());
-parent.children.each(function(child, k)
-{
-  console.log('child', k, child.node);
-});
-
     editor.schema.attachElement(parent, parent.ref);
 
     parent.updateFormat();
@@ -472,11 +459,8 @@ parent.children.each(function(child, k)
     });
 
     show.start(height);
-
-    return [
-      source,
-      target
-    ];
+    
+    return parentPath;
   },
   
   getShortName : function () {

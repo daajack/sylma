@@ -101,7 +101,7 @@
 
   <view:view name="steps" groups="sql, collection" builder:return="result" builder:output="array">
     
-    <sql:limit>10</sql:limit>
+    <sql:limit>20</sql:limit>
     <sql:order>!update</sql:order>
 
     <tpl:template>

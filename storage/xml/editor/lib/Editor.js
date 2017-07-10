@@ -6,6 +6,7 @@ sylma.xml.Editor = new Class({
   Extends : sylma.ui.Container,
   
   namespaces : {},
+  updating : false,
 
   onLoad : function () {
     
@@ -33,13 +34,6 @@ sylma.xml.Editor = new Class({
     this.schema = schema;
     this.file = this.options.file;
     this.updateTime = this.options.update;
-  },
-  
-  isComplex : function(el)
-  {
-    var len = el.childNodes.length;
-    
-    return len && (len > 1 || el.childNodes[0].nodeType === el.ELEMENT_NODE);
   },
   
   /**
@@ -84,7 +78,7 @@ sylma.xml.Editor = new Class({
       prefix : el.prefix ? el.prefix : '',
       name : el.localName,
       attribute : new Array(),
-      format : this.isComplex(el) ? 'complex' : !el.childNodes.length || el.childNodes[0].nodeValue.length < 100 ? 'text' : 'complex'
+//      format : this.isComplex(el) ? 'complex' : !el.childNodes.length || el.childNodes[0].nodeValue.length < 100 ? 'text' : 'complex'
     };
 
     var len = el.attributes.length;
@@ -162,7 +156,7 @@ sylma.xml.Editor = new Class({
     this.getNode().addClass('edit');
   },
   
-  findNode: function (path, type)
+  findNode: function (path, type, name)
   {
     var result;
     var paths = path.split('/');
@@ -184,7 +178,7 @@ sylma.xml.Editor = new Class({
     {
       case 'element' : result = element; break;
       case 'text' : result = element.children[0]; break;
-      case 'attribute' : result = element.attributes[this.arguments.name]; break;
+      case 'attribute' : result = element.attributes[name]; break;
       default : throw new Error('Unknown step type');
     }
     

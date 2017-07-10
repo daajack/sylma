@@ -166,7 +166,7 @@
     </tpl:template>
 
     <tpl:template match="node:element">
-      <div class="element node real node-{prefix} format-{format}" js:class="sylma.xml.Element" js:parent-name="element" js:alias="element">
+      <div class="element node real node-{prefix}" js:class="sylma.xml.Element" js:parent-name="element" js:alias="element">
         <tpl:apply mode="element/init"/>
       </div>
     </tpl:template>
@@ -181,13 +181,13 @@
           <tpl:read select="name"/>
         </span>
       </div>
+      <div class="spacing self">
+        <js:event name="click">%object%.insert()</js:event>
+      </div>
 
       <tpl:apply mode="tools"/>
       <div class="attributes">
         <tpl:apply mode="element/attributes"/>
-      </div>
-      <div class="spacing self">
-        <js:event name="click">%object%.insert()</js:event>
       </div>
       <tpl:apply select="children"/>
       <div class="spacing parent">

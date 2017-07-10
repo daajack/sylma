@@ -216,7 +216,7 @@ sylma.xml.Step = new Class({
   
   findNode: function (path, type)
   {
-    return this.getParent('editor').findNode(path, type || this.arguments.type);
+    return this.getParent('editor').findNode(path, type || this.arguments.type, this.arguments.name);
   },
   
   updateNode : function()

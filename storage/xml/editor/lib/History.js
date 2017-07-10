@@ -58,6 +58,7 @@ sylma.xml.History = new Class({
 
   save: function() 
   {
+//return;
     if (!this.sending && this.steps.length) 
     {
       this.sending = true;
@@ -92,14 +93,14 @@ sylma.xml.History = new Class({
   
   stepBackward : function()
   {
-    var steps = this.objects.step;
+    var steps = this.objects.step || [];
     var k = steps.length;
     
     do
     {
       k--;
     }
-    while (k && steps[k].disabled);
+    while (steps[k] && steps[k].disabled);
 
     if (steps[k]) steps[k].undo();
     else sylma.ui.showMessage('No step');
@@ -107,10 +108,10 @@ sylma.xml.History = new Class({
   
   stepForward : function()
   {
-    var steps = this.objects.step;
+    var steps = this.objects.step || [];
     var k = steps.length - 1;
 
-    while (k >= 0 && steps[k].disabled)
+    while (steps[k] && steps[k].disabled)
     {
       k--;
     }

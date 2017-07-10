@@ -238,6 +238,8 @@ class Editor extends core\module\Domed {
     $last = $this->run('history/last', array('file' => $id, 'disabled' => 0));
     
     $pstep = $this->createArgument(current($last));
+    $this->run('history/disable', array('id' => $pstep->read('id'), 'value' => 1));
+    
     $args = $this->createArgument(json_decode($pstep->read('arguments'), true));
     
     $step->set('arguments', $args);
@@ -309,8 +311,6 @@ class Editor extends core\module\Domed {
 
       default : $this->launchException('Uknown step type');
     }
-
-    $this->run('history/disable', array('id' => $pstep->read('id'), 'value' => 1));
 
     return $step;
   }

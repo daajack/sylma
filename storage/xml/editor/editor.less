@@ -18,6 +18,7 @@
 
 .editor
 {
+  font-family: @family;
   position: relative;
   color: black;
   user-select: none;
@@ -196,7 +197,7 @@
       transition: opacity @speed;
       z-index: 1;
       transform: scale(0.9, 0.9);
-
+      
       &.parent
       {
         _margin-left: -1.6em;
@@ -215,9 +216,24 @@
       }
     }
 
-    &.format-complex > .spacing.parent
+    &.format-complex
     {
-      margin-top: -0.5em;
+      & > .spacing.self
+      {
+        margin-top: 0.9em;
+      }
+      
+      & > .spacing.parent
+      {
+        margin-top: -0.5em;
+      }
+    }
+    
+    &.format-empty > .spacing.self
+    {
+      position: relative;
+      float: left;
+      margin: 0;
     }
 
     & > .fullname
@@ -476,8 +492,9 @@
     {
       cursor: pointer;
 
-      &:hover + .tools,
-      & + .tools:hover
+      &:hover + .spacing + .tools,
+      & + .spacing:hover + .tools,
+      & + .spacing + .tools:hover
       {
         max-width: 10em;
 

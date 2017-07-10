@@ -53,11 +53,10 @@ sylma.xml.Element = new Class({
     this.namespace = this.options.namespace;
     this.name = this.options.name;
     this.prefix = this.options.prefix;
-
+    this.node = this.getNode();
+    
     this.prepareChildren();
     this.children.each(this.prepareChild, this);
-
-    this.node = this.getNode();
 
     //this.position = this.node.getParent().getChildren().indexOf(this.node);
     //console.log(this.children);
@@ -84,6 +83,8 @@ sylma.xml.Element = new Class({
         this.attributes[attribute.shortname] = attribute;
       }.bind(this));
     }
+    
+    this.updateFormat();
   },
 
   prepareChild : function (child) {
@@ -381,6 +382,15 @@ sylma.xml.Element = new Class({
     }
     
     var editor = this.getParent('editor');
+    
+    if (editor.updating)
+    {
+      sylma.ui.showMessage('... updating ...');
+      return;
+    }
+    
+    editor.updating = true;
+    
     var node = this.getNode();
     var copy = node.clone(true);
 
@@ -444,8 +454,6 @@ sylma.xml.Element = new Class({
     
     editor.schema.attachElement(parent, parent.ref);
 
-    parent.updateFormat();
-
     hide.addEvent('complete', function(node)
     {
       node.dispose();
@@ -459,6 +467,8 @@ sylma.xml.Element = new Class({
     });
 
     show.start(height);
+    
+    editor.updating = false;
     
     return parentPath;
   },
@@ -476,11 +486,33 @@ sylma.xml.Element = new Class({
   updateFormat : function()
   {
     var el = this.getNode();
-    var children = this.objects.children;
-    var complex = children && children.length;
+    var children = this.children;
+    
+    el.removeClass('format-empty');
+    el.removeClass('format-text');
+    el.removeClass('format-complex');
+    el.removeClass('text-long');
 
-    el.toggleClass('format-text', !complex);
-    el.toggleClass('format-complex', complex);
+    if (!children.length)
+    {
+      el.addClass('format-empty');
+    }
+    else
+    {
+      if (children.length === 1 && children[0].element === 'text')
+      {
+        el.addClass('format-text');
+        
+        if (children[0].value.length > 100)
+        {
+          el.addClass('text-long');
+        }
+      }
+      else
+      {
+        el.addClass('format-complex');
+      }
+    }
   },
 
   toPathArray : function (last) {

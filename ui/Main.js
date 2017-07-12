@@ -169,7 +169,7 @@ sylma.uiClass = {
         path = 'id : ' + props.id;
       }
 
-      throw 'Cannot create object from : ' + path;
+      throw new Error('Cannot create object from : ' + path + ', class does not exist');
     }
 
     var result = new parent(props);

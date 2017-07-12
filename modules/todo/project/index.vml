@@ -15,7 +15,7 @@
 
   <crud:global stat:ns="ns">
 
-    <view:schema>project.xql</view:schema>
+    <view:schema>../project.xql</view:schema>
     <tpl:constant name="list-cols">* ^ sql:reference</tpl:constant>
     <tpl:constant name="form-cols">* ^ id, sql:reference</tpl:constant>
 

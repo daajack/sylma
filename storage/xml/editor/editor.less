@@ -18,13 +18,47 @@
 
 .editor
 {
+  font-family: @family;
   position: relative;
   color: black;
   user-select: none;
   border-right: 1px solid #ddd;
-  margin-bottom: 4em;
   font-size: @font-size;
+  height: 100%;
+  
+  .window
+  {
+    box-sizing: border-box;
+    display: flex;
+    position: absolute;
+    top: 0;
+    width: 100%;
+    padding-top: 3rem;
+    height: 100%;
+  }
+  
+  .tree
+  {
+    flex: 1 85%;
+    width: 85%;
+    height: 100%;
+    
+    overflow: auto;
 
+    & > .container
+    {
+      box-sizing: border-box;
+      position: relative;
+      height: 100%;
+    }
+  }
+
+  .history
+  {
+    flex: 1 15%;
+    width: 15%;
+  }
+  
   input
   {
     box-sizing: border-box;
@@ -50,6 +84,8 @@
 
     input
     {
+      box-sizing: border-box;
+      width: 10%;
       border-right: 3px solid @gray2;
     }
 
@@ -66,7 +102,7 @@
     .container
     {
       box-sizing: border-box;
-      /*width: 85%;*/
+      width: 90%;
       float: left;
       white-space: nowrap;
       overflow: hidden;
@@ -112,6 +148,11 @@
       width: 20em;
     }
   }
+  
+  .document
+  {
+    margin-bottom: 3rem;
+  }
 
   .element
   {
@@ -156,7 +197,7 @@
       transition: opacity @speed;
       z-index: 1;
       transform: scale(0.9, 0.9);
-
+      
       &.parent
       {
         _margin-left: -1.6em;
@@ -175,9 +216,24 @@
       }
     }
 
-    &.format-complex > .spacing.parent
+    &.format-complex
     {
-      margin-top: -0.5em;
+      & > .spacing.self
+      {
+        margin-top: 0.9em;
+      }
+      
+      & > .spacing.parent
+      {
+        margin-top: -0.5em;
+      }
+    }
+    
+    &.format-empty > .spacing.self
+    {
+      position: relative;
+      float: left;
+      margin: 0;
     }
 
     & > .fullname
@@ -329,6 +385,70 @@
   .node-tpl > .fullname .prefix { color: @color-tpl; }
   .node-js > .fullname .prefix { color: red; }
   .node-sql > .fullname .prefix { color: indigo; }
+  
+  .history
+  {
+    padding: 0 1rem;
+    box-sizing: border-box;
+
+    .actions
+    {
+      margin: auto;
+      text-align: center;
+      margin-bottom: 1rem;
+
+      .button
+      {
+        @s: 2rem;
+
+        display: inline-block;
+        width: @s;
+        height: @s;
+        line-height: @s;
+        background-color: @gray4;
+        margin-left: 0.5rem;
+        text-align: center;
+        cursor: pointer;
+
+        &:hover
+        {
+          color: @gray1;
+          background-color: @gray3;
+        }
+      }
+    }
+    
+    .step
+    {
+      border-bottom: 1px solid @gray1;
+      overflow: hidden;
+      
+      &.disabled
+      {
+        opacity: 0.5;
+      }
+      
+      .type
+      {
+        display: inline-block;
+        font-weight: bold;
+      }
+      
+      .path
+      {
+        display: inline-block;
+        float: right;
+      }
+      
+      .date
+      {
+        display: block;
+        font-size: 0.8em;
+        clear: both;
+        color: @gray1;
+      }
+    }
+  }
 }
 
 .editor.edit
@@ -372,8 +492,9 @@
     {
       cursor: pointer;
 
-      &:hover + .tools,
-      & + .tools:hover
+      &:hover + .spacing + .tools,
+      & + .spacing:hover + .tools,
+      & + .spacing + .tools:hover
       {
         max-width: 10em;
 

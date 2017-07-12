@@ -6,7 +6,7 @@ sylma.xml.Element = new Class({
   namespace : null,
   name : null,
   children : [],
-  attributes : [],
+  attributes : null,
   sylma : {
     splice : true
   },
@@ -53,11 +53,10 @@ sylma.xml.Element = new Class({
     this.namespace = this.options.namespace;
     this.name = this.options.name;
     this.prefix = this.options.prefix;
-
+    this.node = this.getNode();
+    
     this.prepareChildren();
     this.children.each(this.prepareChild, this);
-
-    this.node = this.getNode();
 
     //this.position = this.node.getParent().getChildren().indexOf(this.node);
     //console.log(this.children);
@@ -70,15 +69,22 @@ sylma.xml.Element = new Class({
 
   prepareChildren : function () {
 
-    if (this.objects.children) {
-
+    if (this.objects.children) 
+    {
       this.children = this.objects.children[0].tmp;
     }
+    
+    this.attributes = {};
 
-    if (this.objects.attributes) {
-
-      this.attributes = this.objects.attributes[0].tmp;
+    if (this.objects.attribute)
+    {
+      this.objects.attribute.each(function(attribute)
+      {
+        this.attributes[attribute.shortname] = attribute;
+      }.bind(this));
     }
+    
+    this.updateFormat();
   },
 
   prepareChild : function (child) {
@@ -158,6 +164,13 @@ sylma.xml.Element = new Class({
       key = 0;//undefined;//container.tmp.length - 1;
     }
 
+    return this.addIndexedChild(options, type, key);
+  },
+
+  addIndexedChild : function (options, type, key) {
+
+    var container = this.getChildren();
+
     var result = container.add(type, options, key === container.tmp.length ? undefined : key);
     result.key = key;
 
@@ -167,11 +180,16 @@ sylma.xml.Element = new Class({
     return result;
   },
 
-  remove : function () {
-console.log('Remove element', this);
-    this.getParent('editor').getObject('history').addStep('remove', this.toPath(true), '', {
-      type : 'element',
-    });
+  remove : function (save) 
+  {
+    save = save === undefined ? true : save;
+    
+    if (save)
+    {
+      this.getParent('editor').getObject('history').addStep('remove', this.toPath(true), this.toXML(true), {
+        type : 'element',
+      });
+    }
 
     var parent = this.parentElement;
     this.sylma.key = parent.children.indexOf(this);
@@ -182,22 +200,13 @@ console.log('Remove element', this);
     parent.prepareChildren();
   },
 
-  addAttribute : function (attribute) {
-
-    //var container = this.getObject('attribute')[0];
-
-    var child = this.add('attribute', {
-      prefix : attribute.prefix,
-      namespace : attribute.namespace,
-      name : attribute.name,
-      value : '',
-    });
-
-    this.prepareChildren();
-    this.prepareChild(child);
-
+  addAttributeFromType : function (attribute) {
+    
     var editor = this.getParent('editor');
+    var child = this.addAttribute(attribute.namespace, attribute.name, attribute.prefix, '');
+    
     editor.schema.attachAttribute(child, attribute);
+
     var path = this.toPath(true);
 
     child.openValue(function() {
@@ -207,11 +216,22 @@ console.log('Remove element', this);
         namespace : attribute.namespace,
         name : attribute.shortname,
       });
-
     });
-/*
-*/
-//console.log(this.children);
+  },
+  
+  addAttribute: function (namespace, name, prefix, value) 
+  {
+    var child = this.add('attribute', {
+      prefix : prefix,
+      namespace : namespace,
+      name : name,
+      value : value,
+    });
+
+    this.prepareChildren();
+    this.prepareChild(child);
+
+    return child;
   },
 
   initMove : function () {
@@ -280,7 +300,11 @@ console.log('Remove element', this);
 
   resetMove : function () {
 
-    this.dummy.dispose();
+    if (this.dummy)
+    {
+      this.dummy.dispose();
+    }
+    
     this.getNode().removeClass('moving');
 
     window.removeEvent('mousemove', this.mousemove);
@@ -336,9 +360,37 @@ console.log('Remove element', this);
     this.dummy = dummy;
   },
 
-  validateMove : function (parent, previous) {
-
+  validateMove : function (parent, previous) 
+  {
     var editor = this.getParent('editor');
+    var source = this.toPath(true);
+    
+    var parentPath = this.applyMove(parent, previous);
+    
+    editor.getObject('history').addStep('move', source, '', {
+      type : 'element',
+      parent : parentPath,
+      position : this.getPosition()
+    });
+  },
+  
+  applyMove : function (parent, key)
+  {
+    if (!this.parentElement)
+    {
+      throw new Error('Cannot move root');
+    }
+    
+    var editor = this.getParent('editor');
+    
+    if (editor.updating)
+    {
+      sylma.ui.showMessage('... updating ...');
+      return;
+    }
+    
+    editor.updating = true;
+    
     var node = this.getNode();
     var copy = node.clone(true);
 
@@ -350,59 +402,77 @@ console.log('Remove element', this);
     var height = copy.getSize().y;
     var options = {
       duration: 200,
-      property: 'height',
+      property: 'height'
     };
 
     var hide = new Fx.Tween(copy, options);
     var show = new Fx.Tween(node, options);
-
-    var key = 0;
-
-    if (previous) {
-
-      node.inject(previous.getNode(), 'after');
-      key = previous.getPosition() + 1;
-    }
-    else {
-
-      node.inject(parent.getObject('children')[0].getNode(), 'top');
-    }
-
-    editor.getObject('history').addStep('move', this.toPath(true), '', {
-      position : key,
-      parent : parent.toPath(true),
-      type : 'element'
-    });
-
+    
     var children = this.parentElement.getObject('children')[0].tmp;
     children.splice(this.getPosition(), 1);
-
     this.parentElement.prepareChildren();
+    
+    if (typeOf(parent) === 'string')
+    {
+      parent = this.getParent('editor').findNode(parent, 'element');
+    }
+    
+    if (!parent.objects.children) 
+    {
+      parent.add('children');
+    }
+    
+    if (key !== undefined)
+    {
+      if (typeOf(key) !== 'number')
+      {
+        key = key.getPosition() + 1;
+      }
+    }
+    else
+    {
+      key = 0;
+    }
+    
+    var parentPath = parent.toPath(true);
+    
+    var children = parent.getObject('children')[0].tmp;
+    children.splice(key, 0, this);
+    parent.prepareChildren();
 
     this.parentElement = parent;
 
-    var children = parent.getObject('children')[0].tmp;
-    children.splice(key, 0, this);
-
-    parent.prepareChildren();
-
+    if (key !== 0)
+    {
+      var previous = parent.children[key - 1];
+      node.inject(previous.getNode(), 'after');
+    }
+    else
+    {
+      node.inject(parent.getObject('children')[0].getNode(), 'top');
+    }
+    
     editor.schema.attachElement(parent, parent.ref);
 
-    hide.addEvent('complete', function(node) {
-
+    hide.addEvent('complete', function(node)
+    {
       node.dispose();
     });
 
     hide.start(0);
 
-    show.addEvent('complete', function(node) {
-
+    show.addEvent('complete', function(node)
+    {
       node.setStyle('height');
-    })
+    });
 
     show.start(height);
+    
+    editor.updating = false;
+    
+    return parentPath;
   },
-
+  
   getShortName : function () {
 
     return this.prefix ? this.prefix + ':' + this.name : this.name;
@@ -413,6 +483,56 @@ console.log('Remove element', this);
     return this.parentElement.children.indexOf(this);
   },
 
+  updateFormat : function()
+  {
+    var el = this.getNode();
+    var children = this.children;
+    
+    el.removeClass('format-empty');
+    el.removeClass('format-text');
+    el.removeClass('format-complex');
+    el.removeClass('text-long');
+
+    if (!children.length)
+    {
+      el.addClass('format-empty');
+    }
+    else
+    {
+      if (children.length === 1 && children[0].element === 'text')
+      {
+        el.addClass('format-text');
+        
+        if (children[0].value.length > 100)
+        {
+          el.addClass('text-long');
+        }
+      }
+      else
+      {
+        el.addClass('format-complex');
+      }
+    }
+  },
+
+  toPathArray : function (last) {
+
+    var el = this.parentElement;
+    var result;
+
+    if (el) {
+
+      result = el.toPathArray();
+      result.push(el.children.indexOf(this));
+    }
+    else
+    {
+      result = [];
+    }
+
+    return result;
+  },
+  
   toPath : function (last) {
 
     var el = this.parentElement;
@@ -460,25 +580,34 @@ console.log('Remove element', this);
 
   toXML : function (first) {
 
-    var xmlns = '';
+    var namespaces = {};
 
-    if (first) {
+    if (first || (this.parentElement && this.parentElement.namespace !== this.namespace)) {
 
-      var prefix = this.prefix ? ':' + this.prefix : '';
-      xmlns = ' xmlns' + prefix + '="' + this.namespace + '"';
+      namespaces[this.namespace] = this.prefix;
     }
 
     var name = this.getShortName();
-    var attributes = this.attributes.join(' ');
+    
+    var attributes = Object.values(this.attributes);
+    
+    attributes.each(function(attr)
+    {
+      var ns = attr.namespace;
+      if (ns && !namespaces[ns])  namespaces[ns] = attr.prefix;
+    });
+    
+    var attributes = attributes.join(' ');
     var content = '';
 
     if (this.children.length) {
 
       content = '>' + this.children.map(function(item) { return item.toXML(); }).join('')
     }
-
+    
+    var xmlns = Object.values(Object.map(namespaces, function(prefix, ns) { return ' xmlns' + (prefix ? ':' + prefix : '') + '="' + ns + '"'; })).join(' ')
     var end = content ? '</' + name + '>' : '/>';
 
-    return '<' + name + xmlns + attributes + content + end;
+    return '<' + name + xmlns + (xmlns || attributes ? ' ' : '') + attributes + content + end;
   },
 });

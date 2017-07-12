@@ -1,9 +1,16 @@
 
-@import "../../../html/medias/vars.less";
+@import "/sylma/modules/html/medias/vars.less";
 
 .inspector
 {
-
+  padding-bottom: 2em;
+  
+  ul
+  {
+    margin-left: 1em;
+    column-count: 3;
+  }
+  
   .protected
   {
     color: @color-text4;
@@ -29,7 +36,6 @@
     max-height: 0;
     transition: max-height 0.5s;
     overflow: hidden;
-
   }
 
 }

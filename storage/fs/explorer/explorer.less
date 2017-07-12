@@ -1,0 +1,62 @@
+
+@import "/sylma/modules/html/vars.less";
+
+.explorer .storage-fs
+{
+  & > .wrapper
+  {
+    position: relative;
+    margin: 1rem;
+  }
+  
+  .root
+  {
+    position: absolute;
+    top: 0;
+    margin-left: 100%;
+    width: 100%;
+    transition: all 0.2s;
+
+    &.parent
+    {
+      margin-left: -100%;
+    }
+
+    &.visible
+    {
+      margin-left: 0;
+    }
+  }
+
+  .children
+  {
+    overflow-y: auto;
+  }
+
+  .open
+  {
+    color: blue;
+  }
+
+  .directory
+  {
+    .name
+    {
+      font-size: 1.2em;
+    }
+  }
+
+  .directory,
+  .file
+  {
+    display: block;
+    padding: 0.5em 1em;
+    border: 1px solid #eee;
+    margin-bottom: 0.1em;
+  }
+
+  .directory
+  {
+    background-color: #fcefa1;
+  }
+}

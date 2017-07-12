@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <explorer
-  xmlns="http://2014.sylma.org/storage/fs"
+  xmlns="http://2014.sylma.org/storage/fs/explorer"
 >
   <root name="">
     <directory name=""/>

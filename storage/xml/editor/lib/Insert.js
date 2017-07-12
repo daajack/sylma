@@ -176,7 +176,7 @@ sylma.xml.Insert = new Class({
 
       case 'attribute' :
 
-        this.element.addAttribute(node);
+        this.element.addAttributeFromType(node);
         break;
 
       case 'simpleType' :

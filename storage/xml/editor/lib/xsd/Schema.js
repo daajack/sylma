@@ -210,6 +210,12 @@ sylma.xsd.Schema = new Class({
   attachElement: function (el, ref) {
 
     el.ref = ref;
+
+    if (!ref)
+    {
+      console.log('No ref given');
+      return;
+    }
 //console.log('Attach ' + el, el);
 //console.log(el, ref);
     if (ref.element === 'element') {
@@ -222,17 +228,17 @@ sylma.xsd.Schema = new Class({
       }
 
       type.prepareChildren();
-
-      el.attributes.each(function(item) {
+if (0) {
+      Object.values(el.attributes).each(function(item) {
 
         this.lookupAttribute(item, type.children);
 
         if (!item.ref) {
 
-          console.log('Cannot attach', item);
+          console.log('Cannot attach', item.name);
         }
-      });
-
+      }.bind(this));
+}
       if (el.children.length === 1 && el.children[0].type === 'text') {
 
         if (type.element === 'complexType' && !type.mixed) {
@@ -263,7 +269,7 @@ sylma.xsd.Schema = new Class({
               else {
 
                 child.getNode().addClass('invalid');
-                console.log('Cannot attach', child);
+                console.log('Cannot attach', child.name);
               }
             }
 

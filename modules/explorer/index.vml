@@ -16,31 +16,15 @@
 
   <crud:global fs:ns="ns">
 
-    <xl:resource file="schema.xml"/>
-
-    <tpl:settings>
-      <cls:classes>
-        <cls:class alias="tree">
-          <cls:classes>
-            <cls:class alias="cached" name="\sylma\modules\explorer\Explorer"/>
-          </cls:classes>
-        </cls:class>
-      </cls:classes>
-    </tpl:settings>
+    <xl:resource/>
 
     <tpl:template mode="explorer/resources">
-
-      <js:include>/#sylma/ui/Template.js</js:include>
-      <js:include>/#sylma/ui/Loader.js</js:include>
+      
       <js:include>/#sylma/ui/Extras.js</js:include>
       <js:include>/#sylma/ui/Locale.js</js:include>
       <js:include>/#sylma/ui/Date.js</js:include>
 
       <js:include>Explorer.js</js:include>
-      <js:include>Tree.js</js:include>
-      <js:include>Directory.js</js:include>
-      <js:include>Root.js</js:include>
-      <js:include>File.js</js:include>
 
     </tpl:template>
 
@@ -53,96 +37,31 @@
       <le:file>../inspector/php/view/php.less</le:file>
     </le:context>
 
-    <tpl:template mode="explorer/title">Explorer</tpl:template>
-
-    <le:argument name="dir">
-      <le:default>/</le:default>
-    </le:argument>
-
     <tpl:template>
 
-      <le:context name="title">
-        <tpl:apply mode="explorer/title"/>
-      </le:context>
+      <le:context name="title">Explorer</le:context>
 
       <tpl:apply mode="explorer/resources"/>
 
-      <tpl:variable name="directory" format="array">
-      </tpl:variable>
-
       <div class="explorer" js:class="sylma.modules.explorer.Explorer" js:name="explorer" js:parent-name="explorer">
-        <div class="view view-1" js:class="sylma.modules.explorer.Tree" js:name="sidebar" js:parent-name="tree">
-          <js:option name="datas">
-            <crud:include path="getDirectory"/>
-          </js:option>
-          <js:option name="file">
-            <le:get-argument name="file" optional="x"/>
-          </js:option>
-          <js:option name="path">
-            <crud:path path="getDirectory"/>
-          </js:option>
-          <div class="wrapper">
-            <tpl:apply select="root"/>
-          </div>
+        <js:option name="file">
+          <le:get-argument name="file" optional="x"/>
+        </js:option>
+        <js:option name="dir">
+          <le:get-argument name="dir" optional="x"/>
+        </js:option>
+        <div class="view view-1" js:script="/#sylma/storage/fs/explorer/sidebar" js:name="sidebar">
+          <js:option name="sylma-inside">1</js:option>
         </div>
         <div class="view view-2" js:class="sylma.ui.Loader" js:name="view">
-          <div js:script="/#sylma/modules/inspector/php/view" js:name="tab-inspector">
+          <div class="tab" js:script="/#sylma/modules/inspector/php/view" js:name="tab-inspector">
             <js:option name="sylma-inside">1</js:option>
           </div>
-          <div js:script="/#sylma/storage/xml/editor" js:name="tab-editor"/>
+          <div class="tab" js:script="/#sylma/storage/xml/editor" js:name="tab-editor"/>
+          <!--<div class="tab" js:script="/#sylma/storage/fs/explorer/settings" js:name="settings"/>-->
         </div>
       </div>
 
-    </tpl:template>
-
-    <tpl:template match="fs:root">
-      <div class="root hidder" js:class="sylma.modules.explorer.Root" js:alias="root">
-        <h3 class="name">
-          <tpl:read select="name"/>
-        </h3>
-        <tpl:apply mode="children"/>
-      </div>
-    </tpl:template>
-
-    <tpl:template match="*" mode="children">
-      <div class="children" js:node="children">
-        <div class="directories">
-          <tpl:apply select="*"/>
-        </div>
-        <div class="files">
-          <tpl:apply select="*"/>
-        </div>
-      </div>
-    </tpl:template>
-
-    <tpl:template match="fs:directory">
-      <a href="javascript:void(0)" class="directory" js:class="sylma.modules.explorer.Directory" js:alias="directory">
-        <js:event name="click">%object%.open()</js:event>
-        <tpl:read select="name"/>
-      </a>
-    </tpl:template>
-
-    <tpl:template match="fs:file">
-      <a href="javascript:void(0)" class="file" js:class="sylma.modules.explorer.File" js:alias="file">
-        <js:option name="path">
-          <tpl:read select="path"/>
-        </js:option>
-        <js:event name="click">%object%.open()</js:event>
-        <tpl:read select="name"/>
-      </a>
-    </tpl:template>
-
-  </view:view>
-
-  <view:view name="getDirectory"
-    build:class="\sylma\core\argument\Readable"
-    build:output="result"
-  >
-
-    <tpl:template>
-      <tpl:apply select="buildDirectory()">
-        <le:get-argument name="dir"/>
-      </tpl:apply>
     </tpl:template>
 
   </view:view>

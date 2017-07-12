@@ -13,8 +13,9 @@
   <view:schema>schema.xql</view:schema>
 
   <tpl:template>
-
-
+    
+    <div class="item">
+    </div>
 
   </tpl:template>
 

@@ -1,5 +1,5 @@
 
-sylma.modules.explorer.Directory = new Class({
+sylma.storage.fs.explorer.Directory = new Class({
 
   Extends : sylma.ui.Template,
 

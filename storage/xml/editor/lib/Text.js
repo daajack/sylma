@@ -34,27 +34,37 @@ sylma.xml.Text = new Class({
     this.destroy();
   },
 
-  updateValue: function (value, callback) {
-
+  updateValue: function (value, callback, save) {
+    
+    var previous = this.value;
+    save = save === undefined ? true : save;
+    
+    if (value === previous)
+    {
+      callback && callback();
+      return;
+    }
+    
     this.value = value;
     this.getNode().set('html', value);
 
-    if (!value) {
-
+    if (!value) 
+    {
       this.remove();
     }
-    else {
-
-      if (callback) {
-
+    else
+    {
+      if (callback) 
+      {
         callback();
       }
-      else {
-
+      else if (save)
+      {
         var editor = this.getParent('editor');
         var path = this.parentElement.toPath(true);
 
         editor.getObject('history').addStep('update', path, this.value, {
+          previous : previous,
           type : 'text',
           position : this.getPosition()
         });

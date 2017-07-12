@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<view:view
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:js="http://2013.sylma.org/template/binder"
+
+  xmlns:sql="http://2013.sylma.org/storage/sql"
+>
+
+  <sql:resource multiple="x"/>
+  <view:schema>schema.xql</view:schema>
+
+  <tpl:template>
+    
+    <div class="collection">
+      <tpl:apply select="*" mode="item"/>
+    </div>
+
+  </tpl:template>
+  
+  <tpl:template match="*" mode="item">
+    <div class="item">
+      <tpl:read select="name"/>
+    </div>
+  </tpl:template>
+
+</view:view>

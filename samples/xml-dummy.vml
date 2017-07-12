@@ -17,14 +17,10 @@
 
   <tpl:template>
 
-    <tpl:template match="*">
-
-      <le:array>
-        <tpl:read select="'hello'"/>
-        <tpl:read select="'world'"/>
-      </le:array>
-
-    </tpl:template>
+    <le:array>
+      <tpl:read select="'hello'"/>
+      <tpl:read select="'world'"/>
+    </le:array>
 
   </tpl:template>
 

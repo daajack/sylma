@@ -103,7 +103,7 @@ class Basic extends core\module\Filed implements core\request, core\tokenable {
 
         if (!in_array($result->getExtension(), $this->query('extensions/readable'))) {
 
-          $this->throwException('Unauthorized extension type');
+          $this->getManager('initializer')->send404();
         }
       }
     }

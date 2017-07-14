@@ -188,8 +188,8 @@ class Initializer extends module\Domed {
       $sResult = $this->runWindow($path);
     }
     else {
-
-      $this->throwException('No valid window defined');
+      
+      $this->send404();
     }
 
     $this->stopProfile();
@@ -283,6 +283,8 @@ class Initializer extends module\Domed {
   public function send404() {
 
     header('HTTP/1.0 404 Not Found');
+    $e = new core\exception\Error404 ('No valid window defined');
+    $e->save();
   }
 
   public function getMime($sExtension) {

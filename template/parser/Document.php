@@ -11,7 +11,7 @@ class Document  extends xml\tree\Argument implements template\parser\tree
 
     switch ($sName) {
 
-      case 'url' : $result = $this->reflectFunctionURL(); break;
+      case 'url' : $result = $this->reflectFunctionURL($sArguments); break;
       case 'root' : $result = $this->reflectFunctionRoot($path, $sMode, $bRead, $aArguments); break;
       case 'sylma' : $result = $this->reflectFunctionSylma($path); break;
       case 'post' : $result = $this->reflectFunctionArgument('post', $path, $sArguments); break;
@@ -45,12 +45,14 @@ class Document  extends xml\tree\Argument implements template\parser\tree
     return $pather->parsePathToken($aPath, $sMode, $bRead, $aArguments);
   }
 
-  protected function reflectFunctionURL() {
+  protected function reflectFunctionURL($arguments) {
 
     $window = $this->getWindow();
     $init = $window->addControler('init');
-
-    return $init->call('getURL');
+    
+    $pather = $this->getParser()->getCurrentTemplate()->getPather();
+    
+    return $init->call('getURL', $pather->parseArguments($arguments));
   }
 
   protected function reflectFunctionArgument($name, array $path, $arguments) {

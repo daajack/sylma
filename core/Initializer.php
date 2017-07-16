@@ -447,9 +447,9 @@ class Initializer extends module\Domed {
     return $aResult[1];
   }
 
-  public function getURL() {
+  public function getURL($force_ssl = false) {
 
     return
-      (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off' ? 'https' : 'http') . '://' . $_SERVER['SERVER_NAME'];
+      ($force_ssl || (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? 'https' : 'http') . '://' . $_SERVER['SERVER_NAME'];
   }
 }

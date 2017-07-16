@@ -98,8 +98,8 @@ abstract class Manager extends core\module\Domed {
   protected function loadCache(fs\file $file, $bUpdate = null) {
 
     if (!$file->checkRights(\Sylma::MODE_EXECUTE)) {
-
-      $this->launchException('Unauthorized access', get_defined_vars());
+      
+      $this->launchException('Unauthorized access to file ' . $file, get_defined_vars());
     }
 
     if ((!$result = $this->getCache($file, $bUpdate)) && $this->getControler('user')->isPrivate()) {

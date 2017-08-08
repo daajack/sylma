@@ -291,8 +291,7 @@ class Initializer extends module\Domed {
 
     if (!$sResult = $this->readArgument("mime/$sExtension", false)) {
 
-      $this->launchException('Unknown content type');
-      //$sResult = $this->readArgument("mime/default");
+      throw new core\exception\Error404('Unknown content type');
     }
 
     return $sResult;

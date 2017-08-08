@@ -102,6 +102,7 @@ initializer :
     ttf : application/octet-stream
     eot : application/octet-stream
     woff : application/x-font-woff
+    woff2 : application/x-font-woff
     vcf : text/x-vcard
     svg : image/svg+xml
     pdf : application/pdf

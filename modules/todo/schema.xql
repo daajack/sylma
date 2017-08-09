@@ -42,10 +42,12 @@
     <foreign name="project" occurs="0..1" table="proj:todo_project" import="project.xql"/>
 
     <field name="owner" type="sql:string-short" default="null"/>
-    <field name="delegate" type="sql:string-short" default="null"/>
+    
+    <foreign name="delegate" occurs="0..1" table="user:user" default="null" import="/#sylma/modules/users/schema.xql"/>
+    <foreign name="delegate_group" title="delegate group" occurs="0..1" table="group:group" default="null" import="/#sylma/modules/users/group.xql"/>
+    
     <!--
     <foreign name="owner" occurs="1..1" table="user:user" import="/#sylma/modules/users/schema.xql"/>
-    <foreign name="delegate" occurs="1..1" table="group:group" import="/#sylma/modules/users/group.xql"/>
     -->
     <foreign name="parent" occurs="0..1" table="todo:todo" import="schema.xql"/>
     <foreign name="tags" occurs="0..n" table="tag:todo_tag" import="tag.xql" junction="todo_tag_junction"/>

@@ -238,7 +238,7 @@ template :
 path :
   extensions :
     executable : [vml]
-    readable : [css, js, webm, jpg, jpeg, gif, png, pdf, eot, ttf, woff, woff2, vcf, less, svg]
+    readable : [css, js, webm, jpg, jpeg, gif, png, pdf, eot, json, ttf, woff, woff2, vcf, less, svg]
 
 directory :
   tmp : tmp

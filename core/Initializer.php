@@ -251,7 +251,7 @@ class Initializer extends module\Domed {
      $path->parse();
      $file = $path->asFile();
 
-     if ($file->getExtension() !== 'vml') {
+     if (!$file || $file->getExtension() !== 'vml') {
 
        $this->send404();
        $file = $this->getFile($this->getErrorPath());

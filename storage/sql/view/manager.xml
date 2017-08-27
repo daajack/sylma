@@ -22,6 +22,7 @@
           </cls:classes>
         </cls:class>
         <cls:class alias="order" name="view\component\Order"/>
+        <cls:class alias="offset" name="view\component\Offset"/>
         <cls:class alias="limit" name="view\component\Limit"/>
         <cls:class alias="trigger" name="view\component\Trigger"/>
         <cls:class alias="result" name="view\component\Result"/>

@@ -17,10 +17,12 @@
     <field name="type" type="sql:string-short"/>
     <field name="path" type="sql:string" default="null"/>
     <field name="content" type="sql:string-long" default="null"/>
+    <field name="document" type="sql:string-long" default="null"/>
     <field name="arguments" type="sql:string" default="null"/>
+    <field name="display" type="sql:string-short"/>
     <field name="disabled" type="sql:boolean" default="0"/>
 
-    <field name="update" type="sql:datetime"/>
+    <field name="update" type="sql:datetime" default="now()"/>
 
     <foreign name="file" occurs="0..1" table="file:editor_file" import="file.xql"/>
     <foreign name="user" occurs="0..1" table="user:user" import="/#sylma/modules/users/schema.xql"/>

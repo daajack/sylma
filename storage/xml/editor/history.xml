@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <history
-  xmlns="http://2014.sylma.org/storage/xml/editor/history"
+  xmlns="http://2016.sylma.org/storage/xml/editor/history"
 >
-  <step type="" path="" date=""/>
+  <steps>
+   <action namespace="" name="" type="" path="" date=""/>
+   <revision name="" date=""/>
+  </steps>
 </history>

@@ -39,6 +39,11 @@ class Filter extends reflector\component\Foreigner implements reflector\componen
     $container = $this->getNode();
 
     if ($sName = $this->readx('@name')) {
+      
+      if (!method_exists($tree, 'getElement'))
+      {
+        $this->launchException("Method 'getElement' does not exist in tree", get_defined_vars());
+      }
 
       $field = $tree->getElement($sName, $tree->getNamespace());
     }

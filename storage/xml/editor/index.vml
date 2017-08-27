@@ -8,7 +8,8 @@
   xmlns:js="http://2013.sylma.org/template/binder"
   xmlns:builder="http://2013.sylma.org/parser/reflector/builder"
   xmlns:cls="http://2013.sylma.org/core/factory"
-  xmlns:node="http://2013.sylma.org/modules/xmler"
+  
+  xmlns:node="http://2016.sylma.org/storage/xml/editor"
 
   xmlns:xl="http://2013.sylma.org/storage/xml"
 >
@@ -40,6 +41,7 @@
       <js:include>lib/Editor.js</js:include>
       <js:include>lib/History.js</js:include>
       <js:include>lib/Step.js</js:include>
+      <js:include>lib/Revision.js</js:include>
       <js:include>lib/Tools.js</js:include>
       <js:include>lib/Insert.js</js:include>
       <js:include>lib/Update.js</js:include>
@@ -116,7 +118,20 @@
         <le:script path="history">
           <le:get-argument name="file" le:name="file"/>
         </le:script>
+        <div class="mask hidder"/>
+        <div class="error hidder">
+          <div class="head">
+            error
+          </div>
+          <div class="body">
+            An error has occured, you must reload the page.
+            <div class="actions">
+              <button onclick="location.reload();">Reload</button>
+            </div>
+          </div>
+        </div>
       </div>
+      
     </tpl:template>
     
     <tpl:template match="*" mode="document/tools">
@@ -138,7 +153,7 @@
     </tpl:template>
     
     <tpl:template match="node:document">
-      <div class="document" js:class="sylma.xml.Document" js:parent-name="document" js:alias="document">
+      <div class="document hidder visible" js:class="sylma.xml.Document" js:parent-name="document" js:alias="document">
         <div class="children">
           <tpl:apply select="element"/>
         </div>
@@ -262,6 +277,14 @@
 
     <tpl:template>
       <tpl:apply select="update()"/>
+    </tpl:template>
+
+  </view:view>
+
+  <view:view name="load" builder:return="result">
+
+    <tpl:template>
+      <tpl:apply select="loadDocument()"/>
     </tpl:template>
 
   </view:view>

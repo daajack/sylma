@@ -36,7 +36,7 @@ sylma.xml.Attribute = new Class({
     {
       var path = this.parentElement.toPath(true);
       
-      this.getParent('editor').getObject('history').addStep('remove', path, this.value, {
+      this.getParent('editor').getObject('history').addStep('remove', path, this.toToken(), this.value, {
         type : 'attribute',
         namespace : this.namespace,
         prefix : this.prefix,
@@ -76,10 +76,11 @@ sylma.xml.Attribute = new Class({
         var editor = this.getParent('editor');
         var path = this.parentElement.toPath(true);
 
-        editor.getHistory().addStep('update', path, this.value, {
+        editor.getHistory().addStep('update', path, this.toToken(), this.value, {
           type : 'attribute',
           namespace : this.namespace,
-          name : this.shortname,
+          name : this.name,
+          prefix : this.prefix,
           previous : previous
         });
       }
@@ -93,4 +94,9 @@ sylma.xml.Attribute = new Class({
     return prefix + this.name + '="' + this.value + '"';
   },
 
+  toToken : function()
+  {
+    var prefix = this.prefix ? this.prefix + ':' : '';
+    return this.parentElement.toToken() + '@' + prefix + this.name;
+  },
 });

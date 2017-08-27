@@ -39,7 +39,7 @@ sylma.xml.Insert = new Class({
     this.updateChildren();
 
     this.show();
-    input.focus.delay(1000, input);
+    input.focus.delay(200, input);
   },
 
   updateChildren: function () {

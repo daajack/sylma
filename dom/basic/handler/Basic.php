@@ -103,7 +103,7 @@ abstract class Basic extends core\module\Managed {
 
     $doc = $this->getDocument();
 
-    if (!$sName) $this->throwException(t('Empty value cannot be used as element\'s name'));
+    if (!$sName) $this->throwException('Empty value cannot be used as element\'s name');
 
     try {
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <collection
-  xmlns="http://2013.sylma.org/modules/xmler"
+  xmlns="http://2016.sylma.org/storage/xml/editor"
 >
   <insert/>
   <history/>

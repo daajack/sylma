@@ -15,7 +15,9 @@
 
     <field name="path" type="sql:string"/>
     <field name="lock" type="sql:boolean"/>
-
+    <field name="steps" type="sql:int" default="0"/>
+    
+    <foreign name="step" occurs="0..1" table="history:editor_history" import="history.xql"/>
     <reference name="history" table="history:editor_history" foreign="history:file" import="history.xql"/>
 
   </table>

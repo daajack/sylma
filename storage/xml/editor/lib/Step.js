@@ -1,5 +1,5 @@
 
-sylma.xml.Step = new Class({
+sylma.xml.StepClass = {
   
   Extends : sylma.ui.Template,
   
@@ -7,7 +7,12 @@ sylma.xml.Step = new Class({
     
     this.arguments = JSON.parse(this.options.arguments);
     this.disabled = this.options.disabled === '1';
-    
+    this.id = this.options.id;
+    this.content = this.options.content;
+    this.document = this.options.document;
+    this.type = this.options.type;
+    this.path = this.options.path;
+
     this.updateNode();
   },
   
@@ -15,16 +20,39 @@ sylma.xml.Step = new Class({
 
     var el = this.initTemplate();
 
-    el.inject(node.getParent(), 'top');
+    if (this.options.old)
+    {
+      el.inject(node, 'before');
+    }
+    else
+    {
+      el.inject(node.getParent(), 'top');
+    }
 
     this.initNode({node : el}, true);
+    
+    var types = {
+      add : '+',
+      update : '*',
+      move : '>',
+      remove : '-',
+    };
+    
+    var type = this.getNode('type');
+    type.set('html', types[type.get('html')]);
 
     sylma.ui.loadArray([this]);
   },
   
+  select: function () {
+    
+    var history = this.getParent('history');
+    history.load(this);
+  },
+  
   undo : function()
   {
-    switch (this.options.type)
+    switch (this.type)
     {
       case 'add' : this.undoAdd(); break;
       case 'update' : this.undoUpdate(); break;
@@ -56,12 +84,12 @@ sylma.xml.Step = new Class({
   
   undoUpdate : function()
   {
-    var history = this.getParent();
+    var history = this.getParent('history');
     var node = this.findNode(this.options.path);
-    
+
     node.updateValue(this.arguments.previous, function()
     {
-      history.steps.push({
+      history.stepsAdded.push({
         type : 'undo'
       });
       
@@ -71,12 +99,12 @@ sylma.xml.Step = new Class({
   
   redoUpdate : function()
   {
-    var history = this.getParent();
+    var history = this.getParent('history');
     var node = this.findNode(this.options.path);
     
     node.updateValue(this.options.content, function()
     {
-      history.steps.push({
+      history.stepsAdded.push({
         type : 'redo'
       });
       
@@ -86,18 +114,19 @@ sylma.xml.Step = new Class({
   
   undoAdd: function ()
   {
-    var history = this.getParent();
+    var history = this.getParent('history');
     var node;
     
     switch (this.arguments.type)
     {
+      case 'text' :
       case 'element' : node = this.findNode(this.options.path + '/' + this.arguments.position); break;
       case 'attribute' : node = this.findNode(this.options.path); break;
     }
     
     node.remove(false);
     
-    history.steps.push({
+    history.stepsAdded.push({
       type : 'undo'
     });
       
@@ -106,47 +135,69 @@ sylma.xml.Step = new Class({
   
   applyAdd: function (type, add) {
     
-    var history = this.getParent();
+    var history = this.getParent('history');
     var editor = this.getParent('editor');
     
     switch (this.arguments.type)
     {
+      case 'text' :
       case 'element' :
         
         var path, position;
         
         if (add)
         {
-          path = this.options.path;
+          path = this.path;
           position = this.arguments.position;
         }
         else
         {
-          path = this.options.path.split('/');
+          path = this.path.split('/');
           position = path.pop();
           path = path.join('/');
         }
 
         var node = this.findNode(path);
-        var doc = editor.parseDocument(this.options.content);
-        var options = editor.buildElement(doc.documentElement);
-        var child = node.addIndexedChild(options, this.arguments.type, parseInt(position));
-        editor.schema.lookupElement(child, node.ref.type.children);
+
+        if (this.arguments.type === 'element')
+        {
+          var doc = editor.parseDocument(this.content);
+          var options = editor.buildElement(doc.documentElement);
+          var child = node.addIndexedChild(options, this.arguments.type, parseInt(position));
+          
+          editor.schema.lookupElement(child, node.ref.type.children);
+        }
+        else
+        {
+          var options = {
+            _alias : 'text',
+            content : this.options.content,
+          };
+          
+          var child = node.addIndexedChild(options, this.arguments.type, parseInt(position));
+        }
 
         break;
         
-      case 'text' : throw new Error('Not implemented'); break;
       case 'attribute' : 
         
-        var node = this.findNode(this.options.path, 'element');
-        var child = node.addAttribute(this.arguments.namespace, this.arguments.name, this.arguments.prefix || '', this.options.content);
-        var attribute = editor.schema.lookupAttribute(child, node.ref.type.children);
-        editor.schema.attachAttribute(child, attribute);
+        var node = this.findNode(this.path, 'element');
+        var child = node.addAttribute(this.arguments.namespace, this.arguments.name, this.arguments.prefix || '', this.content);
+        
+        if (node.ref)
+        {
+          var attribute = editor.schema.lookupAttribute(child, node.ref.type.children);
+          editor.schema.attachAttribute(child, attribute);
+        }
         
         break;
+        
+      default :
+        
+        throw new Error('Unknown step type');
     }
     
-    history.steps.push({
+    history.stepsAdded.push({
       type : type
     });
 
@@ -165,11 +216,11 @@ sylma.xml.Step = new Class({
   
   redoRemove : function()
   {
-    var history = this.getParent();
+    var history = this.getParent('history');
     var node = this.findNode(this.options.path);
     
     node.remove(false);
-    history.steps.push({
+    history.stepsAdded.push({
       type : 'redo'
     });
     
@@ -179,13 +230,14 @@ sylma.xml.Step = new Class({
   applyMove: function (source, target, key, type) 
   {
     var node = this.findNode(source);
+    var history = this.getParent('history')
     node.applyMove(target, key - 0);
 
-    this.getParent().steps.push({
+    history.stepsAdded.push({
       type : type
     });
 
-    this.getParent().save();
+    history.save();
   },
   
   undoMove: function ()
@@ -216,11 +268,13 @@ sylma.xml.Step = new Class({
   
   findNode: function (path, type)
   {
-    return this.getParent('editor').findNode(path, type || this.arguments.type, this.arguments.name);
+    return this.getParent('editor').findNode(path, type || this.arguments.type, this.arguments.name, this.arguments.prefix);
   },
   
   updateNode : function()
   {
     this.getNode().toggleClass('disabled', this.disabled);
   }
-});
+};
+
+sylma.xml.Step = new Class(sylma.xml.StepClass);

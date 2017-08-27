@@ -101,4 +101,18 @@
 
   </view:view>
 
+  <view:view name="steps" internal="x" builder:return="result">
+
+    <sql:resource/>
+
+    <sql:filter name="id">
+      <le:get-argument name="id"/>
+    </sql:filter>
+
+    <tpl:template>
+      <tpl:read select="steps"/>
+    </tpl:template>
+
+  </view:view>
+
 </crud:crud>

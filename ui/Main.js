@@ -347,6 +347,7 @@ sylma.uiClass = {
       },
       onError: function(response)
       {
+        sylma.ui.showMessage('Request error');
         throw new Error('Request error');
       }
     });
@@ -457,4 +458,9 @@ sylma.log = function(msg) {
 
     console.log(msg);
   }
+}
+
+var log = function()
+{
+  console.log.apply(console, arguments);
 }

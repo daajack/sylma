@@ -1,21 +1,24 @@
 
 sylma.xml = {};
 
-sylma.xml.Editor = new Class({
+sylma.xml.EditorClass = {
 
   Extends : sylma.ui.Container,
-  
+  enable : false,
   namespaces : {},
   updating : false,
+  original : '',
 
   onLoad : function () {
     
-    this.prepareDocument();
-  },
-  
-  prepareDocument: function () {
+    var document = this.options.document;
     
-    var doc = this.buildDocument(this.options.document);
+    this.file = this.options.file;
+    this.original = document;
+    this.container = this.getObject('container');
+  
+    this.prepareSchema();
+    this.prepareDocument(document, true);
 
     var history = this.getHistory();
     
@@ -23,17 +26,39 @@ sylma.xml.Editor = new Class({
 
       history.save();
     });
-
+  },
+  
+  prepareSchema: function () {
+    
     var root = this.options.schemas.root;
-
     var schema = new sylma.xsd.Schema(root, this.options.namespaces);
+    schema.editor = this;
+    
+    this.schema = schema;
+  },
+  
+  prepareDocument: function (content, parse) {
+    
+    var doc = this.buildDocument(content, parse);
+    var schema = this.schema;
+    
     schema.validate(doc);
     
-    schema.editor = this;
-
-    this.schema = schema;
-    this.file = this.options.file;
     this.updateTime = this.options.update;
+    this.setReady();
+    
+    return doc;
+  },
+  
+  setReady : function()
+  {
+    this.enable = true;
+  },
+  
+  setDisabled : function()
+  {
+    this.enable = false;
+    this.getNode().addClass('disabled');
   },
   
   /**
@@ -52,14 +77,36 @@ sylma.xml.Editor = new Class({
     return text.replace(/[&<>"']/g, function(m) { return map[m]; });
   },
 
-  buildDocument : function(options) {
+  buildDocument : function(options, parse) {
     
-    var container = this.getObject('container');
-    var parser = new DOMParser();
-    var doc = parser.parseFromString(options, "text/xml");
+    var container = this.container;
+    var doc;
+    
+    if (parse)
+    {
+      var parser = new DOMParser();
+      doc = parser.parseFromString(options, "text/xml");
+    }
+    else
+    {
+      doc = options;
+    }
+    
     var content = {element : [this.buildElement(doc.documentElement)]};
+    
+    if (container.objects.document)
+    {
+      container.objects.document.each(function(document)
+      {
+        document.hide();
+      });
+    }
 
-    return container.add('document', content);
+    var result = container.add('document', content);
+    
+    this.setReady();
+    
+    return result;
   },
   
   parseDocument: function (content) 
@@ -90,7 +137,7 @@ sylma.xml.Editor = new Class({
       
       if (attr.prefix === 'xmlns') continue;
       if (attr.name === 'xmlns') continue;
-      
+
       result.attribute.push({
         prefix : attr.prefix ? attr.prefix : '',
         name : attr.localName,
@@ -156,7 +203,7 @@ sylma.xml.Editor = new Class({
     this.getNode().addClass('edit');
   },
   
-  findNode: function (path, type, name)
+  findNode: function (path, type, name, prefix)
   {
     var result;
     var paths = path.split('/');
@@ -176,9 +223,9 @@ sylma.xml.Editor = new Class({
     
     switch (type)
     {
+      case 'text' : //result = element.children[0]; break;
       case 'element' : result = element; break;
-      case 'text' : result = element.children[0]; break;
-      case 'attribute' : result = element.attributes[name]; break;
+      case 'attribute' : result = element.attributes[(prefix ? prefix + ':' : '') + name]; break;
       default : throw new Error('Unknown step type');
     }
     
@@ -189,4 +236,7 @@ sylma.xml.Editor = new Class({
     
     return result;
   }
-});
+  
+};
+
+sylma.xml.Editor = new Class(sylma.xml.EditorClass);

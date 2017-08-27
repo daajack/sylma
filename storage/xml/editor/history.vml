@@ -7,11 +7,15 @@
   xmlns:le="http://2013.sylma.org/action"
   xmlns:js="http://2013.sylma.org/template/binder"
   xmlns:builder="http://2013.sylma.org/parser/reflector/builder"
+  
+  xmlns:history="http://2016.sylma.org/storage/xml/editor/history"
 
   xmlns:sql="http://2013.sylma.org/storage/sql"
   xmlns:xl="http://2013.sylma.org/storage/xml"
 >
-
+  
+  <crud:global history:ns="ns"/>
+  
   <crud:group name="sql">
 
     <view:schema>history.xql</view:schema>
@@ -32,21 +36,30 @@
     <sql:resource multiple="x"/>
     
     <tpl:template match="*" mode="step">
+      <!--<tpl:apply select="update" mode="update/filter"/>-->
       <tpl:apply select="file/ref()" mode="file/filter"/>
       <le:array>
         <tpl:read select="id" le:name="id"/>
         <tpl:read select="type" le:name="type"/>
+        <tpl:read select="display" le:name="display"/>
         <tpl:read select="update" le:name="update"/>
         <tpl:read select="path" le:name="path"/>
         <tpl:read select="arguments/text()" le:name="arguments"/>
         <tpl:read select="content/text()" le:name="content"/>
         <tpl:read select="disabled" le:name="disabled"/>
+        <tpl:apply mode="step/document" le:name="document"/>
       </le:array>
     </tpl:template>
     
     <tpl:template match="*" mode="file/filter">
       <sql:filter name="path">
         <le:get-argument name="file"/>
+      </sql:filter>
+    </tpl:template>
+    
+    <tpl:template match="*" mode="update/filter">
+      <sql:filter op="&lt;" optional="x">
+        <le:get-argument name="update" optional="x"/>
       </sql:filter>
     </tpl:template>
     
@@ -57,42 +70,72 @@
     <xl:resource file="history.xml"/>
     
     <tpl:template>
-      <div class="history" js:class="sylma.xml.History" js:name="history">
+      <div class="history" js:class="sylma.xml.History" js:name="history" js:parent-name="history">
         <js:option name="path">
           <le:path/>
         </js:option>
+        <js:option name="pathLoad">
+          <le:path>index/load</le:path>
+        </js:option>
+        <js:option name="pathSteps">
+          <crud:path path="steps"/>
+        </js:option>
         <js:option name="pathUpdate">
           <le:path>index/update</le:path>
+        </js:option>
+        <js:option name="pathClear">
+          <crud:path path="clear-all"/>
         </js:option>
         <js:option name="steps">
           <crud:include path="steps"/>
         </js:option>
         <div class="actions">
+          <div class="admin" style="font-size: 0.8em;">
+            <div class="button clear">
+              <js:event name="click">%object%.clear();</js:event>
+              <tpl:text>*</tpl:text>
+            </div>
+          </div>
           <div class="button back">
             <js:event name="click">%object%.stepBackward();</js:event>
             <tpl:text>↶</tpl:text>
+          </div>
+          <div class="button back">
+            <js:event name="click">%object%.goCurrent();</js:event>
+            <tpl:text>o</tpl:text>
           </div>
           <div class="button back">
             <js:event name="click">%object%.stepForward();</js:event>
             <tpl:text>↷</tpl:text>
           </div>
         </div>
-        <div class="steps">
-          <tpl:apply select="*" mode="step"/>
-        </div>
+        <tpl:apply select="steps" mode="steps"/>
       </div>
     </tpl:template>
 
-    <tpl:template match="*" mode="step">
-      <div class="step" js:class="sylma.xml.Step" js:alias="step">
-        <span class="type">
+    <tpl:template match="*" mode="steps">
+      <div class="steps" js:class="sylma.ui.Template" js:alias="steps" js:all="x">
+        <tpl:apply select="*" mode="step"/>
+      </div>
+    </tpl:template>
+    
+    <tpl:template match="history:action" mode="step">
+      <div class="step action" js:class="sylma.xml.Step" js:alias="action">
+        <js:event name="click">%object%.select();</js:event>
+        <span class="type" js:node="type">
           <tpl:read select="type"/>
         </span>
-        <span class="path">
-          <tpl:read select="path"/>
+        <span class="display">
+          <tpl:read select="display"/>
         </span>
-        <span class="date">
-          <tpl:read select="update"/>
+      </div>
+    </tpl:template>
+
+    <tpl:template match="history:revision" mode="step">
+      <div class="step revision" js:class="sylma.xml.Revision" js:alias="revision">
+        <span class="type">R</span>
+        <span class="name">
+          <tpl:read select="name"/>
         </span>
       </div>
     </tpl:template>
@@ -101,18 +144,51 @@
 
   <view:view name="steps" groups="sql, collection" builder:return="result" builder:output="array">
     
-    <sql:limit>20</sql:limit>
+    <le:argument name="offset">
+      <le:default>0</le:default>
+    </le:argument>
+    
+    <sql:limit>30</sql:limit>
+
+    <sql:offset>
+      <le:get-argument name="offset"/>
+    </sql:offset>
+    
     <sql:order>!update</sql:order>
 
     <tpl:template>
-      <tpl:apply select="*" mode="step"/>
+      <tpl:apply select="*" mode="step" le:name="steps"/>
     </tpl:template>
+    
+    <tpl:template match="*" mode="step/document">
+      <tpl:read select="document/text()"/>
+    </tpl:template>
+    
+  </view:view>
+  
+
+  <view:view name="range" groups="sql, collection" builder:return="result" builder:output="array">
+    
+    <sql:order>id</sql:order>
+    
+    <sql:filter name="id" op="&gt;">
+      <le:get-argument name="from"/>
+    </sql:filter>
+    <sql:filter name="id" op="&lt;=">
+      <le:get-argument name="to"/>
+    </sql:filter>
+
+    <tpl:template>
+      <tpl:apply select="*" mode="step" le:name="steps"/>
+    </tpl:template>
+    
+    <tpl:template match="*" mode="file/filter"/>
     
   </view:view>
   
   <view:view name="time" groups="sql, collection" internal="x" builder:return="result">
 
-    <sql:order>!update</sql:order>
+    <sql:order>!id</sql:order>
     <sql:limit>1</sql:limit>
 
     <tpl:template>
@@ -126,9 +202,9 @@
 
   </view:view>
 
-  <view:view name="last" groups="sql, file, collection" internal="x" builder:return="result" builder:output="array">
+  <view:view name="first" groups="sql, file, collection" internal="x" builder:return="result" builder:output="array">
 
-    <sql:order>!update</sql:order>
+    <sql:order>id</sql:order>
     <sql:limit>1</sql:limit>
 
     <sql:filter name="disabled">
@@ -140,6 +216,45 @@
     </tpl:template>
     
     <tpl:template match="*" mode="file/filter"/>
+    
+  </view:view>
+
+  <view:view name="last" groups="sql, file, collection" internal="x" builder:return="result" builder:output="array">
+
+    <sql:order>!id</sql:order>
+    <sql:limit>1</sql:limit>
+
+    <sql:filter name="disabled">
+      <le:get-argument name="disabled"/>
+    </sql:filter>
+    
+    <tpl:template>
+      <tpl:apply select="*" mode="step"/>
+    </tpl:template>
+    
+    <tpl:template match="*" mode="file/filter"/>
+    
+  </view:view>
+
+  <view:view name="document" groups="sql, file, collection" internal="x" builder:return="result" builder:output="array">
+
+    <sql:order>!id</sql:order>
+    <sql:limit>1</sql:limit>
+
+    <sql:filter name="document" function="x" op="is not">null</sql:filter>
+    <sql:filter name="id" op="&lt;=">
+      <le:get-argument name="from"/>
+    </sql:filter>
+    
+    <tpl:template>
+      <tpl:apply select="*" mode="step"/>
+    </tpl:template>
+    
+    <tpl:template match="*" mode="file/filter"/>
+    
+    <tpl:template match="*" mode="step/document">
+      <tpl:read select="document/text()"/>
+    </tpl:template>
     
   </view:view>
 
@@ -164,6 +279,59 @@
   <view:view name="clear" groups="sql, file" internal="x" mode="delete" builder:return="result">
     
     <sql:filter name="disabled">1</sql:filter>
+    
+    <tpl:template/>
+    
+  </view:view>
+  
+  <view:view name="clear-all" groups="sql, file" builder:return="result">
+    
+    <tpl:template>
+      <crud:include path="reset-file"/>
+      <crud:include path="clear-history"/>
+    </tpl:template>
+    
+  </view:view>
+  
+  <view:view name="reset-file" mode="update" builder:return="result">
+    
+    <sql:resource/>
+    <view:schema>file.xql</view:schema>
+    
+    <sql:filter name="path">
+      <le:get-argument name="file"/>
+    </sql:filter>
+    
+    <tpl:template>
+      <tpl:apply select="steps" mode="reset"/>
+    </tpl:template>
+    
+    <tpl:template match="*" mode="reset">
+      <tpl:register>0</tpl:register>
+    </tpl:template>
+
+  </view:view>
+  
+  <view:view name="get-file" builder:return="result">
+    
+    <sql:resource/>
+    <view:schema>file.xql</view:schema>
+    
+    <sql:filter name="path">
+      <le:get-argument name="file"/>
+    </sql:filter>
+    
+    <tpl:template>
+      <tpl:read select="id"/>
+    </tpl:template>
+
+  </view:view>
+  
+  <view:view name="clear-history" groups="sql" mode="delete" builder:return="result">
+    
+    <sql:filter name="file">
+      <crud:include path="get-file"/>
+    </sql:filter>
     
     <tpl:template/>
     

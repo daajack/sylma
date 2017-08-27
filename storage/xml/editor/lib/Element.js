@@ -1,5 +1,5 @@
 
-sylma.xml.Element = new Class({
+sylma.xml.ElementClass = {
 
   Extends : sylma.xml.Node,
 
@@ -29,7 +29,7 @@ sylma.xml.Element = new Class({
 
     var children = this.getObject('children');
 
-    if (children) {
+    if (0 && children) {
 
       var _class = children[0].sylma.template.classes['element'];
       var spacer = this.getNode().getElement('.' + _class.node);
@@ -124,7 +124,7 @@ sylma.xml.Element = new Class({
 
     var editor = this.getParent('editor');
 
-    editor.getObject('history').addStep('add', this.toPath(true), child.toXML(true), {
+    editor.getObject('history').addStep('add', this.toPath(true), child.toToken(), child.toXML(true), {
       position : child.key,
       type : 'element'
     });
@@ -142,7 +142,7 @@ sylma.xml.Element = new Class({
 
     child.openValue(function() {
 
-      editor.getObject('history').addStep('add', this.toPath(true), child.toXML(true), {
+      editor.getObject('history').addStep('add', this.toPath(true), child.toToken(), child.toXML(true), {
         position : child.key,
         type : child.element
       });
@@ -167,12 +167,35 @@ sylma.xml.Element = new Class({
     return this.addIndexedChild(options, type, key);
   },
 
-  addIndexedChild : function (options, type, key) {
+  addIndexedChild : function (args, alias, position) {
 
     var container = this.getChildren();
 
-    var result = container.add(type, options, key === container.tmp.length ? undefined : key);
-    result.key = key;
+    var key = position === container.tmp.length ? undefined : position;
+    
+    var target;
+    var _class = container.sylma.template.classes[alias];
+    var result = container.buildObject(alias, args, key);
+
+    if (key >= 0) {
+
+      ++key;
+
+      var next = container.tmp[key];
+      target = next.getNode();
+    }
+    else {
+
+      target = container.getNode().getElements('.' + _class.node).getLast();
+    }
+    
+    if (!target)
+    {
+      throw new Error('No target found');
+    }
+    
+    result.addTo(target);
+    result.key = position;
 
     this.prepareChildren();
     this.prepareChild(result);
@@ -186,7 +209,7 @@ sylma.xml.Element = new Class({
     
     if (save)
     {
-      this.getParent('editor').getObject('history').addStep('remove', this.toPath(true), this.toXML(true), {
+      this.getParent('editor').getObject('history').addStep('remove', this.toPath(true), this.toToken(), this.toXML(true), {
         type : 'element',
       });
     }
@@ -211,10 +234,11 @@ sylma.xml.Element = new Class({
 
     child.openValue(function() {
 
-      editor.getObject('history').addStep('add', path, child.value, {
+      editor.getObject('history').addStep('add', path, child.toToken(), child.value, {
         type : 'attribute',
         namespace : attribute.namespace,
-        name : attribute.shortname,
+        name : attribute.name,
+        prefix : attribute.prefix
       });
     });
   },
@@ -367,7 +391,7 @@ sylma.xml.Element = new Class({
     
     var parentPath = this.applyMove(parent, previous);
     
-    editor.getObject('history').addStep('move', source, '', {
+    editor.getObject('history').addStep('move', source, this.toToken(), '', {
       type : 'element',
       parent : parentPath,
       position : this.getPosition()
@@ -577,6 +601,12 @@ sylma.xml.Element = new Class({
 
     return result;
   },
+  
+  toToken : function()
+  {
+    var p = this.prefix;
+    return (p ? p + ':' : '') + this.name;
+  },
 
   toXML : function (first) {
 
@@ -610,4 +640,6 @@ sylma.xml.Element = new Class({
 
     return '<' + name + xmlns + (xmlns || attributes ? ' ' : '') + attributes + content + end;
   },
-});
+};
+
+sylma.xml.Element = new Class(sylma.xml.ElementClass);

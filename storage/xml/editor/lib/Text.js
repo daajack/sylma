@@ -21,15 +21,15 @@ sylma.xml.Text = new Class({
     this.getParent('editor').getObject('update').attachNode(this, this.getNode(), callback);
   },
 
-  remove : function () {
+  remove : function (previous) {
 
-    var path = this.parentElement.toPath(true);
-
-    this.getParent('editor').getObject('history').addStep('remove', path, '', {
-      type : 'text',
-      position : this.getPosition()
-    });
-
+    if (previous)
+    {
+      this.getParent('editor').getObject('history').addStep('remove', this.toPath(), this.toToken(), previous, {
+        type : 'text',
+      });
+    }
+    
     this.parent();
     this.destroy();
   },
@@ -46,11 +46,12 @@ sylma.xml.Text = new Class({
     }
     
     this.value = value;
+    
     this.getNode().set('html', value);
 
     if (!value) 
     {
-      this.remove();
+      this.remove(previous);
     }
     else
     {
@@ -61,15 +62,26 @@ sylma.xml.Text = new Class({
       else if (save)
       {
         var editor = this.getParent('editor');
-        var path = this.parentElement.toPath(true);
 
-        editor.getObject('history').addStep('update', path, this.value, {
+        editor.getObject('history').addStep('update', this.toPath(), this.toToken(), this.value, {
           previous : previous,
           type : 'text',
-          position : this.getPosition()
         });
       }
     }
+  },
+
+  toPath : function () {
+
+    var el = this.parentElement;
+    var position = el.children.indexOf(this);
+
+    return el.toPath() + position;
+  },
+  
+  toToken : function()
+  {
+    return this.parentElement.toToken() + '/text()';
   },
 
   toXML: function () {

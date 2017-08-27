@@ -149,6 +149,7 @@
     <xs:complexType mixed="true">
       <xs:choice minOccurs="0" maxOccurs="unbounded">
         <xs:element ref="argument" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element ref="register" minOccurs="0" maxOccurs="1"/>
         <xs:group ref="anyStructure"/>
         <xs:group ref="anyContentNode"/>
       </xs:choice>

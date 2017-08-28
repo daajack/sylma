@@ -45,6 +45,7 @@
       <js:include>lib/Tools.js</js:include>
       <js:include>lib/Insert.js</js:include>
       <js:include>lib/Update.js</js:include>
+      <js:include>lib/Content.js</js:include>
       <js:include>lib/Node.js</js:include>
       <js:include>lib/Document.js</js:include>
       <js:include>lib/Element.js</js:include>
@@ -224,6 +225,10 @@
           <span>
             <js:event name="click">%parent%.insert(null, true);</js:event>
             <tpl:text>@</tpl:text>
+          </span>
+          <span>
+            <js:event name="click">%parent%.copy();</js:event>
+            <tpl:text>C</tpl:text>
           </span>
 <!--          <span>
             <js:event name="click">console.log('*');</js:event>

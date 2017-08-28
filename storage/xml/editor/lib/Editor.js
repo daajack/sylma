@@ -7,18 +7,16 @@ sylma.xml.EditorClass = {
   enable : false,
   namespaces : {},
   updating : false,
-  original : '',
 
   onLoad : function () {
     
     var document = this.options.document;
     
     this.file = this.options.file;
-    this.original = document;
     this.container = this.getObject('container');
   
     this.prepareSchema();
-    this.prepareDocument(document, true);
+    this.document = this.prepareDocument(document, true);
 
     var history = this.getHistory();
     
@@ -92,7 +90,7 @@ sylma.xml.EditorClass = {
       doc = options;
     }
     
-    var content = {element : [this.buildElement(doc.documentElement)]};
+    var content = {element : [this.buildElement(doc.documentElement)], document : doc};
     
     if (container.objects.document)
     {

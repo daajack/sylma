@@ -51,48 +51,64 @@ sylma.xml.Insert = new Class({
 
     if (element.ref) {
 
+      var ref = element.ref;
+
       var result = [];
       var max = 10;
       //var max = Infinity;
       var input = this.getNode('input').get('value');
       var children = [];
-
-      if (this.attribute) {
-
-        children = this.schema.loadAttributes(element.ref.type);
-      }
-      else {
-
-        var ref = element.ref;
-
-        if (ref.type.children) {
-
-          children = this.schema.loadChildren(ref.type);
+      
+      if (input && input.trim()[0] === '<')
+      {
+        if (!this.content)
+        {
+          this.content = new sylma.xml.Content(ref.schema, input);
+        }
+        else
+        {
+          this.content.value = input;
         }
 
-        if (ref.type.mixed) {
+        children.push(this.content);
+      }
+      else
+      {
+        if (this.attribute) {
 
-          var text = new sylma.xsd.SimpleType(ref.schema, {
-            element: 'simpleType',
-            name: '_',
+          children = this.schema.loadAttributes(ref.type);
+        }
+        else {
+
+          if (ref.type.children) {
+
+            children = this.schema.loadChildren(ref.type);
+          }
+
+          if (ref.type.mixed) {
+
+            var text = new sylma.xsd.SimpleType(ref.schema, {
+              element: 'simpleType',
+              name: '_',
+            });
+
+            text.shortname = '(text)';
+            //text.name = '_';
+
+            children.push(text);
+          }
+        }
+
+        if (input) {
+
+          var val = input.toLowerCase().trim();
+          var reg = new RegExp(val);
+
+          children = children.filter(function(item) {
+
+            return item.shortname.toLowerCase().match(reg);
           });
-
-          text.shortname = '(text)';
-          //text.name = '_';
-
-          children.push(text);
         }
-      }
-
-      if (input) {
-        
-        var val = input.toLowerCase().trim();
-        var reg = new RegExp(val);
-
-        children = children.filter(function(item) {
-
-          return item.shortname.toLowerCase().match(reg);
-        });
       }
 
       children.each(function(item) {
@@ -103,16 +119,11 @@ sylma.xml.Insert = new Class({
         }
       });
 
-      var attribute = this.attribute;
-
       result.sort(function(a, b) {
 
-        //var diff = attribute ? a.element > b.element : a.element < b.element;
-        //return a.element !== b.element ? diff : a.name > b.name;
         return a.name > b.name;
-
       });
-
+      
       container.adopt(result.slice(0, max));
     }
   },
@@ -187,9 +198,5 @@ sylma.xml.Insert = new Class({
       default : throw new Error('Unknown element : ' + node.element);
 
     }
-
-
-
-
   }
 });

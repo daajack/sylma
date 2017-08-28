@@ -150,6 +150,20 @@ sylma.xml.ElementClass = {
     }.bind(this));
   },
 
+  addContent : function (options, previous) {
+
+    var child = this.addChild(options, 'element', previous);
+
+    var editor = this.getParent('editor');
+
+    editor.getObject('history').addStep('add', this.toPath(true), child.toToken(), child.toXML(true), {
+      position : child.key,
+      type : 'element'
+    });
+
+//    editor.schema.attachElement(child, element);
+  },
+
   addChild : function (options, type, previous) {
 
     var container = this.getChildren();
@@ -166,7 +180,7 @@ sylma.xml.ElementClass = {
 
     return this.addIndexedChild(options, type, key);
   },
-
+  
   addIndexedChild : function (args, alias, position) {
 
     var container = this.getChildren();
@@ -536,6 +550,25 @@ sylma.xml.ElementClass = {
       {
         el.addClass('format-complex');
       }
+    }
+  },
+  
+  copy: function () 
+  {
+    var input = new Element('input', { type : 'text', style : 'width: 0; height: 0;', value : this.toXML() });
+    this.getNode().grab(input);
+
+    input.select();
+
+    var successful = document.execCommand('copy');
+
+    if (successful)
+    {
+      sylma.ui.showMessage('Element copied');
+    }
+    else
+    {
+      sylma.ui.showMessage('Error, cannot copy');
     }
   },
 

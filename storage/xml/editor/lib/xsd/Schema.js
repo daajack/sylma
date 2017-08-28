@@ -123,7 +123,7 @@ sylma.xsd.Schema = new Class({
 
     if (!result) {
 
-      throw new Error('Cannot find ' + element + ' : ' + namespace + ':' + name);
+//      throw new Error('Cannot find ' + element + ' : ' + namespace + ':' + name);
     }
 
     return result;
@@ -305,9 +305,12 @@ if (0) {
           if (item.namespace === attribute.namespace) {
 
             item = this.findAttribute(attribute.namespace, attribute.name);
-            item.prepare();
-
-            this.attachAttribute(attribute, item);
+            
+            if (item)
+            {
+              item.prepare();
+              this.attachAttribute(attribute, item);
+            }
           }
 
           break;
@@ -350,9 +353,12 @@ if (0) {
           if (item.namespace === el.namespace) {
 
             item = this.findElement(el.namespace, el.name);
-            item.prepare();
 
-            this.attachElement(el, item);
+            if (item)
+            {
+              item.prepare();
+              this.attachAttribute(el, item);
+            }
           }
 
           break;

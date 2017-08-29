@@ -7,7 +7,9 @@ class Manager extends core\module\Domed
 {
   protected $translations = array();
   protected $language;
-  
+
+  protected $modePrefix = false;
+  protected $usePrefix = false;
   protected $redirect = array();
   protected $redirectKeys = array();
   
@@ -15,6 +17,8 @@ class Manager extends core\module\Domed
     
     $this->setDirectory(__FILE__);
     $this->setSettings($args);
+
+    $this->modePrefix = !$this->get('domains')->asArray();
     $this->setLanguage($this->getDefault());
     
     $this->loadTranslations();
@@ -41,9 +45,27 @@ class Manager extends core\module\Domed
   
   public function loadRequest(core\request $request) {
     
-    $this->loadDomainLanguage();
+//    $this->loadDomainLanguage();
+    $lang = $this->loadPrefixLanguage($request);
+
+    if (!$lang)
+    {
+      $lang = $this->loadSessionLanguage();
+    }
+
+    if (!$lang)
+    {
+      $lang = $this->loadBrowserLanguage();
+    }
+
+    if ($lang)
+    {
+      $this->setLanguage($lang);
+    }
 
     $result = (string) $request;
+
+    $this->current = substr($request->getPath(), 1);
     
     foreach ($this->aliasKeys as $key => $alias) {
       
@@ -58,15 +80,62 @@ class Manager extends core\module\Domed
     
     $request->setPath($result);
   }
-  
-  public function loadDomainLanguage() {
-    
+
+  protected function loadSessionLanguage() {
+
+    $result = false;
+
+    if (isset($_SESSION['locale']))
+    {
+      $result = $_SESSION['locale'];
+    }
+
+    return $result;
+  }
+
+  protected function loadBrowserLanguage() {
+
+    $locales = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
+    $languages = array_keys($this->getTranslations());
+    $suffix = '';
+
+    foreach ($locales as $locale) {
+
+      $language = substr($locale, 0, 2);
+
+      if (in_array($language, $languages)) {
+
+        $suffix = $language;
+        break;
+      }
+    }
+
+    return $suffix;
+  }
+
+  protected function loadPrefixLanguage($request) {
+
+    $path = $request->getPath();
+    $prefix = substr($path, 1, 2);
+    $translations = array_keys($this->translations);
+
+    if (in_array($prefix, $translations))
+    {
+      $request->setPath('/' . substr($path, 3));
+      $this->usePrefix = true;
+    }
+
+    return $this->usePrefix ? $prefix : false;
+  }
+
+  protected function loadDomainLanguage() {
+
     $domain = $_SERVER['SERVER_NAME'];
-    
+
     foreach ($this->get('domains') as $key => $match) {
-      
+
       if (preg_match("`$match`", $domain)) {
-        
+
         $this->setLanguage($key);
       }
     }
@@ -159,15 +228,34 @@ class Manager extends core\module\Domed
 
   public function getCurrentPage($language) {
     
-    $path = $_SERVER['REQUEST_URI'];
+    $path = $this->current;
     $result = $this->lookupPage($path, $language);
 
-    if (!$result) {
-      
+    if (!$result)
+    {
       $result = $path;
     }
     
-    return '//' . $this->read('domains/' . $language) . $result;
+    $https = false;
+
+    if(isset($_SERVER['HTTPS'])) {
+
+      if ($_SERVER['HTTPS'] == "on")
+      {
+        $https = true;
+      }
+    }
+
+    if ($this->modePrefix)
+    {
+      $root = $_SERVER['SERVER_NAME'] . '/' . $language;
+    }
+    else
+    {
+      $root = $this->read('domains/' . $language);
+    }
+
+    return 'http' . ($https ? 's' : '') . '://' . $root . $result;
   }
   
   public function getPage($path) {
@@ -179,10 +267,19 @@ class Manager extends core\module\Domed
       
       $this->launchException('Cannot find page : ' . $path);
     }
+
+    if ($path{0} === '/' && $this->usePrefix)
+    {
+      $prefix = '/' . $this->language;
+    }
+    else
+    {
+      $prefix = '';
+    }
     
-    return $result;
+    return $prefix . $result;
   }
-  
+
   /** DB **/
   
   protected function loadTranslations() {
@@ -202,7 +299,7 @@ class Manager extends core\module\Domed
   }
   
   public function getTranslation($value, $page) {
-    
+
     $db = $this->getManager('mysql')->getConnection();
     $suffix = $this->getSuffix();
     $value = trim($value);

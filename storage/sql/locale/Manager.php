@@ -130,19 +130,24 @@ class Manager extends core\module\Domed
   }
 
   protected function loadBrowserLanguage() {
-
-    $locales = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
-    $languages = array_keys($this->getTranslations());
+    
     $suffix = '';
+    
+    if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE']))
+    {
+      $header = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
+      $locales = explode(',', $header);
+      $languages = array_keys($this->getTranslations());
 
-    foreach ($locales as $locale) {
+      foreach ($locales as $locale) {
 
-      $language = substr($locale, 0, 2);
+        $language = substr($locale, 0, 2);
 
-      if (in_array($language, $languages)) {
+        if (in_array($language, $languages)) {
 
-        $suffix = $language;
-        break;
+          $suffix = $language;
+          break;
+        }
       }
     }
 

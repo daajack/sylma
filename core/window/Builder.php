@@ -75,12 +75,13 @@ class Builder extends core\module\Domed {
   
   public function buildWindow(core\request $path, core\argument $exts, core\argument $fusion, $bUpdate = null, $bRun = true) {
     
+    $result = '';
     $redirect = $this->prepareRequest($path);
 
     if ($redirect) 
     {
       $redirect->run();
-    } 
+    }
     else
     {
       $this->setSettings($exts);

@@ -71,6 +71,11 @@ class Redirect extends core\module\Argumented implements core\stringable {
 
     $this->sExtension = $sExtension;
   }
+  
+  public function run()
+  {
+    header('Location: ' . $this->getPath());
+  }
 
   public function asString() {
 

@@ -45,40 +45,75 @@ class Manager extends core\module\Domed
   
   public function loadRequest(core\request $request) {
     
-//    $this->loadDomainLanguage();
-    $lang = $this->loadPrefixLanguage($request);
-
-    if (!$lang)
+    $result = null;
+    $redirect = null;
+    
+    if ($this->modePrefix)
     {
-      $lang = $this->loadSessionLanguage();
-    }
+      $lang = $this->loadPrefixLanguage($request);
+      $redirect = !$lang;
+      
+      if (!$lang)
+      {
+        $lang = $this->loadSessionLanguage();
+      }
 
-    if (!$lang)
+      if (!$lang)
+      {
+        $lang = $this->loadBrowserLanguage();
+      }
+    }
+    else
     {
-      $lang = $this->loadBrowserLanguage();
+      $lang = $this->loadDomainLanguage();
     }
-
+    
     if ($lang)
     {
       $this->setLanguage($lang);
     }
 
+    if ($redirect)
+    {
+      $path = (string) $request;
+      if (!$lang) $lang = $this->getDefault();
+
+      if ($path === '/') $path = '';
+
+      $result = new core\Redirect('/' . $lang . $path);
+
+    }
+    else
+    {
+      $this->checkAliases($request);
+    }
+
+    return $result;
+  }
+  
+  protected function checkAliases(core\request $request)
+  {
     $result = (string) $request;
 
-    $this->current = substr($request->getPath(), 1);
-    
-    foreach ($this->aliasKeys as $key => $alias) {
-      
+    $this->current = $request->getPath();
+
+    foreach ($this->aliasKeys as $key => $alias) 
+    {
       $exp = "`$key`";
 
-      if (preg_match($exp, $result)) {
-
+      if (preg_match($exp, $result))
+      {
         $result = preg_replace($exp, $alias, $result);
         break;
       }
     }
-    
+
     $request->setPath($result);
+  }
+
+  public function saveSession() {
+
+    $_SESSION['locale'] = $this->language;
   }
 
   protected function loadSessionLanguage() {
@@ -121,7 +156,14 @@ class Manager extends core\module\Domed
 
     if (in_array($prefix, $translations))
     {
-      $request->setPath('/' . substr($path, 3));
+      $sub = substr($path, 3);
+      
+      if (!$sub)
+      {
+        $sub = '/';
+      }
+      
+      $request->setPath($sub);
       $this->usePrefix = true;
     }
 
@@ -131,14 +173,18 @@ class Manager extends core\module\Domed
   protected function loadDomainLanguage() {
 
     $domain = $_SERVER['SERVER_NAME'];
+    $result = null;
 
     foreach ($this->get('domains') as $key => $match) {
 
-      if (preg_match("`$match`", $domain)) {
+      if (preg_match("`^$match`", $domain)) {
 
-        $this->setLanguage($key);
+        $result = $key;
+        break;
       }
     }
+    
+    return $result;
   }
   
   protected function loadAliases(core\argument $aliases) {
@@ -236,15 +282,12 @@ class Manager extends core\module\Domed
       $result = $path;
     }
     
-    $https = false;
-
-    if(isset($_SERVER['HTTPS'])) {
-
-      if ($_SERVER['HTTPS'] == "on")
-      {
-        $https = true;
-      }
+    if ($result === '/')
+    {
+      $result = '';
     }
+
+    $https = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == "on";
 
     if ($this->modePrefix)
     {
@@ -261,23 +304,28 @@ class Manager extends core\module\Domed
   public function getPage($path) {
 
     $language = $this->getLanguage();
-    $result = $this->lookupPage($path, $language);
-    
-    if (!$result) {
-      
-      $this->launchException('Cannot find page : ' . $path);
+    $query = $this->lookupPage($path, $language);
+
+    if (!$query)
+    {
+      $query = $path;
     }
 
-    if ($path{0} === '/' && $this->usePrefix)
+    if ($this->usePrefix)
     {
       $prefix = '/' . $this->language;
+      
+      if ($path === '/')
+      {
+        $query = '';
+      }
     }
     else
     {
       $prefix = '';
     }
     
-    return $prefix . $result;
+    return $prefix . $query;
   }
 
   /** DB **/
@@ -317,6 +365,7 @@ class Manager extends core\module\Domed
       $result = $value;
     }
     
+//    return "[[$result]]";
     return $result;
   }
   

@@ -63,28 +63,48 @@ class Builder extends core\module\Domed {
   
   protected function prepareRequest(core\request $path) {
     
+    $result = false;
+    
     if (\Sylma::read('locale/enable')) {
       
-      $this->getManager('locale')->loadRequest($path);
+      $result = $this->getManager('locale')->loadRequest($path);
     }
+    
+    return $result;
   }
   
   public function buildWindow(core\request $path, core\argument $exts, core\argument $fusion, $bUpdate = null, $bRun = true) {
     
-    $this->prepareRequest($path);
-    $this->setSettings($exts);
+    $redirect = $this->prepareRequest($path);
+
+    if ($redirect) 
+    {
+      $redirect->run();
+    } 
+    else
+    {
+      $this->setSettings($exts);
+
+      $sExtension = strtolower($path->getExtension());
+      if (!$sExtension) $sExtension = self::EXTENSION_DEFAULT;
+
+      $settings = $this->get($sExtension);
+      $sCurrent = (string) $path;
+
+      $path->parse();
+
+      $aPaths = $this->buildWindowStack($settings, $sCurrent);
+      $aPaths[] = (string) $path->asFile();
+
+      $this->prepareStack($aPaths);
+      $result = $this->runWindow($aPaths, $path, $fusion, $bUpdate, $bRun);
+    }
     
-    $sExtension = strtolower($path->getExtension());
-    if (!$sExtension) $sExtension = self::EXTENSION_DEFAULT;
-
-    $settings = $this->get($sExtension);
-    $sCurrent = (string) $path;
-    
-    $path->parse();
-
-    $aPaths = $this->buildWindowStack($settings, $sCurrent);
-    $aPaths[] = (string) $path->asFile();
-
+    return $result;
+  }
+  
+  protected function prepareStack(array &$aPaths) 
+  {
     $bAccess = true;
 
     foreach ($aPaths as $sFile) {
@@ -107,7 +127,10 @@ class Builder extends core\module\Domed {
       $aPaths = $this->buildWindowStack($row, '');
       $aPaths[] = $this->read('error/path');
     }
-
+  }
+  
+  protected function runWindow(array $aPaths, $path, core\argument $fusion, $bUpdate, $bRun) 
+  {
     $aPaths = array_reverse($aPaths);
     $sMain = array_pop($aPaths);
 

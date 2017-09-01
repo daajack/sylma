@@ -316,8 +316,7 @@ class Manager extends core\module\Domed
     {
       $query = $path;
     }
-
-    if ($this->usePrefix)
+    if ($this->usePrefix && !preg_match('/^http/', $query))
     {
       $prefix = '/' . $this->language;
       

@@ -8,9 +8,15 @@ class Form extends schema\cached\form\Form {
   public function validate() {
 
     $bResult = false;
+    
+    if ($this->getMode() === 'delete')
+    {
+      return true;
+    }
+    
     $sConfirmAlias = 'password_confirm';
 
-    $sConfirm = $this->read($sConfirmAlias);
+    $sConfirm = $this->read($sConfirmAlias, false);
     $password = $this->getElement('password');
 
     $user = $this->getManager('user');
@@ -21,8 +27,8 @@ class Form extends schema\cached\form\Form {
 
         $this->addMessage($this->translate('You must confirm the password'), array('error' => true));
       }
-      else {
-
+      else
+      {
         if (!$iID = intval($this->read('id'))) {
 
           $this->launchException('ID not valid');

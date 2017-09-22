@@ -340,15 +340,32 @@ sylma.uiClass = {
     var req = new Request.JSON({
 
       url : path + '.json',
-      onSuccess: function(response) {
-
+      onSuccess: function(response)
+      {
         sylma.ui.parseMessages(response, null, redirect);
+
         if (callback) callback(response);
       },
-      onError: function(response)
+      onError : function(response)
       {
+        if (callback) callback(response);
+        
         sylma.ui.showMessage('Request error');
         throw new Error('Request error');
+      },
+      onFailure : function(response)
+      {
+        if (callback) callback(response);
+        
+        sylma.ui.showMessage('Request failure');
+        throw new Error('Request failure');
+      },
+      onException : function(response)
+      {
+        if (callback) callback(response);
+        
+        sylma.ui.showMessage('Request exception');
+        throw new Error('Request exception');
       }
     });
 

@@ -14,6 +14,8 @@ sylma.stepper.Element = new Class({
     this.options = options;
     this.excludes = excludes;
 
+    this.ready = true;
+
     if (options) {
 
       if (options.children) {
@@ -89,6 +91,7 @@ sylma.stepper.Element = new Class({
       if (!subopt || tag !== subopt.name) {
 
         this.addDifference('bad element', node, 'expecting ' + (subopt ? subopt.name : '[undefined]'));
+        this.ready = false;
 
         i--;
         length--;
@@ -108,6 +111,11 @@ sylma.stepper.Element = new Class({
   compare : function() {
 
     var result = true;
+
+    if (!this.ready)
+    {
+      return false;
+    }
 
     var el = this.element;
     var opt = this.options;

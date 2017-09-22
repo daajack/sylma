@@ -62,6 +62,8 @@ class Foreign extends sql\template\component\Foreign {
 
     if ($this->getParent()->isStatic()) {
 
+      $this->buildSingle();
+
       $table = $this->getElementRef();
       $table->setQuery($this->getParent()->getQuery());
 

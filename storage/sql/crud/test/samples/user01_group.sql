@@ -1,3 +1,6 @@
+
+SET foreign_key_checks = 0;
+
 INSERT INTO `sylma_stepper_group01` (
 `id` ,
 `name`

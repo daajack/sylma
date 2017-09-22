@@ -9,6 +9,7 @@ require_once('core/functions/Path.php');
 class Basic extends \Exception implements core\exception {
 
   const NS_MESSAGE = 'http://www.sylma.org/core/message';
+  
   /**
    * Number of exceptions created during the script
    * @var integer
@@ -348,7 +349,7 @@ class Basic extends \Exception implements core\exception {
         $bResult = !$this->insert($aResult);
       }
     }
-    catch (core\exception $e) {
+    catch (\Exception $e) {
 
       //echo $e->getMessage();
     }

@@ -22,4 +22,9 @@ sylma.xsd.Type = new Class({
 
 
   },
+  
+  toToken: function()
+  {
+    return this.namespace + ':' + this.name;
+  }
 });

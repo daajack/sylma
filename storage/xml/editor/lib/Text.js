@@ -1,5 +1,5 @@
 
-sylma.xml.Text = new Class({
+sylma.xml.TextClass = {
 
   Extends : sylma.xml.Node,
   type : 'text',
@@ -22,12 +22,28 @@ sylma.xml.Text = new Class({
   },
 
   remove : function (previous) {
+    
+    var step = {
+      type : 'remove',
+      path : this.toPath(),
+      token : this.toToken(),
+      content : previous,
+      arguments :
+      {
+        type : 'text',
+      }
+    };
+
+    var editor = this.getParent('editor');
+    var history = editor.getObject('history');
+
+    history.applyStep(this.getParent('document').document, step, step.arguments)
+
+    editor.fireEvent('update');
 
     if (previous)
     {
-      this.getParent('editor').getObject('history').addStep('remove', this.toPath(), this.toToken(), previous, {
-        type : 'text',
-      });
+      history.addStep(step);
     }
     
     this.parent();
@@ -35,7 +51,7 @@ sylma.xml.Text = new Class({
   },
 
   updateValue: function (value, callback, save) {
-    
+//    console.log('update');
     var previous = this.value;
     save = save === undefined ? true : save;
     
@@ -55,19 +71,32 @@ sylma.xml.Text = new Class({
     }
     else
     {
+      var step = {
+        type : 'update',
+        path : this.toPath(),
+        token : this.toToken(),
+        content : this.value,
+        arguments :
+        {
+          type : 'text',
+          previous : previous
+        }
+      };
+
+      var editor = this.getParent('editor');
+      var history = editor.getObject('history');
+
       if (callback) 
       {
         callback();
       }
       else if (save)
       {
-        var editor = this.getParent('editor');
-
-        editor.getObject('history').addStep('update', this.toPath(), this.toToken(), this.value, {
-          previous : previous,
-          type : 'text',
-        });
+        history.addStep(step);
       }
+
+      history.applyStep(this.getParent('document').document, step, step.arguments)
+      editor.fireEvent('update');
     }
   },
 
@@ -88,4 +117,6 @@ sylma.xml.Text = new Class({
 
     return this.value;
   },
-});
+};
+
+sylma.xml.Text = new Class(sylma.xml.TextClass);

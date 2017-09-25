@@ -32,16 +32,30 @@ sylma.xml.Attribute = new Class({
   {
     save = save === undefined ? true : save;
     
-    if (save)
-    {
-      var path = this.parentElement.toPath(true);
-      
-      this.getParent('editor').getObject('history').addStep('remove', path, this.toToken(), this.value, {
+    var step = {
+      type : 'remove',
+      path : this.parentElement.toPath(true),
+      token : this.toToken(),
+      content : this.value,
+      arguments :
+      {
         type : 'attribute',
         namespace : this.namespace,
         prefix : this.prefix,
-        name : this.name,
-      });
+        name : this.name
+      }
+    };
+    
+    var editor = this.getParent('editor');
+    var history = editor.getObject('history');
+    
+    history.applyStep(this.getParent('document').document, step, step.arguments);
+    
+    editor.fireEvent('update');
+    
+    if (save)
+    {
+      history.addStep(step);
     }
 
     this.parent();
@@ -67,22 +81,35 @@ sylma.xml.Attribute = new Class({
       this.value = value;
       this.getNode('value').set('html', value);
 
+      var step = {
+        type : 'update',
+        path : this.parentElement.toPath(true),
+        token : this.toToken(),
+        content : this.value,
+        arguments :
+        {
+          type : 'attribute',
+          namespace : this.namespace,
+          name : this.name,
+          prefix : this.prefix,
+          previous : previous
+        }
+      };
+
+      var editor = this.getParent('editor');
+      var history = editor.getObject('history');
+      
+      history.applyStep(this.getParent('document').document, step, step.arguments);
+      
+      editor.fireEvent('update');
+      
       if (callback) 
       {
         callback();
       }
       else 
       {
-        var editor = this.getParent('editor');
-        var path = this.parentElement.toPath(true);
-
-        editor.getHistory().addStep('update', path, this.toToken(), this.value, {
-          type : 'attribute',
-          namespace : this.namespace,
-          name : this.name,
-          prefix : this.prefix,
-          previous : previous
-        });
+        history.addStep(step);
       }
     }
   },

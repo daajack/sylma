@@ -48,7 +48,7 @@ sylma.xml.Insert = new Class({
     var container = this.getNode('container');
 
     container.empty();
-
+//console.log(element, element.ref);
     if (element.ref) {
 
       var ref = element.ref;
@@ -79,7 +79,10 @@ sylma.xml.Insert = new Class({
           children = this.schema.loadAttributes(ref.type);
         }
         else {
-
+          
+//          ref.type.prepare();
+//          ref.type.prepareChildren();
+          
           if (ref.type.children) {
 
             children = this.schema.loadChildren(ref.type);
@@ -121,7 +124,7 @@ sylma.xml.Insert = new Class({
 
       result.sort(function(a, b) {
 
-        return a.name > b.name;
+        return a.name.length > b.name.length;
       });
       
       container.adopt(result.slice(0, max));

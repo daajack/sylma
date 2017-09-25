@@ -166,6 +166,7 @@ sylma.xml.StepClass = {
           var child = node.addIndexedChild(options, this.arguments.type, parseInt(position));
           
           editor.schema.lookupElement(child, node.ref.type.children);
+          editor.schema.checkElement(child);
         }
         else
         {
@@ -176,6 +177,20 @@ sylma.xml.StepClass = {
           
           var child = node.addIndexedChild(options, this.arguments.type, parseInt(position));
         }
+
+        var step = {
+          type : 'add',
+          path : child.parentElement.toPath(true),
+          token : child.toToken(),
+          content : child.toXML(true),
+          arguments :
+          {
+            type : this.arguments.type,
+            position : position
+          }
+        };
+
+        history.applyStep(child.getParent('document').document, step, step.arguments);
 
         break;
         
@@ -201,6 +216,8 @@ sylma.xml.StepClass = {
       type : type
     });
 
+    editor.fireEvent('update');
+    
     history.save();
   },
   

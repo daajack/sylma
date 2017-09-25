@@ -4,19 +4,24 @@ sylma.xml = {};
 sylma.xml.EditorClass = {
 
   Extends : sylma.ui.Container,
+  Implements: Events,
+  
   enable : false,
   namespaces : {},
   updating : false,
+  document : null,
+  documents : [],
 
   onLoad : function () {
     
     var document = this.options.document;
-    
+
     this.file = this.options.file;
     this.container = this.getObject('container');
   
     this.prepareSchema();
     this.document = this.prepareDocument(document, true);
+    this.current = this.document;
 
     var history = this.getHistory();
     
@@ -89,19 +94,29 @@ sylma.xml.EditorClass = {
     {
       doc = options;
     }
-    
+//    console.log(doc);
     var content = {element : [this.buildElement(doc.documentElement)], document : doc};
     
-    if (container.objects.document)
+    this.documents.each(function(document)
     {
-      container.objects.document.each(function(document)
-      {
-        document.hide();
-      });
-    }
-
-    var result = container.add('document', content);
+      document.hide();
+    });
     
+    var result;
+
+    switch (doc.documentElement.namespaceURI)
+    {
+      case 'http://2017.sylma.org/view' :
+        
+        result = container.add('view', content);
+        break;
+      
+      default :
+        result = container.add('document', content);
+    }
+    
+    this.documents.push(result);
+
     this.setReady();
     
     return result;
@@ -154,7 +169,16 @@ sylma.xml.EditorClass = {
 
       if (child.nodeType === child.ELEMENT_NODE)
       {
-        children.push(this.buildElement(child));
+        if (0 && child.namespace === 'http://2016.sylma.org/storage/xml/editor')
+        {
+          children.push({
+            _alias : 'spacer',
+          });
+        }
+        else
+        {
+          children.push(this.buildElement(child));
+        }
       }
       else if (child.nodeType === child.COMMENT_NODE) 
       {
@@ -165,15 +189,28 @@ sylma.xml.EditorClass = {
       }
       else {
 
-        var content = child.nodeValue.trim();
+        var content = child.nodeValue;
 
+        if (content)
+        {
+//console.log(content, content.match(/\s*[\n\r]\s*[\n\r]/g));
+          if (0 && i !== len - 1 && content.match(/\s*[\n\r]\s*[\n\r]/g))
+          {
         children.push({
+              _alias : 'spacer',
+            });
+          }
+          else
+          {
+            children.push({
           _alias : 'text',
-          content : content,
+          content : content.trim(),
         });
       }
     }
-
+      }
+    }
+    
     if (children.length) {
 
       result.children = [{
@@ -208,7 +245,7 @@ sylma.xml.EditorClass = {
 //console.log(path, paths);
     paths.shift();
 
-    var element = this.getObject('container').getObject('document')[0].element;
+    var element = this.document.element;
 
     if (paths.length) 
     {

@@ -51,6 +51,7 @@
       <js:include>lib/Element.js</js:include>
       <js:include>lib/Attribute.js</js:include>
       <js:include>lib/Text.js</js:include>
+      <!--<js:include>lib/Spacer.js</js:include>-->
       <js:include>lib/xsd/Schema.js</js:include>
       <js:include>lib/xsd/Annotation.js</js:include>
       <js:include>lib/xsd/Type.js</js:include>
@@ -68,6 +69,8 @@
       <js:include>lib/xsd/Attribute.js</js:include>
       <js:include>lib/xsd/AttributeGroup.js</js:include>
       <js:include>lib/xsd/AnyAttribute.js</js:include>
+
+      <js:include>/#sylma/view/editor/Document.js</js:include>
 
       <tpl:apply select="init()">
         <le:file>
@@ -114,6 +117,7 @@
         <div class="tree">
           <div class="container" js:class="sylma.ui.Container" js:name="container">
             <tpl:apply select="document"/>
+            <tpl:apply select="view"/>
           </div>
         </div>
         <le:script path="history">
@@ -161,6 +165,10 @@
       </div>
     </tpl:template>
 
+    <tpl:template match="node:view">
+      <div class="document hidder visible" js:class="sylma.view.Document" js:parent-name="document" js:alias="view"/>
+    </tpl:template>
+
     <tpl:template match="node:comment">
       <pre class="comment" js:class="sylma.xml.Text" js:alias="comment">
         <tpl:read select="content"/>
@@ -173,7 +181,13 @@
         <tpl:read select="content"/>
       </pre>
     </tpl:template>
-
+<!--
+    <tpl:template match="node:spacer">
+      <div class="node-spacer" js:class="sylma.xml.Spacer" js:alias="spacer">
+        <js:event name="click">%object%.openValue();</js:event>
+      </div>
+    </tpl:template>
+-->
     <tpl:template match="node:element" mode="element/empty">
       <div class="element" js:class="sylma.xml.Element" js:alias="element">
         <tpl:read select="'--'"/>
@@ -250,6 +264,7 @@
       <div class="children" js:class="sylma.ui.Template" js:alias="children" js:all="x">
         <tpl:apply select="element" mode="element/empty"/>
         <tpl:apply select="text, comment"/>
+        <!--<tpl:apply select="text, comment, spacer"/>-->
       </div>
     </tpl:template>
 

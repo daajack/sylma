@@ -20,11 +20,10 @@ sylma.xml.Content = new Class({
         mousedown : function() {
           
           var doc = document.implementation.createDocument("", "", null);
-          doc.appendChild(editor.document.document.documentElement);
+          doc.appendChild(editor.document.document.documentElement.cloneNode());
           var root = doc.documentElement;
           
           var node = root;
-          while (node.firstChild) node.removeChild(node.firstChild);
           
           var serializer = new XMLSerializer();
           var container = serializer.serializeToString(root);

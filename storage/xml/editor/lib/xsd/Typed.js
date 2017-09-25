@@ -20,8 +20,8 @@ sylma.xsd.Typed = new Class({
 
       prefix = this.schema.getPrefix(datas.namespace)
     }
-
-    this.ref = datas.ref;
+//console.log(datas.ref);
+    this.dref = datas.ref;
     this.namespace = datas.namespace;
     this.name = datas.name;
     this.prefix =  prefix || '';
@@ -41,21 +41,21 @@ sylma.xsd.Typed = new Class({
 
       if (!this.ref && !this.type) {
 
-        throw 'Node not ready';
+        throw new Error('Node not ready');
       }
     }
+//    console.log(this.toString());
 //if (this.name === 'classes') console.log('stop', this, this.type);
   },
 
   prepareContent : function () {
 
-    if (this.ref) {
+    if (this.dref) {
 
       var ref = this.schema.find(this.element, this.namespace, this.name);
       ref.prepare();
-
+      
       this.ref = ref;
-      //this.ref = null;
       this.type = ref.type;
     }
     else {
@@ -80,7 +80,9 @@ sylma.xsd.Typed = new Class({
       }
 
       this.type = type;
+      
       type.prepare();
+//      type.prepareChildren();
     }
 //if (!type.prepare) console.log(type, this.ref);
   },

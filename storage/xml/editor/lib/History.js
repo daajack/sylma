@@ -68,8 +68,11 @@ sylma.xml.HistoryClass = {
         if (response.content) {
 
           var doc = editor.prepareDocument(response.content, true);
+          editor.current = doc;
 
           doc.getNode().addClass('revision');
+          
+          editor.fireEvent('update');
           console.info('File loaded');
         }
         else {
@@ -123,14 +126,18 @@ sylma.xml.HistoryClass = {
   goCurrent: function () {
     
     var editor = this.getParent('editor');
-    var documents = editor.container.objects.document;
+    var documents = editor.documents;
+    
+    editor.current = documents[0];
 
     documents.each(function(doc)
     {
       doc.hide();
     });
     
-    documents[0].show();
+    editor.current.show();
+    
+    editor.fireEvent('update');
   },
   
   checkScroll: function()
@@ -214,7 +221,7 @@ sylma.xml.HistoryClass = {
   
   applyStep : function(doc, step, args)
   {
-//    log('apply step ' + step.options.display);
+//    log('apply step ' + step);
     var el = this.findElement(doc.documentElement, step.path);
 
     switch (args.type) 
@@ -291,19 +298,17 @@ sylma.xml.HistoryClass = {
     switch (step.type) {
 
       case 'add' :
-
-        this.insertElement(step.content, args.position);
+        this.insertElement(el, document.createTextNode(step.content), args.position + 1);
         break;
 
       case 'update' :
 
-        var position = args.position;
-        el.childNodes[position].nodeValue = step.content;
+        el.nodeValue = step.content;
         break;
 
       case 'remove' :
 
-        position = args.read('position');
+        var position = args.position;
         el.remove(el.childNodes[position]);
         break;
 
@@ -345,17 +350,14 @@ sylma.xml.HistoryClass = {
     }
   },
 
-  addStep: function(type, path, display, content, args) 
+  addStep: function(source) 
   {
-    var options = {
-      type : type,
-      path : path,
-      display : display,
-      update : new Date,
-      content : content,
-      arguments : JSON.stringify(args)
-    };
-    
+    var options = Object.assign({}, source);
+
+    options.arguments = JSON.stringify(source.arguments);
+    options.display = source.token;
+    options.update = new Date;
+//console.log(step);
     var container = this.objects.steps[0];
     
     var step = container.add('action', options);
@@ -414,7 +416,7 @@ sylma.xml.HistoryClass = {
 
       var steps = this.stepsAdded;
       this.stepsAdded = [];
-
+//console.log(steps);
       this.send(this.options.pathUpdate, {
         steps : steps,
         file : editor.file,

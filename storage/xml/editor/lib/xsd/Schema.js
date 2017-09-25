@@ -1,7 +1,9 @@
 
 sylma.xsd = {};
 
-sylma.xsd.Schema = new Class({
+sylma.xsd.parseTypes = [];
+
+sylma.xsd.SchemaClass = {
 
   editor : null,
   children : null,
@@ -111,8 +113,9 @@ sylma.xsd.Schema = new Class({
     return result;
   },
 
-  findChild: function (children, namespace, name, element) {
-
+  findChild: function (children, namespace, name, element, debug) {
+    
+    debug = debug === undefined ? true : false;
     var ns = children[namespace];
     var result;
 
@@ -121,21 +124,21 @@ sylma.xsd.Schema = new Class({
       result = ns[name];
     }
 
-    if (!result) {
+    if (!result && debug) {
 
-//      throw new Error('Cannot find ' + element + ' : ' + namespace + ':' + name);
+      throw new Error('Cannot find ' + element + ' : ' + namespace + ':' + name);
     }
 
     return result;
   },
 
-  find: function (alias, namespace, name) {
-
+  find: function (alias, namespace, name, debug) {
+    
     var result;
 
     switch (alias) {
 
-      case 'element' : result = this.findElement(namespace, name); break;
+      case 'element' : result = this.findElement(namespace, name, debug); break;
       case 'attribute' : result = this.findAttribute(namespace, name); break;
       case 'group' : result = this.findGroup(namespace, name); break;
       case 'attributeGroup' : result = this.findAttributeGroup(namespace, name); break;
@@ -146,9 +149,9 @@ sylma.xsd.Schema = new Class({
     return result;
   },
 
-  findElement: function (namespace, name) {
+  findElement: function (namespace, name, debug) {
 
-    return this.findChild(this.elements, namespace, name, 'element');
+    return this.findChild(this.elements, namespace, name, 'element', debug);
   },
 
   findAttribute: function (namespace, name) {
@@ -202,80 +205,90 @@ sylma.xsd.Schema = new Class({
     var root = document.element;
 
     var element = this.findElement(root.namespace, root.name);
-
     element.prepare();
+    
     this.attachElement(root, element);
   },
 
   attachElement: function (el, ref) {
 
     el.ref = ref;
-
+//console.log(el, ref);
     if (!ref)
     {
       console.log('No ref given');
       return;
     }
-//console.log('Attach ' + el, el);
+//console.log('Attach ' + el);
 //console.log(el, ref);
-    if (ref.element === 'element') {
+    if (ref.element !== 'element') {
+      
+      throw new Error('Not element');
+    }
+    
+    var type = ref.type;
 
-      var type = ref.type;
+    if (!type) {
 
-      if (!type) {
+      throw new Error('No type found');
+    }
 
-        throw new Error('No type found');
-      }
-
-      type.prepareChildren();
+    type.prepareChildren();
 if (0) {
-      Object.values(el.attributes).each(function(item) {
+    Object.values(el.attributes).each(function(item) {
 
-        this.lookupAttribute(item, type.children);
+      this.lookupAttribute(item, type.children);
 
-        if (!item.ref) {
+      if (!item.ref) {
 
-          console.log('Cannot attach', item.name);
-        }
-      }.bind(this));
+        console.log('Cannot attach', item.namespace + ':' + item.name);
+      }
+    }.bind(this));
 }
-      if (el.children.length === 1 && el.children[0].type === 'text') {
+    if (el.children.length === 1 && el.children[0].type === 'text') {
 
-        if (type.element === 'complexType' && !type.mixed) {
+      if (type.element === 'complexType' && !type.mixed) {
 
-          console.log(el + ' should be complex');
-        }
+        console.log(el + ' should be complex');
+      }
+    }
+    else {
+
+      if (type.element === 'simpleType') {
+
+        console.log(el + ' should be simple');
       }
       else {
 
-        if (type.element === 'simpleType') {
+        el.children.each(function(child) {
 
-          console.log(el + ' should be simple');
-        }
-        else {
+          if (child.type !== 'text') {
 
-          el.children.each(function(child) {
+            child.ref = null;
 
-            if (child.type !== 'text') {
+//              type.prepareChildren();
 
-              child.ref = null;
+            this.lookupElement(child, type.children);
+            this.checkElement(child);
+//console.log(child.toToken(), child.ref);
+          }
 
-              this.lookupElement(child, type.children);
-
-              if (child.ref) {
-
-                child.getNode().removeClass('invalid');
-              }
-              else {
-
-                child.getNode().addClass('invalid');
-                console.log('Cannot attach', child.name);
-              }
-            }
-
-          }, this);
-        }
+        }, this);
       }
+    }
+  },
+  
+  checkElement: function (child)
+  {
+//console.log('check', child.toToken(), child.getNode());
+    if (child.ref) {
+
+      child.getNode().removeClass('invalid');
+    }
+    else {
+
+      child.getNode().addClass('invalid');
+      console.log('Cannot attach : ' + child.toToken());
     }
   },
 
@@ -341,15 +354,15 @@ if (0) {
         case 'element' :
 //console.log((item.name === el.name && item.namespace === el.namespace), el.name, item)
           if (item.name === el.name && item.namespace === el.namespace) {
-
+//console.log(el.toToken(), item);
             this.attachElement(el, item);
             break element;
           }
-
+//console.log(el.toToken());
           break;
 
         case 'any' :
-
+//console.log(item);
           if (item.namespace === el.namespace) {
 
             item = this.findElement(el.namespace, el.name);
@@ -357,7 +370,12 @@ if (0) {
             if (item)
             {
               item.prepare();
-              this.attachAttribute(el, item);
+              this.attachElement(el, item);
+//console.log(el, item);
+            }
+            else
+            {
+              console.warn('Cannot find element : ' + el.toToken());
             }
           }
 
@@ -379,12 +397,14 @@ if (0) {
         default : console.log(key, item); throw new Error('Unknown element : ' + item.element);
       }
     }
+    
+//    console.log(el.toToken());
   },
 
   loadChildren: function(container) {
 //console.log(element);
     var result = [];
-
+//console.log(container);
     container.children.each(function(item) {
 
       switch (item.element) {
@@ -469,4 +489,6 @@ if (0) {
 
     return uniques;
   }
-});
+};
+
+sylma.xsd.Schema = new Class(sylma.xsd.SchemaClass);

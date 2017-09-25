@@ -10,9 +10,9 @@
 @color-view: green;
 @color-tpl: orange;
 
-@family: Arial;
+@family: Verdana;
 @speed: 0.2s;
-@font-size: 0.9em;
+@font-size: 0.8em;
 
 .less-fix-parse {}
 
@@ -22,7 +22,7 @@
   position: relative;
   color: black;
   user-select: none;
-  border-right: 1px solid #ddd;
+  /*border-right: 1px solid #ddd;*/
   font-size: @font-size;
   height: 100%;
   
@@ -55,6 +55,7 @@
     {
       position: absolute;
       width: 30%;
+      min-width: 150em;
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%);
@@ -99,7 +100,6 @@
   .tree
   {
     flex: 1 85%;
-    width: 85%;
     height: 100%;
     
     overflow: auto;
@@ -115,13 +115,13 @@
   .history
   {
     flex: 1 15%;
-    width: 15%;
+    min-width: 100px;
   }
   
   input
   {
     box-sizing: border-box;
-    font-size: @font-size;
+    font-size: 1em;
     font-family: @family;
     border: 0;
     background-color: #fdf5ce;
@@ -134,7 +134,6 @@
   {
     overflow: hidden;
     clear: left;
-    _width: 30em;
     _border: 1px solid @gray3;
     max-height: 0;
     box-sizing: border-box;
@@ -186,7 +185,7 @@
 
     .attribute
     {
-      font-style: italic;
+      /*font-style: italic;*/
     }
   }
 
@@ -212,6 +211,7 @@
   {
     position: absolute;
     margin-bottom: 3rem;
+    width: 100%;
     
     &.revision
     {
@@ -366,7 +366,6 @@
         display: inline-block;
         padding: 0 0.25em;
         color: @gray2;
-        font-style: italic;
         max-width: 30em;
         overflow: hidden;
         height: 1.3em;
@@ -374,7 +373,7 @@
 
         .name
         {
-          font-weight: bold;
+          /*font-weight: bold;*/
         }
 
         *
@@ -442,8 +441,14 @@
       }
     }
   }
-
-  .node- > .fullname { font-weight: bold; }
+/*  
+  .node-spacer
+  {
+    height: 0.75em;
+    border-bottom: 1px dotted @gray4;
+  }
+*/
+  .node-.element > .fullname { color: @color-le; }
   .node- > .fullname .prefix { color: @gray2; }
   .node-crud > .fullname .prefix { color: @color-crud; }
   .node-le > .fullname .prefix { color: @color-le; }
@@ -454,8 +459,11 @@
   
   .history
   {
-    padding: 0 1rem;
+    padding: 0 0 1rem 0;
     box-sizing: border-box;
+    font-family: Arial;
+    border-left: 1px solid @gray4;
+    border-right: 1px solid @gray4;
 
     .actions
     {
@@ -465,14 +473,14 @@
 
       .button
       {
-        @s: 2rem;
+        @s: 1.5rem;
 
         display: inline-block;
         width: @s;
         height: @s;
         line-height: @s;
         background-color: @gray4;
-        margin-left: 0.5rem;
+        margin-left: 0.3rem;
         text-align: center;
         cursor: pointer;
 
@@ -493,13 +501,22 @@
     {
       @size: 1.3em;
       
-      border: 1px solid @gray3;
+      color: @gray2;
+      border-bottom: 1px solid @gray4;
+      border-top: 0;
       overflow: hidden;
-      margin-bottom: 0.2em;
-      border-radius: 1em;
+      white-space: nowrap;
+      overflow: hidden;
+      /*margin-bottom: 0.2em;*/
+      /*border-radius: 1em;*/
       font-size: 0.75em;
       cursor: pointer;
       line-height: @size;
+      
+      &:first-child
+      {
+        border-top: 1px solid @gray4;
+      }
       
       &:hover
       {
@@ -525,7 +542,7 @@
         width: @size;
         height: @size;
         overflow: hidden;
-        border-right: 1px solid @gray2;
+        border-right: 1px solid @gray4;
         margin-right: 0.5em;
         padding-left: 0.25em;
         text-transform: uppercase;

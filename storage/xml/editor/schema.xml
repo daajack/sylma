@@ -12,7 +12,9 @@
         <element/>
         <text/>
         <comment/>
+        <!--<spacer/>-->
       </children>
     </element>
   </document>
+  <view/>
 </collection>

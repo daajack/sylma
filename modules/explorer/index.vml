@@ -60,6 +60,9 @@
           <div class="tab" js:script="/#sylma/storage/xml/editor" js:name="tab-editor"/>
           <!--<div class="tab" js:script="/#sylma/storage/fs/explorer/settings" js:name="settings"/>-->
         </div>
+        <div class="view view-3" js:script="/#sylma/view/compiler" js:name="preview">
+          <js:option name="sylma-inside">1</js:option>
+        </div>
       </div>
 
     </tpl:template>

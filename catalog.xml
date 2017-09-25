@@ -16,12 +16,20 @@
       uri="modules/html/xhtml.xsd"/>
 
     <uri
+      name="http://2017.sylma.org/html"
+      uri="modules/html/html5.xsd"/>
+
+    <uri
       name="http://2013.sylma.org/view/crud"
       uri="view/parser/crud.xsd"/>
 
     <uri
       name="http://2013.sylma.org/view"
       uri="view/parser/view.xsd"/>
+
+    <uri
+      name="http://2017.sylma.org/view"
+      uri="view/view.xsd"/>
 
     <uri
       name="http://2013.sylma.org/parser/reflector/builder"

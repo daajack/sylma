@@ -28,7 +28,7 @@ class Editor extends core\module\Domed {
   public function init(fs\file $file)
   {
     $this->setFile($file);
-    $this->setDocument($file->asDocument());
+    $this->setDocument($file->asDocument()); // , \Sylma::MODE_READ, true
   }
 
   public function getFile($sPath = '', $bDebug = true) {
@@ -106,7 +106,8 @@ class Editor extends core\module\Domed {
 
     return array(
       'crud' => 'http://2013.sylma.org/view/crud',
-      'tpl' => 'http://2013.sylma.org/template',
+      'tpl2' => 'http://2013.sylma.org/template',
+      'tpl' => 'http://2017.sylma.org/view',
       'le' => 'http://2013.sylma.org/action',
       'sql' => 'http://2013.sylma.org/storage/sql',
       'view' => 'http://2013.sylma.org/view',
@@ -218,7 +219,7 @@ class Editor extends core\module\Domed {
       try 
       {
 
-        $result = $this->updateDocument($id, $file, $file->asDocument($this->getNS()));
+        $result = $this->updateDocument($id, $file, $file->asDocument($this->getNS())); // , \Sylma::MODE_READ, true
 //        $result = 1;
         
         if (!$result)
@@ -493,13 +494,19 @@ class Editor extends core\module\Domed {
     }
   }
 
-  protected function findElement($result, $path) {
+  protected function findElement(dom\element $result, $spath) {
 
-    $path = explode('/', $path);
+    $path = explode('/', $spath);
     $position = next($path);
 
     while ($result && $position !== false) {
-
+      
+      if ($result instanceof dom\text)
+      {
+        $result = null;
+        break;
+      }
+      
       $children = $result->getChildren();
       $result = $children->item($position);
 //dsp($result);
@@ -516,7 +523,11 @@ class Editor extends core\module\Domed {
 
   public function asXML()
   {
-    return (string) $this->getDocument();
+    $doc = $this->getDocument();
+    
+//    return (string) $doc;
+    return $doc->asString();
+//    return file_get_contents($this->getFile()->getRealPath());
   }
 }
 

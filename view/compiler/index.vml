@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<view:view
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:js="http://2013.sylma.org/template/binder"
+  xmlns:builder="http://2013.sylma.org/parser/reflector/builder"
+  xmlns:cls="http://2013.sylma.org/core/factory"
+
+  xmlns:xl="http://2013.sylma.org/storage/xml"
+  
+  builder:return="result"
+>
+
+  <xl:resource/>
+  
+  <js:include>titan.min.js</js:include>
+  <js:include>Compiler.js</js:include>
+  
+  <le:context name="css">
+    <le:file>compiler.less</le:file>
+  </le:context>
+
+  <tpl:template>
+    <h3>Preview</h3>
+    <div class="compiler" js:class="sylma.view.Compiler" js:name="compiler">
+      <iframe js:node="iframe">
+        <html>
+          <head></head>
+          <body></body>
+        </html>
+      </iframe>
+    </div>
+  </tpl:template>
+
+</view:view>

@@ -74,7 +74,7 @@ sylma.modules.explorer.Explorer = new Class({
       sylma.ui.showMessage('No editor defined');
     }
   },
-
+  
   updateLocation : function(args) {
 
     for (var key in args) {

@@ -30,7 +30,7 @@
     <tpl:import>/#sylma/modules/todo/tags.tpl</tpl:import>
 
     <tpl:constant name="list-cols">project, description, url, update, statut, delegate, delegate_group, priority, duration, term</tpl:constant>
-    <tpl:constant name="form-cols">* ^ id, update, insert, parent, owner, duration_sub, duration_sub_real, tags</tpl:constant>
+    <tpl:constant name="form-cols">* ^ id, update, insert, parent, owner, duration_sub, duration_sub_real, datas, tags</tpl:constant>
     <tpl:constant name="list-order">!update</tpl:constant>
 
     <tpl:template match="stat:todo_statut" mode="select-option-value">

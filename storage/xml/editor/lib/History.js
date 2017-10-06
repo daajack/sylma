@@ -265,7 +265,7 @@ sylma.xml.HistoryClass = {
 
         var position = args.position;
         var content = editor.parseDocument(step.content).documentElement;
-//console.log(el);
+//console.log(el, content);
 
         this.insertElement(el, content, position);
 

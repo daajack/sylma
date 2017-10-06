@@ -97,6 +97,9 @@
       <js:option name="update">
         <tpl:read select="/root()/getUpdate()"/>
       </js:option>
+      <js:option name="publish">
+        <crud:path path="publish"/>
+      </js:option>
       <js:option name="rights">
         <tpl:read select="/root()/getRights()"/>
       </js:option>
@@ -110,9 +113,15 @@
         <tpl:read select="/root()/getNamespaces()"/>
       </js:option>
       <tpl:apply mode="document/tools"/>
-      <h3 class="name">
-        <tpl:read select="/root()/getFile()"/>
-      </h3>
+      <div class="top">
+        <h3 class="name">
+          <tpl:read select="/root()/getFile()"/>
+        </h3>
+        <button type="button" class="publish">
+          <js:event name="click">%object%.publish()</js:event>
+          publish
+        </button>
+      </div>
       <div class="window">
         <div class="tree">
           <div class="container" js:class="sylma.ui.Container" js:name="container">
@@ -305,6 +314,14 @@
 
     <tpl:template>
       <tpl:apply select="loadDocument()"/>
+    </tpl:template>
+
+  </view:view>
+
+  <view:view name="publish" builder:return="result">
+
+    <tpl:template>
+      <tpl:apply select="publish()"/>
     </tpl:template>
 
   </view:view>

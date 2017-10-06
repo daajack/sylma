@@ -238,6 +238,24 @@ sylma.xml.EditorClass = {
     this.getNode().addClass('edit');
   },
   
+  publish: function ()
+  {
+    var compiler = new window.titan.Compiler;
+    var document = this.current.options.document;
+    var editor = this;
+    
+    compiler.prepareDOM(document, 1, function(result)
+    {
+      editor.send(editor.options.publish, {
+        file : editor.file,
+        scripts : result.map(function(window) { return { name : window.name, content : window.content }})
+      }, function()
+      {
+        sylma.ui.showMessage('Document published');
+      });
+    });
+  },
+  
   findNode: function (path, type, name, prefix)
   {
     var result;

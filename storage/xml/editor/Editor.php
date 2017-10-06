@@ -412,7 +412,7 @@ class Editor extends core\module\Domed {
         {
           $content = $step->read('content');
         }
-        
+
         if ($position !== null) {
 
           $node->insert($content, $node->getChildren()->item($position));
@@ -519,6 +519,46 @@ class Editor extends core\module\Domed {
     }
 
     return $result;
+  }
+  
+  public function publish()
+  {
+    $this->setDirectory(__FILE__);
+    
+    $file = $this->getFile($this->read('file'));
+    $files = $this->get('scripts');
+    $parser = $this->getManager('parser');
+    $caches = [];
+    
+    foreach ($files as $script)
+    {
+      $name = $script->read('name');
+      
+      if ($name === 'main')
+      {
+        $main = $script;
+      }
+      else
+      {
+        $cache = $parser->getCachedFile($file, '.' . $name . '.php');
+        $cache->saveText("<?php\n" . $script->read('content'));
+        $caches[$name] = $cache->getRealPath();
+      }
+    }
+    
+    $scripts = "\$scripts = array(\n";
+    
+    foreach ($caches as $key => $cache)
+    {
+      $scripts .= "'$key' => '$cache',\n";
+    }
+    
+    $scripts .= ");\n";
+    
+    $cache = $parser->getCachedFile($file);
+    $cache->saveText("<?php\n" . $scripts . $main->read('content'));
+    
+    return 1;
   }
 
   public function asXML()

@@ -41,6 +41,31 @@
     }
   }
   
+  .top
+  {
+    @publish : 5em;
+    
+    position: relative;
+    z-index: 1;
+    width: 100%;
+
+    h3
+    {
+      width: calc(~"100% - " @publish);
+    }
+
+    .publish
+    {
+      width: @publish;
+    }
+  }
+  
+  h3,
+  .publish
+  {
+    float: left;
+  }
+  
   .window
   {
     box-sizing: border-box;

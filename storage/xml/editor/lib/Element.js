@@ -42,7 +42,7 @@ sylma.xml.ElementClass = {
     this.children.each(this.prepareChild, this);
 
     //this.position = this.node.getParent().getChildren().indexOf(this.node);
-    //console.log(this.children);
+//    console.log(this.toToken(), this.options);
   },
 
   insert : function (previous, attribute) {

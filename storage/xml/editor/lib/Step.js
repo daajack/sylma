@@ -205,6 +205,22 @@ sylma.xml.StepClass = {
           editor.schema.attachAttribute(child, attribute);
         }
         
+        var step = {
+          type : 'add',
+          path : child.parentElement.toPath(true),
+          token : child.toToken(),
+          content : child.value,
+          arguments :
+          {
+            type : 'attribute',
+            namespace : child.namespace,
+            prefix : child.prefix,
+            name : child.name
+          }
+        };
+
+        history.applyStep(child.getParent('document').document, step, step.arguments);
+
         break;
         
       default :

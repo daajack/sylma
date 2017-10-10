@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<crud:crud
+  xmlns:crud="http://2013.sylma.org/view/crud"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:js="http://2013.sylma.org/template/binder"
+  xmlns:builder="http://2013.sylma.org/parser/reflector/builder"
+  xmlns:cls="http://2013.sylma.org/core/factory"
+  
+  xmlns:node="http://2016.sylma.org/storage/xml/editor"
+
+  xmlns:xl="http://2013.sylma.org/storage/xml"
+  
+  extends="/#sylma/storage/xml/editor/file-container.vml"
+>
+  
+  <view:view>
+    
+    <le:context name="css">
+      <le:file>editor.less</le:file>
+    </le:context>
+
+    <tpl:template mode="file/resources">
+      <tpl:apply mode="file/resources"/>
+      <js:include>File.js</js:include>
+      <js:include>Document.js</js:include>
+    </tpl:template>
+
+    <tpl:template mode="file">
+      <div class="file hidder visible" js:class="sylma.view.File" js:parent-name="file">
+        <tpl:apply mode="file/init"/>
+        <div class="window">
+          <tpl:apply mode="file/top"/>
+          <tpl:apply mode="file/tree"/>
+        </div>
+        <tpl:apply mode="file/history"/>
+        <tpl:apply mode="file/compiler"/>
+      </div>
+    </tpl:template>
+
+    <tpl:template mode="file/tree">
+      <div class="tree">
+        <div class="container" js:class="sylma.ui.Container" js:name="container">
+          <tpl:apply select="document"/>
+        </div>
+      </div>
+    </tpl:template>
+
+    <tpl:template mode="file/compiler">
+      <le:script path="../compiler">
+        <le:get-argument name="file" le:name="file"/>
+      </le:script>
+    </tpl:template>
+    
+  </view:view>
+  
+</crud:crud>

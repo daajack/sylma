@@ -23,8 +23,8 @@
   </le:context>
 
   <tpl:template>
-    <h3>Preview</h3>
     <div class="compiler" js:class="sylma.view.Compiler" js:name="compiler">
+      <h3>Preview</h3>
       <iframe js:node="iframe">
         <html>
           <head></head>

@@ -50,13 +50,13 @@ sylma.xml.HistoryClass = {
   {
     
     this.save();
-    var editor = this.getParent('editor');
+    var file = this.getParent('file');
 
     if (step.id)// && step.id < 98
     {
       this.send(this.options.pathLoad, {
         step : step.id,
-        file : editor.file,
+        file : file.path,
   //      update : editor.updateTime
       }, function(response) {
 
@@ -67,12 +67,12 @@ sylma.xml.HistoryClass = {
         }
         if (response.content) {
 
-          var doc = editor.prepareDocument(response.content, true);
-          editor.current = doc;
+          var doc = file.prepareDocument(response.content, file.schema, true);
+          file.current = doc;
 
           doc.getNode().addClass('revision');
           
-          editor.fireEvent('update');
+          file.fireEvent('update');
           console.info('File loaded');
         }
         else {
@@ -114,30 +114,20 @@ sylma.xml.HistoryClass = {
         // || editor.original
       }
       
-      var options = editor.parseDocument(content);
+      var options = file.parseDocument(content);
 
       this.applySteps(options, todos.reverse());
-      var doc = editor.prepareDocument(options);
+      var doc = file.prepareDocument(options);
       
       doc.getNode().addClass('revision');
     }
   },
   
-  goCurrent: function () {
+  goCurrent: function () 
+  {
+    var file = this.getParent('file');
     
-    var editor = this.getParent('editor');
-    var documents = editor.documents;
-    
-    editor.current = documents[0];
-
-    documents.each(function(doc)
-    {
-      doc.hide();
-    });
-    
-    editor.current.show();
-    
-    editor.fireEvent('update');
+    file.openDocument(file.documents[0]);
   },
   
   checkScroll: function()
@@ -155,12 +145,12 @@ sylma.xml.HistoryClass = {
       if (container.scrollHeight - container.getScroll().y < container.getSize().y * 2)
       {
         this.sending = true;
-        var editor = this.getParent('editor');
+        var file = this.getParent('file');
         
         var history = this;
 
         this.send(history.options.pathSteps, {
-          file : editor.file,
+          file : file.path,
           offset : this.steps.length
         }, function(response)
         {
@@ -202,9 +192,7 @@ sylma.xml.HistoryClass = {
   
   clear: function () {
     
-    var editor = this.getParent('editor');
-
-    this.send(this.options.pathClear, { file : editor.file });
+    this.send(this.options.pathClear, { file : this.getParent('file').path });
   },
   
   applySteps: function (doc, steps) {
@@ -258,6 +246,7 @@ sylma.xml.HistoryClass = {
   updateElement : function(doc, el, step, args) {
     
     var editor = this.getParent('editor');
+    var file = this.getParent('file');
     
     switch (step.type) {
 
@@ -413,14 +402,15 @@ sylma.xml.HistoryClass = {
       this.sending = true;
 
       var editor = this.getParent('editor');
+      var file = this.getParent('file');
 
       var steps = this.stepsAdded;
       this.stepsAdded = [];
 //console.log(steps);
       this.send(this.options.pathUpdate, {
         steps : steps,
-        file : editor.file,
-        update : editor.updateTime
+        file : file.path,
+        update : file.updateTime
       }, function(response) {
 
         if (response.error) {

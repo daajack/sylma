@@ -12,6 +12,7 @@ class View extends Variabled {
 
   protected $reflector;
   protected $resourceWindow;
+  protected $resources = array();
 
   public function build() {
 
@@ -115,9 +116,14 @@ class View extends Variabled {
   }
 
   public function addResourceCall(fs\file $file) {
-
-    $window = $this->getResourceWindow();
-    $window->add($this->callScript($file, $window, null, false, true));
+    
+    if (!in_array($file, $this->resources))
+    {
+      $window = $this->getResourceWindow();
+      $window->add($this->callScript($file, $window, null, false, true));
+      
+      $this->resources[] = $file;
+    }
   }
 
   protected function buildDoView(dom\document $doc, common\_window $window) {

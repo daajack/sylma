@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<crud:crud
+  xmlns:crud="http://2013.sylma.org/view/crud"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:js="http://2013.sylma.org/template/binder"
+  xmlns:builder="http://2013.sylma.org/parser/reflector/builder"
+  xmlns:cls="http://2013.sylma.org/core/factory"
+  
+  xmlns:node="http://2016.sylma.org/storage/xml/editor"
+
+  xmlns:xl="http://2013.sylma.org/storage/xml"
+>
+
+  <crud:global node:ns="ns">
+    
+    <xl:resource file="file.xml"/>
+    
+    <tpl:settings>
+      <cls:classes>
+        <cls:class alias="tree">
+          <cls:classes>
+            <cls:class alias="cached" name="\sylma\storage\xml\editor\Editor"/>
+          </cls:classes>
+        </cls:class>
+      </cls:classes>
+    </tpl:settings>
+    
+  </crud:global>
+
+  <view:view _debug="x">
+    
+    <tpl:template mode="file/resources">
+
+      <js:include>lib/History.js</js:include>
+      <js:include>lib/Step.js</js:include>
+      <js:include>lib/Revision.js</js:include>
+    
+      <js:include>lib/File.js</js:include>
+      <js:include>lib/Tools.js</js:include>
+      <js:include>lib/Content.js</js:include>
+      <js:include>lib/Node.js</js:include>
+      <js:include>lib/Document.js</js:include>
+      <js:include>lib/Element.js</js:include>
+      <js:include>lib/Attribute.js</js:include>
+      <js:include>lib/Text.js</js:include>
+      <!--<js:include>lib/Spacer.js</js:include>-->
+      
+    </tpl:template>
+
+    <tpl:template>
+      
+      <tpl:apply select="init()">
+        <le:file>
+          <le:get-argument name="file"/>
+        </le:file>
+      </tpl:apply>
+      
+      <tpl:apply mode="file/resources"/>
+      <tpl:apply mode="file"/>
+      
+    </tpl:template>
+
+    <tpl:template match="*" mode="file">
+      <div class="file hidder visible" js:class="sylma.xml.File" js:parent-name="file">
+        <tpl:apply mode="file/init"/>
+        <tpl:apply mode="file/window"/>
+      </div>
+    </tpl:template>
+    
+    <tpl:template match="*" mode="file/init">
+      <js:option name="path" cast="x">
+        <tpl:read select="/root()/getFile()"/>
+      </js:option>
+      <js:option name="rights">
+        <tpl:read select="/root()/getRights()"/>
+      </js:option>
+      <js:option name="document">
+        <tpl:read select="/root()/asXML()"/>
+      </js:option>
+      <js:option name="schemas">
+        <tpl:read select="/root()/getSchemas()"/>
+      </js:option>
+    </tpl:template>
+    
+    <tpl:template match="*" mode="file/top">
+      <div class="top">
+        <h3 class="name">
+          <tpl:read select="/root()/getFile()"/>
+        </h3>
+        <button type="button" class="publish">
+          <js:event name="click">%object%.publish()</js:event>
+          publish
+        </button>
+      </div>
+    </tpl:template>
+    
+    <tpl:template match="*" mode="file/window">
+      <div class="window">
+        <tpl:apply mode="file/top"/>
+        <tpl:apply mode="file/tree"/>
+      </div>
+      <tpl:apply mode="file/history"/>
+    </tpl:template>
+    
+    <tpl:template match="*" mode="file/tree">
+      <div class="tree">
+        <div class="container" js:class="sylma.ui.Container" js:name="container">
+          <tpl:apply select="document"/>
+        </div>
+      </div>
+    </tpl:template>
+    
+    <tpl:template match="*" mode="file/history">
+      <le:script path="history">
+        <le:get-argument name="file" le:name="file"/>
+      </le:script>
+    </tpl:template>
+        
+    <tpl:template match="node:document">
+      <div class="document hidder visible" js:class="sylma.xml.Document" js:parent-name="document" js:alias="document">
+        <div class="children">
+          <tpl:apply select="element"/>
+        </div>
+      </div>
+    </tpl:template>
+
+    <tpl:template match="node:comment">
+      <pre class="comment" js:class="sylma.xml.Text" js:alias="comment">
+        <tpl:read select="content"/>
+      </pre>
+    </tpl:template>
+
+    <tpl:template match="node:text">
+      <pre class="text" js:class="sylma.xml.Text" js:alias="text">
+        <js:event name="click">%object%.openValue();</js:event>
+        <tpl:read select="content"/>
+      </pre>
+    </tpl:template>
+<!--
+    <tpl:template match="node:spacer">
+      <div class="node-spacer" js:class="sylma.xml.Spacer" js:alias="spacer">
+        <js:event name="click">%object%.openValue();</js:event>
+      </div>
+    </tpl:template>
+-->
+    <tpl:template match="node:element" mode="element/empty">
+      <div class="element" js:class="sylma.xml.Element" js:alias="element">
+        <tpl:read select="'--'"/>
+        <tpl:read select="name"/>
+      </div>
+    </tpl:template>
+
+    <tpl:template match="node:element">
+      <div class="element node real node-{prefix}" js:class="sylma.xml.Element" js:parent-name="element" js:alias="element">
+        <tpl:apply mode="element/init"/>
+      </div>
+    </tpl:template>
+
+    <tpl:template match="node:element" mode="element/init">
+      <div class="fullname">
+        <js:event name="mousedown">%object%.initMove(e);</js:event>
+        <span class="prefix">
+          <tpl:read select="prefix"/>
+        </span>
+        <span class="name">
+          <tpl:read select="name"/>
+        </span>
+      </div>
+      <div class="spacing self">
+        <js:event name="click">%object%.insert()</js:event>
+      </div>
+
+      <tpl:apply mode="tools"/>
+      <div class="attributes">
+        <tpl:apply mode="element/attributes"/>
+      </div>
+      <tpl:apply select="children"/>
+      <div class="spacing parent">
+        <js:event name="click">%object%.parentElement.insert(%object%)</js:event>
+      </div>
+    </tpl:template>
+
+    <tpl:template match="*" mode="element/attributes">
+      <tpl:apply select="attribute"/>
+    </tpl:template>
+    
+    <tpl:template match="*" mode="tools">
+      <div class="tools" js:class="sylma.xml.Tools" js:alias="tools" js:autoload="x">
+        <div class="wrapper">
+          <span>
+            <js:event name="click">%parent%.insert();</js:event>
+            <tpl:text>*</tpl:text>
+          </span>
+          <span>
+            <js:event name="click">%parent%.insert(null, true);</js:event>
+            <tpl:text>@</tpl:text>
+          </span>
+          <span>
+            <js:event name="click">%parent%.copy();</js:event>
+            <tpl:text>C</tpl:text>
+          </span>
+<!--          <span>
+            <js:event name="click">console.log('*');</js:event>
+            <tpl:text>.</tpl:text>
+          </span>
+          <span>
+            <js:event name="click">console.log('move');</js:event>
+            <tpl:text>&gt;</tpl:text>
+          </span>-->
+          <span>
+            <js:event name="click">%parent%.remove();</js:event>
+            <tpl:text>-</tpl:text>
+          </span>
+        </div>
+      </div>
+    </tpl:template>
+
+    <tpl:template match="node:children">
+      <div class="children" js:class="sylma.ui.Template" js:alias="children" js:all="x">
+        <tpl:apply select="element" mode="element/empty"/>
+        <tpl:apply select="text, comment"/>
+        <!--<tpl:apply select="text, comment, spacer"/>-->
+      </div>
+    </tpl:template>
+
+    <tpl:template match="node:attribute">
+      <div class="attribute node-{prefix}" js:class="sylma.xml.Attribute" js:alias="attribute">
+        <tpl:apply mode="attribute/init"/>
+      </div>
+    </tpl:template>
+    
+    <tpl:template match="*" mode="attribute/init">
+      <js:event name="click">%object%.openValue()</js:event>
+
+      <div class="fullname">
+        <span class="prefix">
+          <tpl:read select="prefix"/>
+        </span>
+        <span class="name">
+          <tpl:read select="name"/>
+        </span>
+      </div>
+
+      <div class="value" js:node="value">
+        <tpl:read select="value"/>
+      </div>
+    </tpl:template>
+    
+  </view:view>
+
+</crud:crud>

@@ -46,12 +46,10 @@ sylma.xml.Attribute = new Class({
       }
     };
     
-    var editor = this.getParent('editor');
-    var history = editor.getObject('history');
+    var file = this.getParent('file');
     
-    history.applyStep(this.getParent('document').document, step, step.arguments);
-    
-    editor.fireEvent('update');
+    file.history.applyStep(this.getParent('document').document, step, step.arguments);
+    file.fireEvent('update');
     
     if (save)
     {
@@ -96,12 +94,11 @@ sylma.xml.Attribute = new Class({
         }
       };
 
-      var editor = this.getParent('editor');
-      var history = editor.getObject('history');
+      var file = this.getParent('file');
 
-      history.applyStep(this.getParent('document').document, step, step.arguments);
+      file.history.applyStep(this.getParent('document').document, step, step.arguments);
       
-      editor.fireEvent('update');
+      file.fireEvent('update');
       
       if (callback) 
       {
@@ -109,7 +106,7 @@ sylma.xml.Attribute = new Class({
       }
       else 
       {
-        history.addStep(step);
+        file.history.addStep(step);
       }
     }
   },

@@ -56,18 +56,28 @@ sylma.modules.explorer.Explorer = new Class({
 
     if (container) 
     {
-      view.startLoading();
+      if (!container.tmp.length)
+      {
+        view.startLoading();
 
-      container.update(function() {
+        container.update(function() {
 
+          container.getNode().addClass('open');
+          view.stopLoading();
+
+        }, {
+          data : {
+            file : path
+          }
+        });
+      }
+      else
+      {
         container.getNode().addClass('open');
-        view.stopLoading();
-
-      }, {
-        data : {
-          file : path
-        }
-      });
+        
+        var app = container.tmp[0];
+        app.open(path);
+      }
     }
     else 
     {

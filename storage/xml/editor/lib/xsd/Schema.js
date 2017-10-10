@@ -12,12 +12,7 @@ sylma.xsd.SchemaClass = {
 
   initialize : function(datas, namespaces) {
 
-    Object.each(namespaces, function(namespace, prefix) {
-
-      this.prefixes[namespace] = prefix;
-
-    }, this);
-
+    this.prefixes = namespaces;
     this.load(datas);
   },
 

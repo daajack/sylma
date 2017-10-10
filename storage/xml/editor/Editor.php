@@ -10,7 +10,7 @@ class Editor extends core\module\Domed {
 
   const NS = 'http://2013.sylma.org/modules/stepper';
 
-  public function __construct(core\argument $args, core\argument $post) {
+  public function __construct(core\argument $args, core\argument $post, core\argument $contexts) {
 
     //$this->setDirectory(__DIR__);
     $this->setNamespace(self::NS);
@@ -18,6 +18,8 @@ class Editor extends core\module\Domed {
 
     $this->setSettings($post);
     $this->setSettings($args);
+    
+    $this->contexts = $contexts;
 
     if ($sDirectory = $this->read('dir', false)) {
 
@@ -36,11 +38,16 @@ class Editor extends core\module\Domed {
     return parent::getFile($sPath, $bDebug);
   }
 
-  public function getSchemas() {
+  public function getSchemas(dom\document $doc = null) {
 
     $this->setDirectory(__FILE__);
+    
+    if (!$doc)
+    {
+      $doc = $this->getDocument();
+    }
 
-    $ns = $this->getDocument()->getRoot()->getNamespace();
+    $ns = $doc->getRoot()->getNamespace();
     $this->setNamespace('urn:oasis:names:tc:entity:xmlns:xml:catalog', 'cat');
 
     $doc = $this->getDocument('/#sylma/catalog.xml');
@@ -105,22 +112,62 @@ class Editor extends core\module\Domed {
   public function getNamespaces() {
 
     return array(
-      'crud' => 'http://2013.sylma.org/view/crud',
-      'tpl2' => 'http://2013.sylma.org/template',
-      'tpl' => 'http://2017.sylma.org/view',
-      'le' => 'http://2013.sylma.org/action',
-      'sql' => 'http://2013.sylma.org/storage/sql',
-      'view' => 'http://2013.sylma.org/view',
-      'js' => 'http://2013.sylma.org/template/binder',
-      'cls' => 'http://2013.sylma.org/core/factory',
-      'xl' => 'http://2013.sylma.org/storage/xml',
-      'xs' => 'http://www.w3.org/2001/XMLSchema',
+      'http://2013.sylma.org/view/crud' => 'crud',
+      'http://2013.sylma.org/template' => 'tpl',
+      'http://2017.sylma.org/view' => 'tpl',
+      'http://2013.sylma.org/action' => 'le',
+      'http://2013.sylma.org/storage/sql' => 'sql',
+      'http://2013.sylma.org/view' => 'view',
+      'http://2013.sylma.org/template/binder' => 'js',
+      'http://2013.sylma.org/core/factory' => 'cls',
+      'http://2013.sylma.org/storage/xml' => 'xl',
+      'http://www.w3.org/2001/XMLSchema' => 'xs',
     );
   }
 
   protected function run($path, array $arguments = array(), array $posts = array(), array $contexts = array()) {
 
     return $this->getScript($path, $arguments, $posts, $contexts);
+  }
+
+  public function open()
+  {
+    $this->setDirectory(__FILE__);
+    
+    if ($file = $this->getFile('', false))
+    {
+      $doc = $this->getDocument();
+    }
+    else
+    {
+      $file = $this->getFile($this->read('file'));
+      $doc = $file->asDocument();
+    }
+    
+    switch ($doc->getRoot()->getNamespace())
+    {
+      case 'http://2017.sylma.org/view' : $path = '/#sylma/view/editor/file-container.vml'; break;
+//      default : $path = '/#sylma/view/editor/file-container'; break;
+      default : $path = 'file-container';
+    }
+
+    $result = $this->getScript($path, array('file' => (string) $file), array(), $this->contexts->query());
+//    dsp($result);
+    return $result;
+    
+    $this->setDirectory(__FILE__);
+    $this->loadDefaultSettings();
+
+    $file = $this->getFile($this->read('file'));
+    $doc = $file->asDocument();
+    
+    
+    
+    return array(
+      'schemas' => $this->getSchemas($doc),
+      'document' => (string) $doc,
+      'steps' => $this->getScript('history/steps', array('file' => (string) $file)),
+    );
   }
 
   public function loadDocument()
@@ -138,27 +185,27 @@ class Editor extends core\module\Domed {
     $step = $this->read('step');
     $last = $this->createArgument($this->run('history/document', array('file' => $id, 'from' => $step))[0]);
     
-    $doc = $this->createDocument($last->read('document'));
-    
+      $doc = $this->createDocument($last->read('document'));
+
     if ($last->read('id') != $step)
-    {
-      $steps = $this->run('history/range', array('file' => $id, 'from' => $last->read('id'), 'to' => $step));
-      
-      if (!$steps)
       {
-        $this->launchException('No range found');
+        $steps = $this->run('history/range', array('file' => $id, 'from' => $last->read('id'), 'to' => $step));
+
+        if (!$steps)
+        {
+          $this->launchException('No range found');
+        }
+
+        $steps = $this->createArgument($steps);
+
+        foreach ($steps as $step)
+        {
+          $args = $this->createArgument(json_decode($step->read('arguments'), true));
+          $this->applyStep($doc, $step, $args);
+        }
       }
       
-      $steps = $this->createArgument($steps);
       
-      foreach ($steps as $step)
-      {
-        $args = $this->createArgument(json_decode($step->read('arguments'), true));
-        $this->applyStep($doc, $step, $args);
-      }
-    }
-    
-    
 //    $user = (string) $this->getManager('user');
 
     

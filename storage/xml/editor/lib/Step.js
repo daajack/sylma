@@ -135,8 +135,9 @@ sylma.xml.StepClass = {
   
   applyAdd: function (type, add) {
     
-    var history = this.getParent('history');
     var editor = this.getParent('editor');
+    var file = this.getParent('file');
+    var history = this.getParent('history');
     
     switch (this.arguments.type)
     {
@@ -165,8 +166,8 @@ sylma.xml.StepClass = {
           var options = editor.buildElement(doc.documentElement);
           var child = node.addIndexedChild(options, this.arguments.type, parseInt(position));
           
-          editor.schema.lookupElement(child, node.ref.type.children);
-          editor.schema.checkElement(child);
+          file.schema.lookupElement(child, node.ref.type.children);
+          file.schema.checkElement(child);
         }
         else
         {
@@ -201,8 +202,8 @@ sylma.xml.StepClass = {
         
         if (node.ref)
         {
-          var attribute = editor.schema.lookupAttribute(child, node.ref.type.children);
-          editor.schema.attachAttribute(child, attribute);
+          var attribute = file.schema.lookupAttribute(child, node.ref.type.children);
+          file.schema.attachAttribute(child, attribute);
         }
         
         var step = {
@@ -232,7 +233,7 @@ sylma.xml.StepClass = {
       type : type
     });
 
-    editor.fireEvent('update');
+    file.fireEvent('update');
     
     history.save();
   },
@@ -301,7 +302,7 @@ sylma.xml.StepClass = {
   
   findNode: function (path, type)
   {
-    return this.getParent('editor').findNode(path, type || this.arguments.type, this.arguments.name, this.arguments.prefix);
+    return this.getParent('file').findNode(path, type || this.arguments.type, this.arguments.name, this.arguments.prefix);
   },
   
   updateNode : function()

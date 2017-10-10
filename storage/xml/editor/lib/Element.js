@@ -105,7 +105,7 @@ sylma.xml.ElementClass = {
       name : element.name
     }, 'element', previous);
 
-    var editor = this.getParent('editor');
+    var file = this.getParent('file');
 
     var step = {
       type : 'add',
@@ -119,14 +119,11 @@ sylma.xml.ElementClass = {
       }
     };
     
-    var history = editor.getObject('history');
-
-    history.addStep(step);
-    history.applyStep(this.getParent('document').document, step, step.arguments);
+    file.history.addStep(step);
+    file.history.applyStep(this.getParent('document').document, step, step.arguments);
     
-    editor.schema.attachElement(child, element);
-
-    editor.fireEvent('update');
+    file.schema.attachElement(child, element);
+    file.fireEvent('update');
   },
 
   addText : function (previous) {
@@ -149,13 +146,12 @@ sylma.xml.ElementClass = {
         }
       };
 
-      var editor = this.getParent('editor');
-      var history = editor.getObject('history');
+      var file = this.getParent('file');
 
-      history.addStep(step);
-      history.applyStep(this.getParent('document').document, step, step.arguments);
+      file.history.addStep(step);
+      file.history.applyStep(this.getParent('document').document, step, step.arguments);
 
-      editor.fireEvent('update');
+      file.fireEvent('update');
 
     }.bind(this));
   },
@@ -176,15 +172,12 @@ sylma.xml.ElementClass = {
       }
     };
     
-    var editor = this.getParent('editor');
-    var history = editor.getObject('history');
+    var file = this.getParent('file');
     
-    history.applyStep(this.getParent('document').document, step, step.arguments);
-
-    editor.fireEvent('update');
+    file.history.applyStep(this.getParent('document').document, step, step.arguments);
+    file.history.addStep(step);
+    file.fireEvent('update');
     
-    history.addStep(step);
-
 //    editor.schema.attachElement(child, element);
   },
 
@@ -256,17 +249,16 @@ sylma.xml.ElementClass = {
       }
     };
     
-    var editor = this.getParent('editor');
-    var history = editor.getObject('history');
+    var file = this.getParent('file');
     
-    history.applyStep(this.getParent('document').document, step, step.arguments);
+    file.history.applyStep(this.getParent('document').document, step, step.arguments);
     
     if (save)
     {
-      history.addStep(step);
+      file.history.addStep(step);
     }
 
-    editor.fireEvent('update');
+    file.fireEvent('update');
     
     var parent = this.parentElement;
     this.sylma.key = parent.children.indexOf(this);
@@ -279,10 +271,10 @@ sylma.xml.ElementClass = {
 
   addAttributeFromType : function (attribute) {
     
-    var editor = this.getParent('editor');
+    var file = this.getParent('file');
     var child = this.addAttribute(attribute.namespace, attribute.name, attribute.prefix, '');
     
-    editor.schema.attachAttribute(child, attribute);
+    file.schema.attachAttribute(child, attribute);
 
     var path = this.toPath(true);
     var document = this.getParent('document').document;
@@ -303,12 +295,10 @@ sylma.xml.ElementClass = {
         }
       };
 
-      var history = editor.getObject('history');
-      
-      history.addStep(step);
-      history.applyStep(document, step, step.arguments)
+      file.history.addStep(step);
+      file.history.applyStep(document, step, step.arguments)
 
-      editor.fireEvent('update');
+      file.fireEvent('update');
     });
   },
   
@@ -454,8 +444,6 @@ sylma.xml.ElementClass = {
 
   validateMove : function (parent, previous) 
   {
-    var editor = this.getParent('editor');
-    
     this.applyMove(parent, previous, true);
   },
   
@@ -500,7 +488,7 @@ sylma.xml.ElementClass = {
     
     if (typeOf(parent) === 'string')
     {
-      parent = this.getParent('editor').findNode(parent, 'element');
+      parent = this.getParent('file').findNode(parent, 'element');
     }
     
     if (!parent.objects.children) 

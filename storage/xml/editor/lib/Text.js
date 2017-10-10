@@ -34,17 +34,16 @@ sylma.xml.TextClass = {
       }
     };
 
-    var editor = this.getParent('editor');
-    var history = editor.getObject('history');
+    var file = this.getParent('file');
 
-    history.applyStep(this.getParent('document').document, step, step.arguments)
-
-    editor.fireEvent('update');
+    file.history.applyStep(this.getParent('document').document, step, step.arguments)
 
     if (previous)
     {
-      history.addStep(step);
+      file.history.addStep(step);
     }
+    
+    file.fireEvent('update');
     
     this.parent();
     this.destroy();
@@ -83,8 +82,7 @@ sylma.xml.TextClass = {
         }
       };
 
-      var editor = this.getParent('editor');
-      var history = editor.getObject('history');
+      var file = this.getParent('file');
 
       if (callback) 
       {
@@ -92,11 +90,11 @@ sylma.xml.TextClass = {
       }
       else if (save)
       {
-        history.addStep(step);
+        file.history.addStep(step);
       }
 
-      history.applyStep(this.getParent('document').document, step, step.arguments)
-      editor.fireEvent('update');
+      file.history.applyStep(this.getParent('document').document, step, step.arguments)
+      file.fireEvent('update');
     }
   },
 

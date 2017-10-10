@@ -1,20 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<collection
+<editor
   xmlns="http://2016.sylma.org/storage/xml/editor"
 >
   <insert/>
-  <history/>
-  <document>
-    <xmlns prefix="x" namespace="x"/>
-    <element prefix="x" name="x">
-      <attribute prefix="x" name="x"/>
-      <children>
-        <element/>
-        <text/>
-        <comment/>
-        <!--<spacer/>-->
-      </children>
-    </element>
-  </document>
-  <view/>
-</collection>
+</editor>

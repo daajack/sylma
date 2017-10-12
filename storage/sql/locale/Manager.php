@@ -13,7 +13,6 @@ class Manager extends core\module\Domed
   protected $usePrefix = false;
   protected $redirect = array();
   protected $redirectKeys = array();
-  protected $current = '';
   
   public function __construct(core\argument $args) {
     

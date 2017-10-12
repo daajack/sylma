@@ -7,6 +7,7 @@ class Manager extends core\module\Domed
 {
   protected $translations = array();
   protected $language;
+  protected $current;
 
   protected $modePrefix = false;
   protected $usePrefix = false;

@@ -7,6 +7,7 @@ class Sub extends Form {
 
   protected $bID = false;
   protected $iKey;
+  protected $parent;
 
   public function setSub($sAlias, $iKey, $parent, $sID) {
 

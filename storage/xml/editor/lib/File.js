@@ -127,12 +127,13 @@ sylma.xml.FileClass = {
   {
     var compiler = new window.titan.Compiler;
     var document = this.current.options.document;
-    var editor = this;
+    var editor = this.getParent('editor');
+    var file = this.path;
     
     compiler.prepareDOM(document, 1, function(result)
     {
       editor.send(editor.options.publishPath, {
-        file : editor.file,
+        file : file,
         scripts : result.map(function(window) { return { name : window.name, content : window.content }})
       }, function()
       {

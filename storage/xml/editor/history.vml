@@ -169,7 +169,7 @@
   </view:view>
   
 
-  <view:view name="range" groups="sql, collection" builder:return="result" builder:output="array">
+  <view:view name="range" groups="sql, collection, file" builder:return="result" builder:output="array">
     
     <sql:order>id</sql:order>
     

@@ -68,12 +68,6 @@
       
       <tpl:apply mode="editor/resources"/>
       
-      <tpl:apply select="init()">
-        <le:file>
-          <le:get-argument name="file"/>
-        </le:file>
-      </tpl:apply>
-
       <div class="tab" js:class="sylma.ui.Container">
         <tpl:apply mode="editor"/>
       </div>
@@ -100,12 +94,6 @@
 
     <tpl:template mode="editor/init">
       
-      <js:option name="file" cast="x">
-        <tpl:read select="/root()/getFile()"/>
-      </js:option>
-      <js:option name="update">
-        <tpl:read select="/root()/getUpdate()"/>
-      </js:option>
       <js:option name="publishPath">
         <crud:path path="publish"/>
       </js:option>
@@ -125,7 +113,9 @@
         </js:option>
         <js:option name="sylma-inside">1</js:option>
 
-        <tpl:read select="/root()/open()"/>
+        <tpl:read select="/root()/openFileContainer()">
+          <le:get-argument name="file"/>
+        </tpl:read>
         
       </div>
       
@@ -157,7 +147,9 @@
     
     <tpl:template>
       
-      <tpl:apply select="open()"/>
+      <tpl:apply select="openFileContainer()">
+        <le:get-argument name="file" source="post"/>
+      </tpl:apply>
 
     </tpl:template>
     
@@ -174,7 +166,7 @@
   <view:view name="load" builder:return="result">
 
     <tpl:template>
-      <tpl:apply select="loadDocument()"/>
+      <tpl:apply select="openRevision()"/>
     </tpl:template>
 
   </view:view>

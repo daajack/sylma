@@ -29,8 +29,29 @@ class Editor extends core\module\Domed {
 
   public function init(fs\file $file)
   {
+    $this->setDirectory(__FILE__);
+    
+    $doc = $this->loadLast($file);
+    
     $this->setFile($file);
-    $this->setDocument($file->asDocument()); // , \Sylma::MODE_READ, true
+    $this->setDocument($doc);
+  }
+  
+  protected function loadLast(fs\file $file)
+  {
+    $id = $this->checkFile($file);
+    $last = $this->run('history/last', array('file' => $id, 'disabled' => 0));
+    
+    if (!$last)
+    {
+      $doc = $file->asDocument();
+    }
+    else
+    {
+      $pstep = $this->createArgument(current($last));
+      $doc = $this->loadRevision($file, $pstep->read('id'));
+    }
+    return $doc;
   }
 
   public function getFile($sPath = '', $bDebug = true) {
@@ -130,84 +151,64 @@ class Editor extends core\module\Domed {
     return $this->getScript($path, $arguments, $posts, $contexts);
   }
 
-  public function open()
+  public function openFileContainer($path)
   {
     $this->setDirectory(__FILE__);
     
-    if ($file = $this->getFile('', false))
-    {
-      $doc = $this->getDocument();
-    }
-    else
-    {
-      $file = $this->getFile($this->read('file'));
-      $doc = $file->asDocument();
-    }
-    
+    $file = $this->getFile($path);
+    $doc = $file->asDocument();
+
     switch ($doc->getRoot()->getNamespace())
     {
       case 'http://2017.sylma.org/view' : $path = '/#sylma/view/editor/file-container.vml'; break;
 //      default : $path = '/#sylma/view/editor/file-container'; break;
-      default : $path = 'file-container';
+      default : $path = 'file-container.vml';
     }
 
     $result = $this->getScript($path, array('file' => (string) $file), array(), $this->contexts->query());
-//    dsp($result);
+    
     return $result;
-    
-    $this->setDirectory(__FILE__);
-    $this->loadDefaultSettings();
-
-    $file = $this->getFile($this->read('file'));
-    $doc = $file->asDocument();
-    
-    
-    
-    return array(
-      'schemas' => $this->getSchemas($doc),
-      'document' => (string) $doc,
-      'steps' => $this->getScript('history/steps', array('file' => (string) $file)),
-    );
   }
 
-  public function loadDocument()
+  protected function loadRevision(fs\file $file, $step)
   {
-    $this->setDirectory(__FILE__);
-    $this->loadDefaultSettings();
-
-    $file = $this->getFile($this->read('file'));
     $filepath = (string) $file;
 
     $id = $this->run('file', array(
       'path' => $filepath,
     ));
     
-    $step = $this->read('step');
     $last = $this->createArgument($this->run('history/document', array('file' => $id, 'from' => $step))[0]);
-    
-      $doc = $this->createDocument($last->read('document'));
+    $doc = $this->createDocument($last->read('document'));
 
     if ($last->read('id') != $step)
+    {
+      $steps = $this->run('history/range', array('file' => $id, 'from' => $last->read('id'), 'to' => $step));
+
+      if (!$steps)
       {
-        $steps = $this->run('history/range', array('file' => $id, 'from' => $last->read('id'), 'to' => $step));
-
-        if (!$steps)
-        {
-          $this->launchException('No range found');
-        }
-
-        $steps = $this->createArgument($steps);
-
-        foreach ($steps as $step)
-        {
-          $args = $this->createArgument(json_decode($step->read('arguments'), true));
-          $this->applyStep($doc, $step, $args);
-        }
+        $this->launchException('No range found');
       }
-      
-      
-//    $user = (string) $this->getManager('user');
 
+      $steps = $this->createArgument($steps);
+
+      foreach ($steps as $step)
+      {
+        $args = $this->createArgument(json_decode($step->read('arguments'), true));
+        $this->applyStep($doc, $step, $args);
+      }
+    }
+    
+    return $doc;
+  }
+  
+  public function openRevision()
+  {
+    $this->setDirectory(__FILE__);
+    $this->loadDefaultSettings();
+
+    $file = $this->getFile($this->read('file'));
+    $doc = $this->loadRevision($file, $this->read('step'));
     
     return (string) $doc;
   }
@@ -225,13 +226,8 @@ class Editor extends core\module\Domed {
     }
   }
   
-  public function update() 
+  protected function checkFile(fs\file $file)
   {
-    $result = false;
-
-    $this->setDirectory(__FILE__);
-
-    $file = $this->getFile($this->read('file'));
     $filepath = (string) $file;
 
     $id = $this->run('file', array(
@@ -244,7 +240,18 @@ class Editor extends core\module\Domed {
         'path' => $filepath,
       ));
     }
-//$this->launchException('test');
+    
+    return $id;
+  }
+  
+  public function update() 
+  {
+    $this->setDirectory(__FILE__);
+    
+    $result = false;
+    
+    $file = $this->getFile($this->read('file'));
+    $id = $this->checkFile($file);
     $update = $this->run('history/time', array('file' => $id));
     $messages = $this->getManager(self::PARSER_MANAGER)->getContext('messages');
 
@@ -265,8 +272,7 @@ class Editor extends core\module\Domed {
 
       try 
       {
-
-        $result = $this->updateDocument($id, $file, $file->asDocument($this->getNS())); // , \Sylma::MODE_READ, true
+        $result = $this->updateDocument($id, $file); // , \Sylma::MODE_READ, true
 //        $result = 1;
         
         if (!$result)
@@ -286,7 +292,7 @@ class Editor extends core\module\Domed {
     return $result;
   }
 
-  protected function updateDocument($id, fs\file $file, dom\document $doc) 
+  protected function updateDocument($id, fs\file $file) 
   {
     $steps = $this->get('steps');
     $user = (string) $this->getManager('user');
@@ -311,18 +317,19 @@ class Editor extends core\module\Domed {
           $step = $this->$type($id, $step);
           $args = $step->get('arguments');
           
-          $this->applyStep($doc, $step, $args);
+//          $this->applyStep($doc, $step, $args);
         }
         else
         {
           $args = $this->createArgument(json_decode($step->read('arguments'), true));
-          $this->applyStep($doc, $step, $args);
           
           $connection = $this->getManager('mysql')->getConnection();
           $count = $this->run('file/steps', array('id' => $id));
           
           if ($count == 0)
           {
+            $doc = $this->loadLast($file);
+            $this->applyStep($doc, $step, $args);
             $step->set('document', (string) $doc);
             $connection->execute("UPDATE `editor_file` SET steps = 5 WHERE id = $id");
           }
@@ -334,10 +341,7 @@ class Editor extends core\module\Domed {
         }
       }
     }
-
 //    dsp($doc, $step);
-    $doc->saveFile($file, true);
-
     return true;
   }
   
@@ -571,8 +575,19 @@ class Editor extends core\module\Domed {
   public function publish()
   {
     $this->setDirectory(__FILE__);
-    
     $file = $this->getFile($this->read('file'));
+    $this->buildFiles($file);
+    
+    $doc = $this->loadLast($file);
+    $doc->saveFile($file, true);
+    
+    return 1;
+  }
+  
+  protected function buildFiles(fs\file $file)
+  {
+    $this->setDirectory(__FILE__);
+    
     $files = $this->get('scripts');
     $parser = $this->getManager('parser');
     $caches = [];
@@ -604,8 +619,6 @@ class Editor extends core\module\Domed {
     
     $cache = $parser->getCachedFile($file);
     $cache->saveText("<?php\n" . $scripts . $main->read('content'));
-    
-    return 1;
   }
 
   public function asXML()

@@ -121,7 +121,7 @@ sylma.xsd.SchemaClass = {
 
     if (!result && debug) {
 
-      throw new Error('Cannot find ' + element + ' : ' + namespace + ':' + name);
+//      console.log('Cannot find ' + element + ' : ' + namespace + ':' + name);
     }
 
     return result;

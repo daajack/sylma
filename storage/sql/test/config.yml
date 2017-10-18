@@ -1,9 +1,4 @@
 
-database :
-  default :
-    host : localhost
-    database : test
-    
 locale :
   translate : [en, fr]
   languages :

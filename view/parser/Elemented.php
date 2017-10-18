@@ -119,6 +119,7 @@ class Elemented extends template\parser\handler\Domed {
 
       case 'insert' :
       case 'update' :
+      case 'delete' :
 
         if ($el->getNamespace() == self::BINDER_NS) {
 

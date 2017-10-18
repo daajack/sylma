@@ -3,32 +3,21 @@
 namespace sylma\storage\sql\template\delete;
 use sylma\core, sylma\storage\sql, sylma\parser\languages\common;
 
-class Table extends sql\template\component\Table implements common\argumentable {
+class Table extends sql\template\component\TableForm implements common\argumentable {
 
   protected $sMode = 'delete';
 
-  public function parseRoot(\sylma\dom\element $el) {
+  protected function loadQuery() {
 
-    parent::parseRoot($el);
-    $this->insertQuery(false);
-  }
+    if ($dummy = $this->getDummy(false)) {
 
-  public function asArgument() {
-    
-    $window = $this->getWindow();
-    
-    $aArguments = $this->loadDummyArguments();
-    $form = $this->buildReflector($aArguments);
-    $dummy = $window->createVar($form);
-    
-    $content = array($dummy->call('asString'));
-    
-    $aResult[] = $dummy->getInsert();
-    $aResult[] = $window->createCondition($dummy->call('validate'), array(
-        $this->getQuery(),
-        $this->getHandler()->getView()->addToResult($content, false)
-    ));
-    
-    return $this->getWindow()->createGroup($aResult);
+      $this->getQuery()->setDummy($dummy);
+    }
+
+    $view = $this->getParser()->getView();
+
+    $aResult[] = $this->getQuery();
+
+    return $aResult;
   }
 }

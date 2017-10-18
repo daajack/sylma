@@ -68,6 +68,8 @@ class Connection extends core\module\Argumented {
 
     $result = null;
 
+    $this->logQuery($sQuery);
+
     try {
 
       $result = $this->getDatabase()->query($sQuery);
@@ -86,8 +88,6 @@ class Connection extends core\module\Argumented {
 
       throw \Sylma::loadException($e);
     }
-
-    $this->logQuery($sQuery);
 
     //$this->catchError();
 
@@ -138,12 +138,12 @@ class Connection extends core\module\Argumented {
 
     try {
 
-      $stat = $this->getDatabase()->query($sQuery);
-      
       if ($log) {
         
         $this->logQuery($sQuery);
       }
+      
+      $stat = $this->getDatabase()->query($sQuery);
 
       if (!$stat) {
 

@@ -44,7 +44,12 @@ class Script extends action\component\Script implements template\parser\componen
 
     $root = $this->getRoot();
     $path = $root->getPath($sPath);
-
+    
+    if (!$path)
+    {
+      $this->launchException('No path found');
+    }
+    
     return parent::loadPath($path->asPath());
   }
 }

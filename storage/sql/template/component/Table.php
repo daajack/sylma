@@ -126,12 +126,14 @@ class Table extends Dummed implements sql\template\pathable, schema\parser\eleme
     }
     else {
 
-      if ($this->isStatic()) {
-
-        $this->launchException('Cannot load query in static mode');
+      if ($this->isStatic()) 
+      {
+        $result = null;
       }
-
-      $result = $this->getQuery()->getVar();
+      else
+      {
+        $result = $this->getQuery()->getVar();
+      }
     }
 
     return $result;

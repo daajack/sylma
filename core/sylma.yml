@@ -227,6 +227,11 @@ modules :
     background : false
     session : sylma-captcha
     key : undefined
+    secret : undefined
+  report :
+    from : undefined
+    to : undefined
+    subject : Bug Report
   rebuild :
     exclude :
       run :

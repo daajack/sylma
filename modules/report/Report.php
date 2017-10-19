@@ -7,7 +7,7 @@ class Report extends schema\cached\form\Form {
   
   protected function checkCaptcha($reponse) {
     
-    $secret = '6LeFbRIUAAAAAPl75zfFvh7eCO2pHIlcalQmV-2o';
+    $secret = \Sylma::read('modules/captcha/secret');
     $verifyResponse = file_get_contents('https://www.google.com/recaptcha/api/siteverify?secret='.$secret.'&response='.$reponse);
     $responseData = json_decode($verifyResponse);
 

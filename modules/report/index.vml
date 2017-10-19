@@ -55,9 +55,9 @@
           </tpl:variable>
           
           <le:script path="/#sylma/modules/mailer/send">
-            <tpl:read select="'webmaster@pronoxa.ch'" le:name="from"/>
-            <tpl:read select="'support@lemon.ch'" le:name="to"/>
-            <tpl:text le:name="subject">Bug pronoxa.ch</tpl:text>
+            <tpl:read select="/sylma()/modules/report/from" le:name="from"/>
+            <tpl:read select="/sylma()/modules/report/to" le:name="to"/>
+            <tpl:read select="/sylma()/modules/report/subject" le:name="subject"/>
             <tpl:read select="$content" le:name="content"/>
           </le:script>
              

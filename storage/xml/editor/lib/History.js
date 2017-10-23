@@ -34,7 +34,7 @@ sylma.xml.HistoryClass = {
 
       switch (options.type)
       {
-        case 'revision' : name = 'revision'; break;
+//        case 'revision' : name = 'revision'; break;
         default : name = 'action';
       }
       
@@ -46,7 +46,7 @@ sylma.xml.HistoryClass = {
     this.steps = container.tmp;
   },
     
-  load: function (step) 
+  load: function (step, callback) 
   {
     
     this.save();
@@ -70,9 +70,9 @@ sylma.xml.HistoryClass = {
           var doc = file.prepareDocument(response.content, file.schema, true);
           file.current = doc;
 
-          doc.getNode().addClass('revision');
-          
           file.fireEvent('update');
+          
+          callback(doc);
           console.info('File loaded');
         }
         else {
@@ -119,7 +119,7 @@ sylma.xml.HistoryClass = {
       this.applySteps(options, todos.reverse());
       var doc = file.prepareDocument(options);
       
-      doc.getNode().addClass('revision');
+      callback(doc);
     }
   },
   

@@ -19,7 +19,7 @@ sylma.view.Compiler = new Class({
 //    var compiler = require('./Compiler.js');
 //console.log(document);
 //console.log(document.documentElement.innerHTML);
-    compiler.prepareDOM(document, 0, function(result)
+    compiler.prepareDOM(document, 0, function(view, result)
     {
       var View = window.titan.View;
       var tree = {
@@ -38,10 +38,10 @@ sylma.view.Compiler = new Class({
       
       var scripts = [];
       
-//      console.log(result);
+//      console.log(result, result[1].content);
 
       var result = eval(result[1].content);
-  //console.log(view.content);
+//  console.log(result);
   //    var document = parser.parseFromString(view.content, "text/xml");
   //    console.log(this.getNode('iframe'));
       function htmlEntities(str) {

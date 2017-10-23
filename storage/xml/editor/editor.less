@@ -238,7 +238,7 @@
     }
   }
 
-  .update
+  & > .update
   {
     position: absolute;
     z-index: 2;
@@ -551,7 +551,7 @@
       @size: 1.3em;
       
       color: @gray2;
-      border-bottom: 1px solid @gray4;
+      border-bottom: 1px dashed @gray4;
       border-top: 0;
       overflow: hidden;
       white-space: nowrap;
@@ -596,6 +596,17 @@
         padding-left: 0.25em;
         text-transform: uppercase;
         text-align: center;
+      }
+      
+      &.revision
+      {
+        margin-bottom: 0.5em;
+        border-bottom-style: solid;
+        
+        & + .step
+        {
+          border-top: 1px dashed @gray4;
+        }
       }
       
       .date

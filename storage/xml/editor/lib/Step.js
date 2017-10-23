@@ -5,7 +5,15 @@ sylma.xml.StepClass = {
   
   onLoad: function () {
     
-    this.arguments = JSON.parse(this.options.arguments);
+    if (this.options.arguments)
+    {
+      this.arguments = JSON.parse(this.options.arguments);
+    }
+    else
+    {
+      this.arguments = {};
+    }
+    
     this.disabled = this.options.disabled === '1';
     this.id = this.options.id;
     this.content = this.options.content;
@@ -36,6 +44,7 @@ sylma.xml.StepClass = {
       update : '*',
       move : '>',
       remove : '-',
+      revision : 'R',
     };
     
     var type = this.getNode('type');
@@ -47,13 +56,17 @@ sylma.xml.StepClass = {
   select: function () {
     
     var history = this.getParent('history');
-    history.load(this);
+    history.load(this, function(doc)
+    {
+      doc.getNode().addClass('revision');
+    });
   },
   
   undo : function()
   {
     switch (this.type)
     {
+      case 'revision' : this.undoRevision(); break;
       case 'add' : this.undoAdd(); break;
       case 'update' : this.undoUpdate(); break;
       case 'delete' : this.undoDelete(); break;
@@ -70,6 +83,7 @@ sylma.xml.StepClass = {
   {
     switch (this.options.type)
     {
+      case 'revision' : this.redoRevision(); break;
       case 'add' : this.redoAdd(); break;
       case 'update' : this.redoUpdate(); break;
       case 'delete' : this.redoDelete(); break;
@@ -80,6 +94,32 @@ sylma.xml.StepClass = {
     
     this.disabled = false;
     this.updateNode();
+  },
+  
+  applyRevision: function (key, step)
+  {
+    var history = this.getParent('history');
+    
+    history.load(step, function(doc)
+    {
+      history.stepsAdded.push({
+        type : key
+      });
+      
+      history.save();
+    });
+
+  },
+  
+  undoRevision: function ()
+  {
+    var history = this.getParent('history');
+    this.applyRevision('undo', history.steps[history.steps.indexOf(this) - 1]);
+  },
+  
+  redoRevision: function ()
+  {
+    this.applyRevision('redo', this);
   },
   
   undoUpdate : function()

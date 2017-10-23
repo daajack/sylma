@@ -9,7 +9,9 @@ class Editor extends core\module\Domed {
   const FILE_MANAGER = 'fs/editable';
 
   const NS = 'http://2013.sylma.org/modules/stepper';
-
+  
+  protected $id;
+  
   public function __construct(core\argument $args, core\argument $post, core\argument $contexts) {
 
     //$this->setDirectory(__DIR__);
@@ -27,14 +29,38 @@ class Editor extends core\module\Domed {
     }
   }
 
-  public function init(fs\file $file)
+  public function loadFile(fs\file $file)
   {
     $this->setDirectory(__FILE__);
+    $this->setFile($file);
+    
+    $historyUpdate = $this->run('history/time', array('file' => (string) $file));
+    $fileUpdate = $file->getUpdateTime();
+    $historyUpdate = strtotime($historyUpdate);
     
     $doc = $this->loadLast($file);
-    
-    $this->setFile($file);
-    $this->setDocument($doc);
+//dsp($fileUpdate, $historyUpdate);
+    if ($fileUpdate > $historyUpdate)
+    {
+      $id = $this->id;
+      $user = $this->getManager('user');
+      $this->setDocument($file->asDocument());
+      
+      $step = array(
+        'file' => $id,
+        'user' => (string) $user,
+        'type' => 'revision',
+        'document' => $this->asXML(),
+        'display' => date('Y-m-d h:m:s', $fileUpdate),
+      );
+      
+      $this->run('history/insert', array(), $step);
+      $this->resetRevisionCount($id);
+    }
+    else
+    {
+      $this->setDocument($doc);
+    }
   }
   
   protected function loadLast(fs\file $file)
@@ -51,6 +77,9 @@ class Editor extends core\module\Domed {
       $pstep = $this->createArgument(current($last));
       $doc = $this->loadRevision($file, $pstep->read('id'));
     }
+    
+    $this->id = $id;
+    
     return $doc;
   }
 
@@ -315,15 +344,10 @@ class Editor extends core\module\Domed {
         if ($type === 'undo' || $type === 'redo')
         {
           $step = $this->$type($id, $step);
-          $args = $step->get('arguments');
-          
-//          $this->applyStep($doc, $step, $args);
         }
         else
         {
           $args = $this->createArgument(json_decode($step->read('arguments'), true));
-          
-          $connection = $this->getManager('mysql')->getConnection();
           $count = $this->run('file/steps', array('id' => $id));
           
           if ($count == 0)
@@ -331,18 +355,32 @@ class Editor extends core\module\Domed {
             $doc = $this->loadLast($file);
             $this->applyStep($doc, $step, $args);
             $step->set('document', (string) $doc);
-            $connection->execute("UPDATE `editor_file` SET steps = 5 WHERE id = $id");
+            $this->resetRevisionCount($id);
           }
 
           $this->run('history/insert', array(), $step->asArray());
-          
-          $id = $connection->escape($id);
-          $connection->execute("UPDATE `editor_file` SET steps = steps - 1 WHERE id = $id");
+          $this->updateRevisionCount($id);
         }
       }
     }
 //    dsp($doc, $step);
     return true;
+  }
+  
+  protected function updateRevisionCount($id)
+  {
+    $connection = $this->getManager('mysql')->getConnection();
+    
+    $id = $connection->escape($id);
+    $connection->execute("UPDATE `editor_file` SET steps = steps - 1 WHERE id = $id");
+  }
+  
+  protected function resetRevisionCount($id)
+  {
+    $connection = $this->getManager('mysql')->getConnection();
+    
+    $id = $connection->escape($id);
+    $connection->execute("UPDATE `editor_file` SET steps = 5 WHERE id = $id");
   }
   
   protected function undo($id, $step)
@@ -351,95 +389,14 @@ class Editor extends core\module\Domed {
     
     $pstep = $this->createArgument(current($last));
     $this->run('history/disable', array('id' => $pstep->read('id'), 'value' => 1));
-    
-    $args = $this->createArgument(json_decode($pstep->read('arguments'), true));
-    
-    $step->set('arguments', $args);
-
-    switch ($pstep->read('type'))
-    {
-      case 'add' :
-
-        $step->set('type', 'remove'); 
-        
-        switch ($args->read('type'))
-        {
-          case 'text' :
-          case 'element' : $step->set('path', $pstep->read('path') . '/' . $args->read('position')); break;
-          case 'attribute' : $step->set('path', $pstep->read('path')); break;
-        }
-        
-        break;
-
-      case 'update' :
-
-        $step->set('type', 'update');
-        $step->set('path', $pstep->read('path'));
-        $step->set('content', $args->read('previous'));
-        break;
-      
-      case 'remove' :
-        
-        switch ($args->read('type'))
-        {
-          case 'text' : 
-          case 'element' : 
-
-            $path = explode('/', $pstep->read('path'));
-            $position = (int) array_pop($path);
-
-            $args->set('position', $position);
-
-            $step->set('type', 'add');
-            $step->set('path', implode('/', $path));
-            $step->set('content', $pstep->read('content'));
-            break;
-          
-          case 'attribute' :
-            
-            $step->set('type', 'add');
-            $step->set('path', $pstep->read('path'));
-            $step->set('content', $pstep->read('content'));
-            break;
-          
-          default : $this->launchException('Uknown node type');
-        }
-        
-        break;
-
-      case 'move' :
-
-        $p = $args->read('parent');
-        $sourcePath = ($p !== '/' ? $p . '/' : $p) . $args->read('position');
-        $source = explode('/', $sourcePath);
-        $target = explode('/', $pstep->read('path'));
-
-        $position = array_pop($target);
-        
-        $step->set('type', 'move');
-        $step->set('path', implode('/', $source));
-        $args->set('parent', implode('/', $target));
-        $args->set('position', $position);
-
-      break;
-
-      default : $this->launchException('Uknown step type');
-    }
-
-    return $step;
   }
   
   protected function redo($id, $step)
   {
     $last = $this->run('history/first', array('file' => $id, 'disabled' => 1));
     $pstep = $this->createArgument(current($last));
-    $args = $this->createArgument(json_decode($pstep->read('arguments'), true));
-    
-    $pstep->set('arguments', $args);
 
     $this->run('history/disable', array('id' => $pstep->read('id'), 'value' => 0));
-    
-    return $pstep;
   }
 
   protected function updateNode(dom\document $doc, dom\node $node, core\argument $step, core\argument $args) {

@@ -52,7 +52,7 @@
 
     <tpl:template>
       
-      <tpl:apply select="init()">
+      <tpl:apply select="loadFile()">
         <le:file>
           <le:get-argument name="file"/>
         </le:file>

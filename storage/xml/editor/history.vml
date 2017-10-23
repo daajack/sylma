@@ -122,22 +122,13 @@
     </tpl:template>
     
     <tpl:template match="history:action" mode="step">
-      <div class="step action" js:class="sylma.xml.Step" js:alias="action">
+      <div class="step action {type}" js:class="sylma.xml.Step" js:alias="action">
         <js:event name="click">%object%.select();</js:event>
         <span class="type" js:node="type">
           <tpl:read select="type"/>
         </span>
         <span class="display">
           <tpl:read select="display"/>
-        </span>
-      </div>
-    </tpl:template>
-
-    <tpl:template match="history:revision" mode="step">
-      <div class="step revision" js:class="sylma.xml.Revision" js:alias="revision">
-        <span class="type">R</span>
-        <span class="name">
-          <tpl:read select="name"/>
         </span>
       </div>
     </tpl:template>

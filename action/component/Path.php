@@ -12,7 +12,12 @@ class Path extends reflector\component\Foreigner implements common\arrayable {
   }
 
   public function asArray() {
-//return array($this->create('request', array($this->getRoot()->getFile()))->asString());
+    
+    if ($this->readx('@path', false))
+    {
+      $this->launchException('Path must be set into element content when using le:path');
+    }
+    
     if ($sValue = $this->readx()) {
 
       $request = $this->create('request', array($sValue, $this->getSourceDirectory()));

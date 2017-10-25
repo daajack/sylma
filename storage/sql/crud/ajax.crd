@@ -27,6 +27,17 @@
 
   </crud:global>
 
+  <crud:group name="list">
+    
+    <tpl:template mode="actions/insert"/>
+    
+    <tpl:template mode="dummy">
+      <tpl:apply mode="dummy"/>
+      <tpl:apply mode="list/filter" required="x"/>
+    </tpl:template>
+
+  </crud:group>
+  
   <crud:group name="view">
 
     <tpl:template match="*" mode="parent">
@@ -73,9 +84,7 @@
         <tpl:apply mode="filters/content"/>
 
       </tpl:template>
-
-      <tpl:template mode="actions"/>
-
+      
       <tpl:template mode="list/form">
 
         <form class="list" js:name="list" js:class="sylma.crud.collection.Table" action="" method="post" js:parent-name="table">
@@ -93,13 +102,6 @@
     </view:view>
 
     <view:view name="list">
-
-      <tpl:template mode="init-container">
-
-        <tpl:apply mode="list/filter" required="x"/>
-        <tpl:apply mode="init-container"/>
-
-      </tpl:template>
 
       <tpl:template match="*" mode="row/action"/>
 
@@ -123,7 +125,10 @@
           <js:event name="click">
             %object%.onClick(e);
           </js:event>
-
+          
+          <tpl:apply mode="row/filter"/>
+          <tpl:apply mode="row/init"/>
+          
           <td>
             <tpl:apply mode="row/action"/>
           </td>

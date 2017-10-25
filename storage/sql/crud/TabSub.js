@@ -14,7 +14,10 @@ sylma.crud.multiform.TabSub = new Class({
 
       tabs.getTab(key).getObject('form').update({parent: id}, path);
     });
-
-    e.stopPropagation();
+    
+    if (e)
+    {
+      e.stopPropagation();
+    }
   }
 })

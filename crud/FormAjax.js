@@ -20,10 +20,12 @@ sylma.crud.FormAjax = new Class({
 
     this.getParent('container').hide();
     this.updateList();
+    this.fireEvent('delete');
   },
 
   cancel : function () {
 
     this.getParent('container').hide();
+    this.fireEvent('cancel');
   }
 });

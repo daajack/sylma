@@ -65,7 +65,7 @@ sylma.ui.ContainerProps = {
     
     if (!path) {
       
-      throw 'No path defined';
+      throw new Error('No path defined');
     }
 
     var req = new Request.JSON({

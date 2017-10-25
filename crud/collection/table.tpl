@@ -117,7 +117,7 @@
       <tpl:apply mode="filters"/>
     </tpl:variable>
     <thead>
-      <tpl:apply mode="head/group"/>
+      <tpl:apply mode="head/groups"/>
       <tr class="orders" js:class="sylma.crud.collection.Sorter" js:name="head" js:parent-name="head">
         <tpl:apply mode="head/corner"/>
         <tpl:apply use="list-cols" mode="head/cell"/>

@@ -38,7 +38,7 @@
   </tpl:template>
 
   <tpl:template match="*" mode="filter/container">
-    <th valign="top">
+    <th valign="top" class="filter--{alias()}">
       <tpl:apply mode="filter"/>
     </th>
   </tpl:template>

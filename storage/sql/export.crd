@@ -16,7 +16,7 @@
       <tpl:variable name="url">
         <crud:path path="export"/>
       </tpl:variable>
-      <a href="javascript:void(0)" class="button fa" onclick="document.location = '{$url}.txt';"></a>
+      <a href="javascript:void(0)" class="button fa" onclick="document.location = '{$url}.xlsx';"></a>
     </tpl:template>
     
   </crud:global>

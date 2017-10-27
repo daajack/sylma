@@ -28,7 +28,7 @@
     <tpl:apply select="source()"/>
 
     <div>
-      <tpl:read select="result()"/>
+      <tpl:read select="dummy()/result()"/>
     </div>
 
   </tpl:template>

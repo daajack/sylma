@@ -237,26 +237,26 @@
   </tpl:template>
 
   <tpl:template mode="counter">
-
     <tr class="count">
       <td/>
       <td colspan="99">
         <span class="value">
-          <tpl:read select="count()"/>
+          <tpl:apply mode="counter/value"/>
         </span> result(s)
       </td>
     </tr>
-
   </tpl:template>
 
+  <tpl:template mode="counter/value">
+    <tpl:read select="count()"/>
+  </tpl:template>
+  
   <tpl:template mode="pager">
-
     <tr>
       <td colspan="99">
         <tpl:apply select="pager()"/>
       </td>
     </tr>
-
   </tpl:template>
 
   <tpl:template  match="*" mode="pager/input/source">
@@ -264,9 +264,7 @@
   </tpl:template>
 
   <tpl:template match="*" mode="init/internal">
-
     <tpl:apply use="list-cols" mode="filter/internal"/>
-
   </tpl:template>
 
   <tpl:template match="*" mode="row/init">

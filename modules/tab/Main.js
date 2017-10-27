@@ -3,7 +3,7 @@ sylma.ui.tab = {};
 
 sylma.ui.tab.Main = new Class({
 
-  Extends : sylma.crud.Form,
+  Extends : sylma.crud.FormAjax,
   tabs : {},
   width : 0,
   current : 0,
@@ -13,9 +13,16 @@ sylma.ui.tab.Main = new Class({
   onLoad : function() {
 
     this.build(this.getObject('container').tmp);
+    
+    this.init();
     this.parent();
   },
 
+  init : function() 
+  {
+    this.go(0);
+  },
+  
   prepareNode : function() {
 
     this.getNode().addClass('sylma-tabs');
@@ -35,8 +42,29 @@ sylma.ui.tab.Main = new Class({
       this.tabs[i] = tabs[i]
       this.tabs[i].prepare(this.width, i);
     }
+  },
+  
+  parseHref : function()
+  {
+    var href = window.location.href;
+    var key = href.indexOf('#');
 
-    this.go(0);
+    if (key)
+    {
+      href = window.location.href.substr(0, key);
+    }
+
+    return href;
+  },
+  
+  startLoading : function()
+  {
+    this.getParent('handler').getNode().addClass('loading');
+  },
+  
+  stopLoading : function()
+  {
+    this.getParent('handler').getNode().removeClass('loading');
   },
 
   parseMessage : function(msg) {

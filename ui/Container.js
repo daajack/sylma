@@ -110,13 +110,15 @@ sylma.ui.ContainerProps = {
 
       this.show();
     }
-
-    this.fireEvent('update', node);
-
-    if (callback) { // because of onwindowload delay 10
-
-      callback.delay(15);
-    }
+    
+    var self = this;
+    
+     // because of onwindowload delay 10
+    window.setTimeout(function()
+    {
+      self.fireEvent('update', node);
+      callback && callback();
+    }, 15);
   },
 
   updateContent : function(result, node, target) {

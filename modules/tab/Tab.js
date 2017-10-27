@@ -44,8 +44,13 @@ sylma.ui.tab.Tab = new Class({
 
   show : function(callback) {
 
-    var callback2 = function() {
+    var tabs = this.getParent('tabs');
+    
+    tabs.startLoading();
 
+    var callback2 = function() {
+      
+      tabs.stopLoading();
       this.getNode().addClass('active');
       callback && callback();
 

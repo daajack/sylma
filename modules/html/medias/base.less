@@ -75,12 +75,17 @@ p { margin: 1em 0; }
 
 #user-login {
     color: #DDDDDD;
+    display: none;
     font-size: 10px;
     margin-top: 2px;
     position: absolute;
     right: 5px;
     text-decoration: none;
-    z-index: 6;
+    z-index: 999999;
+    
+    @media screen and (min-width: 64em) {
+      display: block;
+    }
 }
 
 #user-login:hover {

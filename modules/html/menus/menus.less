@@ -10,7 +10,7 @@
   background-color: @noir;
   font-weight: normal;
   font-family: 'Expletus Sans', cursive;
-  z-index: 20;
+  z-index: 200;
   font-size: 12 * @rem;
   
   & > ul
@@ -25,6 +25,7 @@
       border-right-color: #4d4d4d;
       border-left-color: #333333;
       border-style: solid;
+      margin: 0;
 
       &.empty
       {
@@ -137,3 +138,12 @@
     font-size: 70%;
   }
 }
+
+@media screen and (max-width: 64em)
+{
+  #lemonav {
+    position: fixed;
+  }
+}
+
+

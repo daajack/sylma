@@ -243,10 +243,10 @@ class Sylma {
   public static function isAdmin() {
 
     if (self::$isAdmin === null) {
-
-      $bResult = self::read('debug/enable');
-
-      if (!$bResult and $user = self::getManager('user', false)) {
+      
+      $bResult = false;
+      
+      if ($user = self::getManager('user', false)) {
 
         if ($user->getName() === 'root') {
 

@@ -53,7 +53,7 @@ class Connection extends core\module\Argumented {
 
   protected function logQuery($sQuery) {
 
-    if ($this->readArgument('debug/show')) {
+    if ($this->readArgument('debug/show') && \Sylma::isAdmin() && function_exists('dsp')) {
 
       dsp($sQuery);
     }

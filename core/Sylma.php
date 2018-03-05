@@ -244,14 +244,11 @@ class Sylma {
 
     if (self::$isAdmin === null) {
       
-      $bResult = false;
+      $bResult = self::read('debug/enable');
       
-      if ($user = self::getManager('user', false)) {
+      if (!$bResult and $user = self::getManager('user', false)) {
 
-        if ($user->getName() === 'root') {
-
-          $bResult = true;
-        }
+        $bResult = $user->getName() === 'root';
       }
     }
     else {

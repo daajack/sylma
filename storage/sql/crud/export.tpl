@@ -20,6 +20,8 @@
     <sql:order>
       <tpl:read select="dummy()/sylma-order"/>
     </sql:order>
+    
+    <tpl:apply mode="search/filter"/>
 
     <tpl:apply select="static()" mode="init/internal"/>
 

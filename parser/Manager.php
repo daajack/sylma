@@ -96,16 +96,28 @@ class Manager extends compiler\Manager {
       $builder = $this->loadBuilder($file, $dir);
       $this->aBuilded[] = $file;
       $this->aStackBuild[] = $file;
-
-      $result = $builder->build($dir);
-      clearstatcache();
-
-      if ($aDependencies = $builder->getDependencies()) {
-
-        $this->buildDependencies($dir, $file, $aDependencies);
+      
+      try
+      {
+        $result = $builder->build($dir);
+        
+      } catch (\Exception $e) {
+        
+        $e->save(false);
+        $result = null;
       }
+      
+      if ($result)
+      {
+        clearstatcache();
 
-      array_pop($this->aStackBuild);
+        if ($aDependencies = $builder->getDependencies()) {
+
+          $this->buildDependencies($dir, $file, $aDependencies);
+        }
+
+        array_pop($this->aStackBuild);
+      }
     }
 
     return $result;

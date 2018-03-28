@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<view:view
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:js="http://2013.sylma.org/template/binder"
+  xmlns:le="http://2013.sylma.org/action"
+  xmlns:ls="http://2013.sylma.org/parser/security"
+  xmlns:cls="http://2013.sylma.org/core/factory"
+
+  xmlns:xl="http://2013.sylma.org/storage/xml"
+  
+  extends="/#sylma/modules/html/window.vml"
+>
+
+  <xl:resource/>
+
+  <tpl:settings>
+    <cls:classes>
+      <cls:class alias="tree">
+        <cls:classes>
+          <cls:class alias="cached" name="\sylma\modules\tester\html\Document"/>
+        </cls:classes>
+      </cls:class>
+    </cls:classes>
+  </tpl:settings>
+
+  <tpl:template mode="head/css">
+    <le:context name="css">
+      <le:file>medias/base.less</le:file>
+    </le:context>
+    <link rel="stylesheet" type="text/css" media="all" href="/sylma/modules/html/medias/infos.css" ls:owner="root" ls:group="user" ls:mode="710"/>
+    <tpl:apply mode="head/css/backend"/>
+  </tpl:template>
+
+  <tpl:template mode="head/css/backend">
+    <le:context name="css">
+      <le:file>medias/backend.less</le:file>
+      <le:file>../../html/fonts/font-awesome.less</le:file>
+    </le:context>
+  </tpl:template>
+
+  <tpl:template mode="body/top">
+
+    <ul id="lemonav">
+      <li><a/></li>
+    </ul>
+    <tpl:apply mode="login"/>
+
+  </tpl:template>
+
+</view:view>

@@ -34,18 +34,18 @@ initializer :
       run : true
     html :
       sylma :
-        action : /#sylma/modules/html/window.vml
+        action : /#sylma/modules/tester/html/window.vml
         pattern : `(^/sylma)`
         sub :
           default :
-            action : /#sylma/modules/html/container.vml
+            action : /#sylma/modules/tester/html/container.vml
 
       test :
-        action : /sylma/modules/html/window.vml
+        action : /sylma/modules/tester/html/window.vml
         pattern : `^/(sylma/.+/test)`
         sub :
           default :
-            action : /#sylma/modules/html/container.vml
+            action : /#sylma/modules/tester/html/container.vml
 
       stepper :
         action : /sylma/modules/stepper/test/window.vml
@@ -53,12 +53,12 @@ initializer :
         weight : 10
 
       crud :
-        action : /sylma/modules/html/window.vml
+        action : /sylma/modules/tester/html/window.vml
         pattern : `^/(sylma/storage/sql/crud/test)`
         weight : 10
         sub :
           default :
-            action : /#sylma/modules/html/container.vml
+            action : /#sylma/modules/tester/html/container.vml
 
 device :
   enable : true

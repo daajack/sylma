@@ -1,0 +1,275 @@
+
+@import "vars.less";
+
+form {
+  margin: auto;
+}
+
+.sylma-form
+{
+  width: 600px;
+}
+
+.form-reference.sylma-hidder
+{
+  max-height: 0;
+  transition: all 0.5s;
+}
+
+.form-reference
+{
+  border-bottom: 2px dotted #ddd;
+  padding: 1em 0;
+  overflow: hidden;
+}
+
+.form-reference.sylma-visible
+{
+  max-height: 300em;
+}
+
+.foreign
+{
+  width: auto;
+}
+
+.foreign-value
+{
+  float: left;
+  white-space: nowrap;
+  margin-right: 1em;
+}
+
+.foreign-value input
+{
+  float: left;
+}
+
+fieldset
+{
+  border: 0;
+  background-color: #E5EEF0;
+  margin: 2px 0 0;
+  padding: 10px;
+}
+
+fieldset h3:first-letter
+{
+  text-transform: uppercase;
+}
+
+.form-reference:last-child
+{
+  border-bottom: 0;
+}
+
+legend
+{
+  font-size: 1.4em;
+  text-transform: capitalize;
+}
+
+.field-container {
+  margin-bottom: 0.5em;
+}
+
+.field-container label {
+  display: block;
+  float: left;
+  vertical-align: top;
+  width: 30%;
+  white-space: nowrap;
+  transition: color 0.2s;
+  -webkit-transition: color 0.2s;
+}
+
+.field-container label:first-letter
+{
+  text-transform: uppercase;
+}
+
+.field-container.id
+{
+  margin: 0;
+}
+
+.field-uneditable,
+.field.field-integer,
+.field.field-text,
+.field.field-date
+{
+  float: left;
+  padding: 2px;
+}
+
+.field-text .field-input-element,
+.field.field-text,
+.field.field-integer
+{
+  width: 50%;
+}
+
+textarea.field {
+  height: 100px;
+}
+
+.field-statut-invalid > h3,
+.field-statut-invalid > label
+{
+  color: #EC008C;
+  font-weight: bold;
+}
+
+.field-statut-invalid .field,
+.field-statut-invalid .field-input-element,
+{
+  border: 1px solid #EC008C;
+}
+
+.field-statut-template {
+  display: none;
+}
+
+.field-message {
+  position: absolute;
+  float:left;
+  margin-left:49%;
+  padding:2px 10px;
+  font-size:0.9em;
+  border:1px solid #CCCCCC;
+  border-radius:0 10px 0 10px;
+  -webkit-border-radius:0 10px 0 10px;
+  background-color:#EEEEEE;
+}
+
+.field-date
+{
+  .clear
+  {
+    float: left;
+    display: block;
+    margin-left: -1.2em;
+    cursor: pointer;
+    line-height: 1.8em;
+    color: #aaa;
+    
+    &:hover
+    {
+      color: black;
+    }
+  }
+}
+
+.multiform
+{
+  margin: auto;
+
+  table tbody .empty
+  {
+    margin-top: 1em;
+    text-align: center;
+    font-style: italic;
+    font-size: 1.2em;
+  }
+
+  .sylma-tab-head
+  {
+    .new
+    {
+      display: inline-block;
+      font-size: 1.2em;
+      line-height: 1em;
+      width: 1.05em;
+      text-align: center;
+      margin-left: 1em;
+      margin-top: 1px;
+      border-radius: 2em;
+      color: @color-text2;
+      font-weight: bold;
+      background-color: @color-background2;
+
+      &:hover
+      {
+        background-color: @color-background3;
+        color: @color-text3;
+      }
+    }
+  }
+
+  .form .actions
+  {
+    margin: 3em 0;
+  }
+  
+  .references
+  {
+    .form.hidder
+    {
+      overflow: hidden;
+      max-height : 0;
+      transition: opacity, visibility, max-height;
+      transition-duration: 0.5s;
+
+      &.visible
+      {
+        max-height: 1000px;
+      }
+    }
+  }
+  
+}
+
+.form .actions,
+.sylma-form .actions
+{
+  border-top: 1px solid #ddd;
+  margin: 1em 0;
+  padding-top: 1em;
+  text-align: left;
+
+  button:first-letter
+  {
+    text-transform: uppercase;
+  }
+
+  .save
+  {
+    float: right;
+  }
+
+  .cancel,
+  .delete
+  {
+    display: inline-block;
+
+    span
+    {
+      padding: 0 0.5em;
+    }
+
+    .hidder
+    {
+      float: right;
+      text-align: left;
+      overflow: hidden;
+      white-space: nowrap;
+      max-width: 5px;
+      transition: max-width 0.5s;
+
+      &.visible
+      {
+        max-width: 500px;
+      }
+
+      button
+      {
+        float: none;
+      }
+    }
+  }
+
+}
+
+
+
+

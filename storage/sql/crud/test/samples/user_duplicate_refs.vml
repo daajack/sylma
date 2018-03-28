@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<crud:crud
+  xmlns:crud="http://2013.sylma.org/view/crud"
+  xmlns:view="http://2013.sylma.org/view"
+  xmlns="http://2014.sylma.org/html"
+  xmlns:tpl="http://2013.sylma.org/template"
+  xmlns:sql="http://2013.sylma.org/storage/sql"
+  xmlns:js="http://2013.sylma.org/template/binder"
+  xmlns:le="http://2013.sylma.org/action"
+
+  xmlns:user="http://2013.sylma.org/modules/stepper/test/user01"
+  xmlns:group="http://2013.sylma.org/modules/stepper/test/group01"
+
+  extends="/sylma/storage/sql/collection.crd"
+>
+
+  <crud:group name="collection" sql:ns="ns">
+
+    <view:schema>user_duplicate_refs.xql</view:schema>
+
+    <tpl:constant name="list-cols">id, city/join()/lang, country/join()/lang</tpl:constant>
+    <tpl:constant name="list-order">id</tpl:constant>
+    
+    <tpl:template match="*" mode="select-option-value">
+      <tpl:read select="name"/>
+    </tpl:template>
+    
+    <tpl:template match="sql:foreign" mode="cell/content">
+      <tpl:read select="name"/>
+    </tpl:template>
+
+  </crud:group>
+  
+  <crud:route>
+    
+    <!--<view:view name="list"><tpl:template/></view:view>-->
+    <!--<view:view><tpl:template><crud:include path="list"/></tpl:template></view:view>-->
+    
+  </crud:route>
+
+</crud:crud>

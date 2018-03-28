@@ -307,12 +307,21 @@
   </tpl:template>
 
   <tpl:template match="sql:foreign" mode="filter">
-
+    
     <js:include>foreign/FilterContainer.js</js:include>
     <js:include>foreign/Filter.js</js:include>
     
+    <tpl:register/>
+    
+    <tpl:variable name="alias">
+      <tpl:read select="alias()"/>
+    </tpl:variable>
+    
     <div class="filter-container foreign" js:class="sylma.crud.foreign.FilterContainer">
-      <tpl:argument name="alias" default="alias()"/>
+      <js:option name="name">
+        <tpl:read select="$alias"/>
+      </js:option>
+
       <input type="hidden" name="{$alias}[0][logic]" value="and"/>
       <input type="hidden" name="{$alias}[0][operator]" value="=" js:node="operator"/>
       <span class="label hidder visible" js:node="empty">show</span>
@@ -320,9 +329,7 @@
       <tpl:apply select="all()" mode="filter/foreign">
         <tpl:read select="'{$alias}[0][children]'" tpl:name="alias"/>
       </tpl:apply>
-      <js:option name="name">
-        <tpl:read select="$alias"/>
-      </js:option>
+      
     </div>
 
   </tpl:template>

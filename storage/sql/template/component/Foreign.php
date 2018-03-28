@@ -46,7 +46,7 @@ class Foreign extends sql\schema\component\Foreign implements sql\template\patha
     if ($result = parent::importElementRef()) {
 
       if ($collection = $this->getParent()->getCollection(false)) {
-
+        
         $result->setCollection($collection);
       }
     }
@@ -158,10 +158,10 @@ class Foreign extends sql\schema\component\Foreign implements sql\template\patha
 
     return $result;
   }
-
+  
   public function reflectRegister() {
 
-    return null;
+    $this->getParent()->getQuery()->setElement($this);
   }
 }
 

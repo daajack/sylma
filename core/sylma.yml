@@ -27,6 +27,7 @@ debug :
   xml :
     import : false
   test : false
+  path : null
 
 namespaces :
   html : http://www.w3.org/1999/xhtml

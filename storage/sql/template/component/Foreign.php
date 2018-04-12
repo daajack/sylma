@@ -161,7 +161,10 @@ class Foreign extends sql\schema\component\Foreign implements sql\template\patha
   
   public function reflectRegister() {
 
-    $this->getParent()->getQuery()->setElement($this);
+    if (!$this->getMaxOccurs(true))
+    {
+      $this->getParent()->getQuery()->setElement($this);
+    }
   }
 }
 

@@ -354,7 +354,7 @@ class Initializer extends module\Domed {
 
   public function loadPOST($bArgument = false) {
 
-    if($_SERVER['REQUEST_METHOD'] == 'POST' && empty($_POST) && empty($_FILES) && $_SERVER['CONTENT_LENGTH'] > 0)
+    if(array_key_exists('REQUEST_METHOD', $_SERVER) && $_SERVER['REQUEST_METHOD'] == 'POST' && empty($_POST) && empty($_FILES) && $_SERVER['CONTENT_LENGTH'] > 0)
     {
       $displayMaxSize = ini_get('post_max_size');
 

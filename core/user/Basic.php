@@ -135,7 +135,7 @@ class Basic extends core\module\Argumented implements core\user {
 
     $server = $manager->getArgument('server');
 
-    if ($_SERVER['REMOTE_ADDR'] === $server->read('ip')) {
+    if (array_key_exists('REMOTE_ADDR', $_SERVER) && $_SERVER['REMOTE_ADDR'] === $server->read('ip')) {
 
       $options = $server;
     }

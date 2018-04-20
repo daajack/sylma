@@ -24,19 +24,27 @@ class Main extends core\module\Domed implements dom\domable {
    * @param type $sPath
    * @return string
    */
-  public function load($sPath, $bRun = true) {
-
+  public function load($sPath, $run = true) {
+    
+    $run = is_null($run) ? true : $run;
     $this->aContexts['arguments']->set('path');
 
     $file = $this->getFile($sPath);
     //$parent = $this->getControler('parser')->getContext('action/current');
-
-    dsp("Rebuild : $sPath");
+    
+    $this->getManager('parser')->getContext('messages')->add(array(
+      'content' => "Building complete : $sPath"
+    ));
+    
+    if ($run)
+    {
+      dsp($sPath);
+    }
 
     if (!in_array((string) $file, $this->get('exclude/run')->query())) {
 
       $manager = $this->getManager(self::PARSER_MANAGER);
-      $manager->load($file, $this->aContexts, true, is_null($bRun) ? true : $bRun);
+      $manager->load($file, $this->aContexts, true, $run);
     }
 //$parent->getContexts()->get('message');
     return '1';

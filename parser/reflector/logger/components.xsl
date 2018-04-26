@@ -11,8 +11,21 @@
   <xsl:import href="/#sylma/modules/html/copy.xsl"/>
 
   <xsl:template match="tpl:log">
-    <div class="sylma-error">
+    <div class="sylma-error sylma-logger">
       <style type="text/css">
+        .sylma-logger
+        {
+          height: 2.5em;
+          overflow: hidden;
+        }
+        .sylma-logger h3
+        {
+          margin: 0;
+        }
+        .sylma-logger:hover
+        {
+          height: auto;
+        }
         .sylma-template-component {
           border-left: 2px dotted gray;
           padding-left: 5px;

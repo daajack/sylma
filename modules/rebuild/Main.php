@@ -24,9 +24,11 @@ class Main extends core\module\Domed implements dom\domable {
    * @param type $sPath
    * @return string
    */
-  public function load($sPath, $run = true) {
+  public function load($sPath, $run = true, $force = true) {
     
     $run = is_null($run) ? true : $run;
+    if ($force === 'null') $force = null;
+    
     $this->aContexts['arguments']->set('path');
 
     $file = $this->getFile($sPath);
@@ -44,7 +46,7 @@ class Main extends core\module\Domed implements dom\domable {
     if (!in_array((string) $file, $this->get('exclude/run')->query())) {
 
       $manager = $this->getManager(self::PARSER_MANAGER);
-      $manager->load($file, $this->aContexts, true, $run);
+      $manager->load($file, $this->aContexts, $force, $run);
     }
 //$parent->getContexts()->get('message');
     return '1';

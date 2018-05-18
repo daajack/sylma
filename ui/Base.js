@@ -414,7 +414,10 @@ sylma.ui.BaseProps = {
         this.fireEvent('remove');
 
       }.bind(this)
-    }).start('.destroy');
+    }).start({
+      height: 0,
+      opacity : 0
+    });
     /*
     var node = this.getNode();
     destroy = destroy === undefined ? true : destroy;

@@ -12,7 +12,7 @@
   extends="/#sylma/storage/sql/collection.crd"
 >
 
-  <crud:global stat:ns="ns" sql:ns="ns">
+  <crud:global sql:ns="ns">
 
     <view:schema>mymodule.xql</view:schema>
 

@@ -24,13 +24,13 @@
 
   </crud:global>
 
-  <view:view name="insert" mode="insert" internal="x">
+  <view:view name="insert" mode="insert" internal="x" groups="crud">
 
     <tpl:template/>
 
   </view:view>
 
-  <view:view name="delete" mode="delete">
+  <view:view name="delete" mode="delete" groups="crud">
 
     <tpl:template>
       <tpl:apply select="id" mode="post"/>

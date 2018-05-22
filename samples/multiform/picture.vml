@@ -29,7 +29,7 @@
 
   <crud:group name="crud">
 
-    <view:schema>photo.xql</view:schema>
+    <view:schema>picture.xql</view:schema>
 
   </crud:group>
 

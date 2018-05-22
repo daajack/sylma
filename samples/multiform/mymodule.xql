@@ -15,6 +15,7 @@
     <field name="id" type="sql:id"/>
 
     <field name="name" type="sql:string"/>
+    <field name="update" type="sql:datetime"/>
 
     <reference name="pictures" table="picture:mymodule_picture" foreign="picture:parent" import="picture.xql"/>
     <reference name="sub1s" table="sub1:mymodule_sub1" foreign="sub1:parent" import="sub1.xql"/>

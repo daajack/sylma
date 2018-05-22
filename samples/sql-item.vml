@@ -11,6 +11,10 @@
 
   <sql:resource/>
   <view:schema>schema.xql</view:schema>
+  
+  <sql:filter name="id">
+    <le:get-argument/>
+  </sql:filter>
 
   <tpl:template>
     

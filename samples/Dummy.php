@@ -9,5 +9,10 @@ class Dummy extends core\module\Domed
     
     return implode(', ', $content); // return 'hello, world'
   }
+  
+  public function getClass($position)
+  {
+    return 'item-' . $position;
+  }
 }
 

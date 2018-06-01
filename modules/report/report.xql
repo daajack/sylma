@@ -11,10 +11,10 @@
 
     <field name="id" type="sql:id"/>
 
-    <field name="email" type="sql:string" default="null"/>
-    <field name="url" type="sql:string" default="null"/>
-    <field name="description" type="sql:string-long" default="null"/>
-    
+    <field name="email" type="sql:string"/>
+    <field name="url" type="sql:string"/>
+    <field name="description" type="sql:string-long"/>
+
     <field name="infos" type="sql:string-long"/>
 
   </table>

@@ -443,7 +443,7 @@ class Basic extends \Exception implements core\exception {
 
       $sPath = $_SERVER['DOCUMENT_ROOT'] . '/cache/' . self::getLogPath();
 
-      if (!file_put_contents($sPath, $sValue, \FILE_APPEND . "\n")) {
+      if (!file_put_contents($sPath, $sValue . "\n", \FILE_APPEND)) {
 
         // :(
       }

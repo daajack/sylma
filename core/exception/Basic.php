@@ -196,12 +196,12 @@ class Basic extends \Exception implements core\exception {
 
   public function errorAsHTML($iIndex, array $aError, $bHTML) {
 
-    $sFile = array_key_exists('file', $aError) ? $aError['file'] : '-unknown-';
+    $file = array_key_exists('file', $aError) ? $aError['file'] : '-unknown-';
     $sLine = array_key_exists('line', $aError) ? $aError['line'] : '-unknown-';
     $sClass = array_key_exists('class', $aError) ? $aError['class'] : '-unknown-';
     $sFunction = array_key_exists('function', $aError) ? $aError['function'] : '-unknown-';
 
-    $sDisplay = $this->strongLast(substr($sFile, strlen(\Sylma::PATH_SYSTEM)), '/');
+    $sDisplay = $this->strongLast(substr($file, strlen(\Sylma::PATH_SYSTEM)), '/');
     $sClass = $this->strongLast($sClass);
 
     $bHTML = $bHTML ? \Sylma::read('debug/backtrace/html') : false;
@@ -225,8 +225,13 @@ class Basic extends \Exception implements core\exception {
       $sArgs = '';
       $sFunctionArgs = 0;
     }
-
-    return "<li tabindex=\"1\"><a href=\"netbeans://$sFile:$sLine\">$iIndex. $sDisplay [$sLine]</a> <span>$sClass-></span><span class=\"sylma-function\">$sFunction($sFunctionArgs)</span>$sArgs</li>";
+    
+    if ($path = \Sylma::get('debug/path', false))
+    {
+      $file = preg_replace('`' . $path->read('from') . '`', $path->read('to'), $file);
+    }
+    
+    return "<li tabindex=\"1\"><a href=\"netbeans://$file:$sLine\">$iIndex. $sDisplay [$sLine]</a> <span>$sClass-></span><span class=\"sylma-function\">$sFunction($sFunctionArgs)</span>$sArgs</li>";
   }
 
   public function setVariables($aVars) {

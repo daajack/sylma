@@ -326,11 +326,16 @@ class Controler extends core\module\Domed {
     return implode(' ', $aResult);
   }
 
-  public function buildLink($sFile) {
+  public function buildLink($file) {
 
-    $sDirectory = \Sylma::getManager('fs')->getDirectory()->getSystemPath();
+    $dir = \Sylma::getManager('fs')->getDirectory()->getSystemPath();
+    
+    if ($map = \Sylma::get('debug/path', false))
+    {
+      $dir = preg_replace('`' . $map->read('from') . '`', $map->read('to'), $dir);
+    }
 
-    return 'netbeans://' . $sDirectory . $sFile;
+    return 'netbeans://' . $dir . $file;
   }
 
   public function stringToDOM($sValue, $bCollection = false) {

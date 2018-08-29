@@ -2,7 +2,10 @@ debug :
   enable : false
   rights: false
   show : false
-
+  path :
+    from : /var/www/html
+    to : z:\localhost
+    
 exception :
   show : false
 

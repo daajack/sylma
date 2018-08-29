@@ -97,15 +97,7 @@ class Manager extends compiler\Manager {
       $this->aBuilded[] = $file;
       $this->aStackBuild[] = $file;
       
-      try
-      {
-        $result = $builder->build($dir);
-        
-      } catch (\Exception $e) {
-        
-        $e->save(false);
-        $result = null;
-      }
+      $result = $builder->build($dir);
       
       if ($result)
       {

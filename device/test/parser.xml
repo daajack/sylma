@@ -120,4 +120,36 @@
     </tst:node>
   </tst:test>
 
+  <tst:test name="Get as string">
+    <tst:document>
+      <view:view>
+        <xl:resource/>
+        <tpl:template>
+          <div class="{/device()}">Hello world !</div>
+        </tpl:template>
+      </view:view>
+    </tst:document>
+    <tst:node name="desktop">
+      <div class="desktop">Hello world !</div>
+    </tst:node>
+    <tst:node name="mobile">
+      <div class="mobile">Hello world !</div>
+    </tst:node>
+    <tst:expected>
+      
+      $nodes = $manager->getArgument('node');
+      
+      $manager->setDevice('desktop');
+      $view1 = $manager->loadScript();
+      
+      $manager->setDevice('mobile');
+      $view2 = $manager->loadScript();
+
+      return
+        $manager->compareNodes($view1, $nodes->get('desktop')) &amp;&amp;
+        $manager->compareNodes($view2, $nodes->get('mobile'));
+    </tst:expected>
+
+  </tst:test>
+
 </tst:tests>

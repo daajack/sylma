@@ -29,4 +29,13 @@ class Elemented extends reflector\handler\Elemented implements reflector\element
     
     return $result;
   }
+  
+  public function reflectApplyDefault($sPath, array $aPath, $sMode, $bRead = false, array $aArguments = array()) {
+    
+    $window = $this->getWindow();
+    $return = $this->createDummy('dummy', array(), null, false);
+    $manager = $window->addManager('device', null, $return);
+    
+    return $manager;
+  }
 }

@@ -46,4 +46,9 @@ class Dummy extends \Mobile_Detect
 
     return $bResult;
   }
+  
+  public function __toString() {
+    
+    return $this->isMobile() ? 'mobile' : 'desktop';
+  }
 }

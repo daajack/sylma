@@ -19,6 +19,7 @@ class Document  extends xml\tree\Argument implements template\parser\tree
       // @deprecated, use 'get' instead
       case 'argument' : $result = $this->reflectFunctionArgument('arguments', $path, $sArguments); break;
       case 'locale' : $result = $this->reflectFunctionLocale($path, $sMode, $bRead, $aArguments); break;
+      case 'device' : $result = $this->reflectFunctionDevice($path, $sMode, $bRead, $aArguments); break;
 
       default :
 
@@ -85,5 +86,12 @@ class Document  extends xml\tree\Argument implements template\parser\tree
     $pather->setSource($tree);
 
     return $pather->parsePathToken($aPath, $sMode, $bRead, $aArguments);
+  }
+  
+  protected function reflectFunctionDevice(array $aPath, $sMode, $bRead = false, array $aArguments = array()) {
+    
+    $tree = $this->getWindow()->addManager('device');
+
+    return $tree;
   }
 }

@@ -69,29 +69,40 @@ class CSS extends Basic implements dom\domable {
 
     $fs = \Sylma::getManager('fs');
 
-    $sResult = preg_replace_callback("/url\((?:'|\")?([^\)'\"]+)('|\")?\)/", function($aMatches) use ($fs, $dir) {
+    $sResult = preg_replace_callback("/url\((?:'|\")?([^\)'\"]+)('|\")?\)/", function($matches) use ($fs, $dir) {
 
-      $sMatch = $aMatches[1];
+      $match = $matches[1];
+      
+      // check only local path
+      if (!preg_match('`https?://`', $match)) {
 
-      if (!preg_match('`https?://`', $sMatch)) {
+        if ($match{0} === '/') {
 
-        if ($sMatch{0} === '/') {
-
-          $sURL = $sMatch;
+          $sURL = $match;
         }
         else {
+          
+          // extract arguments
+          preg_match('`([^\?#]+)([\?#].+)?`', $match, $matches);
+          
+          $path = $matches[1];
+          $arguments = '';
 
-          $sURL = (string) $fs->getFile($sMatch, $dir, false);
+          if ( isset($matches[2]) ) $arguments = $matches[2];
+          
+          // check for file existence
+          // concat final url
+          $sURL = (string) $fs->getFile($path, $dir, false) . $arguments;
 
           if (\Sylma::isAdmin() && !$sURL) {
 
-            dsp('Cannot find file : ' . $sMatch);
+            dsp('Cannot find file : ' . $match);
           }
         }
       }
       else {
 
-        $sURL = $sMatch;
+        $sURL = $match;
       }
 
       return "url('$sURL')";

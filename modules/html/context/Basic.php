@@ -111,6 +111,7 @@ class Basic extends core\argument\Readable implements window\context {
 
       $cache = $dir->createFile($sName);
       $cache->saveText(implode("\n\n", $aContent));
+      chmod( $cache->getSystemPath(), 0774 );
     }
 
     return $this->addFile($cache, true);

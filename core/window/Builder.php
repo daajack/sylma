@@ -1,7 +1,7 @@
 <?php
 
 namespace sylma\core\window;
-use sylma\core, sylma\storage\fs, sylma\template\binder, sylma\modules\less, sylma\modules\html;
+use sylma\core, sylma\storage\fs, sylma\template\binder, sylma\modules\html;
 
 class Builder extends core\module\Domed {
 
@@ -164,7 +164,7 @@ class Builder extends core\module\Domed {
 
     $result = $this->createArgument(array(
       'title' => array(),
-      'css' => new less\Context(array(), $fusion, $js),
+      'css' => new html\context\Sass(array(), $fusion, $js),
       'js-common' => new html\context\JS(array(), $fusion),
       'js' => $js,
       'errors' =>  $messages,

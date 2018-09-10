@@ -29,7 +29,12 @@ sylma.slideshow.MobileProps = {
     if (this.prepareContainer()) {
 
       this.getCollection()[this.current].prepare();
-      this.prepareMobile();
+      
+      if ( this.isMobile() )
+      {
+        this.prepareMobile();
+      }
+      
       this.startLoading();
       this.hideInfos();
 

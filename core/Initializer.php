@@ -448,7 +448,11 @@ class Initializer extends module\Domed {
 
   public function getURL($force_ssl = false) {
 
-    return
-      ($force_ssl || (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? 'https' : 'http') . '://' . $_SERVER['SERVER_NAME'];
+    $ssl = $force_ssl || (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? 'https' : 'http';
+    $port = $_SERVER['SERVER_PORT'] === '80' ? '' : ( ':' . $_SERVER['SERVER_PORT'] );
+    
+    $url = $ssl . '://' . $_SERVER['SERVER_NAME'] . $port;
+
+    return $url;
   }
 }

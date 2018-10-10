@@ -117,9 +117,16 @@
 
             <tpl:variable name="parent">
               <le:array>
-                <tpl:read select="$id" le:name="project"/>
+                <tpl:read select="$id" le:name="parent"/>
               </le:array>
             </tpl:variable>
+
+            <div js:script="image" js:class="sylma.ui.tab.Tab" js:parent-name="tab">
+              <js:option name="arguments">
+                <tpl:read select="$parent"/>
+              </js:option>
+              <js:option name="sylma-inside">1</js:option>
+            </div>
 
             <div js:script="sub1/view" js:class="sylma.ui.tab.Tab" js:parent-name="tab">
               <js:option name="arguments">
@@ -152,6 +159,9 @@
         <js:option name="mode">normal</js:option>
         <tpl:apply mode="tab">
           <tpl:read select="'infos'" tpl:name="title"/>
+        </tpl:apply>
+        <tpl:apply mode="tab">
+          <tpl:read select="'photos'" tpl:name="title"/>
         </tpl:apply>
         <tpl:apply mode="tab">
           <tpl:read select="'Sub 1'" tpl:name="title"/>

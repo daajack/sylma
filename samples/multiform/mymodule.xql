@@ -5,7 +5,7 @@
   xmlns:ssd="http://2013.sylma.org/schema/ssd"
 
   xmlns:sub1="mysite:mymodule:sub1"
-  xmlns:picture="mysite:mymodule:picture"
+  xmlns:image="mysite:mymodule:image"
 
   targetNamespace="mysite:mymodule"
 >
@@ -17,7 +17,7 @@
     <field name="name" type="sql:string"/>
     <field name="update" type="sql:datetime"/>
 
-    <reference name="pictures" table="picture:mymodule_picture" foreign="picture:parent" import="picture.xql"/>
+    <reference name="images" table="image:mymodule_image" foreign="image:parent" import="image.xql"/>
     <reference name="sub1s" table="sub1:mymodule_sub1" foreign="sub1:parent" import="sub1.xql"/>
 
   </table>

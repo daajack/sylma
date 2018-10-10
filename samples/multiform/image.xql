@@ -6,10 +6,10 @@
 
   xmlns:parent="mysite:mymodule"
 
-  targetNamespace="mysite:mymodule:picture"
+  targetNamespace="mysite:mymodule:image"
 >
 
-  <table name="mymodule_picture">
+  <table name="mymodule_image">
 
     <field name="id" type="sql:id"/>
 

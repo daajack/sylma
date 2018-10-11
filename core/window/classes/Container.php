@@ -108,7 +108,7 @@ class Container extends core\module\Domed {
             '#button' => array(
               array(
                 '@type' => 'button',
-                '@onclick' => "sylma.ui.send('/sylma/modules/rebuild/standalone', {path : '$file'}, null, true);",
+                '@onclick' => "sylma.ui.send('/sylma/modules/rebuild/standalone', {path : '$file', force : true}, null, true);",
                 'rebuild'
               ),
               array(

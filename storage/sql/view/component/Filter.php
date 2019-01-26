@@ -34,8 +34,10 @@ class Filter extends reflector\component\Foreigner implements reflector\componen
 
       $sOP = '=';
     }
-
-    $bIN = strtolower(trim($sOP)) == 'in';
+    
+    $clean = strtolower(trim($sOP));
+    $bIN = $clean == 'in' || $clean == 'not in';
+    
     $container = $this->getNode();
 
     if ($sName = $this->readx('@name')) {

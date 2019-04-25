@@ -198,11 +198,6 @@ class Table extends Dummed implements sql\template\pathable, schema\parser\eleme
 
   public function addElementToQuery(schema\parser\element $el) {
 
-    if ($this->isStatic() && !$this->getSource(false)) {
-
-      $this->launchException('Cannot read in static');
-    }
-
     $this->addColumn($el);
 
     $this->checkQuery($this->getQuery())->setElement($el);

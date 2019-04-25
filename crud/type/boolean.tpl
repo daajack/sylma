@@ -14,7 +14,7 @@
     <tpl:argument name="type" default="'radio'"/>
     <tpl:argument name="value" default="''"/>
     <tpl:argument name="content" default="'1'"/>
-    <tpl:argument name="alias" default="alias()"/>
+    <tpl:argument name="alias" default="alias('form')"/>
     <tpl:argument name="id" default="$alias"/>
 
     <input class="field field-boolean" type="{$type}" id="form-{$id}" value="{$content}" name="{$alias}">

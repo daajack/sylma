@@ -39,6 +39,17 @@
   
   <crud:route>
     
+    <view:view>
+      
+      <tpl:template mode="form/content">
+        
+        <h2>Report a bug</h2>
+        <tpl:apply mode="form/content"/>
+        
+      </tpl:template>
+      
+    </view:view>
+    
     <view:view name="do">
       
       <tpl:template>

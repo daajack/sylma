@@ -298,11 +298,14 @@ class Initializer extends module\Domed {
   }
 
   public function setHeaderCache($iTime, $bPublic = true) {
-
-    header('Expires: '.gmdate('D, d M Y H:i:s \G\M\T', time() + $iTime));
-    //if ($bPublic) header('Cache-Control: public');
-
-    header_remove('Pragma');
+    
+    $ts = gmdate("D, d M Y H:i:s", time() + $iTime) . " GMT";
+    header("Expires: $ts");
+    header("Pragma: cache");
+    
+    if ($iTime && $bPublic) {
+      header("Cache-Control: public, max-age=$iTime");
+    }
   }
 
   public function setHeaderContent($sMime, $sCharset = 'utf-8') {

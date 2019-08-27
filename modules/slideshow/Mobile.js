@@ -67,7 +67,7 @@ sylma.slideshow.MobileProps = {
 
     Object.each(mobile.parseEvents(this.events), function(event, key) {
 
-      this.getContainer().addListener(key, event);
+      this.getNode().addListener(key, event);
 
     }.bind(this));
 
@@ -77,8 +77,8 @@ sylma.slideshow.MobileProps = {
 
     var mobile = this.device;
 
-    this.prepareSlide(this.getPrevious(true));
-    this.prepareSlide(this.getNext(true));
+    this.prepareSlide(this.getPrevious());
+    this.prepareSlide(this.getNext());
 
     this.stopLoop();
     this.useTransition(false);
@@ -89,6 +89,7 @@ sylma.slideshow.MobileProps = {
       position : mobile.getPosition(e).x,
       margin : margin,
       current : margin,
+      last : 0,
       minPrevent : this.options.minPrevent
     };
 
@@ -101,11 +102,14 @@ sylma.slideshow.MobileProps = {
   touchEnd : function(e) {
 
     if (this.swipe) {
-
+      
+      this.swipe.current += this.swipe.last * 5;
+      
       this.current = Math.round(-this.swipe.current / this.width);
-      var length = this.getCollection().length;
-
-      if (this.current >= length) this.current = length - 1;
+      const length = this.getCollection().length;
+      
+      while ( this.current < 0 ) this.current += length;
+      while ( this.current > length ) this.current -= length;
 
       this.useTransition(true);
 
@@ -127,7 +131,24 @@ sylma.slideshow.MobileProps = {
 
       var position = mobile.getPosition(e).x;
       var diff = this.swipe.position - position;
-      this.swipe.current = this.swipe.margin - diff;
+      var current = this.swipe.margin - diff;
+      this.swipe.last = current - this.swipe.current;
+      this.swipe.current = current;
+      var length = this.width * this.length;
+
+      if (Math.abs(this.swipe.current) > this.width * this.length * 1.5 && this.swipe.last < 0)
+      {
+        this.swipe.current += length;
+        this.swipe.position -= length;
+        this.swipe.last -= length;
+      }
+      else if (Math.abs(this.swipe.current) < this.width * 1.5 && this.swipe.last > 0)
+      {
+        this.swipe.current -= length;
+        this.swipe.position += length;
+        this.swipe.last += length;
+      }
+      
       this.getContainer().setStyle('margin-left', this.swipe.current);
 
       if (this.get('scrollPrevent') || Math.abs(diff) > this.swipe.minPrevent) {

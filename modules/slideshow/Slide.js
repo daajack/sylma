@@ -8,11 +8,12 @@ sylma.slideshow.Slide = new Class({
     if (!this.prepared) {
 
       this.prepared = true;
-      this.loadImage(this.getNodes(), this.getImagePath(), function() {
-
-        this.getParent('handler').stopLoading();
-
-      }.bind(this));
+      
+      if (this.get('path')) {
+        this.loadImage(this.getNodes(), this.getImagePath(), function() {
+          this.getParent('handler').stopLoading();
+        }.bind(this));
+      }
     }
   },
 

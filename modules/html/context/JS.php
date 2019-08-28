@@ -44,7 +44,7 @@ class JS extends Basic implements dom\domable {
     ($bDebug ? "console.log('load : $file');" . parent::readFile($file) : parent::readFile($file));
   }
 
-  public function asDOM() {
+  public function asDOM($sParentNamespace = '') {
 
     $aStrings = $this->loadContent();
     $result = null;

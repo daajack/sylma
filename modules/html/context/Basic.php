@@ -173,7 +173,7 @@ class Basic extends core\argument\Readable implements window\context {
     return \Sylma::getManager('dom')->createDocument($sElement);
   }
 
-  public function asDOM() {
+  public function asDOM($sParentNamespace = '') {
 
     $result = $this->asObject();
 

@@ -203,7 +203,7 @@ class Readable extends Domed implements core\argument {
 
     } while (next($aPath));
 
-    if (each($aPath) && $bDebug) {
+    if (current($aPath) && $bDebug) {
 
       $this->launchException(sprintf('Path "%s" not found', implode('/', $aPath)), get_defined_vars());
     }

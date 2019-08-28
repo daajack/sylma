@@ -9,7 +9,7 @@ class CSS extends Basic implements dom\domable {
 
   protected $aImports = array();
 
-  public function asDOM() {
+  public function asDOM($sParentNamespace = '') {
 
     $result = null;
 

@@ -80,8 +80,8 @@ class Event extends Method {
     }
 */
     $aReplaces = array(
-      '/%([\w-_]+)%/' => '\$(this).retrieve(\'sylma-$1\')',
-      '/%([\w-_]+)\s*,\s*([^%]+)%/' => '\$(this).store(\'sylma-$1\', $2)');
+      '/%([\w\-_]+)%/' => '\$(this).retrieve(\'sylma-$1\')',
+      '/%([\w\-_]+)\s*,\s*([^%]+)%/' => '\$(this).store(\'sylma-$1\', $2)');
 
     $sResult = preg_replace(array_keys($aReplaces), $aReplaces, $sContent);
 

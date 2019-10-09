@@ -254,7 +254,7 @@ class Initializer extends module\Domed {
      if (!$file || $file->getExtension() !== 'vml') {
 
        $this->send404();
-       $file = $this->getFile($this->getErrorPath());
+       $file = $this->getFile($this->read('window/error/path'));
        //$this->launchException('Can execute only view');
      }
 
@@ -457,5 +457,10 @@ class Initializer extends module\Domed {
     $url = $ssl . '://' . $_SERVER['SERVER_NAME'] . $port;
 
     return $url;
+  }
+
+  public function getHost() {
+
+    return $_SERVER['SERVER_NAME'];
   }
 }

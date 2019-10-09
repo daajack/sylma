@@ -202,7 +202,7 @@ class Basic extends \Exception implements core\exception {
     $sFunction = array_key_exists('function', $aError) ? $aError['function'] : '-unknown-';
 
     $sDisplay = $this->strongLast(substr($file, strlen(\Sylma::PATH_SYSTEM)), '/');
-    $sClass = $this->strongLast($sClass);
+    $sDisplayClass = $this->strongLast($sClass);
 
     $bHTML = $bHTML ? \Sylma::read('debug/backtrace/html') : false;
     $bArgs = \Sylma::read('debug/backtrace/arguments');
@@ -211,14 +211,16 @@ class Basic extends \Exception implements core\exception {
 
       $sFunctionArgs = count($aError['args']);
 
-      $sArgs = '<ul>';
+      $sArgs = $bHTML ? '<ul>' : '';
 
       foreach ($aError['args'] as $arg) {
 
-        $sArgs .= '<li>' . \Sylma::show($arg, !$bHTML) . '</li>';
+        $sArgs .= $bHTML ?
+          '<li>' . \Sylma::show($arg, !$bHTML) . '</li>' :
+          ' - ' . \Sylma::show($arg, !$bHTML) . "\n";      
       }
 
-      $sArgs .= '</ul>';
+      $sArgs .= $bHTML ? '</ul>' : '';
     }
     else {
 
@@ -231,7 +233,9 @@ class Basic extends \Exception implements core\exception {
       $file = preg_replace('`' . $path->read('from') . '`', $path->read('to'), $file);
     }
     
-    return "<li tabindex=\"1\"><a href=\"netbeans://$file:$sLine\">$iIndex. $sDisplay [$sLine]</a> <span>$sClass-></span><span class=\"sylma-function\">$sFunction($sFunctionArgs)</span>$sArgs</li>";
+    return $bHTML ?
+      "<li tabindex=\"1\"><a href=\"netbeans://$file:$sLine\">$iIndex. $sDisplay [$sLine]</a> <span>$sDisplayClass-></span><span class=\"sylma-function\">$sFunction($sFunctionArgs)</span>$sArgs</li>" :
+      "$iIndex. $file [$sLine] - $sClass->$sFunction($sFunctionArgs)\n$sArgs\n";
   }
 
   public function setVariables($aVars) {
